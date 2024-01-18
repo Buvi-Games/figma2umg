@@ -4,9 +4,12 @@
 
 #include "ContentBrowserDataMenuContexts.h"
 #include "Figma2UMGStyle.h"
+#include "SImporterWidget.h"
 
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 #define CONTENTBROWSER_MODULE_NAME TEXT("ContentBrowser")
+
+const FName ImporterTabName = "Figma2UMGTab";
 
 FFigma2UMGManager::FFigma2UMGManager()
 {
@@ -25,6 +28,13 @@ void FFigma2UMGManager::Initialize()
 
 void FFigma2UMGManager::Shutdown()
 {
+	if (ImporterDockTab != NULL && ImporterDockTab.IsValid())
+	{
+		ImporterDockTab = NULL;
+	}
+
+	FFigma2UMGStyle::Shutdown();
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(ImporterTabName);
 }
 
 void FFigma2UMGManager::SetupMenuItem()
@@ -50,31 +60,55 @@ void FFigma2UMGManager::SetupMenuItem()
 				);
 			}
 		}));
+
+
+	FGlobalTabmanager::Get()->RegisterNomadTabSpawner(ImporterTabName,
+		FOnSpawnTab::CreateRaw(this, &FFigma2UMGManager::CreateTab))
+		.SetDisplayName(TabDisplay)
+		.SetAutoGenerateMenuEntry(false)
+		.SetTooltipText(ToolTip);
 }
 
 void FFigma2UMGManager::CreateWindow()
 {
-	//FGlobalTabmanager::Get()->TryInvokeTab(BridgeTabName);
-	//
-	//// Set desired window size (if the desired window size is less than main window size)
-	//// Rationale: the main window is mostly maximized - so the size is equal to screen size
-	//TArray<TSharedRef<SWindow>> Windows = FSlateApplication::Get().GetTopLevelWindows();
-	//if (Windows.Num() > 0)
-	//{
-	//	FVector2D MainWindowSize = Windows[0]->GetSizeInScreen();
-	//	float DesiredWidth = 1650;
-	//	float DesiredHeight = 900;
-	//
-	//	if (DesiredWidth < MainWindowSize.X && DesiredHeight < MainWindowSize.Y && LocalBrowserDock->GetParentWindow().IsValid())
-	//	{
-	//		// If Bridge is docked as a tab, the parent window will be the main window
-	//		if (LocalBrowserDock->GetParentWindow() == Windows[0])
-	//		{
-	//			return;
-	//		}
-	//
-	//		LocalBrowserDock->GetParentWindow()->Resize(FVector2D(DesiredWidth, DesiredHeight));
-	//		LocalBrowserDock->GetParentWindow()->MoveWindowTo(FVector2D((MainWindowSize.X - DesiredWidth) - 17, MainWindowSize.Y - DesiredHeight) / 2);
-	//	}
-	//}
+	FGlobalTabmanager::Get()->TryInvokeTab(ImporterTabName);
+	
+	// Set desired window size (if the desired window size is less than main window size)
+	// Rationale: the main window is mostly maximized - so the size is equal to screen size
+	TArray<TSharedRef<SWindow>> Windows = FSlateApplication::Get().GetTopLevelWindows();
+	if (Windows.Num() > 0)
+	{
+		FVector2D MainWindowSize = Windows[0]->GetSizeInScreen();
+		float DesiredWidth = 1650;
+		float DesiredHeight = 900;
+	
+		if (DesiredWidth < MainWindowSize.X && DesiredHeight < MainWindowSize.Y && ImporterDockTab->GetParentWindow().IsValid())
+		{
+			// If Bridge is docked as a tab, the parent window will be the main window
+			if (ImporterDockTab->GetParentWindow() == Windows[0])
+			{
+				return;
+			}
+	
+			ImporterDockTab->GetParentWindow()->Resize(FVector2D(DesiredWidth, DesiredHeight));
+			ImporterDockTab->GetParentWindow()->MoveWindowTo(FVector2D((MainWindowSize.X - DesiredWidth) - 17, MainWindowSize.Y - DesiredHeight) / 2);
+		}
+	}
 }
+
+TSharedRef<SDockTab> FFigma2UMGManager::CreateTab(const FSpawnTabArgs& Args)
+{
+	SAssignNew(ImporterDockTab, SDockTab)
+		.OnTabClosed_Lambda([this](TSharedRef<class SDockTab> InParentTab)
+			{
+				this->ImporterDockTab = nullptr;
+			})
+		.TabRole(ETabRole::NomadTab)
+				[
+					SNew(SImporterWidget)
+				];
+
+	return ImporterDockTab.ToSharedRef();
+}
+
+#undef LOCTEXT_NAMESPACE
