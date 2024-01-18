@@ -14,6 +14,10 @@ SImporterWidget::SImporterWidget()
 	FileURLName = LOCTEXT("FileURLName", "File URL");
 	PagesName = LOCTEXT("PagesName", "Pages (-1 for all)");
 
+	ImportButtonName = LOCTEXT("ImportButtonName", "Import");
+	ImportButtonTooltip  = LOCTEXT("ImportButtonTooltip", "This will import the file from Figma according to the value above.");
+
+
 	//TODO: Load some config file to get the defaulf values of AccessTokenValue, ContentRootFolderValue and FileURLValue
 }
 
@@ -21,14 +25,11 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 {
 
 	TSharedRef<SGridPanel> Content = SNew(SGridPanel).FillColumn(1, 1.0f);
-
-
 	TSharedRef<SBorder> MainContent = SNew(SBorder)
 		.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
 		.VAlign(VAlign_Fill)
 		.HAlign(HAlign_Fill)
-		.BorderBackgroundColor(FLinearColor::Green)
-		.Padding(0.f)
+		.Padding(20.f, 5.f, 10.f, 5.f)
 		[
 			Content
 		];
@@ -39,6 +40,16 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 	Add(Content, ContentRootFolderName, ContentRootFolderValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnContentRootFolderChanged));
 	Add(Content, FileURLName, FileURLValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnFileURLChanged));
 	Add(Content, PagesName, PagesValue, PagesValueTextPtr, FOnFloatValueChanged::CreateRaw(this, &SImporterWidget::OnPagesChanged));
+	Content->AddSlot(0, RowCount)
+		.ColumnSpan(2)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Center)
+		[
+			SNew(SButton)
+				.Text(ImportButtonName)
+				.ToolTipText(ImportButtonTooltip)
+				.OnClicked(this, &SImporterWidget::DoImport)
+		];
 }
 
 void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, const FText& Value, const FOnTextChanged& OnValueChanged)
@@ -62,7 +73,7 @@ void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, con
 				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
 				.HAlign(HAlign_Fill)
 				.VAlign(VAlign_Fill)
-				.Padding(8.f)
+				.Padding(8.f, 3.0f)
 				[
 					SNew(SEditableTextBox)
 						.Text(Value)
@@ -131,6 +142,12 @@ void SImporterWidget::OnPagesChanged(float InValue)
 	{
 		PagesValueTextPtr->SetText(FText::AsNumber(InValue));
 	}
+}
+
+
+FReply SImporterWidget::DoImport()
+{
+	return FReply::Handled();
 }
 
 #undef LOCTEXT_NAMESPACE

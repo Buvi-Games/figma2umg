@@ -22,6 +22,8 @@ private:
 	void Add(TSharedRef<SGridPanel> Content, const FText& Name, const FText& Value, const FOnTextChanged& OnValueChanged);
 	void Add(TSharedRef<SGridPanel> Content, const FText& Name, const int& Value, TSharedPtr<STextBlock>& ValueTextPtr, const FOnFloatValueChanged& OnValueChanged);
 
+	FReply DoImport();
+
 	void OnAccessTokenChanged(const FText& InValue) { AccessTokenValue = InValue; }
 	FText AccessTokenName;
 	FText AccessTokenValue;
@@ -38,6 +40,9 @@ private:
 	FText PagesName;
 	int PagesValue = -1;
 	TSharedPtr<STextBlock> PagesValueTextPtr;
+
+	FText ImportButtonName;
+	FText ImportButtonTooltip;
 
 	int RowCount = 0;
 };
