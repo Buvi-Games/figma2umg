@@ -3,27 +3,51 @@
 
 #include "UI/SImporterWidget.h"
 
+#include "Figma2UMGModule.h"
+#include "Figma2UMGSettings.h"
+#include "REST/RequestWrapper.h"
 #include "Widgets/Input/SSlider.h"
 
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 
 SImporterWidget::SImporterWidget()
 {
+	//OnVaRestDelegate.BindUFunction(this, FName("OnVaRestCB"));
+
 	AccessTokenName = LOCTEXT("AccessTokenName", "Access Token");
 	ContentRootFolderName = LOCTEXT("ContentRootFolderName", "Content Root Folder");
-	FileURLName = LOCTEXT("FileURLName", "File URL");
+	FileKeyName = LOCTEXT("FileKeyName", "File Key");
 	PagesName = LOCTEXT("PagesName", "Pages (-1 for all)");
 
 	ImportButtonName = LOCTEXT("ImportButtonName", "Import");
 	ImportButtonTooltip  = LOCTEXT("ImportButtonTooltip", "This will import the file from Figma according to the value above.");
 
 
-	//TODO: Load some config file to get the defaulf values of AccessTokenValue, ContentRootFolderValue and FileURLValue
+	FFigma2UMGModule& Figma2UMGModule = FModuleManager::LoadModuleChecked<FFigma2UMGModule>("Figma2UMG");
+	UFigma2UMGSettings* Settings = Figma2UMGModule.GetSettings();
+	if (Settings)
+	{
+		AccessTokenValue = Settings->AccessToken;
+		FileKeyValue = Settings->FileKey;// "";
+	}
+
+	//TODO: Load some config file to get the defaulf values of AccessTokenValue, ContentRootFolderValue and FileKeyValue
+#if UE_BUILD_DEVELOPMENT || UE_BUILD_DEBUG
+#endif
+
+
+}
+
+SImporterWidget::~SImporterWidget()
+{
+	if (OnVaRestWrapper)
+	{
+		OnVaRestWrapper->Reset();
+	}
 }
 
 void SImporterWidget::Construct(const FArguments& InArgs)
 {
-
 	TSharedRef<SGridPanel> Content = SNew(SGridPanel).FillColumn(1, 1.0f);
 	TSharedRef<SBorder> MainContent = SNew(SBorder)
 		.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
@@ -37,22 +61,22 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 	ChildSlot[MainContent];
 
 	Add(Content, AccessTokenName, AccessTokenValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnAccessTokenChanged));
-	Add(Content, ContentRootFolderName, ContentRootFolderValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnContentRootFolderChanged));
-	Add(Content, FileURLName, FileURLValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnFileURLChanged));
+	Add(Content, FileKeyName, FileKeyValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnFileURLChanged));
 	Add(Content, PagesName, PagesValue, PagesValueTextPtr, FOnFloatValueChanged::CreateRaw(this, &SImporterWidget::OnPagesChanged));
+	Add(Content, ContentRootFolderName, ContentRootFolderValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnContentRootFolderChanged));
 	Content->AddSlot(0, RowCount)
 		.ColumnSpan(2)
 		.VAlign(VAlign_Center)
 		.HAlign(HAlign_Center)
 		[
-			SNew(SButton)
+			SAssignNew(ImportButton, SButton)
 				.Text(ImportButtonName)
 				.ToolTipText(ImportButtonTooltip)
 				.OnClicked(this, &SImporterWidget::DoImport)
 		];
 }
 
-void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, const FText& Value, const FOnTextChanged& OnValueChanged)
+void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, const FString& Value, const FOnTextChanged& OnValueChanged)
 {
 	Content->AddSlot(0, RowCount)
 		[
@@ -76,7 +100,7 @@ void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, con
 				.Padding(8.f, 3.0f)
 				[
 					SNew(SEditableTextBox)
-						.Text(Value)
+						.Text(FText::FromString(Value))
 						.Padding(FVector4f(10.0, 0.0, 0.0, 0.0))
 						.OnTextChanged(OnValueChanged)
 				]
@@ -147,7 +171,29 @@ void SImporterWidget::OnPagesChanged(float InValue)
 
 FReply SImporterWidget::DoImport()
 {
+	if (!OnVaRestWrapper)
+	{
+		OnVaRestWrapper = NewObject<URequestWrapper>();
+		OnVaRestWrapper->SetCallback(FOnVaRestCB::CreateRaw(this, &SImporterWidget::OnRequestResult));
+	}
+
+	if(OnVaRestWrapper->Request(AccessTokenValue, FileKeyValue, ContentRootFolderValue, PagesValue))
+	{
+		ImportButton->SetEnabled(false);
+	}
+	else
+	{
+		//TODO: Handle error
+	}
+
 	return FReply::Handled();
+}
+
+void SImporterWidget::OnRequestResult(UVaRestRequestJSON* VaRestJson)
+{
+	UVaRestJsonObject* responseJson = VaRestJson->GetResponseObject();
+	FString result = VaRestJson->GetResponseContentAsString();
+	ImportButton->SetEnabled(true);
 }
 
 #undef LOCTEXT_NAMESPACE
