@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
+class UFigma2UMGSettings;
 class FFigma2UMGManager;
 
 class FFigma2UMGModule : public IModuleInterface
@@ -15,6 +16,9 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+	UFigma2UMGSettings* GetSettings() const;
 private:
 	static TSharedPtr<FFigma2UMGManager> Instance;
+
+	UFigma2UMGSettings* ModuleSettings;
 };
