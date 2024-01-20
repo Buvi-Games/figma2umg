@@ -1,0 +1,9 @@
+#pragma once
+
+#define FIGMA_HOST "api.figma.com"
+
+#define FIGMA_BASE_URL "https://api.figma.com"
+
+#define FIGMA_ENDPOINT_FILES "/v1/files/"
+
+#define FIGMA_ACCESSTOLKENS_HEADER FString("X-Figma-Token")
