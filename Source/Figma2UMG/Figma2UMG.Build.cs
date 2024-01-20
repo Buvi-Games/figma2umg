@@ -44,6 +44,9 @@ public class Figma2UMG : ModuleRules
 				"UnrealEd",
                 "ToolMenus",
                 "ContentBrowserData",
+                "VaRest",
+                "Json",
+                "HTTP",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
@@ -55,5 +58,21 @@ public class Figma2UMG : ModuleRules
 				// ... add any modules that your module loads dynamically here ...
 			}
 			);
-	}
+
+        //This needs to match the HTTP module
+        PrivateDefinitions.Add("WITH_CURL= " + (bPlatformSupportsCurl ? "1" : "0"));
+    }
+    private bool bPlatformSupportsCurl { get { return bPlatformSupportsLibCurl || bPlatformSupportsXCurl; } }
+
+    protected virtual bool bPlatformSupportsLibCurl
+    {
+        get
+        {
+            return (Target.Platform.IsInGroup(UnrealPlatformGroup.Windows) && !Target.WindowsPlatform.bUseXCurl) ||
+                   Target.IsInPlatformGroup(UnrealPlatformGroup.Unix) ||
+                   Target.IsInPlatformGroup(UnrealPlatformGroup.Android);
+        }
+    }
+
+    protected virtual bool bPlatformSupportsXCurl { get { return false; } }
 }
