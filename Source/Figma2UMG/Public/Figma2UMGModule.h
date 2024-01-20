@@ -20,5 +20,5 @@ public:
 private:
 	static TSharedPtr<FFigma2UMGManager> Instance;
 
-	UFigma2UMGSettings* ModuleSettings;
+	UFigma2UMGSettings* ModuleSettings = nullptr;
 };

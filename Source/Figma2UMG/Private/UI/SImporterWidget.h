@@ -27,6 +27,7 @@ private:
 	void OnAccessTokenChanged(const FText& InValue) { AccessTokenValue = InValue; }
 	FText AccessTokenName;
 	FText AccessTokenValue;
+	void OnRequestResult(UVaRestRequestJSON* VaRestJson);
 
 	void OnContentRootFolderChanged(const FText& InValue) { ContentRootFolderValue = InValue; }
 	FText ContentRootFolderName;

@@ -12,4 +12,7 @@ public:
 
 	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
 	FString AccessToken;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
+	FString FileKey;
 };
