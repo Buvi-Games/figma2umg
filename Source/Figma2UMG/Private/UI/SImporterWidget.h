@@ -53,5 +53,9 @@ private:
 	int RowCount = 0;
 
 
+	bool HasError = false;
+	FString ErrorMsg;
+
+
 	URequestWrapper* OnVaRestWrapper;
 };

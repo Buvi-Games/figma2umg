@@ -46,6 +46,7 @@ public class Figma2UMG : ModuleRules
                 "ContentBrowserData",
                 "VaRest",
                 "Json",
+                "JsonUtilities",
                 "HTTP",
 				// ... add private dependencies that you statically link with here ...	
 			}

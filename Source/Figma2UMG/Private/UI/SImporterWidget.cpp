@@ -5,6 +5,8 @@
 
 #include "Figma2UMGModule.h"
 #include "Figma2UMGSettings.h"
+#include "JsonObjectConverter.h"
+#include "REST/FigmaFile.h"
 #include "REST/RequestWrapper.h"
 #include "Widgets/Input/SSlider.h"
 
@@ -189,11 +191,51 @@ FReply SImporterWidget::DoImport()
 	return FReply::Handled();
 }
 
-void SImporterWidget::OnRequestResult(UVaRestRequestJSON* VaRestJson)
+void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 {
-	UVaRestJsonObject* responseJson = VaRestJson->GetResponseObject();
-	FString result = VaRestJson->GetResponseContentAsString();
+	//UVaRestJsonObject* responseJson = VaRestJson->GetResponseObject();
+	//FString result = VaRestJson->GetResponseContentAsString();
 	ImportButton->SetEnabled(true);
+
+
+	if (Request)
+	{
+		const EVaRestRequestStatus status = Request->GetStatus();
+		switch (status)
+		{
+		case EVaRestRequestStatus::NotStarted:
+			HasError = false;
+			ErrorMsg = TEXT("EVaRestRequestStatus::NotStarted");
+			break;
+		case EVaRestRequestStatus::Processing:
+			HasError = false;
+			ErrorMsg = TEXT("EVaRestRequestStatus::Processing");
+			break;
+		case EVaRestRequestStatus::Failed:
+			HasError = true;
+			ErrorMsg = TEXT("EVaRestRequestStatus::Failed");
+			break;
+		case EVaRestRequestStatus::Failed_ConnectionError:
+			HasError = true;
+			ErrorMsg = TEXT("EVaRestRequestStatus::Failed_ConnectionError");
+			break;
+		case EVaRestRequestStatus::Succeeded:
+			UVaRestJsonObject* responseJson = Request->GetResponseObject();
+			if (!responseJson)
+			{
+				HasError = true;
+				ErrorMsg = TEXT("VaRestJson has no response object");
+				return;
+			}
+
+			const TSharedRef<FJsonObject> jsonObj = responseJson->GetRootObject();
+			FFigmaFile File;
+			if (FJsonObjectConverter::JsonObjectToUStruct(jsonObj, &File))
+			{
+				File.PostSerialize(jsonObj);
+			}
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE
