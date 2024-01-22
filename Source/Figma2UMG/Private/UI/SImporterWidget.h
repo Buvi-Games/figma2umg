@@ -56,6 +56,5 @@ private:
 	bool HasError = false;
 	FString ErrorMsg;
 
-
-	URequestWrapper* OnVaRestWrapper;
+	URequestWrapper* OnVaRestWrapper = nullptr;
 };

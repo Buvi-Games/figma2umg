@@ -11,7 +11,6 @@ URequestWrapper::URequestWrapper(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	OnVaRestDelegate.BindUFunction(this, FName("OnVaRestCB"));
-	AddToRoot();
 }
 
 void URequestWrapper::SetCallback(const FOnVaRestCB& callback)
@@ -32,6 +31,8 @@ bool URequestWrapper::Request(FString AccessToken, FString FileKey, FString Cont
 	UVaRestSubsystem* VARestSubsystem = GEngine->GetEngineSubsystem<UVaRestSubsystem>();
 	if (!VARestSubsystem)
 		return false;
+
+	AddToRoot();
 
 	TArray<FStringFormatArg> args;
 	args.Add(FIGMA_BASE_URL);
@@ -105,6 +106,7 @@ void URequestWrapper::OnRequestComplete(UVaRestRequestJSON* Request)
 
 	Response.Callback.ExecuteIfBound(Request);
 	Response.Request = nullptr;
+	RemoveFromRoot();
 }
 
 
@@ -115,6 +117,7 @@ void URequestWrapper::OnRequestFail(UVaRestRequestJSON* Request)
 
 	Response.Callback.ExecuteIfBound(Request);
 	Response.Request = nullptr;
+	RemoveFromRoot();
 }
 
 #undef LOCTEXT_NAMESPACE

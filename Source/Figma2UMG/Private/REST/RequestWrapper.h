@@ -18,7 +18,6 @@ public:
 
 	virtual ~URequestWrapper()
 	{
-		RemoveFromRoot();
 	}
 
 	void SetCallback(const FOnVaRestCB& callback);

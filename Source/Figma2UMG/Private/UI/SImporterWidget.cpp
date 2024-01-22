@@ -196,6 +196,7 @@ void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 	//UVaRestJsonObject* responseJson = VaRestJson->GetResponseObject();
 	//FString result = VaRestJson->GetResponseContentAsString();
 	ImportButton->SetEnabled(true);
+	OnVaRestWrapper = nullptr;
 
 
 	if (Request)
@@ -228,11 +229,11 @@ void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 				return;
 			}
 
-			const TSharedRef<FJsonObject> jsonObj = responseJson->GetRootObject();
+			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
 			FFigmaFile File;
-			if (FJsonObjectConverter::JsonObjectToUStruct(jsonObj, &File))
+			if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &File))
 			{
-				File.PostSerialize(jsonObj);
+				File.PostSerialize(JsonObj);
 			}
 		}
 	}

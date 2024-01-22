@@ -17,6 +17,7 @@ public:
 	virtual void ShutdownModule() override;
 
 	UFigma2UMGSettings* GetSettings() const;
+
 private:
 	static TSharedPtr<FFigma2UMGManager> Instance;
 
