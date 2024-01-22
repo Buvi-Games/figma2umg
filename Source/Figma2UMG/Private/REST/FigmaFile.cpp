@@ -5,27 +5,8 @@
 
 void FFigmaFile::PostSerialize(const TSharedRef<FJsonObject> fileJsonObject)
 {
-	if (fileJsonObject->HasTypedField<EJson::Object>("components"))
+	if(Document)
 	{
-		const TSharedPtr<FJsonObject> Components = fileJsonObject->GetObjectField("components");		
-		for (const TPair<FString, TSharedPtr<FJsonValue>>& Component : Components->Values)
-		{
-		}
-	}
-
-	if (fileJsonObject->HasTypedField<EJson::Object>("componentsSets"))
-	{
-		const TSharedPtr<FJsonObject> ComponentsSets = fileJsonObject->GetObjectField("componentsSets");
-		for (const TPair<FString, TSharedPtr<FJsonValue>>& ComponentsSet : ComponentsSets->Values)
-		{
-		}
-	}
-
-	if (fileJsonObject->HasTypedField<EJson::Object>("styles"))
-	{
-		const TSharedPtr<FJsonObject> Styles = fileJsonObject->GetObjectField("styles");
-		for (const TPair<FString, TSharedPtr<FJsonValue>>& Style : Styles->Values)
-		{
-		}
+		Document->PostSerialize(fileJsonObject->GetObjectField("Document").ToSharedRef());
 	}
 }

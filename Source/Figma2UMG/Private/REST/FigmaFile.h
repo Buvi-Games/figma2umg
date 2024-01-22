@@ -3,6 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Nodes/FigmaComponent.h"
+#include "Nodes/FigmaComponentSet.h"
+#include "Nodes/FigmaDocument.h"
+#include "Properties/FigmaComponentSetRef.h"
 
 #include "FigmaFile.generated.h"
 
@@ -12,9 +16,9 @@ struct FFigmaFile
 public:
 	GENERATED_BODY()
 
-	void PostSerialize(const TSharedRef<FJsonObject> jsonObj);
+	void PostSerialize(const TSharedRef<FJsonObject> JsonObj);
 
-private:
+protected:
 
 	UPROPERTY()
 	int SchemaVersion = 0;
@@ -40,15 +44,15 @@ private:
 	UPROPERTY()
 	FString LinkAccess;
 
-	// UPROPERTY()
-	//"document": {}, //TODO: Not sure what is inside
+	UPROPERTY()
+	UFigmaDocument* Document;
 
-	// UPROPERTY()
-	//"components": {}, //TODO: Not sure what is inside
+	UPROPERTY()
+	TMap<FString, FFigmaComponentRef> Components;
 
-	// UPROPERTY()
-	//"componentSets": {}, //TODO: Not sure what is inside
+	UPROPERTY()
+	TMap<FString, FFigmaComponentSetRef> ComponentSets;
 
-	// UPROPERTY()
-	//"styles": {}, //TODO: Not sure what is inside
+	UPROPERTY()
+	TMap<FString, FFigmaStyleRef> Styles;//Not sure if this is correct, probably not
 };
