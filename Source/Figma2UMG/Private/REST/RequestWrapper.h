@@ -22,7 +22,7 @@ public:
 
 	void SetCallback(const FOnVaRestCB& callback);
 
-	bool Request(FString AccessToken, FString FileKey, FString ContentRootFolder, int Pages = -1);
+	bool Request(FString AccessToken, FString FileKey, int Pages = -1);
 	void Reset();
 
 	FVaRestCallDelegate OnVaRestDelegate;

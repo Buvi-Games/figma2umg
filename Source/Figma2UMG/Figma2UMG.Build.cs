@@ -48,6 +48,9 @@ public class Figma2UMG : ModuleRules
                 "Json",
                 "JsonUtilities",
                 "HTTP",
+                "AssetTools",
+                "AssetRegistry", 
+                "UMGEditor",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

@@ -3,20 +3,23 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Nodes/FigmaComponent.h"
-#include "Nodes/FigmaComponentSet.h"
-#include "Nodes/FigmaDocument.h"
-#include "Properties/FigmaComponentSetRef.h"
+#include "UI/SImporterWidget.h"
 
 #include "FigmaFile.generated.h"
 
-USTRUCT()
-struct FFigmaFile
+class UFigmaDocument;
+struct FFigmaComponentRef;
+struct FFigmaComponentSetRef;
+struct FFigmaStyleRef;
+
+UCLASS()
+class UFigmaFile : public UObject
 {
 public:
 	GENERATED_BODY()
 
 	void PostSerialize(const TSharedRef<FJsonObject> JsonObj);
+	void CreateOrUpdateAsset(const FString& ContentRootFolder);
 
 protected:
 

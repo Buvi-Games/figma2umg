@@ -26,8 +26,10 @@ private:
 	void Add(TSharedRef<SGridPanel> Content, const FText& Name, const int& Value, TSharedPtr<STextBlock>& ValueTextPtr, const FOnFloatValueChanged& OnValueChanged);
 
 	FReply DoImport();
-
 	void OnRequestResult(UVaRestRequestJSON* VaRestJson);
+
+	void SetMessage(const FString& Text, bool IsError = false);
+	void ResetMessage();
 
 	void OnAccessTokenChanged(const FText& InValue) { AccessTokenValue = InValue.ToString(); }
 	FText AccessTokenName;
@@ -52,9 +54,7 @@ private:
 
 	int RowCount = 0;
 
-
-	bool HasError = false;
-	FString ErrorMsg;
+	TSharedPtr<STextBlock> Message;
 
 	URequestWrapper* OnVaRestWrapper = nullptr;
 };

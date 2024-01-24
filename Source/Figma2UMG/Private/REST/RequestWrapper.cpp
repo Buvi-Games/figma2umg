@@ -23,7 +23,7 @@ void URequestWrapper::Reset()
 	RequesterCallback.Unbind();
 }
 
-bool URequestWrapper::Request(FString AccessToken, FString FileKey, FString ContentRootFolder, int Pages)
+bool URequestWrapper::Request(FString AccessToken, FString FileKey, int Pages)
 {
 	if (!RequesterCallback.IsBound())
 		return false;

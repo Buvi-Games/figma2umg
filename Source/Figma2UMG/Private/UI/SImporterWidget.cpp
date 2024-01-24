@@ -33,11 +33,7 @@ SImporterWidget::SImporterWidget()
 		FileKeyValue = Settings->FileKey;// "";
 	}
 
-	//TODO: Load some config file to get the defaulf values of AccessTokenValue, ContentRootFolderValue and FileKeyValue
-#if UE_BUILD_DEVELOPMENT || UE_BUILD_DEBUG
-#endif
-
-
+	ContentRootFolderValue = "/Game/";
 }
 
 SImporterWidget::~SImporterWidget()
@@ -66,6 +62,24 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 	Add(Content, FileKeyName, FileKeyValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnFileURLChanged));
 	Add(Content, PagesName, PagesValue, PagesValueTextPtr, FOnFloatValueChanged::CreateRaw(this, &SImporterWidget::OnPagesChanged));
 	Add(Content, ContentRootFolderName, ContentRootFolderValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnContentRootFolderChanged));
+
+	Content->AddSlot(0, RowCount)
+		.ColumnSpan(2)
+		.VAlign(VAlign_Center)
+		.HAlign(HAlign_Center)
+		[
+			SNew(SBorder)
+				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
+				.HAlign(HAlign_Left)
+				.VAlign(VAlign_Center)
+				.Padding(8.f)
+				[
+					SAssignNew(Message, STextBlock)
+						.Visibility(EVisibility::Collapsed)
+				]
+		];
+	RowCount++;
+
 	Content->AddSlot(0, RowCount)
 		.ColumnSpan(2)
 		.VAlign(VAlign_Center)
@@ -179,13 +193,15 @@ FReply SImporterWidget::DoImport()
 		OnVaRestWrapper->SetCallback(FOnVaRestCB::CreateRaw(this, &SImporterWidget::OnRequestResult));
 	}
 
-	if(OnVaRestWrapper->Request(AccessTokenValue, FileKeyValue, ContentRootFolderValue, PagesValue))
+	SetMessage(TEXT("Connecting with Figma"));
+	if (OnVaRestWrapper->Request(AccessTokenValue, FileKeyValue, PagesValue))
 	{
 		ImportButton->SetEnabled(false);
 	}
 	else
 	{
 		//TODO: Handle error
+		SetMessage(TEXT("UNKNOWN ERROR"), true);
 	}
 
 	return FReply::Handled();
@@ -193,11 +209,7 @@ FReply SImporterWidget::DoImport()
 
 void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 {
-	//UVaRestJsonObject* responseJson = VaRestJson->GetResponseObject();
-	//FString result = VaRestJson->GetResponseContentAsString();
-	ImportButton->SetEnabled(true);
 	OnVaRestWrapper = nullptr;
-
 
 	if (Request)
 	{
@@ -205,38 +217,72 @@ void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 		switch (status)
 		{
 		case EVaRestRequestStatus::NotStarted:
-			HasError = false;
-			ErrorMsg = TEXT("EVaRestRequestStatus::NotStarted");
+			SetMessage(TEXT("EVaRestRequestStatus::NotStarted"));
 			break;
 		case EVaRestRequestStatus::Processing:
-			HasError = false;
-			ErrorMsg = TEXT("EVaRestRequestStatus::Processing");
+			SetMessage(TEXT("EVaRestRequestStatus::Processing"));
 			break;
 		case EVaRestRequestStatus::Failed:
-			HasError = true;
-			ErrorMsg = TEXT("EVaRestRequestStatus::Failed");
+			SetMessage(TEXT("EVaRestRequestStatus::Failed"), true);
 			break;
 		case EVaRestRequestStatus::Failed_ConnectionError:
-			HasError = true;
-			ErrorMsg = TEXT("EVaRestRequestStatus::Failed_ConnectionError");
+			SetMessage(TEXT("EVaRestRequestStatus::Failed_ConnectionError"), true);
 			break;
 		case EVaRestRequestStatus::Succeeded:
+			SetMessage(TEXT("EVaRestRequestStatus::Succeeded - Parsing"));
 			UVaRestJsonObject* responseJson = Request->GetResponseObject();
 			if (!responseJson)
 			{
-				HasError = true;
-				ErrorMsg = TEXT("VaRestJson has no response object");
+				SetMessage(TEXT("VaRestJson has no response object"), true);
+
+				ImportButton->SetEnabled(true);
+
 				return;
 			}
 
 			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-			FFigmaFile File;
-			if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &File))
+			UFigmaFile* File = NewObject<UFigmaFile>();
+			File->AddToRoot();
+
+			const int64 CheckFlags = 0;
+			const int64 SkipFlags = 0;
+			const bool StrictMode = false;
+			FText OutFailReason;
+			if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 			{
-				File.PostSerialize(JsonObj);
+				File->PostSerialize(JsonObj);
+				File->CreateOrUpdateAsset(ContentRootFolderValue);
+				ResetMessage();
 			}
+			else
+			{
+				SetMessage(OutFailReason.ToString(), true);
+			}
+			File->RemoveFromRoot();
 		}
 	}
+
+	ImportButton->SetEnabled(true);
+}
+
+void SImporterWidget::SetMessage(const FString& Text, bool IsError)
+{
+	Message->SetVisibility(EVisibility::Visible);
+	Message->SetText(FText::FromString(Text));
+	if(IsError)
+	{
+		Message->SetColorAndOpacity(FLinearColor::Red);
+	}
+	else
+	{
+		Message->SetColorAndOpacity(FLinearColor::White);
+	}
+}
+
+void SImporterWidget::ResetMessage()
+{
+	Message->SetVisibility(EVisibility::Collapsed);
+	Message->SetColorAndOpacity(FLinearColor::White);
 }
 
 #undef LOCTEXT_NAMESPACE

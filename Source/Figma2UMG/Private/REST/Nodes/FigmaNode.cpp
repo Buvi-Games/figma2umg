@@ -57,8 +57,6 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 	
 	static const FString EnumPath = "/Script/Figma2UMG.ENodeTypes";
 	static UEnum* EnumDef = FindObject<UEnum>(nullptr, *EnumPath, true);
-	//static const FString EnumName("ENodeTypes");
-	//static UEnum* EnumDef = FindObject<UEnum>(ANY_PACKAGE, *enumName, true);
 	if (!EnumDef)
 		return nullptr;
 

@@ -3,10 +3,45 @@
 
 #include "REST/FigmaFile.h"
 
-void FFigmaFile::PostSerialize(const TSharedRef<FJsonObject> fileJsonObject)
+#include "AssetToolsModule.h"
+#include "FileHelpers.h"
+#include "WidgetBlueprintFactory.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "Editor/UMGEditor/Public/WidgetBlueprint.h"
+#include "Nodes/FigmaDocument.h"
+
+void UFigmaFile::PostSerialize(const TSharedRef<FJsonObject> fileJsonObject)
 {
 	if(Document)
 	{
 		Document->PostSerialize(fileJsonObject->GetObjectField("Document").ToSharedRef());
 	}
+}
+
+void UFigmaFile::CreateOrUpdateAsset(const FString& PackagePath)
+{
+	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + Name);
+	const UWidgetBlueprint* Asset = nullptr;
+
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *Name, FString()));
+	Asset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset());
+
+	if (Asset == nullptr)
+	{
+		static const FName NAME_AssetTools = "AssetTools";
+		IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
+		UClass* AssetClass = UWidgetBlueprint::StaticClass();
+		UWidgetBlueprintFactory* Factory = NewObject<UWidgetBlueprintFactory>(UWidgetBlueprintFactory::StaticClass());
+		Asset = Cast<UWidgetBlueprint>(AssetTools->CreateAsset(Name, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
+
+		if (Asset == nullptr)
+		{
+			return;
+		}
+	}
+	TArray<UPackage*> DirtyDatabasePackages;
+	DirtyDatabasePackages.AddUnique(Asset->GetPackage());
+
+	UEditorLoadingAndSavingUtils::SavePackages(DirtyDatabasePackages, true);
 }
