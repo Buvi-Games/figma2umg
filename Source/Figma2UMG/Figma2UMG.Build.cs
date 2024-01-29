@@ -36,7 +36,8 @@ public class Figma2UMG : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
-				"Slate",
+                "UnrealEd",
+                "Slate",
 				"SlateCore",
 				"InputCore",
 				"EditorFramework",
@@ -51,6 +52,7 @@ public class Figma2UMG : ModuleRules
                 "AssetTools",
                 "AssetRegistry", 
                 "UMGEditor",
+                "UMG"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

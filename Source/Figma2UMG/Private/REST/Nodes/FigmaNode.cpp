@@ -15,6 +15,7 @@
 #include "FigmaSlice.h"
 #include "FigmaSticky.h"
 #include "JsonObjectConverter.h"
+#include "Blueprint/WidgetTree.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
 #include "Vectors/FigmaBooleanOp.h"
@@ -26,6 +27,27 @@
 #include "Vectors/FigmaText.h"
 #include "Vectors/FigmaVectorNode.h"
 #include "Vectors/FigmaWashiTape.h"
+
+FString UFigmaNode::GetUniqueName() const
+{
+	return Name + "_" + Id;
+}
+
+ESlateVisibility UFigmaNode::GetVisibility() const
+{
+	return Visible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;
+}
+
+FVector2D UFigmaNode::GetPosition() const
+{
+	FVector2D Pos = GetAbsolutPosition();
+	if (ParentNode)
+	{
+		const FVector2D ParentPos = ParentNode->GetAbsolutPosition();
+		Pos = (Pos - ParentPos);
+	}
+	return Pos;
+}
 
 void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName)
 {
@@ -45,6 +67,19 @@ void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJs
 				}
 			}
 		}
+	}
+}
+
+void UFigmaNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	ParentNode = InParent;
+}
+
+void UFigmaNode::PostInsert(UWidget* Widget) const
+{
+	if (Widget)
+	{
+		Widget->SetVisibility(GetVisibility());
 	}
 }
 
@@ -134,10 +169,39 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 		break;
 	}
 
-	if (FigmaNode != nullptr && FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), FigmaNode->StaticClass(), FigmaNode))
+	if (FigmaNode != nullptr && FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), FigmaNode->GetClass(), FigmaNode))
 	{
-		FigmaNode->PostSerialize(JsonObj.ToSharedRef());
+		FigmaNode->PostSerialize(this, JsonObj.ToSharedRef());
 	}
 	
 	return FigmaNode;
+}
+
+void UFigmaNode::AddOrPathChildren(UPanelWidget* ParentWidget, TArray<UFigmaNode*> Children) const
+{
+	//Todo: Use GetUniqueName() to match the elements. This would fix the reorder patching.
+
+	for (int Index = 0; Index < Children.Num(); Index++)
+	{
+		UFigmaNode* Element = Children[Index];
+
+		TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
+		TObjectPtr<UWidget> NewWidget = Element->AddOrPathToWidget(Cast<UWidgetTree>(ParentWidget->GetOuter()), OldWidget);
+		if (NewWidget && NewWidget != OldWidget)
+		{
+			ParentWidget->SetFlags(RF_Transactional);
+			ParentWidget->Modify();
+
+			if (Index < ParentWidget->GetChildrenCount())
+			{
+				ParentWidget->ReplaceChildAt(Index, NewWidget);
+			}
+			else
+			{
+				ParentWidget->AddChild(NewWidget);
+			}
+		}
+
+		Element->PostInsert(NewWidget);
+	}
 }

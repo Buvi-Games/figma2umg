@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/Overlay.h"
 #include "REST/Nodes/FigmaNode.h"
 #include "REST/Properties/FigmaPaint.h"
 #include "REST/Properties/FigmaRectangle.h"
@@ -15,9 +16,14 @@ class UFigmaSection : public  UFigmaNode
 public:
 	GENERATED_BODY()
 
-	virtual void PostSerialize(const TSharedRef<FJsonObject> JsonObj) override;
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 
+	virtual TObjectPtr<UWidget> AddOrPathToWidget(TObjectPtr<UWidgetTree> Outer, TObjectPtr<UWidget> WidgetToPatch) const override;
+	virtual void PostInsert(UWidget* Widget) const;
+
+	virtual FVector2D GetAbsolutePosition() const override;
 protected:
+
 	UPROPERTY()
 	bool SectionContentsHidden = false;
 

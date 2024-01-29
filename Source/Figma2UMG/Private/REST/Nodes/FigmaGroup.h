@@ -24,7 +24,7 @@ class UFigmaGroup : public UFigmaNode
 public:
 	GENERATED_BODY()
 
-	virtual void PostSerialize(const TSharedRef<FJsonObject> JsonObj) override;
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 
 protected:
 	UPROPERTY()
@@ -64,7 +64,7 @@ protected:
 	TArray<FFigmaExportSetting> ExportSettings;
 
 	UPROPERTY()
-	FFigmaBlendMode BlendMode;
+	EFigmaBlendMode BlendMode;
 
 	UPROPERTY()
 	bool PreserveRatio = false;

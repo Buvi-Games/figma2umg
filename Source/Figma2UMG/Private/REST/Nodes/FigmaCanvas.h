@@ -17,8 +17,12 @@ class UFigmaCanvas : public UFigmaNode
 public:
 	GENERATED_BODY()
 
-	virtual void PostSerialize(const TSharedRef<FJsonObject> JsonObj) override;
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 
+	virtual TObjectPtr<UWidget> AddOrPathToWidget(TObjectPtr<UWidgetTree> Outer, TObjectPtr<UWidget> WidgetToPatch) const override;
+	virtual void PostInsert(UWidget* Widget) const override;
+
+	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
 protected:
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;

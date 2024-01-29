@@ -14,7 +14,7 @@ class UFigmaComponent : public  UFigmaFrame
 public:
 	GENERATED_BODY()
 
-	void PostSerialize(const TSharedRef<FJsonObject> JsonObj) override;
+	void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 
 protected:
 	UPROPERTY()

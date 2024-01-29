@@ -14,18 +14,18 @@ void UFigmaFile::PostSerialize(const TSharedRef<FJsonObject> fileJsonObject)
 {
 	if(Document)
 	{
-		Document->PostSerialize(fileJsonObject->GetObjectField("Document").ToSharedRef());
+		Document->PostSerialize(nullptr, fileJsonObject->GetObjectField("Document").ToSharedRef());
 	}
 }
 
 void UFigmaFile::CreateOrUpdateAsset(const FString& PackagePath)
 {
 	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + Name);
-	const UWidgetBlueprint* Asset = nullptr;
+	UWidgetBlueprint* Asset = nullptr;
 
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *Name, FString()));
-	Asset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset());
+	Asset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
 
 	if (Asset == nullptr)
 	{
@@ -40,8 +40,9 @@ void UFigmaFile::CreateOrUpdateAsset(const FString& PackagePath)
 			return;
 		}
 	}
-	TArray<UPackage*> DirtyDatabasePackages;
-	DirtyDatabasePackages.AddUnique(Asset->GetPackage());
 
-	UEditorLoadingAndSavingUtils::SavePackages(DirtyDatabasePackages, true);
+	if (Document)
+	{
+		Document->AddToAsset(Asset);
+	}
 }
