@@ -82,7 +82,7 @@ protected:
 	float TransitionDuration = -1.0f;
 
 	UPROPERTY()
-	FFigmaEasingType TransitionEasing;
+	EFigmaEasingType TransitionEasing;
 
 	UPROPERTY()
 	float Opacity = 1.0f;
