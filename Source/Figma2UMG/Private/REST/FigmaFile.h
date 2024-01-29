@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UI/SImporterWidget.h"
+#include "Interfaces/AssetFileHandler.h"
 
 #include "FigmaFile.generated.h"
 
@@ -13,14 +13,16 @@ struct FFigmaComponentSetRef;
 struct FFigmaStyleRef;
 
 UCLASS()
-class UFigmaFile : public UObject
+class UFigmaFile : public UObject, public IFigmaFileHandle
 {
 public:
 	GENERATED_BODY()
 
+	virtual FString GetPackagePath() const override;
+	virtual FString GetAssetName() const override;
+
 	void PostSerialize(const TSharedRef<FJsonObject> JsonObj);
 	void CreateOrUpdateAsset(const FString& ContentRootFolder);
-
 protected:
 
 	UPROPERTY()
@@ -58,4 +60,6 @@ protected:
 
 	UPROPERTY()
 	TMap<FString, FFigmaStyleRef> Styles;//Not sure if this is correct, probably not
+
+	FString PackagePath;
 };
