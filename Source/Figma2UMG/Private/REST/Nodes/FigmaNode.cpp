@@ -40,10 +40,10 @@ ESlateVisibility UFigmaNode::GetVisibility() const
 
 FVector2D UFigmaNode::GetPosition() const
 {
-	FVector2D Pos = GetAbsolutPosition();
+	FVector2D Pos = GetAbsolutePosition();
 	if (ParentNode)
 	{
-		const FVector2D ParentPos = ParentNode->GetAbsolutPosition();
+		const FVector2D ParentPos = ParentNode->GetAbsolutePosition();
 		Pos = (Pos - ParentPos);
 	}
 	return Pos;
