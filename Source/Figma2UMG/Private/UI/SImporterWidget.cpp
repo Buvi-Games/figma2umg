@@ -241,6 +241,15 @@ void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 			}
 
 			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
+			if (JsonObj->HasField("status") && JsonObj->HasField("err"))
+			{
+				SetMessage(JsonObj->GetStringField("err"), true);
+
+				ImportButton->SetEnabled(true);
+
+				return;
+			}
+
 			UFigmaFile* File = NewObject<UFigmaFile>();
 			File->AddToRoot();
 
