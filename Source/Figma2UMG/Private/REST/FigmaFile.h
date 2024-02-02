@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/AssetFileHandler.h"
+#include "UI/SImporterWidget.h"
 
 #include "FigmaFile.generated.h"
 
@@ -13,17 +14,17 @@ struct FFigmaComponentSetRef;
 struct FFigmaStyleRef;
 
 UCLASS()
-class UFigmaFile : public UObject, public IFigmaFileHandle
+class UFigmaFile : public UObject
 {
 public:
 	GENERATED_BODY()
 
-	virtual FString GetPackagePath() const override;
-	virtual FString GetAssetName() const override;
-
+	void SetRootPath(const FString& InPackagePath);
 	void PostSerialize(const TSharedRef<FJsonObject> JsonObj);
-	void CreateOrUpdateAsset(const FString& ContentRootFolder);
+
 protected:
+	void ImportComponents();
+	void Convert();
 
 	UPROPERTY()
 	int SchemaVersion = 0;

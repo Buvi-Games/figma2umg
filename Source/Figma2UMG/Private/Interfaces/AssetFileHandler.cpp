@@ -4,30 +4,46 @@
 #include "Interfaces/AssetFileHandler.h"
 
 #include "AssetToolsModule.h"
+#include "ObjectTools.h"
 #include "PackageTools.h"
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Blueprint/WidgetTree.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 
-UWidgetBlueprint* IFigmaFileHandle::GetOrCreateAsset()
+template <>
+UWidgetBlueprint* IFigmaFileHandle::GetOrCreateAsset<UWidgetBlueprint>()
 {
-	const FString PackagePath = GetPackagePath();
-	const FString AssetName = GetAssetName();
-	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
-	UWidgetBlueprint* Asset = nullptr;
-
-	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
-	Asset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
-
-	if (Asset == nullptr)
+	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(Asset);
+	if (WidgetAsset == nullptr)
 	{
-		static const FName NAME_AssetTools = "AssetTools";
-		IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
-		UClass* AssetClass = UWidgetBlueprint::StaticClass();
-		UWidgetBlueprintFactory* Factory = NewObject<UWidgetBlueprintFactory>(UWidgetBlueprintFactory::StaticClass());
-		Asset = Cast<UWidgetBlueprint>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
+		const FString PackagePath = UPackageTools::SanitizePackageName(GetPackagePath());
+		const FString AssetName = ObjectTools::SanitizeInvalidChars(GetAssetName(), INVALID_OBJECTNAME_CHARACTERS);
+		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
+
+		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
+		WidgetAsset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
+
+		if (WidgetAsset == nullptr)
+		{
+			static const FName NAME_AssetTools = "AssetTools";
+			IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
+			UClass* AssetClass = UWidgetBlueprint::StaticClass();
+			UWidgetBlueprintFactory* Factory = NewObject<UWidgetBlueprintFactory>(UWidgetBlueprintFactory::StaticClass());
+			WidgetAsset = Cast<UWidgetBlueprint>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
+		}
+
+		Asset = WidgetAsset;
+		AssetOuter = WidgetAsset->WidgetTree;
 	}
 
-	return Asset;
+
+	WidgetAsset->WidgetTree->SetFlags(RF_Transactional);
+	WidgetAsset->WidgetTree->Modify();
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetAsset);
+
+	return WidgetAsset;
 }

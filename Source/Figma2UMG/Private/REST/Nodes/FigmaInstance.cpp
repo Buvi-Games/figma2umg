@@ -2,3 +2,18 @@
 
 
 #include "REST/Nodes/FigmaInstance.h"
+
+FString UFigmaInstance::GetPackagePath() const
+{
+	if (ParentNode)
+	{
+		return ParentNode->GetCurrentPackagePath();
+	}
+
+	return GetCurrentPackagePath();
+}
+
+FString UFigmaInstance::GetAssetName() const
+{
+	return GetUniqueName();
+}

@@ -8,6 +8,16 @@
 #include "WidgetBlueprint.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
+FString UFigmaDocument::GetPackagePath() const
+{
+	return PackagePath;
+}
+
+FString UFigmaDocument::GetAssetName() const
+{
+	return FigmaFileName;
+}
+
 void UFigmaDocument::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
@@ -15,29 +25,28 @@ void UFigmaDocument::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const 
 	SerializeArray(Children, JsonObj, "Children");
 }
 
-void UFigmaDocument::AddToAsset(UWidgetBlueprint* Widget) const
+TObjectPtr<UWidget> UFigmaDocument::AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
 {
-
-	if(Widget->WidgetTree->RootWidget && Cast<UPanelWidget>(Widget->WidgetTree->RootWidget)->GetChildrenCount() != Children.Num())
+	if (WidgetToPatch && Cast<UPanelWidget>(WidgetToPatch)->GetChildrenCount() != Children.Num())
 	{
 		if (Children.Num() == 1)
 		{
 			FString CanvasName = Children[0]->GetUniqueName();
-			UWidget** FoundChild = Cast<UPanelWidget>(Widget->WidgetTree->RootWidget)->GetAllChildren().FindByPredicate([CanvasName](const UWidget* Child)
+			UWidget** FoundChild = Cast<UPanelWidget>(WidgetToPatch)->GetAllChildren().FindByPredicate([CanvasName](const UWidget* Child)
 				{
 					return Child->GetName() == CanvasName;
 				});
 
-			Widget->WidgetTree->RootWidget = Children[0]->AddOrPathToWidget(Widget->WidgetTree, FoundChild  ? *FoundChild : nullptr);
-			Children[0]->PostInsert(Widget->WidgetTree->RootWidget);
+			WidgetToPatch = Children[0]->AddOrPathToWidget(FoundChild ? *FoundChild : nullptr);
+			Children[0]->PostInsert(WidgetToPatch);
 		}
 		else
 		{
-			UPanelWidget* MainWidget = Widget->WidgetTree->RootWidget ? Cast<UWidgetSwitcher>(Widget->WidgetTree->RootWidget) : nullptr;
+			UPanelWidget* MainWidget = WidgetToPatch ? Cast<UWidgetSwitcher>(WidgetToPatch) : nullptr;
 			if (MainWidget == nullptr)
 			{
-				UPanelWidget* OldRootWidget = Cast<UPanelWidget>(Widget->WidgetTree->RootWidget);
-				Widget->WidgetTree->RootWidget = MainWidget = NewObject<UWidgetSwitcher>(Widget->WidgetTree, *GetUniqueName());
+				UPanelWidget* OldRootWidget = Cast<UPanelWidget>(WidgetToPatch);
+				WidgetToPatch = MainWidget = NewObject<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
 				MainWidget->AddChild(OldRootWidget);
 			}
 			else if (MainWidget->GetName() != GetUniqueName())
@@ -50,26 +59,22 @@ void UFigmaDocument::AddToAsset(UWidgetBlueprint* Widget) const
 	}
 	else if (Children.Num() == 1)
 	{
-		Widget->WidgetTree->RootWidget = Children[0]->AddOrPathToWidget(Widget->WidgetTree, Widget->WidgetTree->RootWidget);
-		Children[0]->PostInsert(Widget->WidgetTree->RootWidget);
+		WidgetToPatch = Children[0]->AddOrPathToWidget(WidgetToPatch);
+		Children[0]->PostInsert(WidgetToPatch);
 	}
 	else
-	{		
-		UPanelWidget* MainWidget = Widget->WidgetTree->RootWidget ? Cast<UWidgetSwitcher>(Widget->WidgetTree->RootWidget) : nullptr;
+	{
+		UPanelWidget* MainWidget = WidgetToPatch ? Cast<UWidgetSwitcher>(WidgetToPatch) : nullptr;
 		if (MainWidget == nullptr)
 		{
-			Widget->WidgetTree->RootWidget = MainWidget = NewObject<UWidgetSwitcher>(Widget->WidgetTree, *GetUniqueName());
+			WidgetToPatch = MainWidget = NewObject<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
 		}
 		else if (MainWidget->GetName() != GetUniqueName())
 		{
 			MainWidget->Rename(*GetUniqueName());
 		}
-
-		Widget->WidgetTree->SetFlags(RF_Transactional);
-		Widget->WidgetTree->Modify();
 		AddOrPathChildren(MainWidget, Children);
-
-		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
-
 	}
+
+	return WidgetToPatch;
 }

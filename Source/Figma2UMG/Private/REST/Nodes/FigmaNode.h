@@ -46,9 +46,11 @@ public:
 
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj);
 
-	virtual TObjectPtr<UWidget> AddOrPathToWidget(TObjectPtr<UWidgetTree> Outer, TObjectPtr<UWidget> WidgetToPatch) const { return nullptr; }
 	virtual void PostInsert(UWidget* Widget) const;
 
+	TObjectPtr<UWidget> AddOrPathToWidget(TObjectPtr<UWidget> WidgetToPatch);
+
+	FString GetNodeName() const;
 	FString GetUniqueName() const;
 	ESlateVisibility GetVisibility() const;
 
@@ -56,13 +58,22 @@ public:
 
 	virtual FVector2D GetAbsolutePosition() const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D();)
 
+	void SetCurrentPackagePath(const FString & InPackagePath);
+	virtual FString GetCurrentPackagePath() const;
+
+	UObject* GetAssetOuter() const;
 protected:
+	virtual TObjectPtr<UWidget> AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch) { return nullptr; }
+
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 
 	UFigmaNode* CreateNode(const TSharedPtr<FJsonObject>& JsonObj);
 
 	void AddOrPathChildren(UPanelWidget* ParentWidget, TArray<UFigmaNode*> Children) const;;
+
 	TObjectPtr<UFigmaNode> ParentNode = nullptr;
+
+	FString PackagePath;
 private:
 	UPROPERTY()
 	FString Id;

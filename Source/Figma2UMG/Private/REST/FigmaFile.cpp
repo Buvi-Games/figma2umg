@@ -9,16 +9,9 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Editor/UMGEditor/Public/WidgetBlueprint.h"
 #include "Nodes/FigmaDocument.h"
+#include "Properties/FigmaComponentRef.h"
+#include "Properties/FigmaComponentSetRef.h"
 
-FString UFigmaFile::GetPackagePath() const
-{
-	return PackagePath;
-}
-
-FString UFigmaFile::GetAssetName() const
-{
-	return Name;
-}
 
 void UFigmaFile::PostSerialize(const TSharedRef<FJsonObject> fileJsonObject)
 {
@@ -26,20 +19,35 @@ void UFigmaFile::PostSerialize(const TSharedRef<FJsonObject> fileJsonObject)
 	{
 		Document->PostSerialize(nullptr, fileJsonObject->GetObjectField("Document").ToSharedRef());
 	}
+
+	ImportComponents();
+
+	Convert();
 }
 
-void UFigmaFile::CreateOrUpdateAsset(const FString& ContentRootFolder)
+void UFigmaFile::ImportComponents()
 {
-	PackagePath = ContentRootFolder;
-	UWidgetBlueprint* Asset = GetOrCreateAsset();
-
-	if (Asset == nullptr)
+	for (TTuple<FString, FFigmaComponentRef>& Element : Components)
 	{
-		return;
+		Element.Value.Import();
 	}
+	for (TTuple<FString, FFigmaComponentSetRef>& Element : ComponentSets)
+	{
+		Element.Value.Import();
+	}
+}
 
+void UFigmaFile::SetRootPath(const FString& InPackagePath)
+{
+	PackagePath = InPackagePath;
+}
+
+void UFigmaFile::Convert()
+{
 	if (Document)
 	{
-		Document->AddToAsset(Asset);
+		Document->SetCurrentPackagePath(PackagePath);
+		Document->SetFileName(Name);
+		Document->AddOrPathToWidget(nullptr);
 	}
 }

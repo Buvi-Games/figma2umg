@@ -259,8 +259,8 @@ void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 			FText OutFailReason;
 			if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 			{
+				File->SetRootPath(ContentRootFolderValue);
 				File->PostSerialize(JsonObj);
-				File->CreateOrUpdateAsset(ContentRootFolderValue);
 				ResetMessage();
 			}
 			else

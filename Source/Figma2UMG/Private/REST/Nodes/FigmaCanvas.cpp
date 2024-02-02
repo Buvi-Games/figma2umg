@@ -13,7 +13,7 @@ void UFigmaCanvas::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TS
 	SerializeArray(Children, JsonObj, "Children");
 }
 
-TObjectPtr<UWidget> UFigmaCanvas::AddOrPathToWidget(TObjectPtr<UWidgetTree> Outer, TObjectPtr<UWidget> WidgetToPatch) const
+TObjectPtr<UWidget> UFigmaCanvas::AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
 {
 	UCanvasPanel* Canvas = nullptr;
 	if(WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
@@ -26,7 +26,7 @@ TObjectPtr<UWidget> UFigmaCanvas::AddOrPathToWidget(TObjectPtr<UWidgetTree> Oute
 	}
 	else
 	{
-		Canvas = NewObject<UCanvasPanel>(Outer, *GetUniqueName());
+		Canvas = NewObject<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
 	}
 
 

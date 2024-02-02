@@ -12,6 +12,7 @@ struct FIGMA2UMG_API FFigmaReference
 public:
 	GENERATED_BODY()
 
+	void Import();
 protected:
 	UPROPERTY()
 	FString Key;

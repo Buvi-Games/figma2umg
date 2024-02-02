@@ -8,6 +8,16 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 
+FVector2D UFigmaSection::GetPosition() const
+{
+	return UFigmaNode::GetPosition();
+}
+
+FVector2D UFigmaSection::GetSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
+}
+
 void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
@@ -26,62 +36,25 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 	SerializeArray(Children, JsonObj, "Children");
 }
 
-TObjectPtr<UWidget> UFigmaSection::AddOrPathToWidget(TObjectPtr<UWidgetTree> Outer, TObjectPtr<UWidget> WidgetToPatch) const
+TObjectPtr<UWidget> UFigmaSection::AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
 {
-	UBorder* Border = WidgetToPatch ? Cast<UBorder>(WidgetToPatch) : nullptr;
-	UCanvasPanel* Canvas = nullptr;
-	if (Border)
-	{
-		if (Border->GetName() != GetUniqueName())
-		{
-			Border->Rename(*GetUniqueName());
-		}
-		Canvas = Cast<UCanvasPanel>(Border->GetContent());
-	}
-	else
-	{
-		Border = NewObject<UBorder>(Outer, *GetUniqueName());
-	}
-
-	if (!Canvas)
-	{
-		Canvas = NewObject<UCanvasPanel>(Outer);
-		Border->SetContent(Canvas);
-	}
-
-
-	return Border;
+	return AddOrPathContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
 }
 
 void UFigmaSection::PostInsert(UWidget* Widget) const
 {
 	Super::PostInsert(Widget);
-
-	UCanvasPanelSlot* CanvasSlot = Widget->Slot ? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
-	if (CanvasSlot)
-	{
-		//Todo: Make it relative to parent.
-		//CanvasSlot->SetPosition(AbsoluteBoundingBox.GetPosition());
-		CanvasSlot->SetPosition(GetPosition());
-		CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
-	}
-
-	UBorder* Border = Widget ? Cast<UBorder>(Widget) : nullptr;
-	if (Border)
-	{
-		if (Fills.Num() > 0)
-		{
-			Border->SetBrushColor(Fills[0].Color.GetLinearColor());
-		}
-;
-		if(UCanvasPanel * Canvas = Cast<UCanvasPanel>(Border->GetContent()))
-		{
-			AddOrPathChildren(Canvas, Children);
-		}
-	}
+	PostInsertContent(Fills.Num() > 0 ? Fills[0].Color.GetLinearColor() : FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	AddOrPathChildren(Canvas, Children);
 }
 
 FVector2D UFigmaSection::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();
+}
+
+FString UFigmaSection::GetCurrentPackagePath() const
+{
+	FString CurrentPackagePath = Super::GetCurrentPackagePath() + +TEXT("/") + GetNodeName();
+	return CurrentPackagePath;
 }

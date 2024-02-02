@@ -9,7 +9,7 @@
 class UWidgetBlueprint;
 
 UINTERFACE(BlueprintType, Experimental, meta = (CannotImplementInterfaceInBlueprint))
-class UFigmaFileHandle : public UInterface
+class FIGMA2UMG_API UFigmaFileHandle : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -24,5 +24,19 @@ public:
 	UFUNCTION()
 	virtual FString GetAssetName() const = 0;
 
-	UWidgetBlueprint* GetOrCreateAsset();
+	template<class AssetType>
+	AssetType* GetOrCreateAsset();
+
+	UObject* GetOuter() const { return AssetOuter; }
+
+protected:
+	UObject* Asset = nullptr;
+	UObject* AssetOuter = nullptr;
 };
+
+template <class AssetType>
+AssetType* IFigmaFileHandle::GetOrCreateAsset()
+{
+	return nullptr;
+}
+

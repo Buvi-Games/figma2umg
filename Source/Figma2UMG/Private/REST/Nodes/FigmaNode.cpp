@@ -15,6 +15,7 @@
 #include "FigmaSlice.h"
 #include "FigmaSticky.h"
 #include "JsonObjectConverter.h"
+#include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
@@ -27,6 +28,11 @@
 #include "Vectors/FigmaText.h"
 #include "Vectors/FigmaVectorNode.h"
 #include "Vectors/FigmaWashiTape.h"
+
+FString UFigmaNode::GetNodeName() const
+{
+	return Name;
+}
 
 FString UFigmaNode::GetUniqueName() const
 {
@@ -47,6 +53,34 @@ FVector2D UFigmaNode::GetPosition() const
 		Pos = (Pos - ParentPos);
 	}
 	return Pos;
+}
+
+void UFigmaNode::SetCurrentPackagePath(const FString& InPackagePath)
+{
+	PackagePath = InPackagePath;
+}
+
+FString UFigmaNode::GetCurrentPackagePath() const
+{
+	if (PackagePath.IsEmpty() && ParentNode != nullptr)
+	{
+		return ParentNode->GetCurrentPackagePath();
+	}
+	return PackagePath;
+}
+
+UObject* UFigmaNode::GetAssetOuter() const
+{
+	if(const IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
+	{
+		return FileHandle->GetOuter();
+	}
+	else if (ParentNode)
+	{
+		return ParentNode->GetAssetOuter();
+	}
+
+	return nullptr;
 }
 
 void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName)
@@ -80,6 +114,21 @@ void UFigmaNode::PostInsert(UWidget* Widget) const
 	if (Widget)
 	{
 		Widget->SetVisibility(GetVisibility());
+	}
+}
+
+TObjectPtr<UWidget> UFigmaNode::AddOrPathToWidget(TObjectPtr<UWidget> WidgetToPatch)
+{
+	if (IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
+	{
+		UWidgetBlueprint* Widget = FileHandle->GetOrCreateAsset<UWidgetBlueprint>();
+		Widget->WidgetTree->RootWidget = AddOrPathToWidgetImp(Widget->WidgetTree->RootWidget);
+
+		return Widget->WidgetTree->RootWidget;
+	}
+	else
+	{
+		return AddOrPathToWidgetImp(WidgetToPatch);
 	}
 }
 
@@ -186,7 +235,7 @@ void UFigmaNode::AddOrPathChildren(UPanelWidget* ParentWidget, TArray<UFigmaNode
 		UFigmaNode* Element = Children[Index];
 
 		TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
-		TObjectPtr<UWidget> NewWidget = Element->AddOrPathToWidget(Cast<UWidgetTree>(ParentWidget->GetOuter()), OldWidget);
+		TObjectPtr<UWidget> NewWidget = Element->AddOrPathToWidget(OldWidget);
 		if (NewWidget && NewWidget != OldWidget)
 		{
 			ParentWidget->SetFlags(RF_Transactional);
