@@ -15,14 +15,14 @@ class UFigmaComponent : public  UFigmaFrame, public IFigmaFileHandle
 public:
 	GENERATED_BODY()
 
+	// UFigmaNode
+	virtual void PostInsert(UWidget* Widget) const override;
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
+
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
 
-	void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
-
-
-	virtual FVector2D GetAbsolutePosition() const override;
 protected:
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;

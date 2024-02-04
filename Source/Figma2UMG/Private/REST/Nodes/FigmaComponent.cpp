@@ -3,6 +3,7 @@
 
 #include "REST/Nodes/FigmaComponent.h"
 
+#include "Components/CanvasPanelSlot.h"
 #include "REST/FigmaFile.h"
 #include "REST/Properties/FigmaComponentRef.h"
 
@@ -22,6 +23,16 @@ FString UFigmaComponent::GetAssetName() const
 	return GetUniqueName();
 }
 
+void UFigmaComponent::PostInsert(UWidget* Widget) const
+{
+	Super::PostInsert(Widget);
+	UCanvasPanelSlot* CanvasSlot = Widget->Slot ? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
+	if (CanvasSlot)
+	{
+		CanvasSlot->SetPosition(GetPosition());
+	}
+}
+
 void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
@@ -31,11 +42,3 @@ void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const
 	ComponentRef->SetComponent(this);
 }
 
-FVector2D UFigmaComponent::GetAbsolutePosition() const
-{
-	if (ParentNode)
-	{
-		return ParentNode->GetAbsolutePosition();
-	}
-	return FVector2D();
-}
