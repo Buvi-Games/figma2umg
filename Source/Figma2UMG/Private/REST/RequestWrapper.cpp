@@ -23,7 +23,7 @@ void URequestWrapper::Reset()
 	RequesterCallback.Unbind();
 }
 
-bool URequestWrapper::Request(FString AccessToken, FString FileKey, int Pages)
+bool URequestWrapper::Request(FString AccessToken, FString FileKey, FString Ids)
 {
 	if (!RequesterCallback.IsBound())
 		return false;
@@ -34,11 +34,20 @@ bool URequestWrapper::Request(FString AccessToken, FString FileKey, int Pages)
 
 	AddToRoot();
 
+	FString URL;
 	TArray<FStringFormatArg> args;
 	args.Add(FIGMA_BASE_URL);
 	args.Add(FIGMA_ENDPOINT_FILES);
 	args.Add(FileKey);
-	FString URL = FString::Format(TEXT("{0}{1}{2}"), args);
+	if(Ids.IsEmpty())
+	{
+		URL = FString::Format(TEXT("{0}{1}{2}"), args);
+	}
+	else
+	{
+		args.Add(Ids);
+		URL = FString::Format(TEXT("{0}{1}{2}?ids={3}"), args);
+	}
 
 	UVaRestJsonObject* VaRestJson = VARestSubsystem->ConstructVaRestJsonObject();
 	TSharedRef<FJsonObject> JsonObject = MakeShared<FJsonObject>();

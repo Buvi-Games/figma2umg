@@ -19,7 +19,7 @@ SImporterWidget::SImporterWidget()
 	AccessTokenName = LOCTEXT("AccessTokenName", "Access Token");
 	ContentRootFolderName = LOCTEXT("ContentRootFolderName", "Content Root Folder");
 	FileKeyName = LOCTEXT("FileKeyName", "File Key");
-	PagesName = LOCTEXT("PagesName", "Pages (-1 for all)");
+	IdsName = LOCTEXT("IdsName", "Ids");
 
 	ImportButtonName = LOCTEXT("ImportButtonName", "Import");
 	ImportButtonTooltip  = LOCTEXT("ImportButtonTooltip", "This will import the file from Figma according to the value above.");
@@ -34,6 +34,10 @@ SImporterWidget::SImporterWidget()
 	}
 
 	ContentRootFolderValue = "/Game/";
+
+//#if !UE_BUILD_SHIPPING
+	IdsValue = "146:1357";
+//#endif
 }
 
 SImporterWidget::~SImporterWidget()
@@ -60,7 +64,7 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 
 	Add(Content, AccessTokenName, AccessTokenValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnAccessTokenChanged));
 	Add(Content, FileKeyName, FileKeyValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnFileURLChanged));
-	Add(Content, PagesName, PagesValue, PagesValueTextPtr, FOnFloatValueChanged::CreateRaw(this, &SImporterWidget::OnPagesChanged));
+	Add(Content, IdsName, IdsValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnIdsChanged));
 	Add(Content, ContentRootFolderName, ContentRootFolderValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnContentRootFolderChanged));
 
 	Content->AddSlot(0, RowCount)
@@ -175,15 +179,6 @@ void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, con
 	RowCount++;
 }
 
-void SImporterWidget::OnPagesChanged(float InValue)
-{
-	PagesValue = InValue;
-	if (PagesValueTextPtr.IsValid())
-	{
-		PagesValueTextPtr->SetText(FText::AsNumber(InValue));
-	}
-}
-
 
 FReply SImporterWidget::DoImport()
 {
@@ -194,7 +189,7 @@ FReply SImporterWidget::DoImport()
 	}
 
 	SetMessage(TEXT("Connecting with Figma"));
-	if (OnVaRestWrapper->Request(AccessTokenValue, FileKeyValue, PagesValue))
+	if (OnVaRestWrapper->Request(AccessTokenValue, FileKeyValue, IdsValue))
 	{
 		ImportButton->SetEnabled(false);
 	}
@@ -259,8 +254,8 @@ void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
 			FText OutFailReason;
 			if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 			{
-				File->SetRootPath(ContentRootFolderValue);
-				File->PostSerialize(JsonObj);
+				File->PostSerialize(ContentRootFolderValue, JsonObj);
+				File->ConvertToAssets();
 				ResetMessage();
 			}
 			else

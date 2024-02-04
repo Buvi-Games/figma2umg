@@ -17,7 +17,7 @@ public:
 	SLATE_END_ARGS()
 
 	SImporterWidget();
-	~SImporterWidget();
+	virtual ~SImporterWidget() override;
 
 	void Construct(const FArguments& InArgs);
 
@@ -39,10 +39,9 @@ private:
 	FText FileKeyName;
 	FString FileKeyValue;
 
-	void OnPagesChanged(float InValue);
-	FText PagesName;
-	int PagesValue = -1;
-	TSharedPtr<STextBlock> PagesValueTextPtr;
+	void OnIdsChanged(const FText& InValue) { IdsValue = InValue.ToString(); }
+	FText IdsName;
+	FString IdsValue;
 
 	void OnContentRootFolderChanged(const FText& InValue) { ContentRootFolderValue = InValue.ToString(); }
 	FText ContentRootFolderName;
