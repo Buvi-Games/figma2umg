@@ -17,7 +17,12 @@ TObjectPtr<UWidget> UFigmaInstance::PatchWidgetImp(TObjectPtr<UWidget> WidgetToP
 	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
 	if (ComponentAsset)
 	{
-		if (ParentNode)
+		if (WidgetToPatch)
+		{
+			//TODO: Check if it's the correct Template
+			return WidgetToPatch;
+		}
+		else if (ParentNode)
 		{
 			TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
 			TSubclassOf<UUserWidget> UserWidgetClass = ComponentAsset->GetBlueprintClass();
@@ -27,14 +32,17 @@ TObjectPtr<UWidget> UFigmaInstance::PatchWidgetImp(TObjectPtr<UWidget> WidgetToP
 
 			if (NewWidget)
 			{
-				NewWidget->Rename(*GetName());
+				if (NewWidget->GetName() != GetUniqueName())
+				{
+					NewWidget->Rename(*GetUniqueName());
+				}
 				NewWidget->CreatedFromPalette();
 			}
 
 			return NewWidget;
 		}
 	}
-	return Super::PatchWidgetImp(WidgetToPatch);
+	return WidgetToPatch;
 }
 
 void UFigmaInstance::PostInsert(UWidget* Widget) const
