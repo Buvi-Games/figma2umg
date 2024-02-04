@@ -181,7 +181,6 @@ TObjectPtr<UWidget> UFigmaNode::PatchWidget(TObjectPtr<UWidget> WidgetToPatch)
 
 			if (NewWidget)
 			{
-				NewWidget->Rename(*GetName());
 				NewWidget->CreatedFromPalette();
 			}
 
