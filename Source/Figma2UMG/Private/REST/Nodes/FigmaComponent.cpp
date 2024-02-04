@@ -23,6 +23,15 @@ FString UFigmaComponent::GetAssetName() const
 	return GetUniqueName();
 }
 
+void UFigmaComponent::PrePatchWidget()
+{
+	Super::PrePatchWidget();
+
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(GetId());
+	ComponentRef->SetAsset(GetAsset<UWidgetBlueprint>());
+}
+
 void UFigmaComponent::PostInsert(UWidget* Widget) const
 {
 	Super::PostInsert(Widget);
@@ -30,6 +39,7 @@ void UFigmaComponent::PostInsert(UWidget* Widget) const
 	if (CanvasSlot)
 	{
 		CanvasSlot->SetPosition(GetPosition());
+		CanvasSlot->SetSize(GetSize());
 	}
 }
 

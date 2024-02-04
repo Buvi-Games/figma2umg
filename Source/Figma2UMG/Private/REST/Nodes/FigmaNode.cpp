@@ -336,7 +336,8 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 
 void UFigmaNode::AddOrPathChildren(UPanelWidget* ParentWidget, TArray<UFigmaNode*> Children) const
 {
-	//Todo: Use GetUniqueName() to match the elements. This would fix the reorder patching.
+	if (!ParentWidget)
+		return;
 
 	for (int Index = 0; Index < Children.Num(); Index++)
 	{

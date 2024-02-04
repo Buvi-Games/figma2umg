@@ -16,6 +16,7 @@ public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PrePatchWidget() override;
 	virtual void PostInsert(UWidget* Widget) const override;
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 

@@ -49,7 +49,7 @@ public:
 
 	virtual void PostInsert(UWidget* Widget) const;
 
-	void PrePatchWidget();
+	virtual void PrePatchWidget();
 	TObjectPtr<UWidget> PatchWidget(TObjectPtr<UWidget> WidgetToPatch);
 	void PostPatchWidget();
 
