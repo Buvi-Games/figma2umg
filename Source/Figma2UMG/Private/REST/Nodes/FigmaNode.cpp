@@ -19,6 +19,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
@@ -208,6 +209,18 @@ void UFigmaNode::PostPatchWidget()
 		if (AssetOuter && AssetOuter != Asset)
 		{
 			AssetOuter->Modify();
+		}
+
+		if (UBlueprint * BlueprintObj = Cast<UBlueprint>(Asset))
+		{
+			FCompilerResultsLog LogResults;
+			LogResults.SetSourcePath(BlueprintObj->GetPathName());
+			LogResults.BeginEvent(TEXT("Compile"));
+			LogResults.bLogDetailedResults = true;
+
+			FKismetEditorUtilities::CompileBlueprint(BlueprintObj, EBlueprintCompileOptions::None, &LogResults);
+
+			LogResults.EndEvent();
 		}
 	}
 	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
