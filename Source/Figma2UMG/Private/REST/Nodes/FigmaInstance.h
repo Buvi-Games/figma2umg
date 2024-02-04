@@ -17,6 +17,7 @@ class UFigmaInstance : public UFigmaFrame, public IFigmaRefHandle
 public:
 	GENERATED_BODY()
 
+	virtual void PostInsert(UWidget* Widget) const override;
 protected:
 	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
 
