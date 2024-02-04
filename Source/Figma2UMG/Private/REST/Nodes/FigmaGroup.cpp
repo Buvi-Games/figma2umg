@@ -19,16 +19,9 @@ FVector2D UFigmaGroup::GetSize() const
 	return AbsoluteBoundingBox.GetSize();
 }
 
-void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+TObjectPtr<UWidget> UFigmaGroup::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
 {
-	Super::PostSerialize(InParent, JsonObj);
-
-	SerializeArray(Children, JsonObj, "Children");
-}
-
-TObjectPtr<UWidget> UFigmaGroup::AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
-{
-	return AddOrPathContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
+	return AddOrPatchContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
 }
 
 void UFigmaGroup::PostInsert(UWidget* Widget) const

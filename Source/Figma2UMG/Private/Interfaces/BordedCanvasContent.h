@@ -24,7 +24,7 @@ public:
 	UFUNCTION()
 	virtual FVector2D GetSize() const = 0;
 
-	TObjectPtr<UBorder> AddOrPathContent(UBorder* BorderToPatch, UObject* Outer, const FString& UniqueName);
+	TObjectPtr<UBorder> AddOrPatchContent(UBorder* BorderToPatch, UObject* Outer, const FString& UniqueName);
 	void PostInsertContent(FLinearColor BrushColor = FLinearColor::White) const;
 
 protected:

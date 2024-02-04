@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/FigmaContainer.h"
 #include "REST/Nodes/FigmaNode.h"
 #include "REST/Properties/FigmaColor.h"
 #include "REST/Properties/FigmaExportSetting.h"
@@ -12,18 +13,19 @@
 #include "FigmaCanvas.generated.h"
 
 UCLASS()
-class UFigmaCanvas : public UFigmaNode
+class UFigmaCanvas : public UFigmaNode, public IFigmaContainer
 {
 public:
 	GENERATED_BODY()
-
-	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
-
+	// UFigmaNode
 	virtual void PostInsert(UWidget* Widget) const override;
-
 	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
+
+	// IFigmaContainer
+	virtual FString GetJsonArrayName() const override { return FString("Children"); };
+	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
 protected:
-	virtual TObjectPtr<UWidget> AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;

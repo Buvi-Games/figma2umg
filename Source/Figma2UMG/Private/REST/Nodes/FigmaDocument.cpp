@@ -5,8 +5,6 @@
 
 #include "Blueprint/WidgetTree.h"
 #include <Components/WidgetSwitcher.h>
-#include "WidgetBlueprint.h"
-#include "Kismet2/BlueprintEditorUtils.h"
 
 FString UFigmaDocument::GetPackagePath() const
 {
@@ -15,17 +13,16 @@ FString UFigmaDocument::GetPackagePath() const
 
 FString UFigmaDocument::GetAssetName() const
 {
-	return FigmaFileName;
+	return FigmaFile ? FigmaFile->GetFileName() : FString();
 }
 
-void UFigmaDocument::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 {
-	Super::PostSerialize(InParent, JsonObj);
-
-	SerializeArray(Children, JsonObj, "Children");
+	FigmaFile = InFigmaFile;
+	SetCurrentPackagePath(FigmaFile->GetPackagePath());
 }
 
-TObjectPtr<UWidget> UFigmaDocument::AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
+TObjectPtr<UWidget> UFigmaDocument::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
 {
 	if (WidgetToPatch && Cast<UPanelWidget>(WidgetToPatch)->GetChildrenCount() != Children.Num())
 	{
@@ -37,7 +34,7 @@ TObjectPtr<UWidget> UFigmaDocument::AddOrPathToWidgetImp(TObjectPtr<UWidget> Wid
 					return Child->GetName() == CanvasName;
 				});
 
-			WidgetToPatch = Children[0]->AddOrPathToWidget(FoundChild ? *FoundChild : nullptr);
+			WidgetToPatch = Children[0]->PatchWidget(FoundChild ? *FoundChild : nullptr);
 			Children[0]->PostInsert(WidgetToPatch);
 		}
 		else
@@ -59,7 +56,7 @@ TObjectPtr<UWidget> UFigmaDocument::AddOrPathToWidgetImp(TObjectPtr<UWidget> Wid
 	}
 	else if (Children.Num() == 1)
 	{
-		WidgetToPatch = Children[0]->AddOrPathToWidget(WidgetToPatch);
+		WidgetToPatch = Children[0]->PatchWidget(WidgetToPatch);
 		Children[0]->PostInsert(WidgetToPatch);
 	}
 	else

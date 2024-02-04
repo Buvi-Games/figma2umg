@@ -6,6 +6,7 @@
 
 #include "FigmaNode.generated.h"
 
+class UFigmaFile;
 class UWidgetTree;
 class UPanelWidget;
 class UWidget;
@@ -48,7 +49,11 @@ public:
 
 	virtual void PostInsert(UWidget* Widget) const;
 
-	TObjectPtr<UWidget> AddOrPathToWidget(TObjectPtr<UWidget> WidgetToPatch);
+	void PrePatchWidget();
+	TObjectPtr<UWidget> PatchWidget(TObjectPtr<UWidget> WidgetToPatch);
+	void PostPatchWidget();
+
+	FString GetId() const { return Id; }
 
 	FString GetNodeName() const;
 	FString GetUniqueName() const;
@@ -61,9 +66,13 @@ public:
 	void SetCurrentPackagePath(const FString & InPackagePath);
 	virtual FString GetCurrentPackagePath() const;
 
+	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const;
+
 	UObject* GetAssetOuter() const;
+	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
+
 protected:
-	virtual TObjectPtr<UWidget> AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch) { return nullptr; }
+	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) { return nullptr; }
 
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 

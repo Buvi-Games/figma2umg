@@ -3,17 +3,27 @@
 
 #include "REST/Nodes/FigmaInstance.h"
 
-FString UFigmaInstance::GetPackagePath() const
-{
-	if (ParentNode)
-	{
-		return ParentNode->GetCurrentPackagePath();
-	}
+#include "REST/FigmaFile.h"
 
-	return GetCurrentPackagePath();
-}
+//FString UFigmaInstance::GetPackagePath() const
+//{
+//	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+//	while (TopParentNode && TopParentNode->GetParentNode())
+//	{
+//		TopParentNode = TopParentNode->GetParentNode();
+//	}
+//
+//	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "COMPONENTS";
+//}
+//
+//FString UFigmaInstance::GetAssetName() const
+//{
+//	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+//	const FString ComponentName = FigmaFile->FindComponentName(ComponentId);
+//	return ComponentName + "_" + ComponentId;
+//}
 
-FString UFigmaInstance::GetAssetName() const
+TObjectPtr<UWidget> UFigmaInstance::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
 {
-	return GetUniqueName();
+	return WidgetToPatch;// Super::PatchWidgetImp(WidgetToPatch);
 }

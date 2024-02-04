@@ -27,6 +27,9 @@ public:
 	template<class AssetType>
 	AssetType* GetOrCreateAsset();
 
+	UObject* GetAsset() const { return Asset; }
+	template<class Type>
+	Type* GetAsset() const { return Cast<Type>(Asset); }
 	UObject* GetOuter() const { return AssetOuter; }
 
 protected:

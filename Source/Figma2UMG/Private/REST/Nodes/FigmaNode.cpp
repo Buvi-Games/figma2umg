@@ -17,8 +17,11 @@
 #include "JsonObjectConverter.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Interfaces/WidgetOwner.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
+#include "Templates/WidgetTemplateBlueprintClass.h"
 #include "Vectors/FigmaBooleanOp.h"
 #include "Vectors/FigmaEllipse.h"
 #include "Vectors/FigmaLine.h"
@@ -69,6 +72,16 @@ FString UFigmaNode::GetCurrentPackagePath() const
 	return PackagePath;
 }
 
+TObjectPtr<UFigmaFile> UFigmaNode::GetFigmaFile() const
+{
+	if(ParentNode)
+	{
+		return ParentNode->GetFigmaFile();
+	}
+
+	return nullptr;
+}
+
 UObject* UFigmaNode::GetAssetOuter() const
 {
 	if(const IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
@@ -107,6 +120,11 @@ void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJs
 void UFigmaNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	ParentNode = InParent;
+
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	{
+		SerializeArray(FigmaContainer->GetChildren(), JsonObj, FigmaContainer->GetJsonArrayName());
+	}
 }
 
 void UFigmaNode::PostInsert(UWidget* Widget) const
@@ -117,18 +135,95 @@ void UFigmaNode::PostInsert(UWidget* Widget) const
 	}
 }
 
-TObjectPtr<UWidget> UFigmaNode::AddOrPathToWidget(TObjectPtr<UWidget> WidgetToPatch)
+void UFigmaNode::PrePatchWidget()
 {
 	if (IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
 	{
-		UWidgetBlueprint* Widget = FileHandle->GetOrCreateAsset<UWidgetBlueprint>();
-		Widget->WidgetTree->RootWidget = AddOrPathToWidgetImp(Widget->WidgetTree->RootWidget);
+		FileHandle->GetOrCreateAsset<UWidgetBlueprint>();
+	}
 
-		return Widget->WidgetTree->RootWidget;
+	if (IFigmaRefHandle* RefHandle = Cast<IFigmaRefHandle>(this))
+	{
+		//RefHandle->PrePatchWidget();
+	}
+
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	{
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node)
+			{
+				Node.PrePatchWidget();
+			}));
+	}
+	
+}
+
+TObjectPtr<UWidget> UFigmaNode::PatchWidget(TObjectPtr<UWidget> WidgetToPatch)
+{
+	if (IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
+	{
+		UWidgetBlueprint* Widget = FileHandle->GetAsset<UWidgetBlueprint>();
+		Widget->WidgetTree->RootWidget = PatchWidgetImp(Widget->WidgetTree->RootWidget);
+		PostInsert(Widget->WidgetTree->RootWidget);
+
+		Widget->WidgetTree->SetFlags(RF_Transactional);
+		Widget->WidgetTree->Modify();
+
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
+
+		if(ParentNode)
+		{
+			TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
+			TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
+
+			TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
+			UWidget* NewWidget = Template->Create(OwningObject);
+
+			if (NewWidget)
+			{
+				NewWidget->Rename(*GetName());
+				NewWidget->CreatedFromPalette();
+			}
+
+			return NewWidget;
+		}
+
+		return nullptr;
 	}
 	else
 	{
-		return AddOrPathToWidgetImp(WidgetToPatch);
+		return PatchWidgetImp(WidgetToPatch);
+	}
+}
+
+void UFigmaNode::PostPatchWidget()
+{
+	if (const IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
+	{
+		UObject* Asset = FileHandle->GetAsset();
+		UObject* AssetOuter = FileHandle->GetAsset();
+		if (Asset)
+		{
+			Asset->Modify();
+		}
+		if (AssetOuter && AssetOuter != Asset)
+		{
+			AssetOuter->Modify();
+		}
+	}
+	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
+	{
+		WidgetOwner->ForEach(IWidgetOwner::FOnEachFunction::CreateLambda([](UFigmaNode& Node)
+			{
+				Node.PostPatchWidget();
+			}));
+	}
+	
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	{
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node)
+			{
+				Node.PostPatchWidget();
+			}));
 	}
 }
 
@@ -235,22 +330,25 @@ void UFigmaNode::AddOrPathChildren(UPanelWidget* ParentWidget, TArray<UFigmaNode
 		UFigmaNode* Element = Children[Index];
 
 		TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
-		TObjectPtr<UWidget> NewWidget = Element->AddOrPathToWidget(OldWidget);
-		if (NewWidget && NewWidget != OldWidget)
+		TObjectPtr<UWidget> NewWidget = Element->PatchWidget(OldWidget);
+		if (NewWidget)
 		{
-			ParentWidget->SetFlags(RF_Transactional);
-			ParentWidget->Modify();
+			if(NewWidget != OldWidget)
+			{
+				ParentWidget->SetFlags(RF_Transactional);
+				ParentWidget->Modify();
 
-			if (Index < ParentWidget->GetChildrenCount())
-			{
-				ParentWidget->ReplaceChildAt(Index, NewWidget);
+				if (Index < ParentWidget->GetChildrenCount())
+				{
+					ParentWidget->ReplaceChildAt(Index, NewWidget);
+				}
+				else
+				{
+					ParentWidget->AddChild(NewWidget);
+				}
 			}
-			else
-			{
-				ParentWidget->AddChild(NewWidget);
-			}
+
+			Element->PostInsert(NewWidget);
 		}
-
-		Element->PostInsert(NewWidget);
 	}
 }

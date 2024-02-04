@@ -7,7 +7,7 @@
 #include "Components/CanvasPanelSlot.h"
 
 
-TObjectPtr<UBorder> IBordedCanvasContent::AddOrPathContent(UBorder* BorderToPatch, UObject* Outer, const FString& UniqueName)
+TObjectPtr<UBorder> IBordedCanvasContent::AddOrPatchContent(UBorder* BorderToPatch, UObject* Outer, const FString& UniqueName)
 {
 	Border = BorderToPatch;
 	Canvas = nullptr;

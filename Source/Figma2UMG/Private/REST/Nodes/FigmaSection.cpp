@@ -22,8 +22,6 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 {
 	Super::PostSerialize(InParent, JsonObj);
 
-	//Todo: Translate AbsoluteBoundingBox to LocalBoundingBox.
-
 	if (JsonObj->HasTypedField<EJson::Object>("devStatus"))
 	{
 		const TSharedPtr<FJsonObject> DevStatusJson = JsonObj->GetObjectField("devStatus");
@@ -32,13 +30,11 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 			DevStatus = JsonObj->GetStringField("type");
 		}
 	}
-
-	SerializeArray(Children, JsonObj, "Children");
 }
 
-TObjectPtr<UWidget> UFigmaSection::AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
+TObjectPtr<UWidget> UFigmaSection::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
 {
-	return AddOrPathContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
+	return AddOrPatchContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
 }
 
 void UFigmaSection::PostInsert(UWidget* Widget) const

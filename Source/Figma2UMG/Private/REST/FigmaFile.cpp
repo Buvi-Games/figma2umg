@@ -3,51 +3,53 @@
 
 #include "REST/FigmaFile.h"
 
-#include "AssetToolsModule.h"
-#include "FileHelpers.h"
-#include "WidgetBlueprintFactory.h"
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "Editor/UMGEditor/Public/WidgetBlueprint.h"
 #include "Nodes/FigmaDocument.h"
 #include "Properties/FigmaComponentRef.h"
-#include "Properties/FigmaComponentSetRef.h"
 
 
-void UFigmaFile::PostSerialize(const TSharedRef<FJsonObject> fileJsonObject)
+void UFigmaFile::PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)
 {
+	PackagePath = InPackagePath;
 	if(Document)
 	{
+		Document->SetFigmaFile(this);
 		Document->PostSerialize(nullptr, fileJsonObject->GetObjectField("Document").ToSharedRef());
 	}
+}
 
-	ImportComponents();
-
+void UFigmaFile::ConvertToAssets()
+{
 	Convert();
 }
 
-void UFigmaFile::ImportComponents()
+FString UFigmaFile::FindComponentName(const FString& ComponentId)
 {
-	for (TTuple<FString, FFigmaComponentRef>& Element : Components)
+	if (Components.Contains(ComponentId))
 	{
-		Element.Value.Import();
+		const FFigmaComponentRef& Component = Components[ComponentId];
+		return Component.Name;
 	}
-	for (TTuple<FString, FFigmaComponentSetRef>& Element : ComponentSets)
-	{
-		Element.Value.Import();
-	}
+
+	return FString();
 }
 
-void UFigmaFile::SetRootPath(const FString& InPackagePath)
+FFigmaComponentRef* UFigmaFile::FindComponentRef(const FString& ComponentId)
 {
-	PackagePath = InPackagePath;
+	if (Components.Contains(ComponentId))
+	{
+		FFigmaComponentRef& Component = Components[ComponentId];
+		return &Component;
+	}
+
+	return nullptr;
 }
 
 void UFigmaFile::Convert()
 {
 	if (Document)
 	{
-		Document->SetCurrentPackagePath(PackagePath);
-		Document->SetFileName(Name);
-		Document->AddOrPathToWidget(nullptr);
+		Document->PrePatchWidget();
+		Document->PatchWidget(nullptr);
+		Document->PostPatchWidget();
 	}
 }

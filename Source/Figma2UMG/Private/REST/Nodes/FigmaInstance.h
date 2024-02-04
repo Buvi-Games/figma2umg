@@ -4,17 +4,34 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
-#include "Interfaces/AssetFileHandler.h"
+#include "Interfaces/FigmaRefHandle.h"
+#include "REST/Properties/FigmaOverrides.h"
 
 #include "FigmaInstance.generated.h"
 
+struct FFigmaComponentProperty;
+
 UCLASS()
-class UFigmaInstance : public UFigmaFrame, public IFigmaFileHandle
+class UFigmaInstance : public UFigmaFrame, public IFigmaRefHandle
 {
 public:
 	GENERATED_BODY()
 
-	// IFigmaFileHandle
-	virtual FString GetPackagePath() const override;
-	virtual FString GetAssetName() const override;
+protected:
+	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
+
+	UPROPERTY()
+	FString ComponentId;
+
+	UPROPERTY()
+	bool IsExposedInstance = false;
+
+	UPROPERTY()
+	TArray<FString> ExposedInstances;
+
+	UPROPERTY()
+	TMap<FString, FFigmaComponentProperty> ComponentProperties;
+
+	UPROPERTY()
+	TArray<FFigmaOverrides> Overrides;
 };

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/BordedCanvasContent.h"
+#include "Interfaces/FigmaContainer.h"
 #include "REST/Nodes/FigmaNode.h"
 #include "REST/Properties/FigmaPaint.h"
 #include "REST/Properties/FigmaRectangle.h"
@@ -11,25 +12,27 @@
 #include "FigmaSection.generated.h"
 
 UCLASS()
-class UFigmaSection : public  UFigmaNode, public IBordedCanvasContent
+class UFigmaSection : public  UFigmaNode, public IBordedCanvasContent, public IFigmaContainer
 {
 public:
 	GENERATED_BODY()
+
+	// UFigmaNode
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
+	virtual void PostInsert(UWidget* Widget) const override;
+	virtual FVector2D GetAbsolutePosition() const override;
+	virtual FString GetCurrentPackagePath() const override;
 
 	// IBordedCanvasContent
 	virtual FVector2D GetPosition() const override;
 	virtual FVector2D GetSize() const override;
 
-	// UFigmaNode
-	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
+	// IFigmaContainer
+	virtual FString GetJsonArrayName() const override { return FString("Children"); };
+	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
 
-	virtual void PostInsert(UWidget* Widget) const override;
-
-	virtual FVector2D GetAbsolutePosition() const override;
-
-	virtual FString GetCurrentPackagePath() const override;
 protected:
-	virtual TObjectPtr<UWidget> AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	UPROPERTY()
 	bool SectionContentsHidden = false;

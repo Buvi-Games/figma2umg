@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/FigmaContainer.h"
 #include "REST/FigmaFile.h"
 #include "REST/Nodes/FigmaNode.h"
 
@@ -11,23 +12,29 @@
 class UWidgetBlueprint;
 
 UCLASS()
-class UFigmaDocument : public UFigmaNode, public IFigmaFileHandle
+class UFigmaDocument : public UFigmaNode, public IFigmaFileHandle, public IFigmaContainer
 {
 public:
 	GENERATED_BODY()
 
+	// UFigmaNode
+	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
+	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const override { return FigmaFile; }
+
+	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
 
-	void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj);
+	// IFigmaContainer
+	virtual FString GetJsonArrayName() const override { return FString("Children"); };
+	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
 
-	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
+	void SetFigmaFile(UFigmaFile* InFigmaFile);
 
-	void SetFileName(FString InFigmaFileName) { FigmaFileName = InFigmaFileName; }
 protected:
-	virtual TObjectPtr<UWidget> AddOrPathToWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
 
-	FString FigmaFileName;
+	UFigmaFile* FigmaFile = nullptr;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;

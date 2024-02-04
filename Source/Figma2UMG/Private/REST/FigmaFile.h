@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/AssetFileHandler.h"
+#include "Nodes/FigmaInstance.h"
 #include "UI/SImporterWidget.h"
 
 #include "FigmaFile.generated.h"
@@ -19,8 +20,15 @@ class UFigmaFile : public UObject
 public:
 	GENERATED_BODY()
 
-	void SetRootPath(const FString& InPackagePath);
-	void PostSerialize(const TSharedRef<FJsonObject> JsonObj);
+	void PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> JsonObj);
+
+	void ConvertToAssets();
+
+	FString GetFileName() const { return Name; }
+	FString GetPackagePath() const { return PackagePath; }
+
+	FString FindComponentName(const FString& ComponentId);
+	FFigmaComponentRef* FindComponentRef(const FString& ComponentId);
 
 protected:
 	void ImportComponents();
