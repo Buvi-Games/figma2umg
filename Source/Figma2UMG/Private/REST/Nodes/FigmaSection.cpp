@@ -8,21 +8,6 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 
-FVector2D UFigmaSection::GetTopWidgetPosition() const
-{
-	return GetPosition();
-}
-
-FVector2D UFigmaSection::GetSize() const
-{
-	return AbsoluteBoundingBox.GetSize();
-}
-
-FLinearColor UFigmaSection::GetBrushColor() const
-{
-	return Fills.Num() > 0 ? Fills[0].Color.GetLinearColor() : FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
-}
-
 void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
@@ -37,11 +22,6 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 	}
 }
 
-TObjectPtr<UWidget> UFigmaSection::Patch(TObjectPtr<UWidget> WidgetToPatch)
-{
-	return AddOrPatchContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
-}
-
 FVector2D UFigmaSection::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();
@@ -51,4 +31,85 @@ FString UFigmaSection::GetCurrentPackagePath() const
 {
 	FString CurrentPackagePath = Super::GetCurrentPackagePath() + +TEXT("/") + GetNodeName();
 	return CurrentPackagePath;
+}
+
+void UFigmaSection::ForEach(const IWidgetOwner::FOnEachFunction& Function)
+{
+	Builder.ForEach(Function);
+}
+
+TObjectPtr<UWidget> UFigmaSection::Patch(TObjectPtr<UWidget> WidgetToPatch)
+{
+	Builder.Border = Cast<UBorder>(WidgetToPatch);
+	Builder.Canvas = nullptr;
+	if (Builder.Border)
+	{
+		if (Builder.Border->GetName() != GetUniqueName())
+		{
+			Builder.Border->Rename(*GetUniqueName());
+		}
+		Builder.Canvas = Cast<UCanvasPanel>(Builder.Border->GetContent());
+	}
+	else
+	{
+		Builder.Border = NewObject<UBorder>(GetAssetOuter(), *GetUniqueName());
+	}
+
+	if (!Builder.Canvas)
+	{
+		Builder.Canvas = NewObject<UCanvasPanel>(GetAssetOuter());
+		Builder.Border->SetContent(Builder.Canvas);
+	}
+
+	if (Fills.Num() > 0)
+	{
+		Builder.SetFill(Fills[0]);
+	}
+	else
+	{
+		Builder.Border->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	}
+
+	if (Strokes.Num() > 0)
+	{
+		Builder.SetStroke(Strokes[0], StrokeWeight, StrokeAlign);
+	}
+
+	if (Strokes.Num() > 0)
+	{
+		Builder.SetStroke(Strokes[0], StrokeWeight, StrokeAlign);
+	}
+
+	Builder.SetCorner(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+
+	return Builder.Border;
+}
+
+void UFigmaSection::PostInsert() const
+{
+	TObjectPtr<UWidget> TopWidget = GetTopWidget();
+	if (!TopWidget)
+		return;
+
+	IWidgetOwner::PostInsert();
+
+	if (UCanvasPanelSlot* CanvasSlot = TopWidget->Slot ? Cast<UCanvasPanelSlot>(TopWidget->Slot) : nullptr)
+	{
+		CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
+	}
+}
+
+TObjectPtr<UWidget> UFigmaSection::GetTopWidget() const
+{
+	return Builder.Border;
+}
+
+FVector2D UFigmaSection::GetTopWidgetPosition() const
+{
+	return GetPosition();
+}
+
+TObjectPtr<UPanelWidget> UFigmaSection::GetContainerWidget() const
+{
+	return Builder.Canvas;
 }

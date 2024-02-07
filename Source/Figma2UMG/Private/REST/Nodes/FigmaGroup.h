@@ -3,8 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/BordedCanvasContent.h"
+#include "Builder/BorderCanvasBuilder.h"
 #include "Interfaces/FigmaContainer.h"
+#include "Interfaces/WidgetOwner.h"
 #include "REST/Nodes/FigmaNode.h"
 #include "REST/Properties/FigmaBlendMode.h"
 #include "REST/Properties/FigmaColor.h"
@@ -21,7 +22,7 @@
 #include "FigmaGroup.generated.h"
 
 UCLASS()
-class UFigmaGroup : public UFigmaNode, public IBordedCanvasContent, public IFigmaContainer
+class UFigmaGroup : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
 {
 public:
 	GENERATED_BODY()
@@ -29,17 +30,20 @@ public:
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override;
 
-	// IBordedCanvasContent
-	virtual FVector2D GetSize() const override;
-	virtual FLinearColor GetBrushColor() const override;
-
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
 
 	// IWidgetOwner
-	virtual FVector2D GetTopWidgetPosition() const override;
+	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
+
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void PostInsert() const override;
+
+	virtual TObjectPtr<UWidget> GetTopWidget() const override;
+	virtual FVector2D GetTopWidgetPosition() const override;
+
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 protected:
 
 	UPROPERTY()
@@ -200,4 +204,7 @@ protected:
 
 	UPROPERTY()
 	TMap<EFigmaStyleType, FString> Styles;
+
+	UPROPERTY()
+	FBorderCanvasBuilder Builder;
 };

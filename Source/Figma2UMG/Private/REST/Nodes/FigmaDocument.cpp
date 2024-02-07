@@ -6,6 +6,9 @@
 #include "Blueprint/WidgetTree.h"
 #include <Components/WidgetSwitcher.h>
 
+#include "WidgetBlueprint.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+
 FString UFigmaDocument::GetPackagePath() const
 {
 	return PackagePath;
@@ -31,6 +34,9 @@ void UFigmaDocument::PrePatchWidget()
 
 TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
+	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
+
+	WidgetToPatch = Widget->WidgetTree->RootWidget;
 	if (WidgetToPatch && Cast<UPanelWidget>(WidgetToPatch)->GetChildrenCount() != Children.Num())
 	{
 		if (Children.Num() == 1)
@@ -74,6 +80,9 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 			MainWidget->Rename(*GetUniqueName());
 		}
 	}
+
+	Widget->WidgetTree->RootWidget = WidgetToPatch;
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
 
 	return WidgetToPatch;
 }

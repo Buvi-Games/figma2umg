@@ -15,14 +15,11 @@
 #include "FigmaSlice.h"
 #include "FigmaSticky.h"
 #include "JsonObjectConverter.h"
-#include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Interfaces/WidgetOwner.h"
-#include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
-#include "Templates/WidgetTemplateBlueprintClass.h"
 #include "Vectors/FigmaBooleanOp.h"
 #include "Vectors/FigmaEllipse.h"
 #include "Vectors/FigmaLine.h"
@@ -148,11 +145,6 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 		WidgetToPatch = WidgetOwner->Patch(WidgetToPatch);
 		ParentWidget = WidgetOwner->GetContainerWidget();
 	}
-	else if (IBordedCanvasContent* BordedCanvasContent = Cast<IBordedCanvasContent>(this)) // Not sure why IWidgetOwner is not valid...
-	{
-		WidgetToPatch = BordedCanvasContent->Patch(WidgetToPatch);
-		ParentWidget = BordedCanvasContent->GetContainerWidget();
-	}
 
 	IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this);
 	if (FigmaContainer && ParentWidget)
@@ -196,17 +188,6 @@ void UFigmaNode::PatchPostInsertWidget()
 
 		WidgetOwner->PostInsert();
 	}
-	else if (IBordedCanvasContent* BordedCanvasContent = Cast<IBordedCanvasContent>(this)) // Not sure why IWidgetOwner is not valid...
-	{
-		if (TObjectPtr<UWidget> Widget = BordedCanvasContent->GetTopWidget())
-		{
-			Widget->SetVisibility(GetVisibility());
-
-		}
-
-		BordedCanvasContent->PostInsert();
-	}
-
 
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
 	{

@@ -50,7 +50,6 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	WidgetToPatch = Widget->WidgetTree->RootWidget;
 	Widget->WidgetTree->RootWidget = Patch(WidgetToPatch);
 
-
 	Widget->WidgetTree->SetFlags(RF_Transactional);
 	Widget->WidgetTree->Modify();
 
@@ -111,21 +110,10 @@ void UFigmaComponent::PostInsert() const
 		if (CanvasSlot)
 		{
 			CanvasSlot->SetPosition(GetPosition());
-			CanvasSlot->SetSize(GetSize());
+			CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
 		}
 	}
 }
-
-//void UFigmaComponent::PostInsert(UWidget* Widget) const
-//{
-//	Super::PostInsert(Widget);
-//	UCanvasPanelSlot* CanvasSlot = Widget->Slot ? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
-//	if (CanvasSlot)
-//	{
-//		CanvasSlot->SetPosition(GetPosition());
-//		CanvasSlot->SetSize(GetSize());
-//	}
-//}
 
 void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
