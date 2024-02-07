@@ -8,7 +8,7 @@
 #include "FigmaStyleRef.generated.h"
 
 UENUM()
-enum class EStyleType
+enum class EFigmaStyleType
 {
 	FILL,
 	TEXT,
@@ -24,5 +24,5 @@ public:
 
 protected:
 	UPROPERTY()
-	EStyleType StyleType = EStyleType::FILL;
+	EFigmaStyleType StyleType = EFigmaStyleType::FILL;
 };
