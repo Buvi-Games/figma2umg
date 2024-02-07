@@ -7,61 +7,42 @@
 
 void UFigmaText::ForEach(const FOnEachFunction& Function)
 {
-	if (TextBlock)
+	if (Builder.TextBlock)
 	{
-		Function.ExecuteIfBound(*TextBlock);
+		Function.ExecuteIfBound(*Builder.TextBlock);
 	}
 }
 
 TObjectPtr<UWidget> UFigmaText::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
-	TextBlock = Cast<UTextBlock>(WidgetToPatch);
-	if (TextBlock)
+	Builder.TextBlock = Cast<UTextBlock>(WidgetToPatch);
+	if (Builder.TextBlock)
 	{
-		if (TextBlock->GetName() != GetUniqueName())
+		if (Builder.TextBlock->GetName() != GetUniqueName())
 		{
-			TextBlock->Rename(*GetUniqueName());
+			Builder.TextBlock->Rename(*GetUniqueName());
 		}
 	}
 	else
 	{
-		TextBlock = NewObject<UTextBlock>(GetAssetOuter(), *GetUniqueName());
+		Builder.TextBlock = NewObject<UTextBlock>(GetAssetOuter(), *GetUniqueName());
 	}
 
-	TextBlock->SetText(FText::FromString(Characters));
+	Builder.TextBlock->SetText(FText::FromString(Characters));
 
-	switch (Style.TextAlignHorizontal)
-	{
-	case EFigmaTextAlignHorizontal::LEFT:
-		TextBlock->SetJustification(ETextJustify::Left);
-		break;
-	case EFigmaTextAlignHorizontal::CENTER:
-		TextBlock->SetJustification(ETextJustify::Center);
-		break;
-	case EFigmaTextAlignHorizontal::RIGHT:
-		TextBlock->SetJustification(ETextJustify::Right);
-		break;
-	case EFigmaTextAlignHorizontal::JUSTIFIED:
-		TextBlock->SetJustification(ETextJustify::InvariantLeft);
-		break;
-	}
-
+	Builder.SetStyle(Style);
+	
 	if (!Fills.IsEmpty())
 	{
-		TextBlock->SetColorAndOpacity(Fills[0].Color.GetLinearColor());
+		Builder.SetFill(Fills[0]);
 	}
 
-	FSlateFontInfo Font = TextBlock->GetFont();
-	Font.Size = Style.FontSize;
-	Font.LetterSpacing = Style.LetterSpacing;
-	TextBlock->SetFont(Font);
-
-	return TextBlock;
+	return Builder.TextBlock;
 }
 
 TObjectPtr<UWidget> UFigmaText::GetTopWidget() const
 {
-	return TextBlock;
+	return Builder.TextBlock;
 }
 
 FVector2D UFigmaText::GetTopWidgetPosition() const

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Builder/TextBoxBuilder.h"
 #include "Interfaces/WidgetOwner.h"
 #include "REST/Nodes/Vectors/FigmaVectorNode.h"
 #include "REST/Properties/FigmaTypeStyle.h"
@@ -51,6 +52,6 @@ protected:
 	UPROPERTY()
 	TArray<int> LineIndentations;
 
-protected:
-	TObjectPtr<UTextBlock> TextBlock = nullptr;
+	UPROPERTY()
+	FTextBoxBuilder Builder;
 };
