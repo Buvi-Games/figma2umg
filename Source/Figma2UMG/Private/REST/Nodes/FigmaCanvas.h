@@ -18,7 +18,7 @@ class UFigmaCanvas : public UFigmaNode, public IFigmaContainer
 public:
 	GENERATED_BODY()
 	// UFigmaNode
-	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
+	virtual FVector2D GetAbsolutePosition() const override { return FVector2D::ZeroVector; }
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	// IFigmaContainer

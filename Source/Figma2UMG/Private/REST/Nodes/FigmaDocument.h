@@ -18,7 +18,7 @@ public:
 	GENERATED_BODY()
 
 	// UFigmaNode
-	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
+	virtual FVector2D GetAbsolutePosition() const override { return FVector2D::ZeroVector; }
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const override { return FigmaFile; }
 	virtual void PrePatchWidget() override;
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
