@@ -3,15 +3,54 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/WidgetOwner.h"
 #include "REST/Nodes/Vectors/FigmaVectorNode.h"
+#include "REST/Properties/FigmaTypeStyle.h"
 
 #include "FigmaText.generated.h"
 
+class UTextBlock;
+
+UENUM()
+enum class EFigmaLineType
+{
+	ORDERED,// : Text is an ordered list (numbered)
+	UNORDERED,// : Text is an unordered list (bulleted)
+	NONE,// : Text is plain text and not part of any list
+};
+
 UCLASS()
-class UFigmaText : public UFigmaVectorNode
+class UFigmaText : public UFigmaVectorNode, public IWidgetOwner
 {
 public:
 	GENERATED_BODY()
 
+	// IWidgetOwner
+	virtual void ForEach(const FOnEachFunction& Function) override;
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual TObjectPtr<UWidget> GetTopWidget() const override;
+	virtual FVector2D GetTopWidgetPosition() const override;
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 protected:
+
+	UPROPERTY()
+	FString Characters;
+
+	UPROPERTY()
+	FFigmaTypeStyle Style;
+
+	UPROPERTY()
+	TArray<int> CharacterStyleOverrides;
+
+	UPROPERTY()
+	TMap<int, FFigmaTypeStyle> StyleOverrideTable;
+
+	UPROPERTY()
+	TArray<EFigmaLineType> LineTypes;
+
+	UPROPERTY()
+	TArray<int> LineIndentations;
+
+protected:
+	TObjectPtr<UTextBlock> TextBlock = nullptr;
 };
