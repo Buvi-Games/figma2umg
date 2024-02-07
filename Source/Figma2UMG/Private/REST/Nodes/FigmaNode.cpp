@@ -128,29 +128,11 @@ void UFigmaNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSha
 	}
 }
 
-void UFigmaNode::PostInsert(UWidget* Widget) const
-{
-	if (Widget)
-	{
-		Widget->SetVisibility(GetVisibility());
-	}
-}
-
 void UFigmaNode::PrePatchWidget()
 {
-	if (IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
-	{
-		FileHandle->GetOrCreateAsset<UWidgetBlueprint>();
-	}
-
-	if (IFigmaRefHandle* RefHandle = Cast<IFigmaRefHandle>(this))
-	{
-		//RefHandle->PrePatchWidget();
-	}
-
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
 	{
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node)
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
 			{
 				Node.PrePatchWidget();
 			}));
@@ -158,40 +140,80 @@ void UFigmaNode::PrePatchWidget()
 	
 }
 
-TObjectPtr<UWidget> UFigmaNode::PatchWidget(TObjectPtr<UWidget> WidgetToPatch)
+TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
-	if (IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
+	UPanelWidget* ParentWidget = Cast<UPanelWidget>(WidgetToPatch);
+	if(IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
 	{
-		UWidgetBlueprint* Widget = FileHandle->GetAsset<UWidgetBlueprint>();
-		Widget->WidgetTree->RootWidget = PatchWidgetImp(Widget->WidgetTree->RootWidget);
-		PostInsert(Widget->WidgetTree->RootWidget);
+		WidgetToPatch = WidgetOwner->Patch(WidgetToPatch);
+		ParentWidget = WidgetOwner->GetContainerWidget();
+	}
+	else if (IBordedCanvasContent* BordedCanvasContent = Cast<IBordedCanvasContent>(this)) // Not sure why IWidgetOwner is not valid...
+	{
+		WidgetToPatch = BordedCanvasContent->Patch(WidgetToPatch);
+		ParentWidget = BordedCanvasContent->GetContainerWidget();
+	}
 
-		Widget->WidgetTree->SetFlags(RF_Transactional);
-		Widget->WidgetTree->Modify();
-
-		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
-
-		if(ParentNode)
-		{
-			TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
-			TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
-
-			TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
-			UWidget* NewWidget = Template->Create(OwningObject);
-
-			if (NewWidget)
+	IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this);
+	if (FigmaContainer && ParentWidget)
+	{
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([ParentWidget](UFigmaNode& ChildNode, const int Index)
 			{
-				NewWidget->CreatedFromPalette();
-			}
+				TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
+				TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
+				if (NewWidget)
+				{
+					if (NewWidget != OldWidget)
+					{
+						ParentWidget->SetFlags(RF_Transactional);
+						ParentWidget->Modify();
 
-			return NewWidget;
+						if (Index < ParentWidget->GetChildrenCount())
+						{
+							ParentWidget->ReplaceChildAt(Index, NewWidget);
+						}
+						else
+						{
+							ParentWidget->AddChild(NewWidget);
+						}
+					}
+				}
+			}));
+	}
+
+	return WidgetToPatch;
+}
+
+void UFigmaNode::PatchPostInsertWidget()
+{
+	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
+	{
+		if (TObjectPtr<UWidget> Widget = WidgetOwner->GetTopWidget())
+		{
+			Widget->SetVisibility(GetVisibility());
+
 		}
 
-		return nullptr;
+		WidgetOwner->PostInsert();
 	}
-	else
+	else if (IBordedCanvasContent* BordedCanvasContent = Cast<IBordedCanvasContent>(this)) // Not sure why IWidgetOwner is not valid...
 	{
-		return PatchWidgetImp(WidgetToPatch);
+		if (TObjectPtr<UWidget> Widget = BordedCanvasContent->GetTopWidget())
+		{
+			Widget->SetVisibility(GetVisibility());
+
+		}
+
+		BordedCanvasContent->PostInsert();
+	}
+
+
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	{
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
+			{
+				Node.PatchPostInsertWidget();
+			}));
 	}
 }
 
@@ -222,17 +244,10 @@ void UFigmaNode::PostPatchWidget()
 			LogResults.EndEvent();
 		}
 	}
-	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
-	{
-		WidgetOwner->ForEach(IWidgetOwner::FOnEachFunction::CreateLambda([](UFigmaNode& Node)
-			{
-				Node.PostPatchWidget();
-			}));
-	}
 	
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
 	{
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node)
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
 			{
 				Node.PostPatchWidget();
 			}));
@@ -333,35 +348,33 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 	return FigmaNode;
 }
 
-void UFigmaNode::AddOrPathChildren(UPanelWidget* ParentWidget, TArray<UFigmaNode*> Children) const
-{
-	if (!ParentWidget)
-		return;
-
-	for (int Index = 0; Index < Children.Num(); Index++)
-	{
-		UFigmaNode* Element = Children[Index];
-
-		TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
-		TObjectPtr<UWidget> NewWidget = Element->PatchWidget(OldWidget);
-		if (NewWidget)
-		{
-			if(NewWidget != OldWidget)
-			{
-				ParentWidget->SetFlags(RF_Transactional);
-				ParentWidget->Modify();
-
-				if (Index < ParentWidget->GetChildrenCount())
-				{
-					ParentWidget->ReplaceChildAt(Index, NewWidget);
-				}
-				else
-				{
-					ParentWidget->AddChild(NewWidget);
-				}
-			}
-
-			Element->PostInsert(NewWidget);
-		}
-	}
-}
+//void UFigmaNode::PatchPreInsertWidgetChildren(UPanelWidget* ParentWidget, const TArray<UFigmaNode*>& Children) const
+//{
+//	if (!ParentWidget)
+//		return;
+//
+//	for (int Index = 0; Index < Children.Num(); Index++)
+//	{
+//		UFigmaNode* Element = Children[Index];
+//
+//		TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
+//		TObjectPtr<UWidget> NewWidget = Element->PatchPreInsertWidget(OldWidget);
+//		if (NewWidget)
+//		{
+//			if(NewWidget != OldWidget)
+//			{
+//				ParentWidget->SetFlags(RF_Transactional);
+//				ParentWidget->Modify();
+//
+//				if (Index < ParentWidget->GetChildrenCount())
+//				{
+//					ParentWidget->ReplaceChildAt(Index, NewWidget);
+//				}
+//				else
+//				{
+//					ParentWidget->AddChild(NewWidget);
+//				}
+//			}
+//		}
+//	}
+//}

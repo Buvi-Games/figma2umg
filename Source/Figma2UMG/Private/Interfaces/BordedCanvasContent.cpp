@@ -30,22 +30,48 @@ TObjectPtr<UBorder> IBordedCanvasContent::AddOrPatchContent(UBorder* BorderToPat
 		Border->SetContent(Canvas);
 	}
 
+
+	Border->SetBrushColor(GetBrushColor());
+
 	return Border;
 }
 
-void IBordedCanvasContent::PostInsertContent(FLinearColor BrushColor /*= FLinearColor::White*/) const
+void IBordedCanvasContent::ForEach(const FOnEachFunction& Function)
 {
-	if (!Border)
+	if (!Function.IsBound())
 		return;
 
-	UCanvasPanelSlot* CanvasSlot = Border->Slot ? Cast<UCanvasPanelSlot>(Border->Slot) : nullptr;
-	if (CanvasSlot)
+	if (Border)
 	{
-		//Todo: Make it relative to parent.
-		//CanvasSlot->SetPosition(AbsoluteBoundingBox.GetPosition());
-		CanvasSlot->SetPosition(GetPosition());
-		CanvasSlot->SetSize(GetSize());
+		Function.ExecuteIfBound(*Border);
 	}
 
-	Border->SetBrushColor(BrushColor);
+	if (Canvas)
+	{
+		Function.ExecuteIfBound(*Canvas);
+	}
+}
+
+void IBordedCanvasContent::PostInsert() const
+{
+	TObjectPtr<UWidget> TopWidget = GetTopWidget();
+	if (!TopWidget)
+		return;
+
+	IWidgetOwner::PostInsert();
+
+	if (UCanvasPanelSlot* CanvasSlot = TopWidget->Slot ? Cast<UCanvasPanelSlot>(TopWidget->Slot) : nullptr)
+	{
+		CanvasSlot->SetSize(GetSize());
+	}
+}
+
+TObjectPtr<UWidget> IBordedCanvasContent::GetTopWidget() const
+{
+	return Border;
+}
+
+TObjectPtr<UPanelWidget> IBordedCanvasContent::GetContainerWidget() const
+{
+	return Canvas;
 }

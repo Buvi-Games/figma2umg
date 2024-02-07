@@ -17,10 +17,11 @@ class UFigmaInstance : public UFigmaFrame, public IFigmaRefHandle
 public:
 	GENERATED_BODY()
 
-	virtual void PostInsert(UWidget* Widget) const override;
+	// IWidgetOwner
+	void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual TObjectPtr<UWidget> GetTopWidget() const override;
 protected:
-	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
-
 	UPROPERTY()
 	FString ComponentId;
 

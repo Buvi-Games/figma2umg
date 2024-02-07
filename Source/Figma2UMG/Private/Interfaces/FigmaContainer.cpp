@@ -6,11 +6,12 @@
 void IFigmaContainer::ForEach(const FOnEachFunction& Function)
 {
 	TArray<UFigmaNode*>& Children = GetChildren();
-	for (auto Element : Children)
+	for (int i = 0; i < Children.Num(); i++)
 	{
-		if(!Element)
+		UFigmaNode* Child = Children[i];
+		if(!Child)
 			continue;
 
-		Function.Execute(*Element);
+		Function.Execute(*Child, i);
 	}
 }

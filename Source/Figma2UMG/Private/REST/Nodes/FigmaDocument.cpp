@@ -22,7 +22,14 @@ void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 	SetCurrentPackagePath(FigmaFile->GetPackagePath());
 }
 
-TObjectPtr<UWidget> UFigmaDocument::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
+void UFigmaDocument::PrePatchWidget()
+{
+	GetOrCreateAsset<UWidgetBlueprint>();
+
+	Super::PrePatchWidget();
+}
+
+TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
 	if (WidgetToPatch && Cast<UPanelWidget>(WidgetToPatch)->GetChildrenCount() != Children.Num())
 	{
@@ -34,8 +41,7 @@ TObjectPtr<UWidget> UFigmaDocument::PatchWidgetImp(TObjectPtr<UWidget> WidgetToP
 					return Child->GetName() == CanvasName;
 				});
 
-			WidgetToPatch = Children[0]->PatchWidget(FoundChild ? *FoundChild : nullptr);
-			Children[0]->PostInsert(WidgetToPatch);
+			WidgetToPatch = Children[0]->PatchPreInsertWidget(FoundChild ? *FoundChild : nullptr);
 		}
 		else
 		{
@@ -50,14 +56,11 @@ TObjectPtr<UWidget> UFigmaDocument::PatchWidgetImp(TObjectPtr<UWidget> WidgetToP
 			{
 				MainWidget->Rename(*GetUniqueName());
 			}
-
-			AddOrPathChildren(MainWidget, Children);
 		}
 	}
 	else if (Children.Num() == 1)
 	{
-		WidgetToPatch = Children[0]->PatchWidget(WidgetToPatch);
-		Children[0]->PostInsert(WidgetToPatch);
+		WidgetToPatch = Children[0]->PatchPreInsertWidget(WidgetToPatch);
 	}
 	else
 	{
@@ -70,7 +73,6 @@ TObjectPtr<UWidget> UFigmaDocument::PatchWidgetImp(TObjectPtr<UWidget> WidgetToP
 		{
 			MainWidget->Rename(*GetUniqueName());
 		}
-		AddOrPathChildren(MainWidget, Children);
 	}
 
 	return WidgetToPatch;

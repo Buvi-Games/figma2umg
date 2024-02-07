@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Fvirtual ill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -47,10 +47,11 @@ public:
 
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj);
 
-	virtual void PostInsert(UWidget* Widget) const;
+	//virtual void PostInsert(UWidget* Widget) const;
 
 	virtual void PrePatchWidget();
-	TObjectPtr<UWidget> PatchWidget(TObjectPtr<UWidget> WidgetToPatch);
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch);
+	virtual void PatchPostInsertWidget();
 	void PostPatchWidget();
 
 	FString GetId() const { return Id; }
@@ -72,13 +73,11 @@ public:
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
 
 protected:
-	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) { return nullptr; }
-
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 
 	UFigmaNode* CreateNode(const TSharedPtr<FJsonObject>& JsonObj);
 
-	void AddOrPathChildren(UPanelWidget* ParentWidget, TArray<UFigmaNode*> Children) const;;
+//	void PatchPreInsertWidgetChildren(UPanelWidget* ParentWidget, const TArray<UFigmaNode*>& Children) const;;
 
 	TObjectPtr<UFigmaNode> ParentNode = nullptr;
 
@@ -91,13 +90,13 @@ private:
 	FString Name;
 
 	UPROPERTY()
-	bool Visible;
+	bool Visible = true;
 
 	UPROPERTY()
-	FString Type;
+	ENodeTypes Type;
 
 	UPROPERTY()
-	float Rotation;
+	float Rotation = 0.0f;
 
 	UPROPERTY()
 	FString PluginData;

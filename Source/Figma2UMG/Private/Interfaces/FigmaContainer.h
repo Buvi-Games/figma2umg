@@ -19,7 +19,7 @@ class FIGMA2UMG_API IFigmaContainer
 	GENERATED_BODY()
 public:
 
-	DECLARE_DELEGATE_OneParam(FOnEachFunction, UFigmaNode&)
+	DECLARE_DELEGATE_TwoParams(FOnEachFunction, UFigmaNode&, const int)
 	void ForEach(const FOnEachFunction& Function);
 
 	UFUNCTION()

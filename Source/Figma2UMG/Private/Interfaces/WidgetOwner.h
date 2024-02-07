@@ -6,6 +6,8 @@
 
 #include "WidgetOwner.generated.h"
 
+class UPanelWidget;
+class UWidget;
 class UFigmaNode;
 
 UINTERFACE(BlueprintType, Experimental, meta = (CannotImplementInterfaceInBlueprint))
@@ -18,7 +20,14 @@ class FIGMA2UMG_API IWidgetOwner
 {
 	GENERATED_BODY()
 public:
-	DECLARE_DELEGATE_OneParam(FOnEachFunction, UFigmaNode&)
+	DECLARE_DELEGATE_OneParam(FOnEachFunction, UWidget&)
 	virtual void ForEach(const FOnEachFunction& Function) = 0;
-protected:
+
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) = 0;
+	virtual void PostInsert() const;
+
+	virtual TObjectPtr<UWidget> GetTopWidget() const = 0;
+	virtual FVector2D GetTopWidgetPosition() const = 0;
+
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const = 0;
 };

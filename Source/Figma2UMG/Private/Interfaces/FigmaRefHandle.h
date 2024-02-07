@@ -18,5 +18,6 @@ class FIGMA2UMG_API IFigmaRefHandle
 public:
 
 protected:
-	UObject* Asset = nullptr;
+	UObject* RefAsset = nullptr;
+	UObject* InstanceAsset = nullptr;
 };

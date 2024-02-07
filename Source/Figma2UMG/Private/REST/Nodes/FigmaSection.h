@@ -19,21 +19,22 @@ public:
 
 	// UFigmaNode
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
-	virtual void PostInsert(UWidget* Widget) const override;
 	virtual FVector2D GetAbsolutePosition() const override;
 	virtual FString GetCurrentPackagePath() const override;
 
 	// IBordedCanvasContent
-	virtual FVector2D GetPosition() const override;
 	virtual FVector2D GetSize() const override;
+	virtual FLinearColor GetBrushColor() const override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
 
-protected:
-	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
+	// IWidgetOwner
+	virtual FVector2D GetTopWidgetPosition() const override;
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
 
+protected:
 	UPROPERTY()
 	bool SectionContentsHidden = false;
 

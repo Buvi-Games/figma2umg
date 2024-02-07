@@ -49,7 +49,8 @@ void UFigmaFile::Convert()
 	if (Document)
 	{
 		Document->PrePatchWidget();
-		Document->PatchWidget(nullptr);
+		Document->PatchPreInsertWidget(nullptr);
+		Document->PatchPostInsertWidget();
 		Document->PostPatchWidget();
 	}
 }

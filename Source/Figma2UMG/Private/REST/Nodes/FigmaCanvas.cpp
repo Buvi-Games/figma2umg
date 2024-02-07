@@ -6,7 +6,7 @@
 #include "Components/CanvasPanel.h"
 
 
-TObjectPtr<UWidget> UFigmaCanvas::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
+TObjectPtr<UWidget> UFigmaCanvas::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
 	UCanvasPanel* Canvas = nullptr;
 	if(WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
@@ -23,15 +23,7 @@ TObjectPtr<UWidget> UFigmaCanvas::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPat
 	}
 
 
-	return Canvas;
-}
+	Super::PatchPreInsertWidget(Canvas);
 
-void UFigmaCanvas::PostInsert(UWidget* Widget) const
-{
-	Super::PostInsert(Widget);
-	UCanvasPanel* Canvas = Widget ? Cast<UCanvasPanel>(Widget) : nullptr;
-	if (Canvas)
-	{
-		AddOrPathChildren(Canvas, Children);
-	}
+	return Canvas;
 }

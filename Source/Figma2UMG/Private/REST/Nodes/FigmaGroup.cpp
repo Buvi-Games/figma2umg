@@ -4,9 +4,9 @@
 #include "REST/Nodes/FigmaGroup.h"
 
 
-FVector2D UFigmaGroup::GetPosition() const
+FVector2D UFigmaGroup::GetTopWidgetPosition() const
 {
-	return UFigmaNode::GetPosition();
+	return GetPosition();
 }
 
 FVector2D UFigmaGroup::GetAbsolutePosition() const
@@ -19,14 +19,12 @@ FVector2D UFigmaGroup::GetSize() const
 	return AbsoluteBoundingBox.GetSize();
 }
 
-TObjectPtr<UWidget> UFigmaGroup::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
+FLinearColor UFigmaGroup::GetBrushColor() const
 {
-	return AddOrPatchContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
+	return Fills.Num() > 0 ? Fills[0].Color.GetLinearColor() : FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
 }
 
-void UFigmaGroup::PostInsert(UWidget* Widget) const
+TObjectPtr<UWidget> UFigmaGroup::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
-	Super::PostInsert(Widget);
-	PostInsertContent(Fills.Num() > 0 ? Fills[0].Color.GetLinearColor() : FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
-	AddOrPathChildren(Canvas, Children);
+	return AddOrPatchContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
 }

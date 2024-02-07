@@ -27,18 +27,20 @@ public:
 	GENERATED_BODY()
 
 	// UFigmaNode
-	virtual void PostInsert(UWidget* Widget) const override;
 	virtual FVector2D GetAbsolutePosition() const override;
 
 	// IBordedCanvasContent
-	virtual FVector2D GetPosition() const override;
 	virtual FVector2D GetSize() const override;
+	virtual FLinearColor GetBrushColor() const override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
+
+	// IWidgetOwner
+	virtual FVector2D GetTopWidgetPosition() const override;
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
 protected:
-	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
@@ -197,5 +199,5 @@ protected:
 	FString MaskType;
 
 	UPROPERTY()
-	TMap<EStyleType, FString> Styles;
+	TMap<EFigmaStyleType, FString> Styles;
 };

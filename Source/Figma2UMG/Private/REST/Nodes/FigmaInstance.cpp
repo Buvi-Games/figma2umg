@@ -5,12 +5,19 @@
 
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
-#include "Components/CanvasPanelSlot.h"
 #include "REST/FigmaFile.h"
 #include "REST/Properties/FigmaComponentRef.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
-TObjectPtr<UWidget> UFigmaInstance::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
+void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
+{
+	if (TObjectPtr<UWidget> Widget = GetTopWidget())
+	{
+		Function.ExecuteIfBound(*Widget);
+	}
+}
+
+TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
@@ -32,27 +39,21 @@ TObjectPtr<UWidget> UFigmaInstance::PatchWidgetImp(TObjectPtr<UWidget> WidgetToP
 
 			if (NewWidget)
 			{
-				if (NewWidget->GetName() != GetUniqueName())
-				{
-					NewWidget->Rename(*GetUniqueName());
-				}
+				//if (NewWidget->GetName() != GetUniqueName())
+				//{
+				//	NewWidget->Rename(*GetUniqueName());
+				//}
 				NewWidget->CreatedFromPalette();
 			}
 
+			InstanceAsset = NewWidget;
 			return NewWidget;
 		}
 	}
 	return WidgetToPatch;
 }
 
-void UFigmaInstance::PostInsert(UWidget* Widget) const
+TObjectPtr<UWidget> UFigmaInstance::GetTopWidget() const
 {
-	UCanvasPanelSlot* CanvasSlot = Widget->Slot ? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
-	if (CanvasSlot)
-	{
-		CanvasSlot->SetPosition(GetPosition());
-		CanvasSlot->SetSize(GetSize());
-	}
-
-	// Todo: Any override attribute from Template
+	return Cast<UWidget>(InstanceAsset);
 }

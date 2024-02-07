@@ -20,6 +20,8 @@ public:
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const override { return FigmaFile; }
+	virtual void PrePatchWidget() override;
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
@@ -32,7 +34,6 @@ public:
 	void SetFigmaFile(UFigmaFile* InFigmaFile);
 
 protected:
-	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	UFigmaFile* FigmaFile = nullptr;
 

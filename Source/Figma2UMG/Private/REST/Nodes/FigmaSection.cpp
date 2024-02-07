@@ -8,14 +8,19 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 
-FVector2D UFigmaSection::GetPosition() const
+FVector2D UFigmaSection::GetTopWidgetPosition() const
 {
-	return UFigmaNode::GetPosition();
+	return GetPosition();
 }
 
 FVector2D UFigmaSection::GetSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
+}
+
+FLinearColor UFigmaSection::GetBrushColor() const
+{
+	return Fills.Num() > 0 ? Fills[0].Color.GetLinearColor() : FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
 }
 
 void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
@@ -32,16 +37,9 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 	}
 }
 
-TObjectPtr<UWidget> UFigmaSection::PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch)
+TObjectPtr<UWidget> UFigmaSection::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
 	return AddOrPatchContent(Cast<UBorder>(WidgetToPatch), GetAssetOuter(), GetUniqueName());
-}
-
-void UFigmaSection::PostInsert(UWidget* Widget) const
-{
-	Super::PostInsert(Widget);
-	PostInsertContent(Fills.Num() > 0 ? Fills[0].Color.GetLinearColor() : FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
-	AddOrPathChildren(Canvas, Children);
 }
 
 FVector2D UFigmaSection::GetAbsolutePosition() const

@@ -18,14 +18,13 @@ class UFigmaCanvas : public UFigmaNode, public IFigmaContainer
 public:
 	GENERATED_BODY()
 	// UFigmaNode
-	virtual void PostInsert(UWidget* Widget) const override;
 	virtual FVector2D GetAbsolutePosition() const override { return FVector2D(); }
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
 protected:
-	virtual TObjectPtr<UWidget> PatchWidgetImp(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
