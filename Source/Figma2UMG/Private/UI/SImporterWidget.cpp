@@ -5,10 +5,11 @@
 
 #include "Figma2UMGModule.h"
 #include "Figma2UMGSettings.h"
+#include "FigmaImportSubsystem.h"
 #include "JsonObjectConverter.h"
-#include "REST/FigmaFile.h"
-#include "REST/RequestWrapper.h"
+#include "Parser/FigmaFile.h"
 #include "Widgets/Input/SSlider.h"
+#include "TimerManager.h"
 
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 
@@ -42,10 +43,6 @@ SImporterWidget::SImporterWidget()
 
 SImporterWidget::~SImporterWidget()
 {
-	if (OnVaRestWrapper)
-	{
-		OnVaRestWrapper->Reset();
-	}
 }
 
 void SImporterWidget::Construct(const FArguments& InArgs)
@@ -182,91 +179,33 @@ void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, con
 
 FReply SImporterWidget::DoImport()
 {
-	if (!OnVaRestWrapper)
+	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	if (Importer)
 	{
-		OnVaRestWrapper = NewObject<URequestWrapper>();
-		OnVaRestWrapper->SetCallback(FOnVaRestCB::CreateRaw(this, &SImporterWidget::OnRequestResult));
-	}
-
-	SetMessage(TEXT("Connecting with Figma"));
-	if (OnVaRestWrapper->Request(AccessTokenValue, FileKeyValue, IdsValue))
-	{
+		SetMessage(TEXT("Connecting with Figma"));
 		ImportButton->SetEnabled(false);
-	}
-	else
-	{
-		//TODO: Handle error
-		SetMessage(TEXT("UNKNOWN ERROR"), true);
+		Importer->Request(AccessTokenValue, FileKeyValue, IdsValue, ContentRootFolderValue, FOnFigmaImportUpdateStatusCB::CreateRaw(this, &SImporterWidget::OnRequestFinished));
 	}
 
 	return FReply::Handled();
 }
 
-void SImporterWidget::OnRequestResult(UVaRestRequestJSON* Request)
+void SImporterWidget::OnRequestFinished(eRequestStatus Status, FString InMessage)
 {
-	OnVaRestWrapper = nullptr;
-
-	if (Request)
+	bool Error = Status == eRequestStatus::Failed;
+	if (Status == eRequestStatus::Succeeded || Status == eRequestStatus::Failed)
 	{
-		const EVaRestRequestStatus status = Request->GetStatus();
-		switch (status)
-		{
-		case EVaRestRequestStatus::NotStarted:
-			SetMessage(TEXT("EVaRestRequestStatus::NotStarted"));
-			break;
-		case EVaRestRequestStatus::Processing:
-			SetMessage(TEXT("EVaRestRequestStatus::Processing"));
-			break;
-		case EVaRestRequestStatus::Failed:
-			SetMessage(TEXT("EVaRestRequestStatus::Failed"), true);
-			break;
-		case EVaRestRequestStatus::Failed_ConnectionError:
-			SetMessage(TEXT("EVaRestRequestStatus::Failed_ConnectionError"), true);
-			break;
-		case EVaRestRequestStatus::Succeeded:
-			SetMessage(TEXT("EVaRestRequestStatus::Succeeded - Parsing"));
-			UVaRestJsonObject* responseJson = Request->GetResponseObject();
-			if (!responseJson)
-			{
-				SetMessage(TEXT("VaRestJson has no response object"), true);
+		ImportButton->SetEnabled(true);
+		SetMessage(InMessage);
 
-				ImportButton->SetEnabled(true);
-
-				return;
-			}
-
-			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-			if (JsonObj->HasField("status") && JsonObj->HasField("err"))
-			{
-				SetMessage(JsonObj->GetStringField("err"), true);
-
-				ImportButton->SetEnabled(true);
-
-				return;
-			}
-
-			UFigmaFile* File = NewObject<UFigmaFile>();
-			File->AddToRoot();
-
-			const int64 CheckFlags = 0;
-			const int64 SkipFlags = 0;
-			const bool StrictMode = false;
-			FText OutFailReason;
-			if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
-			{
-				File->PostSerialize(ContentRootFolderValue, JsonObj);
-				File->ConvertToAssets();
-				ResetMessage();
-			}
-			else
-			{
-				SetMessage(OutFailReason.ToString(), true);
-			}
-			File->RemoveFromRoot();
-		}
+		FTimerHandle UnusedHandle;
+		TSharedRef<FTimerManager> WorldTimerManager = GEditor->GetTimerManager();
+		WorldTimerManager->SetTimer(UnusedHandle, FTimerDelegate::CreateRaw(this, &SImporterWidget::ResetMessage), 5.0f, false, 5.0f);
 	}
-
-	ImportButton->SetEnabled(true);
+	else
+	{
+		SetMessage(InMessage);
+	}
 }
 
 void SImporterWidget::SetMessage(const FString& Text, bool IsError)

@@ -4,8 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "VaRestSubsystem.h"
-
-class URequestWrapper;
+#include "REST/FigmaImporter.h"
 
 class SImporterWidget : public SCompoundWidget
 {
@@ -26,7 +25,7 @@ private:
 	void Add(TSharedRef<SGridPanel> Content, const FText& Name, const int& Value, TSharedPtr<STextBlock>& ValueTextPtr, const FOnFloatValueChanged& OnValueChanged);
 
 	FReply DoImport();
-	void OnRequestResult(UVaRestRequestJSON* VaRestJson);
+	void OnRequestFinished(eRequestStatus Status, FString InMessage);
 
 	void SetMessage(const FString& Text, bool IsError = false);
 	void ResetMessage();
@@ -54,6 +53,4 @@ private:
 	int RowCount = 0;
 
 	TSharedPtr<STextBlock> Message;
-
-	URequestWrapper* OnVaRestWrapper = nullptr;
 };

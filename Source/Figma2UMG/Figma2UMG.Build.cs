@@ -34,15 +34,16 @@ public class Figma2UMG : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
+                "CoreUObject",
+                "Engine",
                 "UnrealEd",
                 "Slate",
-				"SlateCore",
-				"InputCore",
-				"EditorFramework",
-				"EditorStyle",
-				"UnrealEd",
+                "SlateCore",
+                "InputCore",
+                "EditorFramework",
+                "EditorSubsystem",
+                "EditorStyle",
+                "UnrealEd",
                 "ToolMenus",
                 "ContentBrowserData",
                 "VaRest",
