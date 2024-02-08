@@ -5,7 +5,7 @@
 
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
-#include "REST/Properties/FigmaPaint.h"
+#include "Parser/Properties/FigmaPaint.h"
 
 void FBorderCanvasBuilder::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {

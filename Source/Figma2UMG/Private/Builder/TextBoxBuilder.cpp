@@ -4,8 +4,8 @@
 #include "Builder/TextBoxBuilder.h"
 
 #include "Components/TextBlock.h"
-#include "REST/Properties/FigmaPaint.h"
-#include "REST/Properties/FigmaTypeStyle.h"
+#include "Parser/Properties/FigmaPaint.h"
+#include "Parser/Properties/FigmaTypeStyle.h"
 
 void FTextBoxBuilder::SetStyle(const FFigmaTypeStyle& Style)
 {
