@@ -3,6 +3,7 @@
 
 #include "Parser/FigmaFile.h"
 
+#include "Interfaces/FigmaImageRequester.h"
 #include "Nodes/FigmaDocument.h"
 #include "Properties/FigmaComponentRef.h"
 
@@ -71,16 +72,15 @@ void UFigmaFile::BuildImageDependency(TArray<FString>& ImageIds)
 {
 	if (Document)
 	{
-		//TArray<IFigmaFileHandle*> AllFiles;
-		//AllFiles.Add(Document);
-		//Document->GetAllChildrenByType(AllFiles);
-		//UFigmaNode* CurrentNode = Document;
-		//
-		//FGCScopeGuard GCScopeGuard;
-		//for (IFigmaFileHandle* FileNode : AllFiles)
-		//{
-		//	FileNode->LoadOrCreateAssets();
-		//}
+		TArray<IFigmaImageRequester*> AllImageRequests;
+		Document->GetAllChildrenByType(AllImageRequests);
+		UFigmaNode* CurrentNode = Document;
+		
+		FGCScopeGuard GCScopeGuard;
+		for (IFigmaImageRequester* FileNode : AllImageRequests)
+		{
+			FileNode->AddImageIds(ImageIds);
+		}
 	}
 }
 
