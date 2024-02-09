@@ -6,7 +6,7 @@
 #include "Interfaces/FigmaImageRequester.h"
 #include "Nodes/FigmaDocument.h"
 #include "Properties/FigmaComponentRef.h"
-
+#include "REST/FigmaImporter.h"
 
 
 void UFigmaFile::PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)
@@ -68,7 +68,7 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 	}
 }
 
-void UFigmaFile::BuildImageDependency(TArray<FString>& ImageIds)
+void UFigmaFile::BuildImageDependency(FImageRequests& ImageRequests)
 {
 	if (Document)
 	{
@@ -79,7 +79,7 @@ void UFigmaFile::BuildImageDependency(TArray<FString>& ImageIds)
 		FGCScopeGuard GCScopeGuard;
 		for (IFigmaImageRequester* FileNode : AllImageRequests)
 		{
-			FileNode->AddImageIds(ImageIds);
+			FileNode->AddImageRequest(ImageRequests);
 		}
 	}
 }

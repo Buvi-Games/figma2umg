@@ -6,6 +6,8 @@
 
 #include "FigmaImageRequester.generated.h"
 
+struct FImageRequests;
+
 UINTERFACE(BlueprintType, Experimental, meta = (CannotImplementInterfaceInBlueprint))
 class FIGMA2UMG_API UFigmaImageRequester : public UInterface
 {
@@ -17,5 +19,5 @@ class FIGMA2UMG_API IFigmaImageRequester
 {
 	GENERATED_BODY()
 public:
-	virtual void AddImageIds(TArray<FString> Array) = 0;
+	virtual void AddImageRequest(FImageRequests& ImageRequests) = 0;
 };

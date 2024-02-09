@@ -8,6 +8,7 @@
 
 #include "FigmaFile.generated.h"
 
+struct FImageRequests;
 class UFigmaDocument;
 
 DECLARE_DELEGATE_OneParam(FProcessFinishedDelegate, bool);
@@ -29,7 +30,7 @@ public:
 	FFigmaComponentRef* FindComponentRef(const FString& ComponentId);
 
 	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
-	void BuildImageDependency(TArray<FString>& ImageIds);
+	void BuildImageDependency(FImageRequests& ImageRequests);
 	void Patch(const FProcessFinishedDelegate& ProcessDelegate);
 	void PostPatch(const FProcessFinishedDelegate& ProcessDelegate);
 

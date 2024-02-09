@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ImageRequest.h"
 #include "VaRestSubsystem.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/ImagesRequestResult.h"
@@ -11,14 +12,6 @@
 
 class URequestParams;
 class UFigmaFile;
-
-enum class eRequestStatus
-{
-	NotStarted,
-	Processing,
-	Succeeded,
-	Failed,
-};
 
 DECLARE_DELEGATE_TwoParams(FOnFigmaImportUpdateStatusCB, eRequestStatus, FString);
 
@@ -51,6 +44,11 @@ protected:
 	UFUNCTION()
 	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
 
+	void DownloadNextImage();
+
+	UFUNCTION()
+	void HandleImageDownload(bool Succeeded);
+
 	UFUNCTION()
 	void OnPatchUAssets(bool Succeeded);
 
@@ -60,6 +58,7 @@ protected:
 	FVaRestCallDelegate OnVaRestFileRequestDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
 	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
+	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
 	FProcessFinishedDelegate OnPatchUAssetsDelegate;
 	FProcessFinishedDelegate OnPostPatchUAssetsDelegate;
 
@@ -73,10 +72,10 @@ protected:
 
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
-
 	UPROPERTY()
 	TObjectPtr<UFigmaFile> File = nullptr;
 
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;
+	FImageRequests RequestedImages;
 };

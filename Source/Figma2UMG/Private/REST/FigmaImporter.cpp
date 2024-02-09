@@ -9,13 +9,13 @@
 #include "RequestParams.h"
 #include "Parser/FigmaFile.h"
 
-
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	OnVaRestFileRequestDelegate.BindUFunction(this, FName("OnFigmaFileRequestReceived"));
-	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
 	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
+	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
+	OnImageDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleImageDownload);
 	OnPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPatchUAssets);
 	OnPostPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPostPatchUAssets);
 }
@@ -246,14 +246,16 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 	}
 
 	UpdateStatus(eRequestStatus::Processing, TEXT("Requesting images."));
-	TArray<FString> ImageIds;
-	File->BuildImageDependency(ImageIds);
-	if (!ImageIds.IsEmpty())
+	RequestedImages.Reset();
+	File->BuildImageDependency(RequestedImages);
+
+	const TArray<FImageRequest>& Requests = RequestedImages.GetRequests();
+	if (!Requests.IsEmpty())
 	{
-		FString ImageIdsFormated = ImageIds[0];
-		for (int i = 1; i < ImageIds.Num(); i++)
+		FString ImageIdsFormated = Requests[0].Id;
+		for (int i = 1; i < Requests.Num(); i++)
 		{
-			ImageIdsFormated += "," + ImageIds[i];
+			ImageIdsFormated += "," + Requests[i].Id;
 		}
 
 		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, ImageIdsFormated, OnVaRestImagesRequestDelegate))
@@ -281,13 +283,43 @@ void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
 		FText OutFailReason;
 		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 		{
-			//TODO: Download the images
-			File->Patch(OnPatchUAssetsDelegate);
+			const TMap<FString, FString>& ImagesURL = ImagesRequestResult.Images;
+			for (TPair<FString, FString> Element : ImagesURL)
+			{
+				RequestedImages.SetURL(Element.Key, Element.Value);
+			}
+			DownloadNextImage();
 		}
 		else
 		{
 			UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
 		}
+	}
+}
+
+void UFigmaImporter::DownloadNextImage()
+{
+	FImageRequest* ImageRequest = RequestedImages.GetNextToDownload();
+	if (ImageRequest)
+	{
+		UpdateStatus(eRequestStatus::Processing, TEXT("Downloading image ")+ ImageRequest->ImageName + TEXT(" at ") + ImageRequest->URL);
+		ImageRequest->StartDownload(OnImageDownloadRequestCompleted);
+	}
+	else
+	{
+		File->Patch(OnPatchUAssetsDelegate);
+	}
+}
+
+void UFigmaImporter::HandleImageDownload(bool Succeeded)
+{
+	if (Succeeded)
+	{
+		DownloadNextImage();
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to download Image."));
 	}
 }
 

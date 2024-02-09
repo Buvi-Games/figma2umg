@@ -3,6 +3,8 @@
 
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 
+#include "REST/FigmaImporter.h"
+
 FVector2D UFigmaVectorNode::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();
@@ -11,4 +13,9 @@ FVector2D UFigmaVectorNode::GetAbsolutePosition() const
 FVector2D UFigmaVectorNode::GetSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
+}
+
+void UFigmaVectorNode::AddImageRequest(FImageRequests& ImageRequests)
+{
+	ImageRequests.AddRequest(GetNodeName(), GetId());
 }

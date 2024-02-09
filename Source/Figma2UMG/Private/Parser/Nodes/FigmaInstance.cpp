@@ -7,6 +7,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
+#include "REST/FigmaImporter.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
@@ -56,4 +57,16 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 TObjectPtr<UWidget> UFigmaInstance::GetTopWidget() const
 {
 	return Cast<UWidget>(InstanceAsset);
+}
+
+void UFigmaInstance::AddImageRequest(FImageRequests& ImageRequests)
+{
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
+	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
+	if (ComponentAsset == nullptr)
+	{
+		//We don't have the Component Asset, import as a Texture as a PlaceHolder
+		ImageRequests.AddRequest(GetNodeName(), GetId());
+	}
 }

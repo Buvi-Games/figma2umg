@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/FigmaImageRequester.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
 #include "Parser/Properties/FigmaEasingType.h"
@@ -68,7 +69,7 @@ enum class EFigmaStrokeAlign
 
 
 UCLASS()
-class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode
+class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester
 {
 public:
 	GENERATED_BODY()
@@ -76,6 +77,9 @@ public:
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override;
 	FVector2D GetSize() const;
+
+	// IFigmaImageRequester
+	virtual void AddImageRequest(FImageRequests& ImageRequests) override;
 
 protected:
 	UPROPERTY()

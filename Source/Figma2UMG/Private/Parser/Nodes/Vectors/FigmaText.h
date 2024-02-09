@@ -32,6 +32,10 @@ public:
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
 	virtual FVector2D GetTopWidgetPosition() const override;
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
+
+	// IFigmaImageRequester
+	virtual void AddImageRequest(FImageRequests& ImageRequests) override {};
+
 protected:
 
 	UPROPERTY()
