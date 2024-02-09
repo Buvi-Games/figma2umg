@@ -22,9 +22,33 @@ public:
 	DECLARE_DELEGATE_TwoParams(FOnEachFunction, UFigmaNode&, const int)
 	void ForEach(const FOnEachFunction& Function);
 
+	template<class NodeType>
+	void GetAllChildrenByType(TArray<NodeType*>& AllFiles);
+
 	UFUNCTION()
 	virtual FString GetJsonArrayName() const = 0;
 
 	UFUNCTION()
 	virtual TArray<UFigmaNode*>& GetChildren() = 0;
 };
+
+template <class NodeType>
+void IFigmaContainer::GetAllChildrenByType(TArray<NodeType*>& AllFiles)
+{
+	TArray<UFigmaNode*>& Children = GetChildren();
+	for (UFigmaNode* Node : Children)
+	{
+		if (!Node)
+			continue;
+
+		if (NodeType* FigmaFileHandle = Cast<NodeType>(Node))
+		{
+			AllFiles.Add(FigmaFileHandle);
+		}
+
+		if (IFigmaContainer* Container = Cast<IFigmaContainer>(Node))
+		{
+			Container->GetAllChildrenByType(AllFiles);
+		}
+	}
+}

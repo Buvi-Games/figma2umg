@@ -5,11 +5,10 @@
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
 #include "Interfaces/FigmaRefHandle.h"
+#include "Parser/Properties/FigmaComponentProperty.h"
 #include "Parser/Properties/FigmaOverrides.h"
 
 #include "FigmaInstance.generated.h"
-
-struct FFigmaComponentProperty;
 
 UCLASS()
 class UFigmaInstance : public UFigmaFrame, public IFigmaRefHandle

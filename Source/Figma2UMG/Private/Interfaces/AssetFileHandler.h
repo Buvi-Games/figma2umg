@@ -24,8 +24,8 @@ public:
 	UFUNCTION()
 	virtual FString GetAssetName() const = 0;
 
-	template<class AssetType>
-	AssetType* GetOrCreateAsset();
+	UFUNCTION()
+	virtual void LoadOrCreateAssets() = 0;
 
 	UObject* GetAsset() const { return Asset; }
 	template<class Type>
@@ -33,6 +33,9 @@ public:
 	UObject* GetOuter() const { return AssetOuter; }
 
 protected:
+	template<class AssetType>
+	AssetType* GetOrCreateAsset();
+
 	UObject* Asset = nullptr;
 	UObject* AssetOuter = nullptr;
 };

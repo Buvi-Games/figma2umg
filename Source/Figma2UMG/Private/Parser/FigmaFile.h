@@ -3,16 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Interfaces/AssetFileHandler.h"
-#include "Nodes/FigmaInstance.h"
-#include "UI/SImporterWidget.h"
+#include "Properties/FigmaComponentRef.h"
+#include "Properties/FigmaComponentSetRef.h"
 
 #include "FigmaFile.generated.h"
 
 class UFigmaDocument;
-struct FFigmaComponentRef;
-struct FFigmaComponentSetRef;
-struct FFigmaStyleRef;
+
+DECLARE_DELEGATE_OneParam(FProcessFinishedDelegate, bool);
 
 UCLASS()
 class UFigmaFile : public UObject
@@ -30,9 +28,13 @@ public:
 	FString FindComponentName(const FString& ComponentId);
 	FFigmaComponentRef* FindComponentRef(const FString& ComponentId);
 
+	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
+	void BuildImageDependency(TArray<FString>& ImageIds);
+	void Patch(const FProcessFinishedDelegate& ProcessDelegate);
+	void PostPatch(const FProcessFinishedDelegate& ProcessDelegate);
+
 protected:
-	void ImportComponents();
-	void Convert();
+	void ExecuteDelegate(const bool Succeeded);
 
 	UPROPERTY()
 	int SchemaVersion = 0;
@@ -71,4 +73,6 @@ protected:
 	TMap<FString, FFigmaStyleRef> Styles;//Not sure if this is correct, probably not
 
 	FString PackagePath;
+
+	FProcessFinishedDelegate CurrentProcessDelegate;
 };

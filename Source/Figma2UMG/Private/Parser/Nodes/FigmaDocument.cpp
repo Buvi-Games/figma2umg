@@ -19,6 +19,11 @@ FString UFigmaDocument::GetAssetName() const
 	return FigmaFile ? FigmaFile->GetFileName() : FString();
 }
 
+void UFigmaDocument::LoadOrCreateAssets()
+{
+	GetOrCreateAsset<UWidgetBlueprint>();
+}
+
 void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 {
 	FigmaFile = InFigmaFile;

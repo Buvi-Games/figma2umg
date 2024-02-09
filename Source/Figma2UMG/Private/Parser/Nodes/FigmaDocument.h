@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Nodes/FigmaNode.h"
@@ -26,6 +27,7 @@ public:
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
+	virtual void LoadOrCreateAssets() override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };

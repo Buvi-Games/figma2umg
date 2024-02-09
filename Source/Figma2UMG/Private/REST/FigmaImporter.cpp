@@ -6,6 +6,7 @@
 #include "Defines.h"
 #include "FigmaImportSubsystem.h"
 #include "JsonObjectConverter.h"
+#include "RequestParams.h"
 #include "Parser/FigmaFile.h"
 
 
@@ -13,14 +14,28 @@ UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	OnVaRestFileRequestDelegate.BindUFunction(this, FName("OnFigmaFileRequestReceived"));
+	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
+	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
+	OnPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPatchUAssets);
+	OnPostPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPostPatchUAssets);
 }
 
-void UFigmaImporter::Init(const FString& InAccessToken, const FString& InFileKey, const FString& InIds, const FString& InContentRootFolder, const FOnFigmaImportUpdateStatusCB& InRequesterCallback)
+void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const FOnFigmaImportUpdateStatusCB& InRequesterCallback)
 {
-	AccessToken = InAccessToken;
-	FileKey = InFileKey;
-	Ids = InIds;
-	ContentRootFolder = InContentRootFolder;
+	AccessToken = InProperties->AccessToken;
+	FileKey = InProperties->FileKey;
+	if(!InProperties->Ids.IsEmpty())
+	{
+
+		Ids = InProperties->Ids[0];
+		for (int i = 1; i < InProperties->Ids.Num(); i++)
+		{
+			Ids += "," + InProperties->Ids[i];
+		}
+
+	}
+
+	ContentRootFolder = InProperties->ContentRootFolder;
 	RequesterCallback = InRequesterCallback;
 }
 
@@ -145,7 +160,7 @@ void UFigmaImporter::OnCurrentRequestFail(UVaRestRequestJSON* Request)
 	Response.Callback.Unbind();
 }
 
-void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
+bool UFigmaImporter::ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request)
 {
 	if (Request)
 	{
@@ -153,57 +168,149 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 		switch (status)
 		{
 		case EVaRestRequestStatus::NotStarted:
-			UpdateStatus(eRequestStatus::NotStarted, TEXT("EVaRestRequestStatus::NotStarted."));
+			UpdateStatus(eRequestStatus::NotStarted, MessagePrefix + TEXT("EVaRestRequestStatus::NotStarted."));
 			break;
 		case EVaRestRequestStatus::Processing:
-			UpdateStatus(eRequestStatus::Processing, TEXT("EVaRestRequestStatus::Processing"));
+			UpdateStatus(eRequestStatus::Processing, MessagePrefix + TEXT("EVaRestRequestStatus::Processing"));
 			break;
 		case EVaRestRequestStatus::Failed:
-			UpdateStatus(eRequestStatus::Failed, TEXT("EVaRestRequestStatus::Failed"));
+			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed"));
 			break;
 		case EVaRestRequestStatus::Failed_ConnectionError:
-			UpdateStatus(eRequestStatus::Failed, TEXT("EVaRestRequestStatus::Failed_ConnectionError"));
+			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed_ConnectionError"));
 			break;
 		case EVaRestRequestStatus::Succeeded:
-			UpdateStatus(eRequestStatus::Processing, TEXT("EVaRestRequestStatus::Succeeded - Parsing"));
+			UpdateStatus(eRequestStatus::Processing, MessagePrefix + TEXT("EVaRestRequestStatus::Succeeded - Parsing"));
 			UVaRestJsonObject* responseJson = Request->GetResponseObject();
 			if (!responseJson)
 			{
-				UpdateStatus(eRequestStatus::Failed, TEXT("VaRestJson has no response object"));
+				UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("VaRestJson has no response object"));
 
-				return;
+				return false;
 			}
 
 			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj]()
-				{
-					if (JsonObj->HasField("status") && JsonObj->HasField("err"))
-					{
-						UpdateStatus(eRequestStatus::Failed, JsonObj->GetStringField("err"));
+			if (JsonObj->HasField("status") && JsonObj->HasField("err"))
+			{
+				UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField("err"));
 
-						return;
-					}
+				return false;
+			}
 
-					File = NewObject<UFigmaFile>();
-
-					const int64 CheckFlags = 0;
-					const int64 SkipFlags = 0;
-					const bool StrictMode = false;
-					FText OutFailReason;
-					if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
-					{
-						File->PostSerialize(ContentRootFolder, JsonObj);
-						AsyncTask(ENamedThreads::GameThread, [this, JsonObj]()
-							{
-								File->ConvertToAssets();
-								UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + " imported successfully!");
-							});
-					}
-					else
-					{
-						UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
-					}
-				});
+			return true;
+			
 		}
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("Result from Figma request is nullptr."));
+	}
+	return false;
+}
+
+void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
+{
+	if (ParseRequestReceived(TEXT("[Figma file request] "), Request))
+	{
+		UVaRestJsonObject* responseJson = Request->GetResponseObject();
+		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
+
+		File = NewObject<UFigmaFile>();
+
+		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj]()
+			{
+				constexpr int64 CheckFlags = 0;
+				constexpr int64 SkipFlags = 0;
+				constexpr bool StrictMode = false;
+				FText OutFailReason;
+				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+				{
+					File->PostSerialize(ContentRootFolder, JsonObj);
+					File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
+					UpdateStatus(eRequestStatus::Processing, TEXT("Creating UAssets."));
+				}
+				else
+				{
+					UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
+				}
+			});
+	}
+}
+
+void UFigmaImporter::OnAssetsCreated(bool Succeeded)
+{
+	if(!Succeeded)
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to create UAssets."));
+		return;
+	}
+
+	UpdateStatus(eRequestStatus::Processing, TEXT("Requesting images."));
+	TArray<FString> ImageIds;
+	File->BuildImageDependency(ImageIds);
+	if (!ImageIds.IsEmpty())
+	{
+		FString ImageIdsFormated = ImageIds[0];
+		for (int i = 1; i < ImageIds.Num(); i++)
+		{
+			ImageIdsFormated += "," + ImageIds[i];
+		}
+
+		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, ImageIdsFormated, OnVaRestImagesRequestDelegate))
+		{
+			UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
+		}
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Processing, TEXT("Patching UAssets."));
+		File->Patch(OnPatchUAssetsDelegate);
+	}
+}
+
+void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
+{
+	if (ParseRequestReceived(TEXT("[Figma images request] "), Request))
+	{
+		UVaRestJsonObject* responseJson = Request->GetResponseObject();
+		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
+
+		constexpr int64 CheckFlags = 0;
+		constexpr int64 SkipFlags = 0;
+		constexpr bool StrictMode = false;
+		FText OutFailReason;
+		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+		{
+			//TODO: Download the images
+			File->Patch(OnPatchUAssetsDelegate);
+		}
+		else
+		{
+			UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
+		}
+	}
+}
+
+void UFigmaImporter::OnPatchUAssets(bool Succeeded)
+{
+	if (!Succeeded)
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to patch UAssets."));
+		return;
+	}
+
+	UpdateStatus(eRequestStatus::Processing, TEXT("Post-patch UAssets."));
+	File->PostPatch(OnPostPatchUAssetsDelegate);
+}
+
+void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
+{
+	if (Succeeded)
+	{
+		UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + TEXT("was successfully imported."));
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("Failed at Post-patch of UAssets."));
 	}
 }

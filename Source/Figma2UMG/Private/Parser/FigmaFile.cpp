@@ -18,12 +18,6 @@ void UFigmaFile::PostSerialize(const FString& InPackagePath, const TSharedRef<FJ
 	}
 }
 
-void UFigmaFile::ConvertToAssets()
-{
-	FGCScopeGuard GCScopeGuard;
-	Convert();
-}
-
 FString UFigmaFile::FindComponentName(const FString& ComponentId)
 {
 	if (Components.Contains(ComponentId))
@@ -46,13 +40,91 @@ FFigmaComponentRef* UFigmaFile::FindComponentRef(const FString& ComponentId)
 	return nullptr;
 }
 
-void UFigmaFile::Convert()
+void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate)
+{
+	CurrentProcessDelegate = ProcessDelegate;
+	if (Document)
+	{
+		AsyncTask(ENamedThreads::GameThread, [this]()
+			{
+				TArray<IFigmaFileHandle*> AllFiles;
+				AllFiles.Add(Document);
+				Document->GetAllChildrenByType(AllFiles);
+				UFigmaNode* CurrentNode = Document;
+
+				FGCScopeGuard GCScopeGuard;
+				for (IFigmaFileHandle* FileNode : AllFiles)
+				{
+					FileNode->LoadOrCreateAssets();
+				}
+
+				ExecuteDelegate(true);
+			});
+	}
+	else
+	{
+		ExecuteDelegate(false);
+	}
+}
+
+void UFigmaFile::BuildImageDependency(TArray<FString>& ImageIds)
 {
 	if (Document)
 	{
-		Document->PrePatchWidget();
-		Document->PatchPreInsertWidget(nullptr);
-		Document->PatchPostInsertWidget();
-		Document->PostPatchWidget();
+		//TArray<IFigmaFileHandle*> AllFiles;
+		//AllFiles.Add(Document);
+		//Document->GetAllChildrenByType(AllFiles);
+		//UFigmaNode* CurrentNode = Document;
+		//
+		//FGCScopeGuard GCScopeGuard;
+		//for (IFigmaFileHandle* FileNode : AllFiles)
+		//{
+		//	FileNode->LoadOrCreateAssets();
+		//}
+	}
+}
+
+void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
+{
+	CurrentProcessDelegate = ProcessDelegate;
+	if (Document)
+	{
+		AsyncTask(ENamedThreads::GameThread, [this]()
+			{
+				Document->PatchPreInsertWidget(nullptr);
+				Document->PatchPostInsertWidget();
+
+				ExecuteDelegate(true);
+			});
+	}
+	else
+	{
+		ExecuteDelegate(false);
+	}
+}
+
+void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
+{
+	CurrentProcessDelegate = ProcessDelegate;
+	if (Document)
+	{
+		AsyncTask(ENamedThreads::GameThread, [this]()
+			{
+				Document->PostPatchWidget();
+
+				ExecuteDelegate(true);
+			});
+	}
+	else
+	{
+		ExecuteDelegate(false);
+	}
+}
+
+void UFigmaFile::ExecuteDelegate(const bool Succeeded)
+{
+	if (CurrentProcessDelegate.ExecuteIfBound(Succeeded))
+	{
+//		CurrentProcessDelegate.Unbind();
 	}
 }

@@ -27,21 +27,25 @@ FString UFigmaComponent::GetAssetName() const
 	return GetUniqueName();
 }
 
-
-void UFigmaComponent::PrePatchWidget()
+void UFigmaComponent::LoadOrCreateAssets()
 {
-	Super::PrePatchWidget();
-
 	UWidgetBlueprint* WidgetBB = GetOrCreateAsset<UWidgetBlueprint>();
 	RefAsset = WidgetBB;
 
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentRef* ComponentRef = FigmaFile ? FigmaFile->FindComponentRef(GetId()) : nullptr;
-	if(ComponentRef)
+	if (ComponentRef)
 	{
 		ComponentRef->SetAsset(GetAsset<UWidgetBlueprint>());
 	}
-	
+}
+
+
+void UFigmaComponent::PrePatchWidget()
+{
+	Super::PrePatchWidget();
+
+	LoadOrCreateAssets();	
 }
 
 TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
