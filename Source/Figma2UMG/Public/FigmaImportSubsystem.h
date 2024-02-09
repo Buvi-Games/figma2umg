@@ -13,7 +13,7 @@ class FIGMA2UMG_API UFigmaImportSubsystem : public UEditorSubsystem
 {
 	GENERATED_BODY()
 public:
-	UFigmaImporter* Request(const FString& InAccessToken, const FString& InFileKey, const FString& InIds, const FString& InContentRootFolder, const FOnFigmaImportUpdateStatusCB& InRequesterCallback);
+	UFigmaImporter* Request(const TObjectPtr<URequestParams> InProperties, const FOnFigmaImportUpdateStatusCB& InRequesterCallback);
 	void RemoveRequest(UFigmaImporter* FigmaImporter);
 
 private:

@@ -3,50 +3,35 @@
 
 #include "UI/SImporterWidget.h"
 
-#include "Figma2UMGModule.h"
-#include "Figma2UMGSettings.h"
 #include "FigmaImportSubsystem.h"
-#include "JsonObjectConverter.h"
-#include "Parser/FigmaFile.h"
-#include "Widgets/Input/SSlider.h"
 #include "TimerManager.h"
+#include "REST/RequestParams.h"
 
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 
 SImporterWidget::SImporterWidget()
 {
-	//OnVaRestDelegate.BindUFunction(this, FName("OnVaRestCB"));
-
-	AccessTokenName = LOCTEXT("AccessTokenName", "Access Token");
-	ContentRootFolderName = LOCTEXT("ContentRootFolderName", "Content Root Folder");
-	FileKeyName = LOCTEXT("FileKeyName", "File Key");
-	IdsName = LOCTEXT("IdsName", "Ids");
-
 	ImportButtonName = LOCTEXT("ImportButtonName", "Import");
 	ImportButtonTooltip  = LOCTEXT("ImportButtonTooltip", "This will import the file from Figma according to the value above.");
-
-
-	FFigma2UMGModule& Figma2UMGModule = FModuleManager::LoadModuleChecked<FFigma2UMGModule>("Figma2UMG");
-	UFigma2UMGSettings* Settings = Figma2UMGModule.GetSettings();
-	if (Settings)
-	{
-		AccessTokenValue = Settings->AccessToken;
-		FileKeyValue = Settings->FileKey;// "";
-	}
-
-	ContentRootFolderValue = "/Game/";
-
-//#if !UE_BUILD_SHIPPING
-	IdsValue = "146:1357";
-//#endif
 }
 
 SImporterWidget::~SImporterWidget()
 {
+	if (Properties != nullptr)
+	{
+		Properties->RemoveFromRoot();
+		Properties = nullptr;
+	}
 }
 
 void SImporterWidget::Construct(const FArguments& InArgs)
 {
+	if (Properties == nullptr)
+	{
+		Properties = NewObject<URequestParams>();
+		Properties->AddToRoot();
+	}
+
 	TSharedRef<SGridPanel> Content = SNew(SGridPanel).FillColumn(1, 1.0f);
 	TSharedRef<SBorder> MainContent = SNew(SBorder)
 		.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
@@ -59,27 +44,7 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 
 	ChildSlot[MainContent];
 
-	Add(Content, AccessTokenName, AccessTokenValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnAccessTokenChanged));
-	Add(Content, FileKeyName, FileKeyValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnFileURLChanged));
-	Add(Content, IdsName, IdsValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnIdsChanged));
-	Add(Content, ContentRootFolderName, ContentRootFolderValue, FOnTextChanged::CreateRaw(this, &SImporterWidget::OnContentRootFolderChanged));
-
-	Content->AddSlot(0, RowCount)
-		.ColumnSpan(2)
-		.VAlign(VAlign_Center)
-		.HAlign(HAlign_Center)
-		[
-			SNew(SBorder)
-				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
-				.HAlign(HAlign_Left)
-				.VAlign(VAlign_Center)
-				.Padding(8.f)
-				[
-					SAssignNew(Message, STextBlock)
-						.Visibility(EVisibility::Collapsed)
-				]
-		];
-	RowCount++;
+	AddPropertyView(Content);
 
 	Content->AddSlot(0, RowCount)
 		.ColumnSpan(2)
@@ -91,91 +56,65 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 				.ToolTipText(ImportButtonTooltip)
 				.OnClicked(this, &SImporterWidget::DoImport)
 		];
-}
+	RowCount++;
 
-void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, const FString& Value, const FOnTextChanged& OnValueChanged)
-{
 	Content->AddSlot(0, RowCount)
+		.ColumnSpan(2)
+		.VAlign(VAlign_Top)
+		.HAlign(HAlign_Fill)
 		[
 			SNew(SBorder)
 				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
-				.HAlign(HAlign_Left)
+				.HAlign(HAlign_Center)
 				.VAlign(VAlign_Center)
 				.Padding(8.f)
 				[
-					SNew(STextBlock)
-						.Text(Name)
+					SAssignNew(Message, STextBlock)
+						.Visibility(EVisibility::Collapsed)
+						.Justification(ETextJustify::Center)
 				]
 		];
-
-	Content->AddSlot(1, RowCount)
-		[
-			SNew(SBorder)
-				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
-				.HAlign(HAlign_Fill)
-				.VAlign(VAlign_Fill)
-				.Padding(8.f, 3.0f)
-				[
-					SNew(SEditableTextBox)
-						.Text(FText::FromString(Value))
-						.Padding(FVector4f(10.0, 0.0, 0.0, 0.0))
-						.OnTextChanged(OnValueChanged)
-				]
-		];
-
-	RowCount++;
 }
 
-void SImporterWidget::Add(TSharedRef<SGridPanel> Content, const FText& Name, const int& Value, TSharedPtr<STextBlock>& ValueTextPtr, const FOnFloatValueChanged& OnValueChanged)
+void SImporterWidget::AddPropertyView(TSharedRef<SGridPanel> Content)
 {
-	Content->AddSlot(0, RowCount)
-		[
-			SNew(SBorder)
-				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
-				.HAlign(HAlign_Left)
-				.VAlign(VAlign_Center)
-				.Padding(8.f)
-				[
-					SNew(STextBlock)
-						.Text(Name)
-				]
-		];
+	FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 
-	Content->AddSlot(1, RowCount)
-		[
-			SNew(SBorder)
-				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
-				.HAlign(HAlign_Fill)
-				.VAlign(VAlign_Fill)
-				.Padding(8.f)
-				[
-					SNew(SHorizontalBox)
-						+ SHorizontalBox::Slot()
-							.AutoWidth()
-							.MaxWidth(50.0f)
-							.Padding(20.f, 0.0f)
-							[
-								SAssignNew(ValueTextPtr, STextBlock)
-									.Text(FText::AsNumber(Value))
-							] 
-						+ SHorizontalBox::Slot()
-							.AutoWidth()
-							.FillWidth(1.0f)
-							[
-								SNew(SSlider)
-									.Value(Value)
-									.MinValue(-1)
-									.MaxValue(100)
-									.StepSize(1.0f)
-									.MouseUsesStep(true)
-									.OnValueChanged(OnValueChanged)
-							]
-				]
-		];
+	FDetailsViewArgs DetailsViewArgs;
+	DetailsViewArgs.NameAreaSettings = FDetailsViewArgs::HideNameArea;
+	DetailsViewArgs.bUpdatesFromSelection = false;
+	DetailsViewArgs.bLockable = false;
+	DetailsViewArgs.bShowPropertyMatrixButton = false;
+	DetailsViewArgs.NotifyHook = this;
 
-	RowCount++;
+	DetailsViewArgs.ViewIdentifier = FName("Figma2UMG Importer");
+	DetailsViewArgs.bAllowSearch = false;
+	DetailsViewArgs.bAllowFavoriteSystem = false;
+	DetailsViewArgs.bShowOptions = false;
+	DetailsViewArgs.bShowObjectLabel = false;
+	DetailsViewArgs.bShowModifiedPropertiesOption = true;
+	DetailsViewArgs.bShowKeyablePropertiesOption = false;
+	DetailsViewArgs.bShowAnimatedPropertiesOption = false;
+	DetailsViewArgs.bShowScrollBar = true;
+	DetailsViewArgs.bForceHiddenPropertyVisibility = false;
+	//DetailsViewArgs.ColumnWidth = ColumnWidth;
+	DetailsViewArgs.bShowCustomFilterOption = false;
+
+	DetailViewWidget = PropertyEditorModule.CreateDetailView(DetailsViewArgs);
+	DetailViewWidget->SetObject(Properties);
+	if (DetailViewWidget.IsValid())
+	{
+		Content->AddSlot(0, 0)
+			.ColumnSpan(2)
+			.VAlign(VAlign_Center)
+			.HAlign(HAlign_Fill)
+			[
+				DetailViewWidget.ToSharedRef()
+			];
+
+		RowCount++;
+	}
 }
-
 
 FReply SImporterWidget::DoImport()
 {
@@ -184,7 +123,7 @@ FReply SImporterWidget::DoImport()
 	{
 		SetMessage(TEXT("Connecting with Figma"));
 		ImportButton->SetEnabled(false);
-		Importer->Request(AccessTokenValue, FileKeyValue, IdsValue, ContentRootFolderValue, FOnFigmaImportUpdateStatusCB::CreateRaw(this, &SImporterWidget::OnRequestFinished));
+		Importer->Request(Properties, FOnFigmaImportUpdateStatusCB::CreateRaw(this, &SImporterWidget::OnRequestFinished));
 	}
 
 	return FReply::Handled();
@@ -211,7 +150,9 @@ void SImporterWidget::OnRequestFinished(eRequestStatus Status, FString InMessage
 void SImporterWidget::SetMessage(const FString& Text, bool IsError)
 {
 	Message->SetVisibility(EVisibility::Visible);
-	Message->SetText(FText::FromString(Text));
+	FString CurrentText = Message->GetText().ToString();
+	CurrentText = CurrentText + TEXT('\r') + Text;
+	Message->SetText(FText::FromString(CurrentText));
 	if(IsError)
 	{
 		Message->SetColorAndOpacity(FLinearColor::Red);
@@ -226,6 +167,11 @@ void SImporterWidget::ResetMessage()
 {
 	Message->SetVisibility(EVisibility::Collapsed);
 	Message->SetColorAndOpacity(FLinearColor::White);
+	Message->SetText(FText::FromString(""));
+}
+
+void SImporterWidget::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, FProperty* PropertyThatChanged)
+{
 }
 
 #undef LOCTEXT_NAMESPACE

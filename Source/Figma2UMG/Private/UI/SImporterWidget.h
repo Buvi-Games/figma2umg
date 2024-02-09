@@ -3,10 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "VaRestSubsystem.h"
 #include "REST/FigmaImporter.h"
 
-class SImporterWidget : public SCompoundWidget
+class SImporterWidget : public SCompoundWidget, public FNotifyHook
 {
 public:
 	SLATE_BEGIN_ARGS(SImporterWidget)
@@ -21,8 +20,7 @@ public:
 	void Construct(const FArguments& InArgs);
 
 private:
-	void Add(TSharedRef<SGridPanel> Content, const FText& Name, const FString& Value, const FOnTextChanged& OnValueChanged);
-	void Add(TSharedRef<SGridPanel> Content, const FText& Name, const int& Value, TSharedPtr<STextBlock>& ValueTextPtr, const FOnFloatValueChanged& OnValueChanged);
+	void AddPropertyView(TSharedRef<SGridPanel> Content);
 
 	FReply DoImport();
 	void OnRequestFinished(eRequestStatus Status, FString InMessage);
@@ -30,22 +28,11 @@ private:
 	void SetMessage(const FString& Text, bool IsError = false);
 	void ResetMessage();
 
-	void OnAccessTokenChanged(const FText& InValue) { AccessTokenValue = InValue.ToString(); }
-	FText AccessTokenName;
-	FString AccessTokenValue;
+	virtual void NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, FProperty* PropertyThatChanged) override;
 
-	void OnFileURLChanged(const FText& InValue) { FileKeyValue = InValue.ToString(); }
-	FText FileKeyName;
-	FString FileKeyValue;
+	TObjectPtr<URequestParams> Properties;
 
-	void OnIdsChanged(const FText& InValue) { IdsValue = InValue.ToString(); }
-	FText IdsName;
-	FString IdsValue;
-
-	void OnContentRootFolderChanged(const FText& InValue) { ContentRootFolderValue = InValue.ToString(); }
-	FText ContentRootFolderName;
-	FString ContentRootFolderValue;
-
+	TSharedPtr<IDetailsView> DetailViewWidget;
 	TSharedPtr<SButton> ImportButton;
 	FText ImportButtonName;
 	FText ImportButtonTooltip;

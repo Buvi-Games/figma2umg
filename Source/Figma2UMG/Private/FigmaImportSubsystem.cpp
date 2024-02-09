@@ -3,11 +3,13 @@
 
 #include "FigmaImportSubsystem.h"
 
+#include "UI/SImporterWidget.h"
 
-UFigmaImporter* UFigmaImportSubsystem::Request(const FString& InAccessToken, const FString& InFileKey, const FString& InIds, const FString& InContentRootFolder, const FOnFigmaImportUpdateStatusCB& InRequesterCallback)
+
+UFigmaImporter* UFigmaImportSubsystem::Request(const TObjectPtr<URequestParams> InProperties, const FOnFigmaImportUpdateStatusCB& InRequesterCallback)
 {
 	UFigmaImporter* request = Requests.Emplace_GetRef(NewObject<UFigmaImporter>());
-	request->Init(InAccessToken, InFileKey, InIds, InContentRootFolder, InRequesterCallback);
+	request->Init(InProperties, InRequesterCallback);
 	request->Run();
 	return request;
 }
