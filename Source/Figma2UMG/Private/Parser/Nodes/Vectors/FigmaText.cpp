@@ -5,6 +5,16 @@
 
 #include "Components/TextBlock.h"
 
+FVector2D UFigmaText::GetAbsolutePosition() const
+{
+	return AbsoluteBoundingBox.GetPosition();
+}
+
+FVector2D UFigmaText::GetSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
+}
+
 void UFigmaText::ForEach(const FOnEachFunction& Function)
 {
 	if (Builder.TextBlock)

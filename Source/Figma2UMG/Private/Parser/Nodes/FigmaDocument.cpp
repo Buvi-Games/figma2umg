@@ -7,6 +7,7 @@
 #include <Components/WidgetSwitcher.h>
 
 #include "WidgetBlueprint.h"
+#include "WidgetBlueprintFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 FString UFigmaDocument::GetPackagePath() const
@@ -21,7 +22,7 @@ FString UFigmaDocument::GetAssetName() const
 
 void UFigmaDocument::LoadOrCreateAssets()
 {
-	GetOrCreateAsset<UWidgetBlueprint>();
+	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 }
 
 void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
@@ -32,7 +33,7 @@ void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 
 void UFigmaDocument::PrePatchWidget()
 {
-	GetOrCreateAsset<UWidgetBlueprint>();
+	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 
 	Super::PrePatchWidget();
 }

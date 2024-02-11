@@ -4,6 +4,7 @@
 #include "Parser/Nodes/FigmaComponent.h"
 
 #include "WidgetBlueprint.h"
+#include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -19,7 +20,7 @@ FString UFigmaComponent::GetPackagePath() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "COMPONENTS";
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
 }
 
 FString UFigmaComponent::GetAssetName() const
@@ -29,7 +30,7 @@ FString UFigmaComponent::GetAssetName() const
 
 void UFigmaComponent::LoadOrCreateAssets()
 {
-	UWidgetBlueprint* WidgetBB = GetOrCreateAsset<UWidgetBlueprint>();
+	UWidgetBlueprint* WidgetBB = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 	RefAsset = WidgetBB;
 
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();

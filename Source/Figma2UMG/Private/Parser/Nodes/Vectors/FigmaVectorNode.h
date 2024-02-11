@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaImageRequester.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
@@ -69,7 +70,7 @@ enum class EFigmaStrokeAlign
 
 
 UCLASS()
-class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester
+class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle
 {
 public:
 	GENERATED_BODY()
@@ -80,6 +81,12 @@ public:
 
 	// IFigmaImageRequester
 	virtual void AddImageRequest(FImageRequests& ImageRequests) override;
+	virtual void OnRawImageReceived(TArray<uint8>& RawData) override;
+
+	// IFigmaFileHandle
+	virtual FString GetPackagePath() const override;
+	virtual FString GetAssetName() const override;
+	virtual void LoadOrCreateAssets() override;
 
 protected:
 	UPROPERTY()

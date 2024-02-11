@@ -4,6 +4,11 @@
 
 #include "CoreMinimal.h"
 
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetToolsModule.h"
+#include "PackageTools.h"
+#include "ObjectTools.h"
+
 #include "AssetFileHandler.generated.h"
 
 class UWidgetBlueprint;
@@ -33,16 +38,46 @@ public:
 	UObject* GetOuter() const { return AssetOuter; }
 
 protected:
-	template<class AssetType>
-	AssetType* GetOrCreateAsset();
+	template<class AssetType, class FactoryType>
+	AssetType* GetOrCreateAsset(FactoryType* Factory = nullptr);
 
 	UObject* Asset = nullptr;
 	UObject* AssetOuter = nullptr;
 };
 
-template <class AssetType>
-AssetType* IFigmaFileHandle::GetOrCreateAsset()
+template <class AssetType, class FactoryType>
+AssetType* IFigmaFileHandle::GetOrCreateAsset(FactoryType* Factory)
 {
-	return nullptr;
+	AssetType* TypedAsset = Cast<AssetType>(Asset);
+	if (TypedAsset == nullptr)
+	{
+		const FString PackagePath = UPackageTools::SanitizePackageName(GetPackagePath());
+		const FString AssetName = ObjectTools::SanitizeInvalidChars(GetAssetName(), INVALID_OBJECTNAME_CHARACTERS);
+		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
+
+		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
+		TypedAsset = Cast<UTexture2D>(AssetData.FastGetAsset(true));
+
+		if (TypedAsset == nullptr)
+		{
+			static const FName NAME_AssetTools = "AssetTools";
+			IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
+			UClass* AssetClass = UTexture2D::StaticClass();
+			if (Factory == nullptr)
+			{
+				Factory = NewObject<FactoryType>(FactoryType::StaticClass());
+			}
+			TypedAsset = Cast<UTexture2D>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
+		}
+
+		Asset = TypedAsset;
+		AssetOuter = TypedAsset;
+	}
+
+	TypedAsset->SetFlags(RF_Transactional);
+	TypedAsset->Modify();
+
+	return TypedAsset;
 }
 

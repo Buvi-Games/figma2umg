@@ -14,6 +14,7 @@
 #include "FigmaShapeWithText.h"
 #include "FigmaSlice.h"
 #include "FigmaSticky.h"
+#include "FileHelpers.h"
 #include "JsonObjectConverter.h"
 #include "Blueprint/WidgetTree.h"
 #include "Interfaces/WidgetOwner.h"
@@ -223,6 +224,11 @@ void UFigmaNode::PostPatchWidget()
 			FKismetEditorUtilities::CompileBlueprint(BlueprintObj, EBlueprintCompileOptions::None, &LogResults);
 
 			LogResults.EndEvent();
+		}
+		else if (UTexture2D* Texture = Cast<UTexture2D>(Asset))
+		{
+			FEditorFileUtils::FPromptForCheckoutAndSaveParams Params;
+			FEditorFileUtils::PromptForCheckoutAndSave({ Texture->GetPackage() }, Params);
 		}
 	}
 	

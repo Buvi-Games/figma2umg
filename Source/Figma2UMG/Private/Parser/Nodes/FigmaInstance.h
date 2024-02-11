@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
+#include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaImageRequester.h"
 #include "Interfaces/FigmaRefHandle.h"
 #include "Parser/Properties/FigmaComponentProperty.h"
@@ -12,7 +13,7 @@
 #include "FigmaInstance.generated.h"
 
 UCLASS()
-class UFigmaInstance : public UFigmaFrame, public IFigmaRefHandle, public IFigmaImageRequester
+class UFigmaInstance : public UFigmaFrame, public IFigmaRefHandle, public IFigmaImageRequester, public IFigmaFileHandle
 {
 public:
 	GENERATED_BODY()
@@ -24,6 +25,13 @@ public:
 
 	// IFigmaImageRequester
 	virtual void AddImageRequest(FImageRequests& ImageRequests) override;
+	virtual void OnRawImageReceived(TArray<uint8>& RawData) override;
+
+	// IFigmaFileHandle
+	virtual FString GetPackagePath() const;
+	virtual FString GetAssetName() const;
+	virtual void LoadOrCreateAssets();
+
 protected:
 	UPROPERTY()
 	FString ComponentId;
@@ -39,4 +47,8 @@ protected:
 
 	UPROPERTY()
 	TArray<FFigmaOverrides> Overrides;
+
+
+	UPROPERTY()
+	TObjectPtr<UTexture> MissingComponentTexture = nullptr;
 };

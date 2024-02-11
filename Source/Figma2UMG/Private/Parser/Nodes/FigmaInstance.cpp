@@ -5,9 +5,12 @@
 
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Factories/Texture2dFactoryNew.h"
+#include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
 #include "REST/FigmaImporter.h"
+#include "REST/ImageRequest.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
@@ -51,6 +54,10 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 			return NewWidget;
 		}
 	}
+	else if (MissingComponentTexture)
+	{
+		//Todo Add image
+	}
 	return WidgetToPatch;
 }
 
@@ -67,6 +74,34 @@ void UFigmaInstance::AddImageRequest(FImageRequests& ImageRequests)
 	if (ComponentAsset == nullptr)
 	{
 		//We don't have the Component Asset, import as a Texture as a PlaceHolder
-		ImageRequests.AddRequest(GetNodeName(), GetId());
+		ImageRequests.AddRequest(GetNodeName(), GetId(), OnRawImageReceivedCB);
 	}
+}
+
+void UFigmaInstance::OnRawImageReceived(TArray<uint8>& RawData)
+{
+	URawTexture2DFactory* Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
+	Factory->RawData = RawData;
+	MissingComponentTexture = GetOrCreateAsset<UTexture>(Factory);
+}
+
+FString UFigmaInstance::GetPackagePath() const
+{
+	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+	while (TopParentNode && TopParentNode->GetParentNode())
+	{
+		TopParentNode = TopParentNode->GetParentNode();
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "InstanceTextures";
+}
+
+FString UFigmaInstance::GetAssetName() const
+{
+	return GetUniqueName();
+}
+
+void UFigmaInstance::LoadOrCreateAssets()
+{
+	// Don't do anything here. Need to wait for the Image stage, in case the Component is missing.
 }

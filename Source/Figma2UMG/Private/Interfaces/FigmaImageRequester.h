@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "REST/ImageRequest.h"
 
 #include "FigmaImageRequester.generated.h"
 
@@ -19,5 +20,15 @@ class FIGMA2UMG_API IFigmaImageRequester
 {
 	GENERATED_BODY()
 public:
+	IFigmaImageRequester();
+
 	virtual void AddImageRequest(FImageRequests& ImageRequests) = 0;
+	virtual void OnRawImageReceived(TArray<uint8>& RawData) = 0;
+
+protected:
+
+	FOnRawImageReceiveDelegate OnRawImageReceivedCB;
+
+private:
+	void OnRawImageReceivedBase(TArray<uint8>& RawData);
 };

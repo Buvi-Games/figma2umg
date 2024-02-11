@@ -7,6 +7,7 @@
 #include "FigmaImportSubsystem.h"
 #include "JsonObjectConverter.h"
 #include "RequestParams.h"
+#include "TextureCompiler.h"
 #include "Parser/FigmaFile.h"
 
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
@@ -283,8 +284,7 @@ void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
 		FText OutFailReason;
 		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 		{
-			const TMap<FString, FString>& ImagesURL = ImagesRequestResult.Images;
-			for (TPair<FString, FString> Element : ImagesURL)
+			for (TPair<FString, FString> Element : ImagesRequestResult.Images)
 			{
 				RequestedImages.SetURL(Element.Key, Element.Value);
 			}
@@ -307,6 +307,24 @@ void UFigmaImporter::DownloadNextImage()
 	}
 	else
 	{
+		//TArray<UTexture*> Textures;
+		//const TArray<FImageRequest>& Requests = RequestedImages.GetRequests();
+		//for(const FImageRequest& Request : Requests)
+		//{
+		//	if(!Request.Texture)
+		//		continue;
+		//
+		//	if (Request.Texture->IsCompiling())
+		//	{
+		//		Textures.Add(Request.Texture);
+		//	}
+		//}
+		//
+		//if (!Textures.IsEmpty())
+		//{
+		//	FTextureCompilingManager::Get().FinishCompilation(Textures);
+		//}
+
 		File->Patch(OnPatchUAssetsDelegate);
 	}
 }

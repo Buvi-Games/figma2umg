@@ -37,6 +37,7 @@ public class Figma2UMG : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "UnrealEd",
+                "ImageCore",
                 "Slate",
                 "SlateCore",
                 "InputCore",

@@ -9,6 +9,8 @@
 
 
 DECLARE_DELEGATE_OneParam(FOnImageRequestCompleteDelegate, bool);
+DECLARE_DELEGATE_OneParam(FOnRawImageReceiveDelegate, TArray<uint8>& );
+
 USTRUCT()
 struct FImageRequest
 {
@@ -23,8 +25,11 @@ public:
 	UPROPERTY()
 	FString URL;
 
+	FOnRawImageReceiveDelegate OnImageRawReceive;
+
 	void StartDownload(const FOnImageRequestCompleteDelegate& Delegate);
 
+	eRequestStatus GetStatus() const { return Status; }
 private:
 	void HandleImageDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
@@ -38,13 +43,13 @@ struct FImageRequests
 {
 	GENERATED_BODY()
 public:
-	void AddRequest(const FString& ImageName, const FString& Id);
+	void AddRequest(const FString& ImageName, const FString& Id, const FOnRawImageReceiveDelegate& OnImageRawReceive);
 	void Reset();
 
 	const TArray<FImageRequest>& GetRequests() const { return Requests; }
 	void SetURL(const FString& Id, const FString& URL);
 
-	FImageRequest* GetNextToDownload() const;
+	FImageRequest* GetNextToDownload();
 
 private:
 	UPROPERTY()
