@@ -83,3 +83,9 @@ UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>
 
 	return TextureAsset;
 }
+
+void IFigmaFileHandle::Reset()
+{
+	Asset = nullptr;
+	AssetOuter = nullptr;
+}

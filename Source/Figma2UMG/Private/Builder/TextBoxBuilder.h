@@ -18,6 +18,7 @@ public:
 
 	void SetStyle(const FFigmaTypeStyle& Style);
 	void SetFill(const FFigmaPaint& Fill);
+	void Reset();
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> TextBlock = nullptr;

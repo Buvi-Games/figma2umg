@@ -37,6 +37,7 @@ public:
 	Type* GetAsset() const { return Cast<Type>(Asset); }
 	UObject* GetOuter() const { return AssetOuter; }
 
+	void Reset();
 protected:
 	template<class AssetType, class FactoryType>
 	AssetType* GetOrCreateAsset(FactoryType* Factory = nullptr);

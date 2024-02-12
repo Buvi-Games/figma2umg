@@ -82,6 +82,11 @@ void UFigmaGroup::PostInsert() const
 	}
 }
 
+void UFigmaGroup::Reset()
+{
+	Builder.Reset();
+}
+
 TObjectPtr<UWidget> UFigmaGroup::GetTopWidget() const
 {
 	return Builder.Border;

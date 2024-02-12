@@ -22,6 +22,7 @@ public:
 	void SetFill (const FFigmaPaint& Fill);
 	void SetStroke(const FFigmaPaint& Stroke, float StrokeWeight, FString StrokeAlign);
 	void SetCorner(const float TopLeftRadius, const float TopRightRadius, const float BottomRightRadius, const float BottomLeftRadius, const float CornerSmoothing);
+	void Reset();
 
 	UPROPERTY()
 	TObjectPtr<UBorder> Border = nullptr;

@@ -25,6 +25,7 @@ public:
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) = 0;
 	virtual void PostInsert() const;
+	virtual void Reset() = 0;
 
 	virtual TObjectPtr<UWidget> GetTopWidget() const = 0;
 	virtual FVector2D GetTopWidgetPosition() const = 0;

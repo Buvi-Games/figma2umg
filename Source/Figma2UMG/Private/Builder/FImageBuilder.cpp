@@ -3,3 +3,7 @@
 
 #include "Builder/FImageBuilder.h"
 
+void FImageBuilder::Reset()
+{
+	Image = nullptr;
+}
