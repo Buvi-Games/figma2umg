@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "IImageWrapper.h"
 #include "Factories/Factory.h"
 #include "Factories/TextureFactory.h"
 #include "RawTexture2DFactory.generated.h"
@@ -21,5 +22,7 @@ class URawTexture2DFactory : public UTextureFactory
 
 	virtual bool ShouldShowInNewMenu() const override;
 	virtual UObject* FactoryCreateNew(UClass* InClass, UObject* InParent, FName InName, EObjectFlags Flags, UObject* Context, FFeedbackContext* Warn) override;
-	
+
+protected:
+	FString GetExtensionFromFormat(const EImageFormat& ImageFormat) const;
 };
