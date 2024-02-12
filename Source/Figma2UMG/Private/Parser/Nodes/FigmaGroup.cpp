@@ -41,7 +41,7 @@ TObjectPtr<UWidget> UFigmaGroup::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		Builder.Border->SetContent(Builder.Canvas);
 	}
 
-	if (Fills.Num() > 0)
+	if (Fills.Num() > 0 && Fills[0].Visible)
 	{
 		Builder.SetFill(Fills[0]);
 	}
@@ -50,7 +50,7 @@ TObjectPtr<UWidget> UFigmaGroup::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		Builder.Border->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 	}
 
-	if (Strokes.Num() > 0)
+	if (Strokes.Num() > 0 && Strokes[0].Visible)
 	{
 		Builder.SetStroke(Strokes[0], StrokeWeight, StrokeAlign);
 	}

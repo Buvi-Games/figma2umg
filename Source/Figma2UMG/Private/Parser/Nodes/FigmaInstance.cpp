@@ -5,6 +5,8 @@
 
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Factories/Texture2dFactoryNew.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
@@ -12,6 +14,11 @@
 #include "REST/FigmaImporter.h"
 #include "REST/ImageRequest.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
+
+FVector2D UFigmaInstance::GetAbsolutePosition() const
+{
+	return AbsoluteBoundingBox.GetPosition();
+}
 
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
@@ -61,9 +68,33 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	return WidgetToPatch;
 }
 
+void UFigmaInstance::PostInsert() const
+{
+	TObjectPtr<UWidget> TopWidget = GetTopWidget();
+	if (!TopWidget)
+		return;
+
+	IWidgetOwner::PostInsert();
+
+	if (UCanvasPanelSlot* CanvasSlot = TopWidget->Slot ? Cast<UCanvasPanelSlot>(TopWidget->Slot) : nullptr)
+	{
+		CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
+	}
+}
+
 TObjectPtr<UWidget> UFigmaInstance::GetTopWidget() const
 {
 	return Cast<UWidget>(InstanceAsset);
+}
+
+FVector2D UFigmaInstance::GetTopWidgetPosition() const
+{
+	return GetPosition();
+}
+
+TObjectPtr<UPanelWidget> UFigmaInstance::GetContainerWidget() const
+{
+	return Builder.Canvas;
 }
 
 void UFigmaInstance::AddImageRequest(FImageRequests& ImageRequests)

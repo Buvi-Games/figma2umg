@@ -45,7 +45,7 @@ public:
 	EPaintTypes Type;
 
 	UPROPERTY()
-	bool Visible;
+	bool Visible = true;
 
 	UPROPERTY()
 	float Opacity;

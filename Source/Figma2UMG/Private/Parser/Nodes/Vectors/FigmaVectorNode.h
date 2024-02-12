@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Builder/FImageBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaImageRequester.h"
+#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
 #include "Parser/Properties/FigmaEasingType.h"
@@ -70,7 +72,7 @@ enum class EFigmaStrokeAlign
 
 
 UCLASS()
-class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle
+class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle, public IWidgetOwner
 {
 public:
 	GENERATED_BODY()
@@ -88,6 +90,16 @@ public:
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets() override;
 
+	// IWidgetOwner
+	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
+
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void PostInsert() const override;
+
+	virtual TObjectPtr<UWidget> GetTopWidget() const override;
+	virtual FVector2D GetTopWidgetPosition() const override;
+
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 protected:
 	UPROPERTY()
 	bool Locked = false;
@@ -181,4 +193,7 @@ protected:
 
 	//UPROPERTY()
 	//FFigmaAnnotation annotation
+
+	UPROPERTY()
+	FImageBuilder Builder;
 };
