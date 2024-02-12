@@ -105,10 +105,8 @@ void UFigmaInstance::PostInsert() const
 
 void UFigmaInstance::Reset()
 {
-	if (InstanceAsset)
-	{
-		InstanceAsset = nullptr;
-	}
+	InstanceAsset = nullptr;
+	BuilderFallback.Reset();
 }
 
 TObjectPtr<UWidget> UFigmaInstance::GetTopWidget() const
@@ -154,8 +152,7 @@ FString UFigmaInstance::GetPackagePath() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	//return TopParentNode->GetCurrentPackagePath() + TEXT("/InstanceTextures");
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/Textures");
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/InstanceTextures");
 }
 
 FString UFigmaInstance::GetAssetName() const

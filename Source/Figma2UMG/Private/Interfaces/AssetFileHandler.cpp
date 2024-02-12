@@ -6,7 +6,6 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
-#include "Factories/Texture2dFactoryNew.h"
 #include "Factories/TextureFactory.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -67,14 +66,26 @@ UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>
 			Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
 		}
 
-		UPackage* Pkg = CreatePackage(*PackagePath);
-		const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
-		TextureAsset = Cast<UTexture2D>(Factory->FactoryCreateNew(AssetClass, Pkg, *AssetName, Flags, nullptr, GWarn));
-		if (TextureAsset)
+		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+		const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
+		TextureAsset = Cast<UTexture2D>(AssetData.FastGetAsset(true));
+
+		if (TextureAsset == nullptr)
 		{
-			Pkg->SetIsExternallyReferenceable(true);
-			FAssetRegistryModule::AssetCreated(TextureAsset);
-			Pkg->MarkPackageDirty();
+			static const FName NAME_AssetTools = "AssetTools";
+			IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
+			TextureAsset = Cast<UTexture2D>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
+		}
+		else
+		{
+
+			UPackage* Pkg = CreatePackage(*PackagePath);
+			const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
+			TextureAsset = Cast<UTexture2D>(Factory->FactoryCreateNew(AssetClass, Pkg, *AssetName, Flags, nullptr, GWarn));
+			if (TextureAsset)
+			{
+				FAssetRegistryModule::AssetCreated(TextureAsset);
+			}
 		}
 
 		Asset = TextureAsset;
