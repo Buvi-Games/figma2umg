@@ -95,6 +95,7 @@ public:
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void PostInsert() const override;
+	virtual void Reset() override;
 
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
 	virtual FVector2D GetTopWidgetPosition() const override;

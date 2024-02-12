@@ -99,6 +99,11 @@ void UFigmaSection::PostInsert() const
 	}
 }
 
+void UFigmaSection::Reset()
+{
+	Builder.Reset();
+}
+
 TObjectPtr<UWidget> UFigmaSection::GetTopWidget() const
 {
 	return Builder.Border;

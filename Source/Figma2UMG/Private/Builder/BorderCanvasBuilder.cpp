@@ -58,3 +58,9 @@ void FBorderCanvasBuilder::SetCorner(const float TopLeftRadius, const float TopR
 		Border->SetBrush(Brush);
 	}
 }
+
+void FBorderCanvasBuilder::Reset()
+{
+	Border = nullptr;
+	Canvas = nullptr;
+}

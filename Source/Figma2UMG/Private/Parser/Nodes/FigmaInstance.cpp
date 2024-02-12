@@ -82,6 +82,14 @@ void UFigmaInstance::PostInsert() const
 	}
 }
 
+void UFigmaInstance::Reset()
+{
+	if (InstanceAsset)
+	{
+		InstanceAsset = nullptr;
+	}
+}
+
 TObjectPtr<UWidget> UFigmaInstance::GetTopWidget() const
 {
 	return Cast<UWidget>(InstanceAsset);

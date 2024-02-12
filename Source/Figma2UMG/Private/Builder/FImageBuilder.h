@@ -15,6 +15,8 @@ struct FIGMA2UMG_API FImageBuilder
 public:
 	GENERATED_BODY()
 
+	void Reset();
+
 	UPROPERTY()
 	TObjectPtr<UImage> Image = nullptr;
 };

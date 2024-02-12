@@ -36,6 +36,7 @@ public:
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
 	virtual FVector2D GetTopWidgetPosition() const override;
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
+	virtual void Reset() override;
 
 protected:
 	UPROPERTY()

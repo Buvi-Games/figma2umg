@@ -64,3 +64,8 @@ TObjectPtr<UPanelWidget> UFigmaText::GetContainerWidget() const
 {
 	return nullptr;
 }
+
+void UFigmaText::Reset()
+{
+	Builder.Reset();
+}

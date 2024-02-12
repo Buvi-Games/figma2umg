@@ -93,6 +93,11 @@ void UFigmaVectorNode::PostInsert() const
 	}
 }
 
+void UFigmaVectorNode::Reset()
+{
+	Builder.Reset();
+}
+
 TObjectPtr<UWidget> UFigmaVectorNode::GetTopWidget() const
 {
 	return Builder.Image;

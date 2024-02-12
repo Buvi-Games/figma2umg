@@ -202,7 +202,7 @@ void UFigmaNode::PatchPostInsertWidget()
 
 void UFigmaNode::PostPatchWidget()
 {
-	if (const IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
+	if (IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
 	{
 		UObject* Asset = FileHandle->GetAsset();
 		UObject* AssetOuter = FileHandle->GetAsset();
@@ -231,8 +231,15 @@ void UFigmaNode::PostPatchWidget()
 			FEditorFileUtils::FPromptForCheckoutAndSaveParams Params;
 			FEditorFileUtils::PromptForCheckoutAndSave({ Texture->GetPackage() }, Params);
 		}
+
+		FileHandle->Reset();
 	}
-	
+
+	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
+	{
+		WidgetOwner->Reset();
+	}
+
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
 	{
 		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
