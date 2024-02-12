@@ -8,11 +8,9 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
-#include "Factories/Texture2dFactoryNew.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
-#include "REST/FigmaImporter.h"
 #include "REST/ImageRequest.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
@@ -23,9 +21,14 @@ FVector2D UFigmaInstance::GetAbsolutePosition() const
 
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
-	if (TObjectPtr<UWidget> Widget = GetTopWidget())
+	if (TObjectPtr<UWidget> Widget = Cast<UWidget>(InstanceAsset))
 	{
 		Function.ExecuteIfBound(*Widget);
+	}
+
+	if (BuilderFallback.Image)
+	{
+		Function.ExecuteIfBound(*BuilderFallback.Image);
 	}
 }
 
@@ -112,7 +115,7 @@ FVector2D UFigmaInstance::GetTopWidgetPosition() const
 
 TObjectPtr<UPanelWidget> UFigmaInstance::GetContainerWidget() const
 {
-	return Builder.Canvas;
+	return nullptr;
 }
 
 void UFigmaInstance::AddImageRequest(FImageRequests& ImageRequests)
@@ -143,7 +146,8 @@ FString UFigmaInstance::GetPackagePath() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "InstanceTextures";
+	//return TopParentNode->GetCurrentPackagePath() + TEXT("/InstanceTextures");
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/Textures");
 }
 
 FString UFigmaInstance::GetAssetName() const

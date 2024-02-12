@@ -221,9 +221,6 @@ protected:
 	TArray<FFigmaOverrides> Overrides;
 
 	UPROPERTY()
-	FBorderCanvasBuilder Builder;
-
-	UPROPERTY()
 	FImageBuilder BuilderFallback;
 
 	UPROPERTY()

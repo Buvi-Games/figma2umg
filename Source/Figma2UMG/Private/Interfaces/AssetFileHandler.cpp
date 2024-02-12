@@ -70,6 +70,12 @@ UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>
 		UPackage* Pkg = CreatePackage(*PackagePath);
 		const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
 		TextureAsset = Cast<UTexture2D>(Factory->FactoryCreateNew(AssetClass, Pkg, *AssetName, Flags, nullptr, GWarn));
+		if (TextureAsset)
+		{
+			Pkg->SetIsExternallyReferenceable(true);
+			FAssetRegistryModule::AssetCreated(TextureAsset);
+			Pkg->MarkPackageDirty();
+		}
 
 		Asset = TextureAsset;
 		AssetOuter = TextureAsset;

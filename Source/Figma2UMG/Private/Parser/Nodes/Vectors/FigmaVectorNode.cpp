@@ -27,7 +27,7 @@ void UFigmaVectorNode::AddImageRequest(FImageRequests& ImageRequests)
 void UFigmaVectorNode::OnRawImageReceived(TArray<uint8>& RawData)
 {
 	URawTexture2DFactory* Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
-	Factory->DownloadSubFolder = GetFigmaFile()->GetFileName();
+	Factory->DownloadSubFolder = GetFigmaFile()->GetFileName() + TEXT("/Images");
 	Factory->RawData = RawData;
 	GetOrCreateAsset<UTexture2D>(Factory);
 }
@@ -40,7 +40,7 @@ FString UFigmaVectorNode::GetPackagePath() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Textures";
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/Textures");
 }
 
 FString UFigmaVectorNode::GetAssetName() const
