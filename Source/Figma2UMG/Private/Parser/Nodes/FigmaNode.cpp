@@ -38,7 +38,8 @@ FString UFigmaNode::GetNodeName() const
 
 FString UFigmaNode::GetUniqueName() const
 {
-	return Name + "_" + Id;
+	FString IdReplace = Id.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
+	return Name + "--" + IdReplace;
 }
 
 ESlateVisibility UFigmaNode::GetVisibility() const
