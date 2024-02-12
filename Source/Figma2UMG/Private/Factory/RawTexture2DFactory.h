@@ -16,7 +16,9 @@ class URawTexture2DFactory : public UTextureFactory
 {
 	GENERATED_UCLASS_BODY()
 
-	/** width of new texture */
+	UPROPERTY()
+	FString DownloadSubFolder;
+
 	UPROPERTY()
 	TArray<uint8> RawData;
 

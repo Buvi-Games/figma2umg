@@ -29,14 +29,17 @@ UObject* URawTexture2DFactory::FactoryCreateNew(UClass* InClass, UObject* InPare
 		return nullptr;
 	}
 
-
 	FImage Image;
 	if (!FImageUtils::DecompressImage(RawData.GetData(), RawData.Num(), Image))
 	{
 		return nullptr;
 	}
 
-	CurrentFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/Images/") + InName.ToString() + TEXT(".png");
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+	EImageFormat ImageFormat = ImageWrapperModule.DetectImageFormat(RawData.GetData(), RawData.Num());
+	const FString FileExtension = GetExtensionFromFormat(ImageFormat);
+	CurrentFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + DownloadSubFolder + TEXT("/Images/") + InName.ToString() + TEXT(".") + FileExtension;
+
 	const int64 FileSize = IFileManager::Get().FileSize(*CurrentFilename);
 	const int32 Gigabyte = 1024 * 1024 * 1024;
 	if (FileSize < Gigabyte)
@@ -46,9 +49,6 @@ UObject* URawTexture2DFactory::FactoryCreateNew(UClass* InClass, UObject* InPare
 
 	FFileHelper::SaveArrayToFile(RawData, *CurrentFilename);
 
-	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
-	EImageFormat ImageFormat = ImageWrapperModule.DetectImageFormat(RawData.GetData(), RawData.Num());
-	FString FileExtension = GetExtensionFromFormat(ImageFormat);
 	const uint8* Ptr = RawData.GetData();
 
 	SuppressImportOverwriteDialog();
