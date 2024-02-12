@@ -216,6 +216,12 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 		UVaRestJsonObject* responseJson = Request->GetResponseObject();
 		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
 
+		
+		const FString FigmaFilename = JsonObj->GetStringField("Name");
+		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
+		const FString RawText = Request->GetResponseContentAsString(false);
+		FFileHelper::SaveStringToFile(RawText, *FullFilename);
+
 		File = NewObject<UFigmaFile>();
 
 		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj]()
