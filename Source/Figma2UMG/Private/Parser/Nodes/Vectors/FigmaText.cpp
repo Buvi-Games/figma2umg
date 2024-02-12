@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/Vectors/FigmaText.h"
 
+#include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 
 FVector2D UFigmaText::GetAbsolutePosition() const
@@ -48,6 +49,20 @@ TObjectPtr<UWidget> UFigmaText::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	}
 
 	return Builder.TextBlock;
+}
+
+void UFigmaText::PostInsert() const
+{
+	TObjectPtr<UWidget> TopWidget = GetTopWidget();
+	if (!TopWidget)
+		return;
+
+	IWidgetOwner::PostInsert();
+
+	if (UCanvasPanelSlot* CanvasSlot = TopWidget->Slot ? Cast<UCanvasPanelSlot>(TopWidget->Slot) : nullptr)
+	{
+		CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
+	}
 }
 
 TObjectPtr<UWidget> UFigmaText::GetTopWidget() const

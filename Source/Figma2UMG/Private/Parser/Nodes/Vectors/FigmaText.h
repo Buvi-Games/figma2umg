@@ -33,6 +33,7 @@ public:
 	// IWidgetOwner
 	virtual void ForEach(const FOnEachFunction& Function) override;
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void PostInsert() const override;
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
 	virtual FVector2D GetTopWidgetPosition() const override;
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
