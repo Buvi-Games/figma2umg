@@ -15,4 +15,7 @@ public:
 
 	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
 	FString FileKey;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
+	TArray<FString> LibraryFileKeys;
 };
