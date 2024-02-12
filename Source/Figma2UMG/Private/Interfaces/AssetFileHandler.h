@@ -57,18 +57,18 @@ AssetType* IFigmaFileHandle::GetOrCreateAsset(FactoryType* Factory)
 
 		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 		const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
-		TypedAsset = Cast<UTexture2D>(AssetData.FastGetAsset(true));
+		TypedAsset = Cast<AssetType>(AssetData.FastGetAsset(true));
 
 		if (TypedAsset == nullptr)
 		{
 			static const FName NAME_AssetTools = "AssetTools";
 			IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
-			UClass* AssetClass = UTexture2D::StaticClass();
+			UClass* AssetClass = AssetType::StaticClass();
 			if (Factory == nullptr)
 			{
 				Factory = NewObject<FactoryType>(FactoryType::StaticClass());
 			}
-			TypedAsset = Cast<UTexture2D>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
+			TypedAsset = Cast<AssetType>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
 		}
 
 		Asset = TypedAsset;
