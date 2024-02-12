@@ -61,28 +61,25 @@ UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>
 		const FString AssetName = ObjectTools::SanitizeInvalidChars(GetAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 
-		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-		const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
-		TextureAsset = Cast<UTexture2D>(AssetData.FastGetAsset(true));
-
-		if (TextureAsset == nullptr)
+		UClass* AssetClass = UTexture2D::StaticClass();
+		if(Factory == nullptr)
 		{
-			static const FName NAME_AssetTools = "AssetTools";
-			IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
-			UClass* AssetClass = UTexture2D::StaticClass();
-			if(Factory == nullptr)
-			{
-				Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
-			}
-			TextureAsset = Cast<UTexture2D>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
+			Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
 		}
+
+		UPackage* Pkg = CreatePackage(*PackagePath);
+		const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
+		TextureAsset = Cast<UTexture2D>(Factory->FactoryCreateNew(AssetClass, Pkg, *AssetName, Flags, nullptr, GWarn));
 
 		Asset = TextureAsset;
 		AssetOuter = TextureAsset;
 	}
 
-	TextureAsset->SetFlags(RF_Transactional);
-	TextureAsset->Modify();
+	if (TextureAsset)
+	{
+		TextureAsset->SetFlags(RF_Transactional);
+		TextureAsset->Modify();
+	}
 
 	return TextureAsset;
 }
