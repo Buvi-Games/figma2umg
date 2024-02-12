@@ -7,13 +7,13 @@
 #include "FigmaImportSubsystem.h"
 #include "JsonObjectConverter.h"
 #include "RequestParams.h"
-#include "TextureCompiler.h"
 #include "Parser/FigmaFile.h"
 
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	OnVaRestFileRequestDelegate.BindUFunction(this, FName("OnFigmaFileRequestReceived"));
+	OnVaRestLibraryFileRequestDelegate.BindUFunction(this, FName("OnFigmaLibraryFileRequestReceived"));
 	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
 	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
 	OnImageDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleImageDownload);
@@ -36,6 +36,11 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 	}
 
+	for (FString Element : InProperties->LibraryFileKeys)
+	{
+		LibraryFileKeys.Add(Element);
+	}
+
 	ContentRootFolder = InProperties->ContentRootFolder;
 	RequesterCallback = InRequesterCallback;
 }
@@ -43,13 +48,20 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 void UFigmaImporter::Run()
 {
-	if (CreateRequest(FIGMA_ENDPOINT_FILES, Ids, OnVaRestFileRequestDelegate))
+	if(LibraryFileKeys.IsEmpty())
 	{
-		UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
+		if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
+		{
+			UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
+		}
+	}
+	else
+	{
+		DownloadNextDependency();
 	}
 }	
 
-bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate)
+bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate)
 {
 	UVaRestSubsystem* VARestSubsystem = GEngine->GetEngineSubsystem<UVaRestSubsystem>();
 	if (!VARestSubsystem)
@@ -62,7 +74,7 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& RequestI
 	TArray<FStringFormatArg> args;
 	args.Add(FIGMA_BASE_URL);
 	args.Add(EndPoint);
-	args.Add(FileKey);
+	args.Add(CurrentFileKey);
 	if (RequestIds.IsEmpty())
 	{
 		URL = FString::Format(TEXT("{0}{1}{2}"), args);
@@ -244,6 +256,64 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 	}
 }
 
+void UFigmaImporter::DownloadNextDependency()
+{
+	for (TPair<FString, TObjectPtr<UFigmaFile>> Lib : LibraryFileKeys)
+	{
+		if (Lib.Value == nullptr)
+		{
+			CurrentLibraryFileKey = Lib.Key;
+			if (CreateRequest(FIGMA_ENDPOINT_FILES, CurrentLibraryFileKey, FString(), OnVaRestLibraryFileRequestDelegate))
+			{
+				UpdateStatus(eRequestStatus::Processing, TEXT("Requesting library file from Figma API."));
+			}
+			return;
+		}
+	}
+
+	if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
+	{
+		UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
+	}
+}
+
+void UFigmaImporter::OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Request)
+{
+	if (ParseRequestReceived(TEXT("[Figma library file request] "), Request))
+	{
+		UVaRestJsonObject* responseJson = Request->GetResponseObject();
+		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
+
+
+		const FString FigmaFilename = JsonObj->GetStringField("Name");
+		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
+		const FString RawText = Request->GetResponseContentAsString(false);
+		FFileHelper::SaveStringToFile(RawText, *FullFilename);
+
+		UFigmaFile* CurrentFile = NewObject<UFigmaFile>();
+		LibraryFileKeys[CurrentLibraryFileKey] = CurrentFile;
+		CurrentLibraryFileKey = nullptr;
+
+		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj, CurrentFile]()
+			{
+				constexpr int64 CheckFlags = 0;
+				constexpr int64 SkipFlags = 0;
+				constexpr bool StrictMode = false;
+				FText OutFailReason;
+				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, CurrentFile->StaticClass(), CurrentFile, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+				{
+					CurrentFile->PostSerialize(ContentRootFolder, JsonObj);
+					UpdateStatus(eRequestStatus::Processing, TEXT("Library file ") + CurrentFile->GetFileName() + TEXT(" downloaded."));
+					DownloadNextDependency();
+				}
+				else
+				{
+					UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
+				}
+			});
+	}
+}
+
 void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 {
 	if(!Succeeded)
@@ -265,7 +335,8 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 			ImageIdsFormated += "," + Requests[i].Id;
 		}
 
-		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, ImageIdsFormated, OnVaRestImagesRequestDelegate))
+		//Todo: Manage images from Libs
+		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
 		{
 			UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
 		}
