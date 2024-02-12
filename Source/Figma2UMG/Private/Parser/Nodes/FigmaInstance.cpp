@@ -7,11 +7,10 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
-#include "Factories/Texture2dFactoryNew.h"
+#include "Components/Image.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
-#include "REST/FigmaImporter.h"
 #include "REST/ImageRequest.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
@@ -22,9 +21,14 @@ FVector2D UFigmaInstance::GetAbsolutePosition() const
 
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
-	if (TObjectPtr<UWidget> Widget = GetTopWidget())
+	if (TObjectPtr<UWidget> Widget = Cast<UWidget>(InstanceAsset))
 	{
 		Function.ExecuteIfBound(*Widget);
+	}
+
+	if (BuilderFallback.Image)
+	{
+		Function.ExecuteIfBound(*BuilderFallback.Image);
 	}
 }
 
@@ -38,6 +42,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		if (WidgetToPatch)
 		{
 			//TODO: Check if it's the correct Template
+			InstanceAsset = WidgetToPatch;
 			return WidgetToPatch;
 		}
 		else if (ParentNode)
@@ -63,7 +68,23 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	}
 	else if (MissingComponentTexture)
 	{
-		//Todo Add image
+		BuilderFallback.Image = Cast<UImage>(WidgetToPatch);
+		if (BuilderFallback.Image)
+		{
+			if (BuilderFallback.Image->GetName() != GetUniqueName())
+			{
+				BuilderFallback.Image->Rename(*GetUniqueName());
+			}
+		}
+		else
+		{
+			BuilderFallback.Image = NewObject<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
+		}
+
+		BuilderFallback.Image->SetBrushFromTexture(GetAsset<UTexture2D>(), true);
+
+		InstanceAsset = BuilderFallback.Image;
+		return BuilderFallback.Image;
 	}
 	return WidgetToPatch;
 }
@@ -102,7 +123,7 @@ FVector2D UFigmaInstance::GetTopWidgetPosition() const
 
 TObjectPtr<UPanelWidget> UFigmaInstance::GetContainerWidget() const
 {
-	return Builder.Canvas;
+	return nullptr;
 }
 
 void UFigmaInstance::AddImageRequest(FImageRequests& ImageRequests)
@@ -120,7 +141,7 @@ void UFigmaInstance::AddImageRequest(FImageRequests& ImageRequests)
 void UFigmaInstance::OnRawImageReceived(TArray<uint8>& RawData)
 {
 	URawTexture2DFactory* Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
-	Factory->DownloadSubFolder = GetFigmaFile()->GetFileName();
+	Factory->DownloadSubFolder = GetFigmaFile()->GetFileName() + TEXT("/MissingComponents");
 	Factory->RawData = RawData;
 	MissingComponentTexture = GetOrCreateAsset<UTexture2D>(Factory);
 }
@@ -133,7 +154,8 @@ FString UFigmaInstance::GetPackagePath() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "InstanceTextures";
+	//return TopParentNode->GetCurrentPackagePath() + TEXT("/InstanceTextures");
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/Textures");
 }
 
 FString UFigmaInstance::GetAssetName() const

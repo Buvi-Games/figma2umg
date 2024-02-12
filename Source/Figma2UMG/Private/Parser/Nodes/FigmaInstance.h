@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
+#include "Builder/FImageBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaImageRequester.h"
 #include "Interfaces/FigmaRefHandle.h"
@@ -203,9 +204,6 @@ protected:
 	TMap<EFigmaStyleType, FString> Styles;
 
 	UPROPERTY()
-	FBorderCanvasBuilder Builder;
-
-	UPROPERTY()
 	TArray<FFigmaLayoutGrid> LayoutGrids;
 
 	UPROPERTY()
@@ -222,6 +220,9 @@ protected:
 
 	UPROPERTY()
 	TArray<FFigmaOverrides> Overrides;
+
+	UPROPERTY()
+	FImageBuilder BuilderFallback;
 
 	UPROPERTY()
 	TObjectPtr<UTexture> MissingComponentTexture = nullptr;
