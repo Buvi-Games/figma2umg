@@ -96,6 +96,7 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 				if (Component)
 				{
 					Component->LoadOrCreateAssets(this);
+					Element.Value.SetAsset(Component->GetAsset<UWidgetBlueprint>());
 				}
 			}
 

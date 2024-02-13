@@ -39,7 +39,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
 	if (ComponentAsset)
 	{
-		if (WidgetToPatch)
+		if (WidgetToPatch && WidgetToPatch.IsA<UWidget>())
 		{
 			//TODO: Check if it's the correct Template
 			InstanceAsset = WidgetToPatch;
