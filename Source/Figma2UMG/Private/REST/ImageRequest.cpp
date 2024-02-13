@@ -131,9 +131,16 @@ void FImageRequest::HandleImageDownload(FHttpRequestPtr HttpRequest, FHttpRespon
 	//}
 }
 
-void FImageRequests::AddRequest(const FString& ImageName, const FString& Id, const FOnRawImageReceiveDelegate& OnImageRawReceive)
+void FImageRequests::AddRequest(FString FileKey, const FString& ImageName, const FString& Id, const FOnRawImageReceiveDelegate& OnImageRawReceive)
 {
-	FImageRequest& Request = Requests.Emplace_GetRef();
+	FImagePerFileRequests* FileRequest = RequestsPerFile.FindByPredicate([FileKey](const FImagePerFileRequests& Request) { return (Request.FileKey == FileKey); });
+	if (!FileRequest)
+	{
+		FileRequest = &RequestsPerFile.Emplace_GetRef();
+		FileRequest->FileKey = FileKey;
+	}
+
+	FImageRequest& Request = FileRequest->Requests.Emplace_GetRef();
 	Request.ImageName = ImageName;
 	Request.Id = Id;
 	Request.OnImageRawReceive = OnImageRawReceive;
@@ -141,12 +148,21 @@ void FImageRequests::AddRequest(const FString& ImageName, const FString& Id, con
 
 void FImageRequests::Reset()
 {
-	Requests.Reset();
+	RequestsPerFile.Reset();
+}
+
+const FImagePerFileRequests* FImageRequests::GetRequests() const
+{
+	if (RequestsPerFile.IsEmpty())
+		return nullptr;
+
+	return &RequestsPerFile[0];
 }
 
 void FImageRequests::SetURL(const FString& Id, const FString& URL)
 {
-	FImageRequest* FoundRequest = Requests.FindByPredicate([Id](const FImageRequest& Request) { return (Request.Id == Id); });
+	FImagePerFileRequests& CurrentFile = RequestsPerFile[0];
+	FImageRequest* FoundRequest = CurrentFile.Requests.FindByPredicate([Id](const FImageRequest& Request) { return (Request.Id == Id); });
 	if (FoundRequest)
 	{
 		FoundRequest->URL = URL;
@@ -155,5 +171,11 @@ void FImageRequests::SetURL(const FString& Id, const FString& URL)
 
 FImageRequest* FImageRequests::GetNextToDownload()
 {
-	return Requests.FindByPredicate([](const FImageRequest& Request) { return (Request.GetStatus() == eRequestStatus::NotStarted); });
+	FImagePerFileRequests& CurrentFile = RequestsPerFile[0];
+	FImageRequest* ImageRequest = CurrentFile.Requests.FindByPredicate([](const FImageRequest& Request) { return (Request.GetStatus() == eRequestStatus::NotStarted); });
+	if(ImageRequest == nullptr)
+	{
+		RequestsPerFile.RemoveAt(0);
+	}
+	return ImageRequest;
 }

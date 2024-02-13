@@ -245,6 +245,9 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 				{
 					File->PostSerialize(ContentRootFolder, JsonObj);
+
+					File->FixRemoteReferences(LibraryFileKeys);
+
 					File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
 					UpdateStatus(eRequestStatus::Processing, TEXT("Creating UAssets."));
 				}
@@ -324,26 +327,38 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 
 	UpdateStatus(eRequestStatus::Processing, TEXT("Requesting images."));
 	RequestedImages.Reset();
-	File->BuildImageDependency(RequestedImages);
+	File->BuildImageDependency(FileKey, RequestedImages);
 
-	const TArray<FImageRequest>& Requests = RequestedImages.GetRequests();
-	if (!Requests.IsEmpty())
+	if (const FImagePerFileRequests* Requests = RequestedImages.GetRequests())
 	{
-		FString ImageIdsFormated = Requests[0].Id;
-		for (int i = 1; i < Requests.Num(); i++)
+		RequestImageURLs();
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Processing, TEXT("Patching UAssets."));
+		File->Patch(OnPatchUAssetsDelegate);
+	}
+}
+
+void UFigmaImporter::RequestImageURLs()
+{
+	const FImagePerFileRequests* Requests = RequestedImages.GetRequests();
+	if (Requests)
+	{
+		FString ImageIdsFormated = Requests->Requests[0].Id;
+		for (int i = 1; i < Requests->Requests.Num(); i++)
 		{
-			ImageIdsFormated += "," + Requests[i].Id;
+			ImageIdsFormated += "," + Requests->Requests[i].Id;
 		}
 
 		//Todo: Manage images from Libs
-		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
+		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
 		{
 			UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
 		}
 	}
 	else
 	{
-		UpdateStatus(eRequestStatus::Processing, TEXT("Patching UAssets."));
 		File->Patch(OnPatchUAssetsDelegate);
 	}
 }
@@ -384,25 +399,7 @@ void UFigmaImporter::DownloadNextImage()
 	}
 	else
 	{
-		//TArray<UTexture*> Textures;
-		//const TArray<FImageRequest>& Requests = RequestedImages.GetRequests();
-		//for(const FImageRequest& Request : Requests)
-		//{
-		//	if(!Request.Texture)
-		//		continue;
-		//
-		//	if (Request.Texture->IsCompiling())
-		//	{
-		//		Textures.Add(Request.Texture);
-		//	}
-		//}
-		//
-		//if (!Textures.IsEmpty())
-		//{
-		//	FTextureCompilingManager::Get().FinishCompilation(Textures);
-		//}
-
-		File->Patch(OnPatchUAssetsDelegate);
+		RequestImageURLs();
 	}
 }
 

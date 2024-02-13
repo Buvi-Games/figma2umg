@@ -41,84 +41,174 @@ FFigmaComponentRef* UFigmaFile::FindComponentRef(const FString& ComponentId)
 	return nullptr;
 }
 
-void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate)
+TObjectPtr<UFigmaComponent> UFigmaFile::FindComponentByKey(const FString& Key)
 {
-	CurrentProcessDelegate = ProcessDelegate;
-	if (Document)
+	for (const TPair<FString, FFigmaComponentRef>& Element : Components)
 	{
-		AsyncTask(ENamedThreads::GameThread, [this]()
-			{
-				TArray<IFigmaFileHandle*> AllFiles;
-				AllFiles.Add(Document);
-				Document->GetAllChildrenByType(AllFiles);
-				UFigmaNode* CurrentNode = Document;
+		if (Element.Value.Remote)
+			continue;
 
-				FGCScopeGuard GCScopeGuard;
-				for (IFigmaFileHandle* FileNode : AllFiles)
-				{
-					FileNode->LoadOrCreateAssets();
-				}
-
-				ExecuteDelegate(true);
-			});
+		if (Element.Value.Key == Key)
+		{
+			return FindByID<UFigmaComponent>(Element.Key);
+		}
 	}
-	else
+
+	return nullptr;
+}
+
+void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
 	{
-		ExecuteDelegate(false);
+		if (!Element.Value.Remote)
+			continue;
+
+		
+		if(Element.Value.GetComponent() != nullptr)
+			continue;
+
+		for (const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile : LibraryFiles)
+		{
+			TObjectPtr<UFigmaComponent> Component = LibraryFile.Value->FindComponentByKey(Element.Value.Key);
+			if (Component != nullptr)
+			{
+				Element.Value.RemoteFileKey = LibraryFile.Key;
+				Element.Value.SetComponent(Component);
+				break;
+			}
+		}
 	}
 }
 
-void UFigmaFile::BuildImageDependency(FImageRequests& ImageRequests)
+void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate)
 {
+	CurrentProcessDelegate = ProcessDelegate;
+
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			for (TPair<FString, FFigmaComponentRef>& Element : Components)
+			{
+				if (!Element.Value.Remote)
+					continue;
+
+				TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent();
+				if (Component)
+				{
+					Component->LoadOrCreateAssets(this);
+				}
+			}
+
+			if (Document)
+			{
+						TArray<IFigmaFileHandle*> AllFiles;
+						AllFiles.Add(Document);
+						Document->GetAllChildrenByType(AllFiles);
+
+						FGCScopeGuard GCScopeGuard;
+						for (IFigmaFileHandle* FileNode : AllFiles)
+						{
+							FileNode->LoadOrCreateAssets(this);
+						}
+
+						ExecuteDelegate(true);
+			}
+			else
+			{
+				ExecuteDelegate(false);
+			}
+		});
+}
+
+void UFigmaFile::BuildImageDependency(FString FileKey, FImageRequests& ImageRequests)
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+	
+		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		{
+			TArray<IFigmaImageRequester*> ComponentImageRequests;
+			Component->GetAllChildrenByType(ComponentImageRequests);
+			for (IFigmaImageRequester* FileNode : ComponentImageRequests)
+			{
+				FileNode->AddImageRequest(Element.Value.RemoteFileKey, ImageRequests);
+			}
+		}
+	}
+
+	TArray<IFigmaImageRequester*> AllImageRequests;
 	if (Document)
 	{
-		TArray<IFigmaImageRequester*> AllImageRequests;
 		Document->GetAllChildrenByType(AllImageRequests);
-		UFigmaNode* CurrentNode = Document;
-		
-		FGCScopeGuard GCScopeGuard;
-		for (IFigmaImageRequester* FileNode : AllImageRequests)
-		{
-			FileNode->AddImageRequest(ImageRequests);
-		}
+	}
+
+	FGCScopeGuard GCScopeGuard;
+	for (IFigmaImageRequester* FileNode : AllImageRequests)
+	{
+		FileNode->AddImageRequest(FileKey, ImageRequests);
 	}
 }
 
 void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
 {
 	CurrentProcessDelegate = ProcessDelegate;
-	if (Document)
-	{
-		AsyncTask(ENamedThreads::GameThread, [this]()
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			for (TPair<FString, FFigmaComponentRef>& Element : Components)
+			{
+				if (!Element.Value.Remote)
+					continue;
+
+				if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+				{
+					Component->PatchPreInsertWidget(nullptr);
+					Component->PatchPostInsertWidget();
+				}
+			}
+
+			if (Document)
 			{
 				Document->PatchPreInsertWidget(nullptr);
 				Document->PatchPostInsertWidget();
 
 				ExecuteDelegate(true);
-			});
-	}
-	else
-	{
-		ExecuteDelegate(false);
-	}
+			}
+			else
+			{
+				ExecuteDelegate(false);
+			}
+		});
 }
 
 void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
 {
 	CurrentProcessDelegate = ProcessDelegate;
-	if (Document)
-	{
-		AsyncTask(ENamedThreads::GameThread, [this]()
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			for (TPair<FString, FFigmaComponentRef>& Element : Components)
+			{
+				if (!Element.Value.Remote)
+					continue;
+
+				if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+				{
+					Component->PostPatchWidget();
+				}
+			}
+
+			if (Document)
 			{
 				Document->PostPatchWidget();
 
 				ExecuteDelegate(true);
-			});
-	}
-	else
-	{
-		ExecuteDelegate(false);
-	}
+			}
+			else
+			{
+				ExecuteDelegate(false);
+			}
+		});
 }
 
 void UFigmaFile::ExecuteDelegate(const bool Succeeded)

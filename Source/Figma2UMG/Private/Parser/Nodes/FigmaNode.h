@@ -71,7 +71,7 @@ public:
 
 	UObject* GetAssetOuter() const;
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
-
+	TObjectPtr<UFigmaNode> FindTypeByID(const UClass* Class, const FString& ID);
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 

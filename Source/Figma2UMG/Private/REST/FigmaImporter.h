@@ -45,6 +45,8 @@ protected:
 	UFUNCTION()
 	void OnAssetsCreated(bool Succeeded);
 
+	void RequestImageURLs();
+
 	UFUNCTION()
 	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
 

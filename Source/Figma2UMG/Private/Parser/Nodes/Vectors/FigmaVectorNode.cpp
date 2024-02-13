@@ -19,9 +19,9 @@ FVector2D UFigmaVectorNode::GetSize() const
 	return AbsoluteBoundingBox.GetSize();
 }
 
-void UFigmaVectorNode::AddImageRequest(FImageRequests& ImageRequests)
+void UFigmaVectorNode::AddImageRequest(FString FileKey, FImageRequests& ImageRequests)
 {
-	ImageRequests.AddRequest(GetNodeName(), GetId(), OnRawImageReceivedCB);
+	ImageRequests.AddRequest(FileKey, GetNodeName(), GetId(), OnRawImageReceivedCB);
 }
 
 void UFigmaVectorNode::OnRawImageReceived(TArray<uint8>& RawData)
@@ -48,7 +48,7 @@ FString UFigmaVectorNode::GetAssetName() const
 	return GetUniqueName();
 }
 
-void UFigmaVectorNode::LoadOrCreateAssets()
+void UFigmaVectorNode::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 }
 

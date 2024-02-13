@@ -82,13 +82,13 @@ public:
 	FVector2D GetSize() const;
 
 	// IFigmaImageRequester
-	virtual void AddImageRequest(FImageRequests& ImageRequests) override;
+	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
 	virtual void OnRawImageReceived(TArray<uint8>& RawData) override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
-	virtual void LoadOrCreateAssets() override;
+	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 
 	// IWidgetOwner
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;

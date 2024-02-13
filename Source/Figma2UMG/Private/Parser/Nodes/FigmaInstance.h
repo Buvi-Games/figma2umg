@@ -35,13 +35,13 @@ public:
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 
 	// IFigmaImageRequester
-	virtual void AddImageRequest(FImageRequests& ImageRequests) override;
+	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
 	virtual void OnRawImageReceived(TArray<uint8>& RawData) override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
-	virtual void LoadOrCreateAssets() override;
+	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 
 protected:
 	UPROPERTY()

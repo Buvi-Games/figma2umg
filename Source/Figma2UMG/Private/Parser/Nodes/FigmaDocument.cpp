@@ -9,6 +9,7 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Parser/FigmaFile.h"
 
 FString UFigmaDocument::GetPackagePath() const
 {
@@ -20,7 +21,7 @@ FString UFigmaDocument::GetAssetName() const
 	return FigmaFile ? FigmaFile->GetFileName() : FString();
 }
 
-void UFigmaDocument::LoadOrCreateAssets()
+void UFigmaDocument::LoadOrCreateAssets(UFigmaFile* InFigmaFile)
 {
 	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 }

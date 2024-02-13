@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Nodes/FigmaDocument.h"
 #include "Properties/FigmaComponentRef.h"
 #include "Properties/FigmaComponentSetRef.h"
 
@@ -29,10 +30,24 @@ public:
 	FString FindComponentName(const FString& ComponentId);
 	FFigmaComponentRef* FindComponentRef(const FString& ComponentId);
 
+	TObjectPtr<UFigmaComponent> FindComponentByKey(const FString& Key);
+
+	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
-	void BuildImageDependency(FImageRequests& ImageRequests);
+	void BuildImageDependency(FString FileKey, FImageRequests& ImageRequests);
 	void Patch(const FProcessFinishedDelegate& ProcessDelegate);
 	void PostPatch(const FProcessFinishedDelegate& ProcessDelegate);
+
+	template<class NodeType>
+	TObjectPtr<NodeType> FindByID(FString ID)
+	{
+		if (Document)
+		{
+			return Cast<NodeType>(Document->FindTypeByID(NodeType::StaticClass(), ID));
+		}
+
+		return nullptr;
+	}
 
 protected:
 	void ExecuteDelegate(const bool Succeeded);
