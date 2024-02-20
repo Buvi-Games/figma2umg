@@ -19,9 +19,9 @@ FVector2D UFigmaVectorNode::GetSize() const
 	return AbsoluteBoundingBox.GetSize();
 }
 
-void UFigmaVectorNode::AddImageRequest(FImageRequests& ImageRequests)
+void UFigmaVectorNode::AddImageRequest(FString FileKey, FImageRequests& ImageRequests)
 {
-	ImageRequests.AddRequest(GetNodeName(), GetId(), OnRawImageReceivedCB);
+	ImageRequests.AddRequest(FileKey, GetNodeName(), GetId(), OnRawImageReceivedCB);
 }
 
 void UFigmaVectorNode::OnRawImageReceived(TArray<uint8>& RawData)
@@ -48,7 +48,7 @@ FString UFigmaVectorNode::GetAssetName() const
 	return GetUniqueName();
 }
 
-void UFigmaVectorNode::LoadOrCreateAssets()
+void UFigmaVectorNode::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 }
 
@@ -75,7 +75,18 @@ TObjectPtr<UWidget> UFigmaVectorNode::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		Builder.Image = NewObject<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
 	}
 
-	Builder.Image->SetBrushFromTexture(GetAsset<UTexture2D>(), true);
+	UTexture2D* Texture = GetAsset<UTexture2D>();
+	if (Texture)
+	{
+		Builder.Image->SetBrushFromTexture(GetAsset<UTexture2D>(), true);
+	}
+	else
+	{
+		FSlateBrush Brush = Builder.Image->GetBrush();
+		const FLinearColor Color(0.0f, 0.0f, 0.0f, 0.0f);
+		Brush.TintColor = Color;
+		Builder.Image->SetBrush(Brush);
+	}
 	return Builder.Image;
 }
 
@@ -91,6 +102,7 @@ void UFigmaVectorNode::PostInsert() const
 	{
 		CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
 	}
+
 }
 
 void UFigmaVectorNode::Reset()

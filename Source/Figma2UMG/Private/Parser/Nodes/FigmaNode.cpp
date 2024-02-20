@@ -96,6 +96,25 @@ UObject* UFigmaNode::GetAssetOuter() const
 	return nullptr;
 }
 
+TObjectPtr<UFigmaNode> UFigmaNode::FindTypeByID(const UClass* Class, const FString& ID)
+{
+	if (this->IsA(Class) && Id == ID)
+		return this;
+
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	{
+		TArray<UFigmaNode*>& Children = FigmaContainer->GetChildren();
+		for (TObjectPtr<UFigmaNode> Child : Children)
+		{
+			TObjectPtr<UFigmaNode> Found = Child->FindTypeByID(Class, ID);
+			if (Found)
+				return Found;
+		}
+	}
+
+	return nullptr;
+}
+
 void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName)
 {
 	Array.Reset();

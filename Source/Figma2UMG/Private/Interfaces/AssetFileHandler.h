@@ -30,7 +30,7 @@ public:
 	virtual FString GetAssetName() const = 0;
 
 	UFUNCTION()
-	virtual void LoadOrCreateAssets() = 0;
+	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) = 0;
 
 	UObject* GetAsset() const { return Asset; }
 	template<class Type>

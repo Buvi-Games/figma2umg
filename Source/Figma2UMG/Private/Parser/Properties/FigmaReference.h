@@ -23,4 +23,6 @@ public:
 
 	UPROPERTY()
 	bool Remote;
+
+	FString RemoteFileKey;
 };

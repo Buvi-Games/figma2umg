@@ -26,7 +26,7 @@ public:
 	void Run();
 
 protected:
-	bool CreateRequest(const char* EndPoint, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate);
+	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
 
 	void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
@@ -39,7 +39,13 @@ protected:
 	void OnFigmaFileRequestReceived(UVaRestRequestJSON* Request);
 
 	UFUNCTION()
+	void OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Request);
+	void DownloadNextDependency();
+
+	UFUNCTION()
 	void OnAssetsCreated(bool Succeeded);
+
+	void RequestImageURLs();
 
 	UFUNCTION()
 	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
@@ -55,6 +61,7 @@ protected:
 	UFUNCTION()
 	void OnPostPatchUAssets(bool Succeeded);
 
+	FVaRestCallDelegate OnVaRestLibraryFileRequestDelegate;
 	FVaRestCallDelegate OnVaRestFileRequestDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
 	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
@@ -67,6 +74,7 @@ protected:
 	FString AccessToken;
 	FString FileKey;
 	FString Ids;
+	FString CurrentLibraryFileKey;
 
 	FString ContentRootFolder;
 
@@ -74,6 +82,9 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UFigmaFile> File = nullptr;
+
+	UPROPERTY()
+	TMap<FString, TObjectPtr<UFigmaFile>> LibraryFileKeys;
 
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;
