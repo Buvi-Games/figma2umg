@@ -39,19 +39,31 @@ private:
 };
 
 USTRUCT()
+struct FImagePerFileRequests
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	FString FileKey;
+
+	UPROPERTY()
+	TArray<FImageRequest> Requests;
+};
+
+USTRUCT()
 struct FImageRequests
 {
 	GENERATED_BODY()
 public:
-	void AddRequest(const FString& ImageName, const FString& Id, const FOnRawImageReceiveDelegate& OnImageRawReceive);
+	void AddRequest(FString FileKey, const FString& ImageName, const FString& Id, const FOnRawImageReceiveDelegate& OnImageRawReceive);
 	void Reset();
 
-	const TArray<FImageRequest>& GetRequests() const { return Requests; }
+	const FImagePerFileRequests* GetRequests() const;
 	void SetURL(const FString& Id, const FString& URL);
 
 	FImageRequest* GetNextToDownload();
 
 private:
 	UPROPERTY()
-	TArray<FImageRequest> Requests;
+	TArray<FImagePerFileRequests> RequestsPerFile;
 };

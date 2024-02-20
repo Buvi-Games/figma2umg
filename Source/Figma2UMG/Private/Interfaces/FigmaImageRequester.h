@@ -22,7 +22,7 @@ class FIGMA2UMG_API IFigmaImageRequester
 public:
 	IFigmaImageRequester();
 
-	virtual void AddImageRequest(FImageRequests& ImageRequests) = 0;
+	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) = 0;
 	virtual void OnRawImageReceived(TArray<uint8>& RawData) = 0;
 
 protected:

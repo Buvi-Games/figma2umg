@@ -14,6 +14,7 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 	{
 		AccessToken = Settings->AccessToken;
 		FileKey = Settings->FileKey;
+		LibraryFileKeys = Settings->LibraryFileKeys;
 	}
 
 	ContentRootFolder = "/Game/";
@@ -21,4 +22,5 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 	//#if !UE_BUILD_SHIPPING
 	Ids.Add("146:1357");
 	//#endif
+
 }

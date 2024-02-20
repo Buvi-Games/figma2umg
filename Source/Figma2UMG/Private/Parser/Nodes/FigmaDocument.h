@@ -5,12 +5,12 @@
 #include "CoreMinimal.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaContainer.h"
-#include "Parser/FigmaFile.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 #include "FigmaDocument.generated.h"
 
 class UWidgetBlueprint;
+class UFigmaFile;
 
 UCLASS()
 class UFigmaDocument : public UFigmaNode, public IFigmaFileHandle, public IFigmaContainer
@@ -27,17 +27,17 @@ public:
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
-	virtual void LoadOrCreateAssets() override;
+	virtual void LoadOrCreateAssets(UFigmaFile* InFigmaFile) override;
 
 	// IFigmaContainer
-	virtual FString GetJsonArrayName() const override { return FString("Children"); };
+	virtual FString GetJsonArrayName() const override { return FString("Children"); }
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
 
 	void SetFigmaFile(UFigmaFile* InFigmaFile);
 
 protected:
 
-	UFigmaFile* FigmaFile = nullptr;
+	TObjectPtr<UFigmaFile> FigmaFile = nullptr;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
