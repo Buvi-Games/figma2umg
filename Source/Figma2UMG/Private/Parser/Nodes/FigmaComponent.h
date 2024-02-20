@@ -10,6 +10,8 @@
 
 #include "FigmaComponent.generated.h"
 
+struct FEdGraphPinType;
+
 UCLASS()
 class UFigmaComponent : public  UFigmaFrame, public IFigmaFileHandle, public IFigmaRefHandle
 {
@@ -30,6 +32,9 @@ public:
 	virtual void PostInsert() const override;
 
 protected:
+	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType);
+	void AddPropertiesToWidget(UWidgetBlueprint* Widget);
+
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
 };

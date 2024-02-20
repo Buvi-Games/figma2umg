@@ -3,8 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaInstanceSwapPreferredValue.h"
 
 #include "FigmaComponentPropertyDefinition.generated.h"
+
+UENUM()
+enum class EFigmaComponentPropertyType
+{
+	BOOLEAN,
+	INSTANCE_SWAP,
+	TEXT,
+	VARIANT,
+};
 
 USTRUCT()
 struct FIGMA2UMG_API FFigmaComponentPropertyDefinition
@@ -12,5 +22,15 @@ struct FIGMA2UMG_API FFigmaComponentPropertyDefinition
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	EFigmaComponentPropertyType Type;
+
+	UPROPERTY()
+	FString DefaultValue;
+
+	UPROPERTY()
+	TArray<FString> VariantOptions;
+
+	UPROPERTY()
+	TArray<FFigmaInstanceSwapPreferredValue> PreferredValues;
 };

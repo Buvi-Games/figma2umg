@@ -58,6 +58,8 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	Widget->WidgetTree->SetFlags(RF_Transactional);
 	Widget->WidgetTree->Modify();
 
+	AddPropertiesToWidget(Widget);
+
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
 
 	TObjectPtr<UWidget> WidgetInstance = nullptr;
@@ -116,6 +118,43 @@ void UFigmaComponent::PostInsert() const
 		{
 			CanvasSlot->SetPosition(GetPosition());
 			CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
+		}
+	}
+}
+
+void UFigmaComponent::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType)
+{
+	MemberType.ContainerType = EPinContainerType::None;
+	switch (Def.Type)
+	{
+	case EFigmaComponentPropertyType::BOOLEAN:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_Boolean;
+		break;
+	case EFigmaComponentPropertyType::TEXT:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_String;
+
+		break;
+	case EFigmaComponentPropertyType::INSTANCE_SWAP:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_Object;
+		// MemberType.PinSubCategory = ?
+		// MemberType.PinSubCategoryObject = ?
+		break;
+	case EFigmaComponentPropertyType::VARIANT:
+		//TODO:
+		break;
+	}
+}
+
+void UFigmaComponent::AddPropertiesToWidget(UWidgetBlueprint* Widget)
+{
+	for(TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	{
+		FEdGraphPinType MemberType;
+		FillType(Property.Value, MemberType);
+		FString PropertyName = Property.Key;//TODO: Remove '#id'
+		if (FBlueprintEditorUtils::AddMemberVariable(Widget, *PropertyName, MemberType, Property.Value.DefaultValue))
+		{
+			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(Widget, *PropertyName, false);
 		}
 	}
 }
