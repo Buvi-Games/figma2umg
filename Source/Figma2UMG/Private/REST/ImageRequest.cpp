@@ -172,7 +172,7 @@ void FImageRequests::SetURL(const FString& Id, const FString& URL)
 FImageRequest* FImageRequests::GetNextToDownload()
 {
 	FImagePerFileRequests& CurrentFile = RequestsPerFile[0];
-	FImageRequest* ImageRequest = CurrentFile.Requests.FindByPredicate([](const FImageRequest& Request) { return (Request.GetStatus() == eRequestStatus::NotStarted); });
+	FImageRequest* ImageRequest = CurrentFile.Requests.FindByPredicate([](const FImageRequest& Request) { return (Request.GetStatus() == eRequestStatus::NotStarted && !Request.URL.IsEmpty()); });
 	if(ImageRequest == nullptr)
 	{
 		RequestsPerFile.RemoveAt(0);
