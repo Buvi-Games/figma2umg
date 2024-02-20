@@ -43,6 +43,7 @@ public:
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 
+	FString GetComponentId() const { return ComponentId; }
 protected:
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
