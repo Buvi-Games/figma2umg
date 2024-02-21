@@ -17,7 +17,7 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		LibraryFileKeys = Settings->LibraryFileKeys;
 	}
 
-	ContentRootFolder = "/Game/";
+	ContentRootFolder = "/Game/Figma";
 
 	//#if !UE_BUILD_SHIPPING
 	Ids.Add("146:1357");

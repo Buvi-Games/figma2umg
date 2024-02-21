@@ -6,6 +6,9 @@
 
 #include "FigmaNode.generated.h"
 
+class UK2Node_FunctionResult;
+class UK2Node_VariableGet;
+class UK2Node_IfThenElse;
 class UWidgetBlueprint;
 class UFigmaFile;
 class UWidgetTree;
@@ -88,6 +91,14 @@ protected:
 	FString PackagePath;
 private:
 	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const;
+
+	void AddBinding(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName) const;
+
+	void PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FBPVariableDescription& VariableDescription, const FName& VariableName) const;
+
+	UK2Node_VariableGet* PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation) const;
+	UK2Node_IfThenElse* PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ConditionValuePin) const;
+	UK2Node_FunctionResult* PatchFunctionResult(UEdGraph* Graph, FVector2D NodeLocation, const FString& ReturnValue) const;
 
 	UPROPERTY()
 	FString Id;

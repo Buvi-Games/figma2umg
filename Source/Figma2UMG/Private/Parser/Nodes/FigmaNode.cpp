@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/FigmaNode.h"
 
+#include "BlueprintNodeSpawner.h"
 #include "FigmaCanvas.h"
 #include "FigmaComponent.h"
 #include "FigmaComponentSet.h"
@@ -16,8 +17,13 @@
 #include "FigmaSticky.h"
 #include "FileHelpers.h"
 #include "JsonObjectConverter.h"
+#include "K2Node_FunctionResult.h"
+#include "K2Node_IfThenElse.h"
+#include "K2Node_VariableGet.h"
+#include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Interfaces/WidgetOwner.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
@@ -377,38 +383,191 @@ void UFigmaNode::ProcessComponentPropertyReferences(TObjectPtr<UWidgetBlueprint>
 void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const
 {
 	static const FString VisibleStr("visible");
+	const FBPVariableDescription* VariableDescription = WidgetBP->NewVariables.FindByPredicate([PropertyReference](const FBPVariableDescription& VariableDescription)
+		{
+			return VariableDescription.VarName == PropertyReference.Value;
+		});
+
+	if(VariableDescription == nullptr)
+		return;
+
 	if (PropertyReference.Key == VisibleStr)
 	{
+		PatchVisibilityBind(WidgetBP, Widget, *VariableDescription, *PropertyReference.Value);
 	}
 }
 
-//void UFigmaNode::PatchPreInsertWidgetChildren(UPanelWidget* ParentWidget, const TArray<UFigmaNode*>& Children) const
-//{
-//	if (!ParentWidget)
-//		return;
-//
-//	for (int Index = 0; Index < Children.Num(); Index++)
-//	{
-//		UFigmaNode* Element = Children[Index];
-//
-//		TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
-//		TObjectPtr<UWidget> NewWidget = Element->PatchPreInsertWidget(OldWidget);
-//		if (NewWidget)
-//		{
-//			if(NewWidget != OldWidget)
-//			{
-//				ParentWidget->SetFlags(RF_Transactional);
-//				ParentWidget->Modify();
-//
-//				if (Index < ParentWidget->GetChildrenCount())
-//				{
-//					ParentWidget->ReplaceChildAt(Index, NewWidget);
-//				}
-//				else
-//				{
-//					ParentWidget->AddChild(NewWidget);
-//				}
-//			}
-//		}
-//	}
-//}
+void UFigmaNode::AddBinding(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName) const
+{
+	UFunction* Function = WidgetBP->SkeletonGeneratedClass->FindFunctionByName(FunctionGraph->GetFName());
+
+	FDelegateEditorBinding Binding;
+	Binding.ObjectName = Widget->GetName();
+	Binding.PropertyName = PropertyName;
+	Binding.SourcePath = FEditorPropertyPath({ Function });
+
+	if (Function != nullptr)
+	{
+		Binding.FunctionName = Function->GetFName();
+
+		UBlueprint::GetGuidFromClassByFieldName<UFunction>(
+			Function->GetOwnerClass(),
+			Function->GetFName(),
+			Binding.MemberGuid);
+
+		Binding.Kind = EBindingKind::Function;
+	}
+
+	WidgetBP->Bindings.Remove(Binding);
+	WidgetBP->Bindings.AddUnique(Binding);
+
+	const UEdGraphSchema_K2* Schema_K2 = Cast<UEdGraphSchema_K2>(FunctionGraph->GetSchema());
+	Schema_K2->AddExtraFunctionFlags(FunctionGraph, FUNC_BlueprintPure);
+}
+
+void UFigmaNode::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FBPVariableDescription& VariableDescription, const FName& VariableName) const
+{
+	FString FunctionName = "Get_" + Widget.GetName() + "_Visibility";
+	TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+		{
+			return Graph.GetName() == FunctionName;
+		});
+
+	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+
+	if (!FunctionGraph)
+	{
+		FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(
+		   WidgetBP,
+		   FBlueprintEditorUtils::FindUniqueKismetName(WidgetBP, FunctionName),
+		   UEdGraph::StaticClass(),
+		   UEdGraphSchema_K2::StaticClass());
+
+		UFunction* BindableSignature = Widget->GetClass()->FindFunctionByName("GetSlateVisibility__DelegateSignature");
+		FBlueprintEditorUtils::AddFunctionGraph(WidgetBP, FunctionGraph, true, BindableSignature);
+	}
+
+	AddBinding(WidgetBP, Widget, FunctionGraph, "Visibility");
+
+	FVector2D StartPos = FunctionGraph->Nodes.IsEmpty() ? FVector2D(0.0f, 0.0f) : FVector2D(FunctionGraph->Nodes[0]->NodePosX, FunctionGraph->Nodes[0]->NodePosY);
+	FVector2D BaseSize = FVector2D(300.0f, 150.0f);
+	FVector2D GetGraphPosition = StartPos + FVector2D(0.0f, BaseSize.Y + 20.0f);
+	UK2Node_VariableGet* VariableGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, VariableName, GetGraphPosition);
+
+	FVector2D VisibleResultPosition = GetGraphPosition + FVector2D(BaseSize.X + 300, StartPos.Y);
+	UK2Node_FunctionResult* VisibleResult = PatchFunctionResult(FunctionGraph, VisibleResultPosition, "Visible");
+
+	FVector2D CollapsedResultPosition = GetGraphPosition + FVector2D(BaseSize.X + 300, StartPos.Y);
+	UK2Node_FunctionResult* CollapsedResult = PatchFunctionResult(FunctionGraph, CollapsedResultPosition, "Collapsed");
+
+	FVector2D IfThenElseGraphPosition = GetGraphPosition + FVector2D(BaseSize.X + 100, StartPos.Y);
+	PatchIfThenElseNode(FunctionGraph, IfThenElseGraphPosition, VariableGetNode->GetValuePin());
+}
+
+UK2Node_VariableGet* UFigmaNode::PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation) const
+{
+	TObjectPtr<class UEdGraphNode>* FoundNode = Graph->Nodes.FindByPredicate([VariableName](const TObjectPtr<class UEdGraphNode> Node)
+	{
+		if (!Node || !Node->IsA<UK2Node_VariableGet>())
+			return false;
+
+		const UK2Node_VariableGet* NodeVarGet = Cast<UK2Node_VariableGet>(Node);		
+		return NodeVarGet->GetVarName() == VariableName;
+	});
+
+	if (FoundNode)
+	{
+		TObjectPtr<UK2Node_VariableGet> VariableGetNode = Cast<UK2Node_VariableGet>(*FoundNode);
+		VariableGetNode->NodePosX = static_cast<int32>(NodeLocation.X);
+		VariableGetNode->NodePosY = static_cast<int32>(NodeLocation.Y);
+		return VariableGetNode;
+	}
+
+	const UEdGraphSchema_K2* K2_Schema = Cast<const UEdGraphSchema_K2>(Graph->GetSchema());
+	if (K2_Schema)
+	{
+		return K2_Schema->SpawnVariableGetNode(NodeLocation, Graph, VariableName, WidgetBP->SkeletonGeneratedClass);
+	}
+
+	return nullptr;
+}
+
+UK2Node_IfThenElse* UFigmaNode::PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ConditionValuePin) const
+{
+	UK2Node_IfThenElse* IfThenElseNode = nullptr;
+	TArray<UK2Node_IfThenElse*> ExistingNodes;
+	Graph->GetNodesOfClass<UK2Node_IfThenElse>(ExistingNodes);
+	if (ExistingNodes.IsEmpty())
+	{
+		IfThenElseNode = NewObject<UK2Node_IfThenElse>(Graph, UK2Node_IfThenElse::StaticClass());
+		IfThenElseNode->CreateNewGuid();
+		IfThenElseNode->SetFlags(RF_Transactional);
+		IfThenElseNode->AllocateDefaultPins();
+		IfThenElseNode->PostPlacedNewNode();
+
+		Graph->Modify();
+		// the FBlueprintMenuActionItem should do the selecting
+		Graph->AddNode(IfThenElseNode, /*bFromUI =*/false, /*bSelectNewNode =*/false);
+	}
+	else if (ExistingNodes.Num() > 1)
+	{
+		IfThenElseNode = ExistingNodes[0];
+		for (int i = 1; i < ExistingNodes.Num(); i++)
+		{
+			Graph->RemoveNode(ExistingNodes[i]);
+		}
+	}
+	else
+	{
+		IfThenElseNode = ExistingNodes[0];
+	}
+
+	IfThenElseNode->NodePosX = static_cast<int32>(NodeLocation.X);
+	IfThenElseNode->NodePosY = static_cast<int32>(NodeLocation.Y);
+
+	UEdGraphPin* ConditionPin = IfThenElseNode->GetConditionPin();
+	if(ConditionValuePin && ConditionPin)
+	{
+		ConditionPin->MakeLinkTo(ConditionValuePin);
+	}
+	return IfThenElseNode;
+}
+
+UK2Node_FunctionResult* UFigmaNode::PatchFunctionResult(UEdGraph* Graph, FVector2D NodeLocation, const FString& ReturnValue) const
+{
+	UK2Node_FunctionResult* FunctionResult = nullptr;
+	TObjectPtr<class UEdGraphNode>* FoundNode = Graph->Nodes.FindByPredicate([ReturnValue](const TObjectPtr<class UEdGraphNode> Node)
+		{
+			if (!Node || !Node->IsA<UK2Node_FunctionResult>())
+				return false;
+
+			const UK2Node_FunctionResult* NodeVarGet = Cast<UK2Node_FunctionResult>(Node);
+			UEdGraphPin* ReturnPin = NodeVarGet->FindPin(UEdGraphSchema_K2::PN_ReturnValue);
+			return ReturnPin && ReturnPin->DefaultValue == ReturnValue;
+		});
+
+	if (FoundNode)
+	{
+		FunctionResult = Cast<UK2Node_FunctionResult>(*FoundNode);
+	}
+	else
+	{
+		FunctionResult = NewObject<UK2Node_FunctionResult>(Graph, UK2Node_FunctionResult::StaticClass());
+		FunctionResult->CreateNewGuid();
+		FunctionResult->SetFlags(RF_Transactional);
+		FunctionResult->AllocateDefaultPins();
+		FunctionResult->PostPlacedNewNode();
+
+		Graph->Modify();
+		// the FBlueprintMenuActionItem should do the selecting
+		Graph->AddNode(FunctionResult, /*bFromUI =*/false, /*bSelectNewNode =*/false);
+	}
+
+	FunctionResult->NodePosX = static_cast<int32>(NodeLocation.X);
+	FunctionResult->NodePosY = static_cast<int32>(NodeLocation.Y);
+
+	UEdGraphPin* ReturnPin = FunctionResult->FindPin(UEdGraphSchema_K2::PN_ReturnValue);
+	ReturnPin->DefaultValue = ReturnValue;
+
+	return FunctionResult;
+}

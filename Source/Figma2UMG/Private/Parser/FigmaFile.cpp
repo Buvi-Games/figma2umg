@@ -273,9 +273,6 @@ void UFigmaFile::PatchWidgetPropertiesDefinition()
 {
 	for (TPair<FString, FFigmaComponentRef>& Element : Components)
 	{
-		if (!Element.Value.Remote)
-			continue;
-
 		TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent();
 		TObjectPtr<UWidgetBlueprint> WidgetBP = Element.Value.GetAsset();
 		if(!Component || !WidgetBP)
@@ -289,9 +286,6 @@ void UFigmaFile::PatchWidgetBinds()
 {
 	for (TPair<FString, FFigmaComponentRef>& Element : Components)
 	{
-		if (!Element.Value.Remote)
-			continue;
-
 		TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent();
 		TObjectPtr<UWidgetBlueprint> WidgetBP = Element.Value.GetAsset();
 		if (!Component || !WidgetBP)
