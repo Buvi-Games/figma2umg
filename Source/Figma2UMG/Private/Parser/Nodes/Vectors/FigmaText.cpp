@@ -3,6 +3,8 @@
 
 #include "Parser/Nodes/Vectors/FigmaText.h"
 
+#include "WidgetBlueprint.h"
+#include "Builder/WidgetBlueprintBuilder.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 
@@ -86,6 +88,27 @@ void UFigmaText::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 		return;
 
 	ProcessComponentPropertyReferences(WidgetBp, Builder.TextBlock);
+}
+
+void UFigmaText::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const
+{
+	static const FString CharactersStr("characters");
+	if (PropertyReference.Key == CharactersStr)
+	{
+		const FBPVariableDescription* VariableDescription = WidgetBP->NewVariables.FindByPredicate([PropertyReference](const FBPVariableDescription& VariableDescription)
+			{
+				return VariableDescription.VarName == PropertyReference.Value;
+			});
+
+		if (VariableDescription == nullptr)
+			return;
+
+		WidgetBlueprintBuilder::PatchTextBind(WidgetBP, Cast<UTextBlock>(Widget), *VariableDescription, *PropertyReference.Value);
+	}
+	else
+	{
+		Super::ProcessComponentPropertyReference(WidgetBP, Widget, PropertyReference);
+	}
 }
 
 void UFigmaText::Reset()
