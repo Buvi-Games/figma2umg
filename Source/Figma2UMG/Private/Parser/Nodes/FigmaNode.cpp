@@ -17,6 +17,7 @@
 #include "FigmaSticky.h"
 #include "FileHelpers.h"
 #include "JsonObjectConverter.h"
+#include "K2Node_FunctionEntry.h"
 #include "K2Node_FunctionResult.h"
 #include "K2Node_IfThenElse.h"
 #include "K2Node_VariableGet.h"
@@ -449,19 +450,28 @@ void UFigmaNode::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObj
 
 	AddBinding(WidgetBP, Widget, FunctionGraph, "Visibility");
 
-	FVector2D StartPos = FunctionGraph->Nodes.IsEmpty() ? FVector2D(0.0f, 0.0f) : FVector2D(FunctionGraph->Nodes[0]->NodePosX, FunctionGraph->Nodes[0]->NodePosY);
+	TObjectPtr<class UEdGraphNode>* FoundEntryNode = FunctionGraph->Nodes.FindByPredicate([](const TObjectPtr<class UEdGraphNode> Node)
+		{
+			return Node && Node->IsA<UK2Node_FunctionEntry>();
+		});
+
+	TObjectPtr<UK2Node_FunctionEntry> FunctionEntry = FoundEntryNode ? Cast<UK2Node_FunctionEntry>(*FoundEntryNode) : nullptr;
+
+	FVector2D StartPos = FunctionEntry ? FVector2D(FunctionEntry->NodePosX, FunctionEntry->NodePosY) : FVector2D(0.0f, 0.0f);
 	FVector2D BaseSize = FVector2D(300.0f, 150.0f);
-	FVector2D GetGraphPosition = StartPos + FVector2D(0.0f, BaseSize.Y + 20.0f);
+	FVector2D Pan = FVector2D(20.0f, 20.0f);
+
+	FVector2D GetGraphPosition = StartPos + FVector2D(0.0f, BaseSize.Y + Pan.Y);
 	UK2Node_VariableGet* VariableGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, VariableName, GetGraphPosition);
 
-	FVector2D VisibleResultPosition = GetGraphPosition + FVector2D(BaseSize.X + 300, StartPos.Y);
+	FVector2D VisibleResultPosition = StartPos + FVector2D((BaseSize.X + Pan.X) * 2.0f, StartPos.Y);
 	UK2Node_FunctionResult* VisibleResult = PatchFunctionResult(FunctionGraph, VisibleResultPosition, "Visible");
 
-	FVector2D CollapsedResultPosition = GetGraphPosition + FVector2D(BaseSize.X + 300, StartPos.Y);
+	FVector2D CollapsedResultPosition = VisibleResultPosition + FVector2D(0, BaseSize.Y + Pan.Y);
 	UK2Node_FunctionResult* CollapsedResult = PatchFunctionResult(FunctionGraph, CollapsedResultPosition, "Collapsed");
 
-	FVector2D IfThenElseGraphPosition = GetGraphPosition + FVector2D(BaseSize.X + 100, StartPos.Y);
-	PatchIfThenElseNode(FunctionGraph, IfThenElseGraphPosition, VariableGetNode->GetValuePin());
+	FVector2D IfThenElseGraphPosition = StartPos + FVector2D(BaseSize.X + Pan.X, StartPos.Y);
+	PatchIfThenElseNode(FunctionGraph, IfThenElseGraphPosition, FunctionEntry ? FunctionEntry->GetThenPin() : nullptr, VariableGetNode->GetValuePin(), VisibleResult->GetExecPin(), CollapsedResult->GetExecPin());
 }
 
 UK2Node_VariableGet* UFigmaNode::PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation) const
@@ -492,7 +502,7 @@ UK2Node_VariableGet* UFigmaNode::PatchVariableGetNode(TObjectPtr<UWidgetBlueprin
 	return nullptr;
 }
 
-UK2Node_IfThenElse* UFigmaNode::PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ConditionValuePin) const
+UK2Node_IfThenElse* UFigmaNode::PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, UEdGraphPin* ConditionValuePin, UEdGraphPin* ThenReturnPin, UEdGraphPin* ElseReturnPin) const
 {
 	UK2Node_IfThenElse* IfThenElseNode = nullptr;
 	TArray<UK2Node_IfThenElse*> ExistingNodes;
@@ -525,10 +535,31 @@ UK2Node_IfThenElse* UFigmaNode::PatchIfThenElseNode(UEdGraph* Graph, FVector2D N
 	IfThenElseNode->NodePosX = static_cast<int32>(NodeLocation.X);
 	IfThenElseNode->NodePosY = static_cast<int32>(NodeLocation.Y);
 
+	UEdGraphPin* ExecutePin = IfThenElseNode->GetExecPin();
+	if (ExecPin && ExecutePin)
+	{
+		ExecPin->BreakAllPinLinks();
+		ExecPin->MakeLinkTo(ExecutePin);
+	}
+
 	UEdGraphPin* ConditionPin = IfThenElseNode->GetConditionPin();
 	if(ConditionValuePin && ConditionPin)
 	{
-		ConditionPin->MakeLinkTo(ConditionValuePin);
+		ConditionPin->BreakAllPinLinks();
+		ConditionValuePin->MakeLinkTo(ConditionPin);
+	}
+
+	UEdGraphPin* ThenPin = IfThenElseNode->GetThenPin();
+	if (ThenReturnPin && ThenPin)
+	{
+		ThenPin->BreakAllPinLinks();
+		ThenPin->MakeLinkTo(ThenReturnPin);
+	}
+	UEdGraphPin* ElsePin = IfThenElseNode->GetElsePin();
+	if (ElseReturnPin && ElsePin)
+	{
+		ElsePin->BreakAllPinLinks();
+		ElsePin->MakeLinkTo(ElseReturnPin);
 	}
 	return IfThenElseNode;
 }
