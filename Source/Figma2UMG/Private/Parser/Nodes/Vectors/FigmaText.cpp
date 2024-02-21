@@ -103,7 +103,11 @@ void UFigmaText::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 		if (VariableDescription == nullptr)
 			return;
 
-		WidgetBlueprintBuilder::PatchTextBind(WidgetBP, Cast<UTextBlock>(Widget), *VariableDescription, *PropertyReference.Value);
+		TObjectPtr<UTextBlock> TextBlock = Cast<UTextBlock>(Widget);
+		if (TextBlock == nullptr)
+			return;
+
+		WidgetBlueprintBuilder::PatchTextBind(WidgetBP, TextBlock, *PropertyReference.Value);
 	}
 	else
 	{

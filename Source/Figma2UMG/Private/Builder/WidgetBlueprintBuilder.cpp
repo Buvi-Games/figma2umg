@@ -29,7 +29,7 @@ void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> Wi
 		FBlueprintEditorUtils::AddFunctionGraph(WidgetBP, FunctionGraph, true, BindableSignature);
 	}
 
-	AddBinding(WidgetBP, Widget, FunctionGraph, "Visibility");
+	AddBindingFunction(WidgetBP, Widget, FunctionGraph, "Visibility");
 
 	TObjectPtr<class UEdGraphNode>* FoundEntryNode = FunctionGraph->Nodes.FindByPredicate([](const TObjectPtr<class UEdGraphNode> Node)
 		{
@@ -55,7 +55,12 @@ void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> Wi
 	PatchIfThenElseNode(FunctionGraph, IfThenElseGraphPosition, FunctionEntry ? FunctionEntry->GetThenPin() : nullptr, VariableGetNode->GetValuePin(), VisibleResult->GetExecPin(), CollapsedResult->GetExecPin());
 }
 
-void WidgetBlueprintBuilder::AddBinding(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName)
+void WidgetBlueprintBuilder::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName)
+{
+	AddBindingProperty(WidgetBP, TextBlock, "Text", VariableName);
+}
+
+void WidgetBlueprintBuilder::AddBindingFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName)
 {
 	UFunction* Function = WidgetBP->SkeletonGeneratedClass->FindFunctionByName(FunctionGraph->GetFName());
 
@@ -81,6 +86,23 @@ void WidgetBlueprintBuilder::AddBinding(TObjectPtr<UWidgetBlueprint> WidgetBP, T
 
 	const UEdGraphSchema_K2* Schema_K2 = Cast<UEdGraphSchema_K2>(FunctionGraph->GetSchema());
 	Schema_K2->AddExtraFunctionFlags(FunctionGraph, FUNC_BlueprintPure);
+}
+
+void WidgetBlueprintBuilder::AddBindingProperty(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& PropertyName, const FName& MemberPropertyName)
+{
+	FProperty* Property = WidgetBP->SkeletonGeneratedClass->FindPropertyByName(MemberPropertyName);
+
+	FDelegateEditorBinding Binding;
+	Binding.ObjectName = Widget->GetName();
+	Binding.PropertyName = PropertyName;
+	Binding.SourcePath = FEditorPropertyPath({ Property });
+	Binding.SourceProperty = MemberPropertyName;
+	Binding.Kind = EBindingKind::Property;
+
+	UBlueprint::GetGuidFromClassByFieldName<FProperty>(WidgetBP->SkeletonGeneratedClass, MemberPropertyName, Binding.MemberGuid);
+
+	WidgetBP->Bindings.Remove(Binding);
+	WidgetBP->Bindings.AddUnique(Binding);
 }
 
 UK2Node_VariableGet* WidgetBlueprintBuilder::PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation)

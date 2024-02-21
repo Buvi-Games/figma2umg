@@ -45,6 +45,8 @@ public:
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
 protected:
+	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const override;
+
 	UPROPERTY()
 	bool Locked = false;
 
