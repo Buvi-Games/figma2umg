@@ -38,6 +38,7 @@ public:
 	virtual FVector2D GetTopWidgetPosition() const override;
 
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
+	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
 protected:
 	UPROPERTY()

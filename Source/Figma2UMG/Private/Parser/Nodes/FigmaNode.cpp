@@ -205,6 +205,7 @@ void UFigmaNode::PatchPostInsertWidget()
 		{
 			Widget->SetVisibility(GetVisibility());
 
+			//ProcessPropertyReferences(Widget);
 		}
 
 		WidgetOwner->PostInsert();
@@ -360,6 +361,25 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 	}
 	
 	return FigmaNode;
+}
+
+void UFigmaNode::ProcessComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget) const
+{
+	if (WidgetBP == nullptr || Widget == nullptr)
+		return;
+
+	for (const TPair<FString, FString>& ComponentPropertyReference : ComponentPropertyReferences)
+	{
+		ProcessComponentPropertyReference(WidgetBP, Widget, ComponentPropertyReference);
+	}
+}
+
+void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const
+{
+	static const FString VisibleStr("visible");
+	if (PropertyReference.Key == VisibleStr)
+	{
+	}
 }
 
 //void UFigmaNode::PatchPreInsertWidgetChildren(UPanelWidget* ParentWidget, const TArray<UFigmaNode*>& Children) const

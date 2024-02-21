@@ -80,6 +80,14 @@ TObjectPtr<UPanelWidget> UFigmaText::GetContainerWidget() const
 	return nullptr;
 }
 
+void UFigmaText::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	if (WidgetBp == nullptr)
+		return;
+
+	ProcessComponentPropertyReferences(WidgetBp, Builder.TextBlock);
+}
+
 void UFigmaText::Reset()
 {
 	Builder.Reset();

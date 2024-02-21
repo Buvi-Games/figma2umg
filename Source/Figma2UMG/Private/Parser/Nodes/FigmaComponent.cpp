@@ -55,8 +55,6 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	Widget->WidgetTree->SetFlags(RF_Transactional);
 	Widget->WidgetTree->Modify();
 
-	AddPropertiesToWidget(Widget);
-
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
 
 	TObjectPtr<UWidget> WidgetInstance = nullptr;
@@ -119,7 +117,7 @@ void UFigmaComponent::PostInsert() const
 	}
 }
 
-void UFigmaComponent::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType)
+void UFigmaComponent::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
 {
 	MemberType.ContainerType = EPinContainerType::None;
 	switch (Def.Type)
@@ -142,9 +140,9 @@ void UFigmaComponent::FillType(const FFigmaComponentPropertyDefinition& Def, FEd
 	}
 }
 
-void UFigmaComponent::AddPropertiesToWidget(UWidgetBlueprint* Widget)
+void UFigmaComponent::PatchPropertiesToWidget(UWidgetBlueprint* Widget) const
 {
-	for(TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	for(const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
 	{
 		FEdGraphPinType MemberType;
 		FillType(Property.Value, MemberType);
@@ -156,6 +154,15 @@ void UFigmaComponent::AddPropertiesToWidget(UWidgetBlueprint* Widget)
 	}
 }
 
+void UFigmaComponent::PatchBinds()
+{
+	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
+	if(!WidgetBp)
+		return;
+
+	Super::PatchBinds(WidgetBp);
+}
+
 void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
@@ -165,3 +172,6 @@ void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const
 	ComponentRef->SetComponent(this);
 }
 
+void UFigmaComponent::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+}

@@ -118,3 +118,12 @@ TObjectPtr<UPanelWidget> UFigmaSection::GetContainerWidget() const
 {
 	return Builder.Canvas;
 }
+
+void UFigmaSection::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	if (WidgetBp == nullptr)
+		return;
+
+	TObjectPtr<UWidget> Widget = GetTopWidget();
+	ProcessComponentPropertyReferences(WidgetBp, Widget);
+}

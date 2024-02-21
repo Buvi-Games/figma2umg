@@ -33,6 +33,7 @@ public:
 	virtual FVector2D GetTopWidgetPosition() const override;
 
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
+	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
 	// IFigmaImageRequester
 	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
@@ -43,6 +44,7 @@ public:
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 
+	void PatchComponentProperty(TObjectPtr<UWidgetBlueprint> WidgetBp) const;
 	FString GetComponentId() const { return ComponentId; }
 protected:
 	UPROPERTY()

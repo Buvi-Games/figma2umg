@@ -195,6 +195,10 @@ void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
 				Document->PatchPreInsertWidget(nullptr);
 				Document->PatchPostInsertWidget();
 
+				PatchWidgetPropertiesDefinition();
+				PatchWidgetProperties();
+				PatchWidgetBinds();
+
 				ExecuteDelegate(true);
 			}
 			else
@@ -263,5 +267,59 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	if (CurrentProcessDelegate.ExecuteIfBound(Succeeded))
 	{
 //		CurrentProcessDelegate.Unbind();
+	}
+}
+void UFigmaFile::PatchWidgetPropertiesDefinition()
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+
+		TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent();
+		TObjectPtr<UWidgetBlueprint> WidgetBP = Element.Value.GetAsset();
+		if(!Component || !WidgetBP)
+			continue;
+
+		Component->PatchPropertiesToWidget(WidgetBP);
+	}
+}
+
+void UFigmaFile::PatchWidgetBinds()
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+
+		TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent();
+		TObjectPtr<UWidgetBlueprint> WidgetBP = Element.Value.GetAsset();
+		if (!Component || !WidgetBP)
+			continue;
+
+		Component->PatchBinds();
+	}
+}
+
+
+void UFigmaFile::PatchWidgetProperties()
+{
+	TArray<UFigmaInstance*> AllInstances;
+	if (Document)
+	{
+		Document->GetAllChildrenByType(AllInstances);
+	}
+
+	for (UFigmaInstance* FigmaInstance : AllInstances)
+	{
+		if (!Components.Contains(FigmaInstance->GetComponentId()))
+			continue;
+
+		FFigmaComponentRef& ComponentRef = Components[FigmaInstance->GetComponentId()];
+		TObjectPtr<UWidgetBlueprint> WidgetBP = ComponentRef.GetAsset();
+		if(!WidgetBP)
+			continue;
+
+		FigmaInstance->PatchComponentProperty(WidgetBP);
 	}
 }

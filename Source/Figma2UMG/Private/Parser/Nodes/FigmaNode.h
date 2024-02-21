@@ -6,6 +6,7 @@
 
 #include "FigmaNode.generated.h"
 
+class UWidgetBlueprint;
 class UFigmaFile;
 class UWidgetTree;
 class UPanelWidget;
@@ -72,10 +73,13 @@ public:
 	UObject* GetAssetOuter() const;
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
 	TObjectPtr<UFigmaNode> FindTypeByID(const UClass* Class, const FString& ID);
+
+	const TMap<FString, FString>& GetComponentPropertyReferences() const { return ComponentPropertyReferences; }
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 
 	UFigmaNode* CreateNode(const TSharedPtr<FJsonObject>& JsonObj);
+	void ProcessComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget) const;
 
 //	void PatchPreInsertWidgetChildren(UPanelWidget* ParentWidget, const TArray<UFigmaNode*>& Children) const;;
 
@@ -83,6 +87,8 @@ protected:
 
 	FString PackagePath;
 private:
+	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const;
+
 	UPROPERTY()
 	FString Id;
 
@@ -104,6 +110,7 @@ private:
 	UPROPERTY()
 	FString SharedPluginData;
 
+protected:
 	UPROPERTY()
 	TMap<FString, FString> ComponentPropertyReferences;
 

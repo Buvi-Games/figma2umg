@@ -164,3 +164,22 @@ void UFigmaInstance::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 	// Don't do anything here. Need to wait for the Image stage, in case the Component is missing.
 }
+
+void UFigmaInstance::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	if (WidgetBp == nullptr)
+		return;
+
+	if (MissingComponentTexture != nullptr)
+		return;
+
+	TObjectPtr<UWidget> Widget = Cast<UWidget>(InstanceAsset);
+	ProcessComponentPropertyReferences(WidgetBp, Widget);
+}
+
+void UFigmaInstance::PatchComponentProperty(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : ComponentProperties)
+	{
+	}
+}

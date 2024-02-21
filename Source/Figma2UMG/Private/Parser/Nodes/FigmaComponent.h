@@ -30,10 +30,13 @@ public:
 
 	// IWidgetOwner
 	virtual void PostInsert() const override;
+	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
+
+	void PatchPropertiesToWidget(UWidgetBlueprint* Widget) const;
+	void PatchBinds();
 
 protected:
-	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType);
-	void AddPropertiesToWidget(UWidgetBlueprint* Widget);
+	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
