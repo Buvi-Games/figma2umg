@@ -5,6 +5,7 @@
 
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintBuilder.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
@@ -94,6 +95,8 @@ void UFigmaInstance::PostInsert() const
 	TObjectPtr<UWidget> TopWidget = GetTopWidget();
 	if (!TopWidget)
 		return;
+
+	TopWidget->bIsVariable = true;
 
 	IWidgetOwner::PostInsert();
 
