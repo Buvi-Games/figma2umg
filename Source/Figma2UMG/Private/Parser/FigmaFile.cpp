@@ -4,11 +4,9 @@
 #include "Parser/FigmaFile.h"
 
 #include "Interfaces/FigmaImageRequester.h"
-#include "Kismet2/KismetEditorUtilities.h"
 #include "Nodes/FigmaDocument.h"
 #include "Nodes/FigmaInstance.h"
 #include "Properties/FigmaComponentRef.h"
-#include "REST/FigmaImporter.h"
 
 
 void UFigmaFile::PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)
