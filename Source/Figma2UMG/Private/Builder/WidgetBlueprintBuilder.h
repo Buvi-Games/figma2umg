@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/TextBlock.h"
 #include "Components/Widget.h"
+#include "Parser/Properties/FigmaComponentProperty.h"
 
 class UK2Node_FunctionResult;
 class UK2Node_VariableGet;
@@ -16,6 +17,7 @@ class WidgetBlueprintBuilder
 public:
 	static FIGMA2UMG_API void PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FBPVariableDescription& VariableDescription, const FName& VariableName);
 	static FIGMA2UMG_API void PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName);
+	static FIGMA2UMG_API void SetPropertyValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, const FFigmaComponentProperty& ComponentProperty);
 
 private:
 	static FIGMA2UMG_API void AddBindingFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName);

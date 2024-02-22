@@ -8,6 +8,7 @@
 #include "K2Node_FunctionEntry.h"
 #include "K2Node_FunctionResult.h"
 #include "WidgetBlueprint.h"
+#include "Blueprint/UserWidget.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 
@@ -58,6 +59,42 @@ void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> Wi
 void WidgetBlueprintBuilder::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName)
 {
 	AddBindingProperty(WidgetBP, TextBlock, "Text", VariableName);
+}
+
+void WidgetBlueprintBuilder::SetPropertyValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, const FFigmaComponentProperty& ComponentProperty)
+{
+	if (!Widget)
+		return;
+
+	UClass* WidgetClass = Widget->GetClass();
+	FProperty* Property = WidgetClass ? FindFProperty<FProperty>(WidgetClass, VariableName) : nullptr;
+	if(Property)
+	{
+		switch (ComponentProperty.Type)
+		{
+			case EFigmaComponentPropertyType::BOOLEAN:
+			{
+				static FString True("True");
+				const FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property);
+				void* Value = BoolProperty->ContainerPtrToValuePtr<uint8>(Widget);
+				BoolProperty->SetPropertyValue(Value, ComponentProperty.Value.Compare(True, ESearchCase::IgnoreCase) == 0);
+			}
+			break;
+			case EFigmaComponentPropertyType::TEXT:
+			{
+				const FStrProperty* StringProperty = CastField<FStrProperty>(Property);
+				void* Value = StringProperty->ContainerPtrToValuePtr<uint8>(Widget);
+				StringProperty->SetPropertyValue(Value, ComponentProperty.Value);
+			}
+			break;
+			case EFigmaComponentPropertyType::INSTANCE_SWAP:
+				//TODO:
+			break;
+			case EFigmaComponentPropertyType::VARIANT:
+				//TODO:
+			break;
+		}
+	}
 }
 
 void WidgetBlueprintBuilder::AddBindingFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName)

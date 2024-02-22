@@ -44,7 +44,7 @@ public:
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 
-	void PatchComponentProperty(TObjectPtr<UWidgetBlueprint> WidgetBp) const;
+	void PatchComponentProperty() const;
 	FString GetComponentId() const { return ComponentId; }
 protected:
 	UPROPERTY()

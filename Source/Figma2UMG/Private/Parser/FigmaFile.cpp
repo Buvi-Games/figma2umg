@@ -306,14 +306,6 @@ void UFigmaFile::PatchWidgetProperties()
 
 	for (UFigmaInstance* FigmaInstance : AllInstances)
 	{
-		if (!Components.Contains(FigmaInstance->GetComponentId()))
-			continue;
-
-		FFigmaComponentRef& ComponentRef = Components[FigmaInstance->GetComponentId()];
-		TObjectPtr<UWidgetBlueprint> WidgetBP = ComponentRef.GetAsset();
-		if(!WidgetBP)
-			continue;
-
-		FigmaInstance->PatchComponentProperty(WidgetBP);
+		FigmaInstance->PatchComponentProperty();
 	}
 }

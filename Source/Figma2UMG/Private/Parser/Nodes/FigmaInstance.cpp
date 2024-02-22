@@ -53,7 +53,6 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 
 			TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(ComponentAsset), UserWidgetClass);
 			UWidget* NewWidget = Template->Create(OwningObject);
-
 			if (NewWidget)
 			{
 				//if (NewWidget->GetName() != GetUniqueName())
@@ -180,9 +179,17 @@ void UFigmaInstance::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 	ProcessComponentPropertyReferences(WidgetBp, Widget);
 }
 
-void UFigmaInstance::PatchComponentProperty(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+void UFigmaInstance::PatchComponentProperty() const
 {
+	if (MissingComponentTexture != nullptr)
+		return;
+
+	TObjectPtr<UUserWidget> Widget = Cast<UUserWidget>(InstanceAsset);
+	if (Widget == nullptr)
+		return;
+
 	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : ComponentProperties)
 	{
+		WidgetBlueprintBuilder::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
 	}
 }
