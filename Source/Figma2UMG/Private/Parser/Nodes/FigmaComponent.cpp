@@ -8,6 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
@@ -30,8 +31,21 @@ FString UFigmaComponent::GetAssetName() const
 
 void UFigmaComponent::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
-	UWidgetBlueprint* WidgetBB = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
-	RefAsset = WidgetBB;
+	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+	if (PatchPropertiesToWidget(WidgetBP))
+	{
+		FCompilerResultsLog LogResults;
+		LogResults.SetSourcePath(WidgetBP->GetPathName());
+		LogResults.BeginEvent(TEXT("Compile"));
+		LogResults.bLogDetailedResults = true;
+
+		FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
+
+		Asset = nullptr;
+		WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+	}
+
+	RefAsset = WidgetBP;
 
 	FFigmaComponentRef* ComponentRef = FigmaFile ? FigmaFile->FindComponentRef(GetId()) : nullptr;
 	if (ComponentRef)
@@ -140,8 +154,9 @@ void UFigmaComponent::FillType(const FFigmaComponentPropertyDefinition& Def, FEd
 	}
 }
 
-void UFigmaComponent::PatchPropertiesToWidget(UWidgetBlueprint* Widget) const
+bool UFigmaComponent::PatchPropertiesToWidget(UWidgetBlueprint* Widget) const
 {
+	bool AddedMemberVariable = false;
 	for(const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
 	{
 		FEdGraphPinType MemberType;
@@ -150,8 +165,11 @@ void UFigmaComponent::PatchPropertiesToWidget(UWidgetBlueprint* Widget) const
 		if (FBlueprintEditorUtils::AddMemberVariable(Widget, *PropertyName, MemberType, Property.Value.DefaultValue))
 		{
 			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(Widget, *PropertyName, false);
+			AddedMemberVariable = true;
 		}
 	}
+
+	return AddedMemberVariable;
 }
 
 void UFigmaComponent::PatchBinds()
