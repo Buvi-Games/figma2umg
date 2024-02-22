@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/FigmaGroup.h"
 
+#include "FigmaComponent.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -100,4 +101,25 @@ FVector2D UFigmaGroup::GetTopWidgetPosition() const
 TObjectPtr<UPanelWidget> UFigmaGroup::GetContainerWidget() const
 {
 	return Builder.Canvas;
+}
+
+void UFigmaGroup::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	if (WidgetBp == nullptr)
+		return;
+
+	TObjectPtr<UWidget> Widget = GetTopWidget();
+	ProcessComponentPropertyReferences(WidgetBp, Widget);
+
+	for (UFigmaNode* Child : Children)
+	{
+		if (Child->IsA<UFigmaComponent>())
+			continue;
+
+		IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(Child);
+		if (WidgetOwner)
+		{
+			WidgetOwner->PatchBinds(WidgetBp);
+		}
+	}
 }

@@ -6,6 +6,7 @@
 
 #include "FigmaNode.generated.h"
 
+class UWidgetBlueprint;
 class UFigmaFile;
 class UWidgetTree;
 class UPanelWidget;
@@ -40,7 +41,7 @@ enum class ENodeTypes
 };
 
 UCLASS()
-class UFigmaNode : public UObject
+class FIGMA2UMG_API UFigmaNode : public UObject
 {
 public:
 	GENERATED_BODY()
@@ -72,16 +73,20 @@ public:
 	UObject* GetAssetOuter() const;
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
 	TObjectPtr<UFigmaNode> FindTypeByID(const UClass* Class, const FString& ID);
+
+	const TMap<FString, FString>& GetComponentPropertyReferences() const { return ComponentPropertyReferences; }
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 
 	UFigmaNode* CreateNode(const TSharedPtr<FJsonObject>& JsonObj);
 
-//	void PatchPreInsertWidgetChildren(UPanelWidget* ParentWidget, const TArray<UFigmaNode*>& Children) const;;
+	void ProcessComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget) const;
+	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const;
 
 	TObjectPtr<UFigmaNode> ParentNode = nullptr;
 
 	FString PackagePath;
+
 private:
 	UPROPERTY()
 	FString Id;
@@ -104,6 +109,7 @@ private:
 	UPROPERTY()
 	FString SharedPluginData;
 
+protected:
 	UPROPERTY()
 	TMap<FString, FString> ComponentPropertyReferences;
 

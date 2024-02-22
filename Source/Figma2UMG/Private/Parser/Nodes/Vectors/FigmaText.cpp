@@ -3,6 +3,8 @@
 
 #include "Parser/Nodes/Vectors/FigmaText.h"
 
+#include "WidgetBlueprint.h"
+#include "Builder/WidgetBlueprintBuilder.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 
@@ -78,6 +80,39 @@ FVector2D UFigmaText::GetTopWidgetPosition() const
 TObjectPtr<UPanelWidget> UFigmaText::GetContainerWidget() const
 {
 	return nullptr;
+}
+
+void UFigmaText::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	if (WidgetBp == nullptr)
+		return;
+
+	ProcessComponentPropertyReferences(WidgetBp, Builder.TextBlock);
+}
+
+void UFigmaText::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const
+{
+	static const FString CharactersStr("characters");
+	if (PropertyReference.Key == CharactersStr)
+	{
+		const FBPVariableDescription* VariableDescription = WidgetBP->NewVariables.FindByPredicate([PropertyReference](const FBPVariableDescription& VariableDescription)
+			{
+				return VariableDescription.VarName == PropertyReference.Value;
+			});
+
+		if (VariableDescription == nullptr)
+			return;
+
+		TObjectPtr<UTextBlock> TextBlock = Cast<UTextBlock>(Widget);
+		if (TextBlock == nullptr)
+			return;
+
+		WidgetBlueprintBuilder::PatchTextBind(WidgetBP, TextBlock, *PropertyReference.Value);
+	}
+	else
+	{
+		Super::ProcessComponentPropertyReference(WidgetBP, Widget, PropertyReference);
+	}
 }
 
 void UFigmaText::Reset()

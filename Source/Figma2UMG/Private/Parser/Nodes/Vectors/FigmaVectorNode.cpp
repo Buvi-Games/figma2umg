@@ -124,3 +124,11 @@ TObjectPtr<UPanelWidget> UFigmaVectorNode::GetContainerWidget() const
 {
 	return nullptr;
 }
+
+void UFigmaVectorNode::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	if (WidgetBp == nullptr)
+		return;
+
+	ProcessComponentPropertyReferences(WidgetBp, Builder.Image);
+}

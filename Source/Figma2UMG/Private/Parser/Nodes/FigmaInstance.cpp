@@ -5,6 +5,7 @@
 
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintBuilder.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
@@ -52,7 +53,6 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 
 			TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(ComponentAsset), UserWidgetClass);
 			UWidget* NewWidget = Template->Create(OwningObject);
-
 			if (NewWidget)
 			{
 				//if (NewWidget->GetName() != GetUniqueName())
@@ -94,6 +94,8 @@ void UFigmaInstance::PostInsert() const
 	TObjectPtr<UWidget> TopWidget = GetTopWidget();
 	if (!TopWidget)
 		return;
+
+	TopWidget->bIsVariable = true;
 
 	IWidgetOwner::PostInsert();
 
@@ -163,4 +165,31 @@ FString UFigmaInstance::GetAssetName() const
 void UFigmaInstance::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 	// Don't do anything here. Need to wait for the Image stage, in case the Component is missing.
+}
+
+void UFigmaInstance::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	if (WidgetBp == nullptr)
+		return;
+
+	if (MissingComponentTexture != nullptr)
+		return;
+
+	TObjectPtr<UWidget> Widget = Cast<UWidget>(InstanceAsset);
+	ProcessComponentPropertyReferences(WidgetBp, Widget);
+}
+
+void UFigmaInstance::PatchComponentProperty() const
+{
+	if (MissingComponentTexture != nullptr)
+		return;
+
+	TObjectPtr<UUserWidget> Widget = Cast<UUserWidget>(InstanceAsset);
+	if (Widget == nullptr)
+		return;
+
+	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : ComponentProperties)
+	{
+		WidgetBlueprintBuilder::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
+	}
 }

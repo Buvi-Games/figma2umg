@@ -6,6 +6,7 @@
 
 #include "WidgetOwner.generated.h"
 
+class UWidgetBlueprint;
 class UPanelWidget;
 class UWidget;
 class UFigmaNode;
@@ -31,4 +32,6 @@ public:
 	virtual FVector2D GetTopWidgetPosition() const = 0;
 
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const = 0;
+
+	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const = 0;
 };

@@ -16,7 +16,9 @@
 #include "FigmaSticky.h"
 #include "FileHelpers.h"
 #include "JsonObjectConverter.h"
+#include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintBuilder.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Table/FigmaTable.h"
@@ -204,7 +206,6 @@ void UFigmaNode::PatchPostInsertWidget()
 		if (TObjectPtr<UWidget> Widget = WidgetOwner->GetTopWidget())
 		{
 			Widget->SetVisibility(GetVisibility());
-
 		}
 
 		WidgetOwner->PostInsert();
@@ -362,33 +363,30 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 	return FigmaNode;
 }
 
-//void UFigmaNode::PatchPreInsertWidgetChildren(UPanelWidget* ParentWidget, const TArray<UFigmaNode*>& Children) const
-//{
-//	if (!ParentWidget)
-//		return;
-//
-//	for (int Index = 0; Index < Children.Num(); Index++)
-//	{
-//		UFigmaNode* Element = Children[Index];
-//
-//		TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
-//		TObjectPtr<UWidget> NewWidget = Element->PatchPreInsertWidget(OldWidget);
-//		if (NewWidget)
-//		{
-//			if(NewWidget != OldWidget)
-//			{
-//				ParentWidget->SetFlags(RF_Transactional);
-//				ParentWidget->Modify();
-//
-//				if (Index < ParentWidget->GetChildrenCount())
-//				{
-//					ParentWidget->ReplaceChildAt(Index, NewWidget);
-//				}
-//				else
-//				{
-//					ParentWidget->AddChild(NewWidget);
-//				}
-//			}
-//		}
-//	}
-//}
+void UFigmaNode::ProcessComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget) const
+{
+	if (WidgetBP == nullptr || Widget == nullptr)
+		return;
+
+	for (const TPair<FString, FString>& ComponentPropertyReference : ComponentPropertyReferences)
+	{
+		ProcessComponentPropertyReference(WidgetBP, Widget, ComponentPropertyReference);
+	}
+}
+
+void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const
+{
+	static const FString VisibleStr("visible");
+	const FBPVariableDescription* VariableDescription = WidgetBP->NewVariables.FindByPredicate([PropertyReference](const FBPVariableDescription& VariableDescription)
+		{
+			return VariableDescription.VarName == PropertyReference.Value;
+		});
+
+	if(VariableDescription == nullptr)
+		return;
+
+	if (PropertyReference.Key == VisibleStr)
+	{
+		WidgetBlueprintBuilder::PatchVisibilityBind(WidgetBP, Widget, *VariableDescription, *PropertyReference.Value);
+	}
+}
