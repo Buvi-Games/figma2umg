@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+#include "FigmaComponentPropertyDefinition.h"
+
 #include "FigmaComponentProperty.generated.h"
 
 USTRUCT()
@@ -12,5 +14,9 @@ struct FIGMA2UMG_API FFigmaComponentProperty
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	EFigmaComponentPropertyType Type;
+
+	UPROPERTY()
+	FString Value;
 };
