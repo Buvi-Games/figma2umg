@@ -21,6 +21,77 @@
 
 #include "FigmaGroup.generated.h"
 
+UENUM()
+enum class EFigmaLayoutMode
+{
+	NONE,
+	HORIZONTAL,
+	VERTICAL,
+};
+
+UENUM()
+enum class EFigmaLayoutSizing
+{
+	FIXED,
+	HUG,
+	FILL,
+};
+
+UENUM()
+enum class EFigmaLayoutWrap
+{
+	NO_WRAP,
+	WRAP,
+};
+
+UENUM()
+enum class EFigmaAxisSizingMode
+{
+	AUTO,
+	FIXED,
+};
+
+UENUM()
+enum class EFigmaPrimaryAxisAlignItems
+{
+	MIN,
+	CENTER,
+	MAX,
+	SPACE_BETWEEN
+};
+
+UENUM()
+enum class EFigmaCounterAxisAlignItems
+{
+	MIN,
+	CENTER,
+	MAX,
+	BASELINE
+};
+
+UENUM()
+enum class EFigmaCounterAxisAlignContent
+{
+	AUTO,
+	SPACE_BETWEEN
+};
+
+UENUM()
+enum class EFigmaLayoutPositioning
+{
+	AUTO,
+	ABSOLUTE,
+};
+
+UENUM()
+enum class EFigmaOverflowDirection
+{
+	NONE,
+	HORIZONTAL_SCROLLING,
+	VERTICAL_SCROLLING,
+	HORIZONTAL_AND_VERTICAL_SCROLLING,
+};
+
 UCLASS()
 class UFigmaGroup : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
 {
@@ -133,31 +204,31 @@ protected:
 	FFigmaTransform RelativeTransform;
 
 	UPROPERTY()
-	FString LayoutMode = FString("NONE");
+	EFigmaLayoutMode LayoutMode = EFigmaLayoutMode::NONE;
 
 	UPROPERTY()
-	FString LayoutSizingHorizontal;
+	EFigmaLayoutSizing LayoutSizingHorizontal;
 
 	UPROPERTY()
-	FString LayoutSizingVertical;
+	EFigmaLayoutSizing LayoutSizingVertical;
 
 	UPROPERTY()
-	FString LayoutWrap = FString("NO_WRAP");
+	EFigmaLayoutWrap LayoutWrap = EFigmaLayoutWrap::NO_WRAP;
 
 	UPROPERTY()
-	FString PrimaryAxisSizingMode = FString("AUTO");
+	EFigmaAxisSizingMode PrimaryAxisSizingMode = EFigmaAxisSizingMode::AUTO;
 
 	UPROPERTY()
-	FString CounterAxisSizingMode = FString("AUTO");
+	EFigmaAxisSizingMode CounterAxisSizingMode = EFigmaAxisSizingMode::AUTO;
 
 	UPROPERTY()
-	FString PrimaryAxisAlignItems = FString("MIN");
+	EFigmaPrimaryAxisAlignItems PrimaryAxisAlignItems = EFigmaPrimaryAxisAlignItems::MIN;
 
 	UPROPERTY()
-	FString CounterAxisAlignItems = FString("MIN");
+	EFigmaCounterAxisAlignItems CounterAxisAlignItems = EFigmaCounterAxisAlignItems::MIN;
 
 	UPROPERTY()
-	FString CounterAxisAlignContent = FString("AUTO");
+	EFigmaCounterAxisAlignContent CounterAxisAlignContent = EFigmaCounterAxisAlignContent::AUTO;
 
 	UPROPERTY()
 	float PaddingLeft = 0.0f;
@@ -184,7 +255,7 @@ protected:
 	float CounterAxisSpacing = 0.0f;
 
 	UPROPERTY()
-	FString LayoutPositioning = FString("AUTO");
+	EFigmaLayoutPositioning LayoutPositioning = EFigmaLayoutPositioning::AUTO;
 
 	UPROPERTY()
 	bool ItemReverseZIndex = false;
@@ -193,7 +264,7 @@ protected:
 	bool StrokesIncludedInLayout = false;
 
 	UPROPERTY()
-	FString OverflowDirection = FString("NONE");
+	EFigmaOverflowDirection OverflowDirection = EFigmaOverflowDirection::NONE;
 
 	UPROPERTY()
 	TArray<FFigmaEffect> Effects;
