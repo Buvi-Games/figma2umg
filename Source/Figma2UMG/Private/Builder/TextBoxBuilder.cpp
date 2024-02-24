@@ -4,6 +4,7 @@
 #include "Builder/TextBoxBuilder.h"
 
 #include "Components/TextBlock.h"
+#include "Engine/UserInterfaceSettings.h"
 #include "Parser/Properties/FigmaPaint.h"
 #include "Parser/Properties/FigmaTypeStyle.h"
 
@@ -29,7 +30,7 @@ void FTextBoxBuilder::SetStyle(const FFigmaTypeStyle& Style)
 	}
 
 	FSlateFontInfo Font = TextBlock->GetFont();
-	Font.Size = Style.FontSize;
+	Font.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
 	Font.LetterSpacing = Style.LetterSpacing;
 	TextBlock->SetFont(Font);
 }
@@ -45,4 +46,14 @@ void FTextBoxBuilder::SetFill(const FFigmaPaint& Fill)
 void FTextBoxBuilder::Reset()
 {
 	TextBlock = nullptr;
+}
+
+
+float FTextBoxBuilder::ConvertFontSizeFromDisplayToNative(float DisplayFontSize) const
+{
+	const UUserInterfaceSettings* UISettings = GetDefault<UUserInterfaceSettings>();
+	const float FontDisplayDPI = UISettings->GetFontDisplayDPI();
+	const float NativeSize = DisplayFontSize * FontDisplayDPI / static_cast<float>(FontConstants::RenderDPI);
+	const float RoundedSize = FMath::GridSnap(NativeSize, 0.01f);
+	return RoundedSize;
 }
