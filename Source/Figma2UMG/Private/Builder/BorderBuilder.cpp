@@ -6,6 +6,8 @@
 #include "Components/Border.h"
 #include "Parser/Properties/FigmaPaint.h"
 
+#define ALWAYS_BORDER false
+
 void FBorderBuilder::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
 	if (!Function.IsBound())
@@ -46,33 +48,41 @@ TObjectPtr<UPanelWidget> FBorderBuilder::GetContainerWidget() const
 
 TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName)
 {
-	Border = Cast<UBorder>(WidgetToPatch);
-	if (Border)
+	const bool RequireBorder = ((Fill && Fill->Visible) || (Stroke && Stroke->Visible));
+	if (RequireBorder || ALWAYS_BORDER)
 	{
-		if (Border->GetName() != WidgetName)
+		Border = Cast<UBorder>(WidgetToPatch);
+		if (Border)
 		{
-			Border->Rename(*WidgetName);
+			if (Border->GetName() != WidgetName)
+			{
+				Border->Rename(*WidgetName);
+			}
 		}
+		else
+		{
+			Border = NewObject<UBorder>(AssetOuter, *WidgetName);
+			if (WidgetToPatch)
+			{
+				Border->SetContent(WidgetToPatch);
+			}
+		}
+
+		if (Border)
+		{
+			FSlateBrush Brush = Border->Background;
+			Brush.DrawAs = RequireBorder ? ESlateBrushDrawType::RoundedBox : ESlateBrushDrawType::NoDrawType;
+			Border->SetBrush(Brush);
+		}
+
+		SetFill();
+		SetStroke();
+		SetCorner();
 	}
 	else
 	{
-		Border = NewObject<UBorder>(AssetOuter, *WidgetName);
-		if (WidgetToPatch)
-		{
-			Border->SetContent(WidgetToPatch);
-		}
+		Border = nullptr;
 	}
-
-	if (Border)
-	{
-		FSlateBrush Brush = Border->Background;
-		Brush.DrawAs = ((Fill && Fill->Visible) || Stroke) ? ESlateBrushDrawType::RoundedBox : ESlateBrushDrawType::NoDrawType;
-		Border->SetBrush(Brush);
-	}
-
-	SetFill();
-	SetStroke();
-	SetCorner();
 
 	return Border;
 }

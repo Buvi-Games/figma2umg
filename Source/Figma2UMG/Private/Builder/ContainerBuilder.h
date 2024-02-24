@@ -57,7 +57,28 @@ TObjectPtr<WidgetType> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatc
 		PatchedWidget = Cast<WidgetType>(WidgetToPatch);
 		if (!PatchedWidget)
 		{
-			PatchedWidget = NewObject<WidgetType>(AssetOuter, *WidgetName);
+			if(const TObjectPtr<UBorder> BorderWrapperOld = Cast<UBorder>(WidgetToPatch))
+			{
+				PatchedWidget = Cast<WidgetType>(BorderWrapperOld->GetContent());
+			}
+
+			if (WidgetToPatch)
+			{
+				if (WidgetToPatch->GetName() == WidgetName)
+				{
+					FString OldName = (WidgetName + "_OLD");
+					WidgetToPatch->Rename(*OldName);
+				}
+			}
+
+			if (!PatchedWidget)
+			{
+				PatchedWidget = NewObject<WidgetType>(AssetOuter, *WidgetName);
+			}
+			else if (PatchedWidget->GetName() != WidgetName)
+			{
+				PatchedWidget->Rename(*WidgetName);
+			}
 		}
 	}
 
