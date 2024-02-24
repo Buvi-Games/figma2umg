@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/BorderCanvasBuilder.h"
+#include "Builder/ContainerBuilder.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
@@ -11,6 +11,7 @@
 #include "Parser/Properties/FigmaColor.h"
 #include "Parser/Properties/FigmaEasingType.h"
 #include "Parser/Properties/FigmaEffect.h"
+#include "Parser/Properties/FigmaEnums.h"
 #include "Parser/Properties/FigmaExportSetting.h"
 #include "Parser/Properties/FigmaLayoutConstraint.h"
 #include "Parser/Properties/FigmaPaint.h"
@@ -67,7 +68,7 @@ protected:
 	float StrokeWeight;
 
 	UPROPERTY()
-	FString StrokeAlign;
+	EFigmaStrokeAlign StrokeAlign;
 
 	UPROPERTY()
 	TArray<float> StrokeDashes;
@@ -133,31 +134,31 @@ protected:
 	FFigmaTransform RelativeTransform;
 
 	UPROPERTY()
-	FString LayoutMode = FString("NONE");
+	EFigmaLayoutMode LayoutMode = EFigmaLayoutMode::NONE;
 
 	UPROPERTY()
-	FString LayoutSizingHorizontal;
+	EFigmaLayoutSizing LayoutSizingHorizontal;
 
 	UPROPERTY()
-	FString LayoutSizingVertical;
+	EFigmaLayoutSizing LayoutSizingVertical;
 
 	UPROPERTY()
-	FString LayoutWrap = FString("NO_WRAP");
+	EFigmaLayoutWrap LayoutWrap = EFigmaLayoutWrap::NO_WRAP;
 
 	UPROPERTY()
-	FString PrimaryAxisSizingMode = FString("AUTO");
+	EFigmaAxisSizingMode PrimaryAxisSizingMode = EFigmaAxisSizingMode::AUTO;
 
 	UPROPERTY()
-	FString CounterAxisSizingMode = FString("AUTO");
+	EFigmaAxisSizingMode CounterAxisSizingMode = EFigmaAxisSizingMode::AUTO;
 
 	UPROPERTY()
-	FString PrimaryAxisAlignItems = FString("MIN");
+	EFigmaPrimaryAxisAlignItems PrimaryAxisAlignItems = EFigmaPrimaryAxisAlignItems::MIN;
 
 	UPROPERTY()
-	FString CounterAxisAlignItems = FString("MIN");
+	EFigmaCounterAxisAlignItems CounterAxisAlignItems = EFigmaCounterAxisAlignItems::MIN;
 
 	UPROPERTY()
-	FString CounterAxisAlignContent = FString("AUTO");
+	EFigmaCounterAxisAlignContent CounterAxisAlignContent = EFigmaCounterAxisAlignContent::AUTO;
 
 	UPROPERTY()
 	float PaddingLeft = 0.0f;
@@ -184,7 +185,7 @@ protected:
 	float CounterAxisSpacing = 0.0f;
 
 	UPROPERTY()
-	FString LayoutPositioning = FString("AUTO");
+	EFigmaLayoutPositioning LayoutPositioning = EFigmaLayoutPositioning::AUTO;
 
 	UPROPERTY()
 	bool ItemReverseZIndex = false;
@@ -193,7 +194,7 @@ protected:
 	bool StrokesIncludedInLayout = false;
 
 	UPROPERTY()
-	FString OverflowDirection = FString("NONE");
+	EFigmaOverflowDirection OverflowDirection = EFigmaOverflowDirection::NONE;
 
 	UPROPERTY()
 	TArray<FFigmaEffect> Effects;
@@ -208,5 +209,5 @@ protected:
 	TMap<EFigmaStyleType, FString> Styles;
 
 	UPROPERTY()
-	FBorderCanvasBuilder Builder;
+	FContainerBuilder Builder;
 };

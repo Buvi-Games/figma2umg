@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/BorderCanvasBuilder.h"
+#include "Builder/ContainerBuilder.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
@@ -57,7 +57,7 @@ protected:
 	float StrokeWeight;
 
 	UPROPERTY()
-	FString StrokeAlign;
+	EFigmaStrokeAlign StrokeAlign;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
@@ -69,5 +69,5 @@ protected:
 	FFigmaRectangle AbsoluteRenderBounds;
 
 	UPROPERTY()
-	FBorderCanvasBuilder Builder;
+	FContainerBuilder Builder;
 };

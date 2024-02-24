@@ -6,7 +6,6 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
-#include "Factories/TextureFactory.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 

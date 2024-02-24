@@ -99,10 +99,8 @@ void UFigmaInstance::PostInsert() const
 
 	IWidgetOwner::PostInsert();
 
-	if (UCanvasPanelSlot* CanvasSlot = TopWidget->Slot ? Cast<UCanvasPanelSlot>(TopWidget->Slot) : nullptr)
-	{
-		CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
-	}
+	SetSize(TopWidget, AbsoluteBoundingBox.GetSize(), true);
+	SetPadding(GetContainerWidget(), PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
 }
 
 void UFigmaInstance::Reset()

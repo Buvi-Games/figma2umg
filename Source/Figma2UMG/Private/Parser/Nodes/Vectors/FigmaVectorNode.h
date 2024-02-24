@@ -11,6 +11,7 @@
 #include "Parser/Properties/FigmaBlendMode.h"
 #include "Parser/Properties/FigmaEasingType.h"
 #include "Parser/Properties/FigmaEffect.h"
+#include "Parser/Properties/FigmaEnums.h"
 #include "Parser/Properties/FigmaExportSetting.h"
 #include "Parser/Properties/FigmaLayoutConstraint.h"
 #include "Parser/Properties/FigmaPaint.h"
@@ -23,53 +24,6 @@
 #include "Parser/Properties/FigmaVector.h"
 
 #include "FigmaVectorNode.generated.h"
-
-UENUM()
-enum class EFigmaLayoutAlign
-{
-	INHERIT,
-	STRETCH,
-	MIN,
-	CENTER,
-	MAX,
-};
-
-UENUM()
-enum class EFigmaStrokeCap
-{
-	NONE,
-	ROUND,
-	SQUARE,
-	LINE_ARROW,
-	TRIANGLE_ARROW,
-	DIAMOND_FILLED,
-	CIRCLE_FILLED,
-	TRIANGLE_FILLED,
-	WASHI_TAPE_1,
-	WASHI_TAPE_2,
-	WASHI_TAPE_3,
-	WASHI_TAPE_4,
-	WASHI_TAPE_5,
-	WASHI_TAPE_6,
-};
-
-UENUM()
-enum class EFigmaStrokeJoin
-{
-	MITER,
-	BEVEL,
-	ROUND,
-};
-
-UENUM()
-enum class EFigmaStrokeAlign
-{
-	INSIDE, // stroke drawn inside the shape boundary,
-	OUTSIDE, // stroke drawn outside the shape boundary
-	CENTER, // stroke drawn centered along the shape boundary
-};
-
-
 
 UCLASS()
 class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle, public IWidgetOwner

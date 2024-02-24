@@ -20,6 +20,8 @@ public:
 	void SetFill(const FFigmaPaint& Fill);
 	void Reset();
 
+	float ConvertFontSizeFromDisplayToNative(float DisplayFontSize) const;
+
 	UPROPERTY()
 	TObjectPtr<UTextBlock> TextBlock = nullptr;
 };
