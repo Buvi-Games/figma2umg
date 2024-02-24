@@ -63,6 +63,13 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		}
 	}
 
+	if (Border)
+	{
+		FSlateBrush Brush = Border->Background;
+		Brush.DrawAs = ((Fill && Fill->Visible) || Stroke) ? ESlateBrushDrawType::RoundedBox : ESlateBrushDrawType::NoDrawType;
+		Border->SetBrush(Brush);
+	}
+
 	SetFill();
 	SetStroke();
 	SetCorner();
@@ -74,7 +81,7 @@ void FBorderBuilder::SetFill() const
 {
 	if (Border)
 	{
-		if (Fill)
+		if (Fill && Fill->Visible)
 		{
 			Border->SetBrushColor(Fill->Color.GetLinearColor());
 		}
@@ -92,17 +99,15 @@ void FBorderBuilder::SetStroke() const
 		if(Stroke)
 		{
 			FSlateBrush Brush = Border->Background;
-
-			Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
 			Brush.OutlineSettings.Color = Stroke->Color.GetLinearColor();
 			Brush.OutlineSettings.Width = StrokeWeight;
-
 			Border->SetBrush(Brush);
 		}
 		else
 		{
 			FSlateBrush Brush = Border->Background;
-			Brush.DrawAs = ESlateBrushDrawType::NoDrawType;
+			Brush.OutlineSettings.Color = FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
+			Brush.OutlineSettings.Width = 0.0f;
 			Border->SetBrush(Brush);
 			
 		}
@@ -114,10 +119,8 @@ void FBorderBuilder::SetCorner() const
 	if (Border && Border->Background.GetDrawType() == ESlateBrushDrawType::RoundedBox)
 	{
 		FSlateBrush Brush = Border->Background;
-
 		Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
-		Brush.OutlineSettings.CornerRadii = CornerRadii;
-		
+		Brush.OutlineSettings.CornerRadii = CornerRadii;		
 		Border->SetBrush(Brush);
 	}
 }
