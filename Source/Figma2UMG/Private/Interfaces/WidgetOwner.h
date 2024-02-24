@@ -34,4 +34,7 @@ public:
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const = 0;
 
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const = 0;
+
+	void SetPosition(TObjectPtr<UWidget> Widget, const FVector2D& Size) const;
+	void SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size) const;
 };

@@ -4,17 +4,60 @@
 #include "Interfaces/WidgetOwner.h"
 
 #include "Components/CanvasPanelSlot.h"
+#include "Components/HorizontalBoxSlot.h"
+#include "Components/VerticalBoxSlot.h"
 #include "Components/Widget.h"
+#include "Components/WrapBoxSlot.h"
 
 void IWidgetOwner::PostInsert() const
 {
-	const UWidget* Widget = GetTopWidget();
+	const TObjectPtr<UWidget> Widget = GetTopWidget();
+	SetPosition(Widget, GetTopWidgetPosition());
+}
+
+void IWidgetOwner::SetPosition(TObjectPtr<UWidget> Widget, const FVector2D& Position) const
+{
 	if (Widget && Widget->Slot)
 	{
-		UCanvasPanelSlot* CanvasSlot = Widget->Slot ? Cast<UCanvasPanelSlot>(Widget->Slot) : nullptr;
-		if (CanvasSlot)
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
-			CanvasSlot->SetPosition(GetTopWidgetPosition());
+			CanvasSlot->SetPosition(Position);
+//			CanvasSlot->SetAutoSize(true);
 		}
+		//else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+		//{
+		//	HorizontalBoxSlot->SetPosition(Position);
+		//}
+		//else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
+		//{
+		//	VerticalBoxSlot->SetPosition(Position);
+		//}
+		//else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
+		//{
+		//	WrapBoxSlot->SetPosition(Position);
+		//}
+	}
+}
+
+void IWidgetOwner::SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size) const
+{
+	if (Widget && Widget->Slot)
+	{
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
+		{
+			CanvasSlot->SetSize(Size);
+		}
+		//else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+		//{
+		//	HorizontalBoxSlot->SetSize(Size);
+		//}
+		//else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
+		//{
+		//	VerticalBoxSlot->SetSize(Size);
+		//}
+		//else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
+		//{
+		//	WrapBoxSlot->SetSize(Size);
+		//}
 	}
 }

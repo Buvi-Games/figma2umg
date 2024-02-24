@@ -52,10 +52,7 @@ void UFigmaSection::PostInsert() const
 
 	IWidgetOwner::PostInsert();
 
-	if (UCanvasPanelSlot* CanvasSlot = TopWidget->Slot ? Cast<UCanvasPanelSlot>(TopWidget->Slot) : nullptr)
-	{
-		CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
-	}
+	SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
 }
 
 void UFigmaSection::Reset()

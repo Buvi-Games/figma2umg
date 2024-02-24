@@ -5,6 +5,9 @@
 
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
+#include "Components/HorizontalBox.h"
+#include "Components/VerticalBox.h"
+#include "Components/WrapBox.h"
 
 void FContainerBuilder::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
@@ -29,30 +32,44 @@ TObjectPtr<UWidget> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, 
 {
 	Super::Patch(WidgetToPatch, AssetOuter, WidgetName);
 	Canvas = nullptr;
-
-	TObjectPtr<UBorder> BorderWrapper = GetBorder();
-	if (BorderWrapper)
+	
+	switch (LayoutMode)
 	{
-		Canvas = Cast<UCanvasPanel>(BorderWrapper->GetContent());
-		if (!Canvas)
+	case EFigmaLayoutMode::NONE:
+	{
+		Patch<UCanvasPanel>(WidgetToPatch, AssetOuter, WidgetName);
+	}
+	break;
+	case EFigmaLayoutMode::HORIZONTAL:
+	{
+		if(LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
 		{
-			Canvas = NewObject<UCanvasPanel>(AssetOuter);
-			BorderWrapper->SetContent(Canvas);
+			Patch<UHorizontalBox>(WidgetToPatch, AssetOuter, WidgetName);
+		}
+		else
+		{
+			TObjectPtr<UWrapBox> WrapBox = Patch<UWrapBox>(WidgetToPatch, AssetOuter, WidgetName);
+			WrapBox->SetOrientation(EOrientation::Orient_Horizontal);
 		}
 	}
-	else
+	break;
+	case EFigmaLayoutMode::VERTICAL:
 	{
-		Canvas = Cast<UCanvasPanel>(WidgetToPatch);
+		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
+		{
+			Patch<UVerticalBox>(WidgetToPatch, AssetOuter, WidgetName);
+		}
+		else
+		{
+			TObjectPtr<UWrapBox> WrapBox = Patch<UWrapBox>(WidgetToPatch, AssetOuter, WidgetName);
+			WrapBox->SetOrientation(EOrientation::Orient_Vertical);
+		}
+	}
+	break;
 	}
 
-	if(BorderWrapper)
-	{
-		return BorderWrapper;
-	}
-	else
-	{
-		return Canvas;
-	}
+	return GetTopWidget();
+
 }
 
 void FContainerBuilder::Reset()

@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "BorderBuilder.h"
+#include "Components/Border.h"
+#include "Components/CanvasPanel.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Properties/FigmaEnums.h"
 
 #include "ContainerBuilder.generated.h"
 
 struct FFigmaPaint;
-class UCanvasPanel;
-class UBorder;
 
 USTRUCT()
 struct FIGMA2UMG_API FContainerBuilder : public FBorderBuilder
@@ -29,9 +29,38 @@ public:
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 private:
+	template<class WidgetType>
+	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName);
+
 	UPROPERTY()
-	TObjectPtr<UCanvasPanel> Canvas = nullptr;
+	TObjectPtr<UPanelWidget> Canvas = nullptr;
 
 	EFigmaLayoutMode LayoutMode = EFigmaLayoutMode::NONE;
 	EFigmaLayoutWrap LayoutWrap = EFigmaLayoutWrap::NO_WRAP;
 };
+
+template <class WidgetType>
+TObjectPtr<WidgetType> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName)
+{
+	TObjectPtr<WidgetType> PatchedWidget = nullptr;
+	if (const TObjectPtr<UBorder> BorderWrapper = GetBorder())
+	{
+		PatchedWidget = Cast<WidgetType>(BorderWrapper->GetContent());
+		if (!PatchedWidget)
+		{
+			PatchedWidget = NewObject<WidgetType>(AssetOuter);
+			BorderWrapper->SetContent(PatchedWidget);
+		}
+	}
+	else
+	{
+		PatchedWidget = Cast<WidgetType>(WidgetToPatch);
+		if (!PatchedWidget)
+		{
+			PatchedWidget = NewObject<WidgetType>(AssetOuter, *WidgetName);
+		}
+	}
+
+	Canvas = PatchedWidget;
+	return PatchedWidget;
+}

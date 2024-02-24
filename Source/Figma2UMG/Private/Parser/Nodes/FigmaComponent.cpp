@@ -122,12 +122,8 @@ void UFigmaComponent::PostInsert() const
 
 	if (TObjectPtr<UWidget> WidgetInstance = Cast<UWidget>(InstanceAsset))
 	{
-		UCanvasPanelSlot* CanvasSlot = WidgetInstance->Slot ? Cast<UCanvasPanelSlot>(WidgetInstance->Slot) : nullptr;
-		if (CanvasSlot)
-		{
-			CanvasSlot->SetPosition(GetPosition());
-			CanvasSlot->SetSize(AbsoluteBoundingBox.GetSize());
-		}
+		SetPosition(WidgetInstance, GetPosition());
+		SetSize(WidgetInstance, AbsoluteBoundingBox.GetSize());
 	}
 }
 
