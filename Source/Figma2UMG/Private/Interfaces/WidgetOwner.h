@@ -36,5 +36,5 @@ public:
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const = 0;
 
 	void SetPosition(TObjectPtr<UWidget> Widget, const FVector2D& Size) const;
-	void SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size) const;
+	void SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size, const bool SizeToContent = false) const;
 };

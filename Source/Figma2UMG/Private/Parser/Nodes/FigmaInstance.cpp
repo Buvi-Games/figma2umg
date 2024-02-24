@@ -99,7 +99,7 @@ void UFigmaInstance::PostInsert() const
 
 	IWidgetOwner::PostInsert();
 
-	SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
+	SetSize(TopWidget, AbsoluteBoundingBox.GetSize(), true);
 }
 
 void UFigmaInstance::Reset()

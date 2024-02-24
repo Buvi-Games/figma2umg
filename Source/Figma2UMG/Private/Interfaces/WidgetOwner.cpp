@@ -39,13 +39,17 @@ void IWidgetOwner::SetPosition(TObjectPtr<UWidget> Widget, const FVector2D& Posi
 	}
 }
 
-void IWidgetOwner::SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size) const
+void IWidgetOwner::SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size, const bool SizeToContent /*= false*/) const
 {
 	if (Widget && Widget->Slot)
 	{
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
 			CanvasSlot->SetSize(Size);
+			if (SizeToContent)
+			{
+				CanvasSlot->SetAutoSize(true);
+			}
 		}
 		//else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
 		//{

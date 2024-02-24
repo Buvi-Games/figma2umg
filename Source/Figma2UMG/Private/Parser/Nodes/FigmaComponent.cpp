@@ -123,7 +123,7 @@ void UFigmaComponent::PostInsert() const
 	if (TObjectPtr<UWidget> WidgetInstance = Cast<UWidget>(InstanceAsset))
 	{
 		SetPosition(WidgetInstance, GetPosition());
-		SetSize(WidgetInstance, AbsoluteBoundingBox.GetSize());
+		SetSize(WidgetInstance, AbsoluteBoundingBox.GetSize(), true);
 	}
 }
 
