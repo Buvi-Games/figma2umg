@@ -3,6 +3,7 @@
 
 #include "Interfaces/WidgetOwner.h"
 
+#include "Components/BorderSlot.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/VerticalBoxSlot.h"
@@ -63,5 +64,34 @@ void IWidgetOwner::SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size, co
 		//{
 		//	WrapBoxSlot->SetSize(Size);
 		//}
+	}
+}
+
+void IWidgetOwner::SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLeft, const float PaddingRight, const float PaddingTop, const float PaddingBottom) const
+{
+	if (Widget && Widget->Slot)
+	{
+		FMargin Padding;
+		Padding.Left = PaddingLeft;
+		Padding.Right = PaddingRight;
+		Padding.Top = PaddingTop;
+		Padding.Bottom = PaddingBottom;
+
+		if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
+		{
+			BorderSlot->SetPadding(Padding);
+		}
+		else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+		{
+			HorizontalBoxSlot->SetPadding(Padding);
+		}
+		else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
+		{
+			VerticalBoxSlot->SetPadding(Padding);
+		}
+		else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
+		{
+			WrapBoxSlot->SetPadding(Padding);
+		}
 	}
 }

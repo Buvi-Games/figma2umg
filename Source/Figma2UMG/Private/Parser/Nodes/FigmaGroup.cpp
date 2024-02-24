@@ -36,6 +36,7 @@ void UFigmaGroup::PostInsert() const
 	IWidgetOwner::PostInsert();
 
 	SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
+	SetPadding(GetContainerWidget(), PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
 }
 
 void UFigmaGroup::Reset()

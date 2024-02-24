@@ -100,6 +100,7 @@ void UFigmaInstance::PostInsert() const
 	IWidgetOwner::PostInsert();
 
 	SetSize(TopWidget, AbsoluteBoundingBox.GetSize(), true);
+	SetPadding(GetContainerWidget(), PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
 }
 
 void UFigmaInstance::Reset()
