@@ -21,6 +21,7 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 
 	//#if !UE_BUILD_SHIPPING
 	Ids.Add("146:1357");
+	Ids.Add("212:1393");
 	//#endif
 
 }
