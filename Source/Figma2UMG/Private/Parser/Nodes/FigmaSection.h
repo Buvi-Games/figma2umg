@@ -57,7 +57,7 @@ protected:
 	float StrokeWeight;
 
 	UPROPERTY()
-	FString StrokeAlign;
+	EFigmaStrokeAlign StrokeAlign;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
@@ -69,5 +69,5 @@ protected:
 	FFigmaRectangle AbsoluteRenderBounds;
 
 	UPROPERTY()
-	FBorderCanvasBuilder Builder;
+	FContainerBuilder Builder;
 };

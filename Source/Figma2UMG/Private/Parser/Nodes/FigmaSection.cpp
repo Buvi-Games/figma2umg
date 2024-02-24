@@ -40,49 +40,8 @@ void UFigmaSection::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 
 TObjectPtr<UWidget> UFigmaSection::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
-	Builder.Border = Cast<UBorder>(WidgetToPatch);
-	Builder.Canvas = nullptr;
-	if (Builder.Border)
-	{
-		if (Builder.Border->GetName() != GetUniqueName())
-		{
-			Builder.Border->Rename(*GetUniqueName());
-		}
-		Builder.Canvas = Cast<UCanvasPanel>(Builder.Border->GetContent());
-	}
-	else
-	{
-		Builder.Border = NewObject<UBorder>(GetAssetOuter(), *GetUniqueName());
-	}
-
-	if (!Builder.Canvas)
-	{
-		Builder.Canvas = NewObject<UCanvasPanel>(GetAssetOuter());
-		Builder.Border->SetContent(Builder.Canvas);
-	}
-
-	if (Fills.Num() > 0)
-	{
-		Builder.SetFill(Fills[0]);
-	}
-	else
-	{
-		Builder.Border->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
-	}
-
-	if (Strokes.Num() > 0)
-	{
-		Builder.SetStroke(Strokes[0], StrokeWeight, StrokeAlign);
-	}
-
-	if (Strokes.Num() > 0)
-	{
-		Builder.SetStroke(Strokes[0], StrokeWeight, StrokeAlign);
-	}
-
-	Builder.SetCorner(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
-
-	return Builder.Border;
+	Builder.SetupBorder(Fills, Strokes, StrokeWeight, StrokeAlign, FVector4::Zero(), 0.0f);
+	return Builder.Patch(WidgetToPatch, GetAssetOuter(), GetUniqueName());
 }
 
 void UFigmaSection::PostInsert() const
@@ -106,7 +65,7 @@ void UFigmaSection::Reset()
 
 TObjectPtr<UWidget> UFigmaSection::GetTopWidget() const
 {
-	return Builder.Border;
+	return Builder.GetTopWidget();
 }
 
 FVector2D UFigmaSection::GetTopWidgetPosition() const
@@ -116,7 +75,7 @@ FVector2D UFigmaSection::GetTopWidgetPosition() const
 
 TObjectPtr<UPanelWidget> UFigmaSection::GetContainerWidget() const
 {
-	return Builder.Canvas;
+	return Builder.GetContainerWidget();
 }
 
 void UFigmaSection::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
