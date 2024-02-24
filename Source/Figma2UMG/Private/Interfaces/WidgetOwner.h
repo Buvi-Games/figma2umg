@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Parser/Properties/FigmaEnums.h"
 
 #include "WidgetOwner.generated.h"
 
@@ -38,4 +39,10 @@ public:
 	void SetPosition(TObjectPtr<UWidget> Widget, const FVector2D& Size) const;
 	void SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size, const bool SizeToContent = false) const;
 	void SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLeft, const float PaddingRight, const float PaddingTop, const float PaddingBottom) const;
+
+	void SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizontal TextAlignHorizontal, EFigmaTextAlignVertical TextAlignVertical) const;
+
+protected:
+	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
+	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;
 };

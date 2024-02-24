@@ -5,7 +5,6 @@
 
 #include "WidgetBlueprint.h"
 #include "Builder/WidgetBlueprintBuilder.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Components/TextBlock.h"
 
 FVector2D UFigmaText::GetAbsolutePosition() const
@@ -62,6 +61,7 @@ void UFigmaText::PostInsert() const
 	IWidgetOwner::PostInsert();
 
 	SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
+	SetAlign(TopWidget, Style.TextAlignHorizontal, Style.TextAlignVertical);
 }
 
 TObjectPtr<UWidget> UFigmaText::GetTopWidget() const

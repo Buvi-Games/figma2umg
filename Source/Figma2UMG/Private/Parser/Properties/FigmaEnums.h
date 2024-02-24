@@ -122,3 +122,54 @@ enum class EFigmaStrokeAlign
 	CENTER, // stroke drawn centered along the shape boundary
 };
 
+
+UENUM()
+enum class EFigmaTextCase
+{
+	ORIGINAL,
+	UPPER,
+	LOWER,
+	TITLE,
+	SMALL_CAPS,
+	SMALL_CAPS_FORCED,
+};
+
+UENUM()
+enum class EFigmaTextDecoration
+{
+	NONE,
+	STRIKETHROUGH,
+	UNDERLINE,
+};
+
+UENUM()
+enum class EFigmaTextAutoResize
+{
+	NONE,
+	HEIGHT,
+	WIDTH_AND_HEIGHT,
+};
+
+UENUM()
+enum class EFigmaTextTruncation
+{
+	DISABLED,
+	ENDING,
+};
+
+UENUM()
+enum class EFigmaTextAlignHorizontal
+{
+	LEFT,
+	RIGHT,
+	CENTER,
+	JUSTIFIED,
+};
+
+UENUM()
+enum class EFigmaTextAlignVertical
+{
+	TOP,
+	CENTER,
+	BOTTOM,
+};

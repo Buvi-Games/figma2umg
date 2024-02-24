@@ -77,7 +77,10 @@ void IWidgetOwner::SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLef
 		Padding.Top = PaddingTop;
 		Padding.Bottom = PaddingBottom;
 
-		if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
+		{
+		}
+		else if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
 		{
 			BorderSlot->SetPadding(Padding);
 		}
@@ -94,4 +97,68 @@ void IWidgetOwner::SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLef
 			WrapBoxSlot->SetPadding(Padding);
 		}
 	}
+}
+
+void IWidgetOwner::SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizontal TextAlignHorizontal, EFigmaTextAlignVertical TextAlignVertical) const
+{
+	if (Widget && Widget->Slot)
+	{
+		EHorizontalAlignment HorizontalAlignment = Convert(TextAlignHorizontal);
+		EVerticalAlignment VerticalAlignment = Convert(TextAlignVertical);
+
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
+		{
+		}
+		else if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
+		{
+			BorderSlot->SetHorizontalAlignment(HorizontalAlignment);
+			BorderSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+		{
+			HorizontalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			HorizontalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
+		{
+			VerticalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			VerticalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
+		{
+			WrapBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			WrapBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+	}
+}
+
+EHorizontalAlignment IWidgetOwner::Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const
+{
+	switch (TextAlignHorizontal)
+	{
+	case EFigmaTextAlignHorizontal::LEFT:
+		return HAlign_Left;
+	case EFigmaTextAlignHorizontal::CENTER:
+		return HAlign_Center;
+	case EFigmaTextAlignHorizontal::RIGHT:
+		return HAlign_Right;
+	case EFigmaTextAlignHorizontal::JUSTIFIED:
+		return HAlign_Fill;
+	}
+	return HAlign_Center;
+}
+
+EVerticalAlignment IWidgetOwner::Convert(EFigmaTextAlignVertical TextAlignVertical) const
+{
+	switch (TextAlignVertical)
+	{
+	case EFigmaTextAlignVertical::TOP:
+		return VAlign_Top;
+	case EFigmaTextAlignVertical::CENTER:
+		return VAlign_Center;
+	case EFigmaTextAlignVertical::BOTTOM:
+		return VAlign_Bottom;
+	}
+
+	return VAlign_Center;
 }
