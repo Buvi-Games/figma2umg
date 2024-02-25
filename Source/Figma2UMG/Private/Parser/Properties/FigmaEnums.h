@@ -173,3 +173,25 @@ enum class EFigmaTextAlignVertical
 	CENTER,
 	BOTTOM,
 };
+
+UENUM()
+enum class EPaintTypes
+{
+	SOLID,
+	GRADIENT_LINEAR,
+	GRADIENT_RADIAL,
+	GRADIENT_ANGULAR,
+	GRADIENT_DIAMOND,
+	IMAGE,
+	EMOJI,
+	VIDEO,
+};
+
+UENUM()
+enum class EScaleMode
+{
+	FILL,
+	FIT,
+	TILE,
+	STRETCH,
+};

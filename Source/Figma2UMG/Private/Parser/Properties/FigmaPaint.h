@@ -6,6 +6,7 @@
 #include "FigmaBlendMode.h"
 #include "FigmaColor.h"
 #include "FigmaColorStop.h"
+#include "FigmaEnums.h"
 #include "FigmaImageFilters.h"
 #include "FigmaTransform.h"
 #include "FigmaVariableAlias.h"
@@ -13,27 +14,6 @@
 
 #include "FigmaPaint.generated.h"
 
-UENUM()
-enum class EPaintTypes
-{
-	SOLID,
-	GRADIENT_LINEAR,
-	GRADIENT_RADIAL,
-	GRADIENT_ANGULAR,
-	GRADIENT_DIAMOND,
-	IMAGE,
-	EMOJI,
-	VIDEO,
-};
-
-UENUM()
-enum class EScaleMode
-{
-	FILL,
-	FIT,
-	TILE,
-	STRETCH,
-};
 
 USTRUCT()
 struct FIGMA2UMG_API FFigmaPaint

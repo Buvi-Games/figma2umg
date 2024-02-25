@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigmaEnums.h"
+#include "FigmaPaint.h"
 #include "FigmaHyperlink.h"
 
 #include "FigmaTypeStyle.generated.h"
