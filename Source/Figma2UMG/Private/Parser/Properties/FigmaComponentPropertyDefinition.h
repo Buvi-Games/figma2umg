@@ -3,18 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaEnums.h"
 #include "FigmaInstanceSwapPreferredValue.h"
 
 #include "FigmaComponentPropertyDefinition.generated.h"
-
-UENUM()
-enum class EFigmaComponentPropertyType
-{
-	BOOLEAN,
-	INSTANCE_SWAP,
-	TEXT,
-	VARIANT,
-};
 
 USTRUCT()
 struct FIGMA2UMG_API FFigmaComponentPropertyDefinition

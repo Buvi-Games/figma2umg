@@ -29,8 +29,12 @@ public:
 
 	FString FindComponentName(const FString& ComponentId);
 	FFigmaComponentRef* FindComponentRef(const FString& ComponentId);
-
 	TObjectPtr<UFigmaComponent> FindComponentByKey(const FString& Key);
+
+	FString FindComponentSetName(const FString& ComponentSetId);
+	FFigmaComponentSetRef* FindComponentSetRef(const FString& ComponentSetId);
+	TObjectPtr<UFigmaComponentSet> FindComponentSetByKey(const FString& Key);
+
 
 	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);

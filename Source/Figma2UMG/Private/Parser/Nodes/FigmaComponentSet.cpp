@@ -3,8 +3,213 @@
 
 #include "Parser/Nodes/FigmaComponentSet.h"
 
+#include "WidgetBlueprint.h"
+#include "WidgetBlueprintFactory.h"
+#include "Blueprint/WidgetTree.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "Parser/FigmaFile.h"
+#include "Parser/Properties/FigmaComponentRef.h"
+#include "Templates/WidgetTemplateBlueprintClass.h"
 
 void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
+
+	static FString Hovered = FString("Hovered");
+	static FString Pressed = FString("Pressed");
+
+	for (const TPair<FString, FFigmaComponentPropertyDefinition>& pair : ComponentPropertyDefinitions)
+	{
+		if (pair.Value.Type == EFigmaComponentPropertyType::VARIANT)
+		{
+			const bool hasHovered = pair.Value.VariantOptions.Find(Hovered) != INDEX_NONE;
+			const bool hasPressed = pair.Value.VariantOptions.Find(Pressed) != INDEX_NONE;
+			if (hasHovered && hasPressed)
+			{
+				IsButton = true;
+			}
+		}
+	}
+
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	FFigmaComponentSetRef* ComponentSetRef = FigmaFile->FindComponentSetRef(GetId());
+	ComponentSetRef->SetComponentSet(this);
+}
+
+FString UFigmaComponentSet::GetPackagePath() const
+{
+	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+	while (TopParentNode && TopParentNode->GetParentNode())
+	{
+		TopParentNode = TopParentNode->GetParentNode();
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
+}
+
+FString UFigmaComponentSet::GetAssetName() const
+{
+	return GetUniqueName();
+}
+
+void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
+{
+	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+	if (PatchPropertiesToWidget(WidgetBP))
+	{
+		FCompilerResultsLog LogResults;
+		LogResults.SetSourcePath(WidgetBP->GetPathName());
+		LogResults.BeginEvent(TEXT("Compile"));
+		LogResults.bLogDetailedResults = true;
+
+		FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
+
+		Asset = nullptr;
+		WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+	}
+
+	FFigmaComponentSetRef* ComponentSetRef = FigmaFile ? FigmaFile->FindComponentSetRef(GetId()) : nullptr;
+	if (ComponentSetRef)
+	{
+		ComponentSetRef->SetAsset(GetAsset<UWidgetBlueprint>());
+	}
+}
+
+TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
+{
+	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
+	WidgetToPatch = Widget->WidgetTree->RootWidget;
+	Widget->WidgetTree->RootWidget = Patch(WidgetToPatch);
+
+	Widget->WidgetTree->SetFlags(RF_Transactional);
+	Widget->WidgetTree->Modify();
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
+
+	TObjectPtr<UWidget> WidgetInstance = nullptr;
+	if (ParentNode)
+	{
+		TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
+		TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
+
+		TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
+		UWidget* NewWidget = Template->Create(OwningObject);
+
+		if (NewWidget)
+		{
+			NewWidget->CreatedFromPalette();
+		}
+
+		WidgetInstance = NewWidget;
+	}
+
+	TObjectPtr<UPanelWidget> PanelWidget = GetContainerWidget();
+	IFigmaContainer::ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([PanelWidget](UFigmaNode& ChildNode, const int Index)
+		{
+			TObjectPtr<UWidget> OldWidget = PanelWidget->GetChildAt(Index);
+			TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
+			if (NewWidget)
+			{
+				if (NewWidget != OldWidget)
+				{
+					PanelWidget->SetFlags(RF_Transactional);
+					PanelWidget->Modify();
+
+					if (Index < PanelWidget->GetChildrenCount())
+					{
+						PanelWidget->ReplaceChildAt(Index, NewWidget);
+					}
+					else
+					{
+						PanelWidget->AddChild(NewWidget);
+					}
+				}
+			}
+		}));
+
+	return nullptr;
+}
+
+void UFigmaComponentSet::PostInsert() const
+{
+	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
+	if (!WidgetBp)
+		return;
+
+	Super::PatchBinds(WidgetBp);
+}
+
+void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
+	Super::PatchBinds(WidgetBp);
+}
+
+void UFigmaComponentSet::PrePatchWidget()
+{
+	Super::PrePatchWidget();
+}
+
+TArray<UFigmaNode*>& UFigmaComponentSet::GetChildren()
+{
+	if (IsButton)
+	{
+		return Empty;
+	}
+
+	return Super::GetChildren();
+}
+
+void UFigmaComponentSet::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
+{
+	MemberType.ContainerType = EPinContainerType::None;
+	switch (Def.Type)
+	{
+	case EFigmaComponentPropertyType::BOOLEAN:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_Boolean;
+		break;
+	case EFigmaComponentPropertyType::TEXT:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_String;
+
+		break;
+	case EFigmaComponentPropertyType::INSTANCE_SWAP:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_Object;
+		// MemberType.PinSubCategory = ?
+		// MemberType.PinSubCategoryObject = ?
+		break;
+	case EFigmaComponentPropertyType::VARIANT:
+		//TODO:
+		break;
+	}
+}
+
+bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* Widget) const
+{
+	bool AddedMemberVariable = false;
+	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	{
+		FEdGraphPinType MemberType;
+		FillType(Property.Value, MemberType);
+		FString PropertyName = Property.Key;//TODO: Remove '#id'
+		if (FBlueprintEditorUtils::AddMemberVariable(Widget, *PropertyName, MemberType, Property.Value.DefaultValue))
+		{
+			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(Widget, *PropertyName, false);
+			AddedMemberVariable = true;
+		}
+	}
+
+	return AddedMemberVariable;
+}
+
+void UFigmaComponentSet::PatchBinds()
+{
+	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
+	if (!WidgetBp)
+		return;
+
+	Super::PatchBinds(WidgetBp);
+}
+
+void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
 }

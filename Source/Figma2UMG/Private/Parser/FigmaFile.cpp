@@ -57,6 +57,44 @@ TObjectPtr<UFigmaComponent> UFigmaFile::FindComponentByKey(const FString& Key)
 	return nullptr;
 }
 
+FString UFigmaFile::FindComponentSetName(const FString& ComponentSetId)
+{
+	if (ComponentSets.Contains(ComponentSetId))
+	{
+		const FFigmaComponentSetRef& ComponentSet = ComponentSets[ComponentSetId];
+		return ComponentSet.Name;
+	}
+
+	return FString();
+}
+
+FFigmaComponentSetRef* UFigmaFile::FindComponentSetRef(const FString& ComponentSetId)
+{
+	if (ComponentSets.Contains(ComponentSetId))
+	{
+		FFigmaComponentSetRef& ComponentSet = ComponentSets[ComponentSetId];
+		return &ComponentSet;
+	}
+
+	return nullptr;
+}
+
+TObjectPtr<UFigmaComponentSet> UFigmaFile::FindComponentSetByKey(const FString& Key)
+{
+	for (const TPair<FString, FFigmaComponentSetRef>& Element : ComponentSets)
+	{
+		if (Element.Value.Remote)
+			continue;
+
+		if (Element.Value.Key == Key)
+		{
+			return FindByID<UFigmaComponentSet>(Element.Key);
+		}
+	}
+
+	return nullptr;
+}
+
 void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
 {
 	TMap<FString, FFigmaComponentRef> PendingComponents;

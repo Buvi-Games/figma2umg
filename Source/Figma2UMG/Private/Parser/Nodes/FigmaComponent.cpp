@@ -6,12 +6,20 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
+
+void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	Super::PostSerialize(InParent, JsonObj);
+
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(GetId());
+	ComponentRef->SetComponent(this);
+}
 
 FString UFigmaComponent::GetPackagePath() const
 {
@@ -175,15 +183,6 @@ void UFigmaComponent::PatchBinds()
 		return;
 
 	Super::PatchBinds(WidgetBp);
-}
-
-void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
-{
-	Super::PostSerialize(InParent, JsonObj);
-
-	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
-	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(GetId());
-	ComponentRef->SetComponent(this);
 }
 
 void UFigmaComponent::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
