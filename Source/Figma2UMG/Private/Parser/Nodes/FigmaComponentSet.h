@@ -28,7 +28,6 @@ public:
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 
 	// IWidgetOwner
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void PostInsert() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
@@ -38,14 +37,16 @@ public:
 
 
 protected:
+	TObjectPtr<UWidget> PatchVariation(TObjectPtr<UWidget> WidgetToPatch);
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);
 	void PatchBinds();
 
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
 
-	FSwitcherBuilder Builder;
+	TArray<FSwitcherBuilder> Builders;
 
+	bool IsDoingInPlace = false;
 	bool IsButton = false;
 	TArray<UFigmaNode*> Empty;
 };

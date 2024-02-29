@@ -11,7 +11,6 @@
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
-#include "Templates/WidgetTemplateBlueprintClass.h"
 
 void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
@@ -77,32 +76,72 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	}
 }
 
-TObjectPtr<UWidget> UFigmaComponentSet::Patch(TObjectPtr<UWidget> WidgetToPatch)
+TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
 {
-	TObjectPtr<UWidgetSwitcher> WidgetSwitcher = Builder.Patch(WidgetToPatch, GetAssetOuter(), FString(""));
-
-	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
-	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	if (IsButton)
 	{
-		if(Property.Value.Type != EFigmaComponentPropertyType::VARIANT)
-			continue;
-
+		//TODO
+		return WidgetToPatch;
 	}
 
-	return WidgetSwitcher;
+	const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	TObjectPtr<UWidgetSwitcher> TopWidgetSwitcher = nullptr;
+	TObjectPtr<UWidgetSwitcher> ParentWidgetSwitcher = nullptr;
+	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	{
+		if (Property.Value.Type != EFigmaComponentPropertyType::VARIANT)
+			continue;
+
+		FSwitcherBuilder& SwitcherBuilder = Builders.Add_GetRef(FSwitcherBuilder());
+		SwitcherBuilder.SetProperty(Property.Key, Property.Value);
+		if(TopWidgetSwitcher == nullptr)
+		{
+			SwitcherBuilder.Patch(WidgetToPatch, GetAssetOuter());
+			TopWidgetSwitcher = SwitcherBuilder.GetWidgetSwitcher();
+		}
+		else
+		{
+			TArray<UWidget*> ChildrenWidgets = ParentWidgetSwitcher->GetAllChildren();
+			if (UWidget** FoundChild = ChildrenWidgets.FindByPredicate([Property](const UWidget* Widget) {return Widget && Widget->IsA<UWidget>() && Widget->GetName() == Property.Key; }))
+			{
+				SwitcherBuilder.Patch((*FoundChild), GetAssetOuter());
+			}
+			else
+			{
+				TObjectPtr<UWidgetSwitcher> NewSwitcher = SwitcherBuilder.Patch(nullptr, GetAssetOuter());
+				ParentWidgetSwitcher->AddChild(NewSwitcher);
+				// TODO: Sort?
+			}
+		}
+		ParentWidgetSwitcher = SwitcherBuilder.GetWidgetSwitcher();
+	}
+	return TopWidgetSwitcher;
+	
 }
 
 TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
-	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
-	Widget->WidgetTree->RootWidget = Patch(Widget->WidgetTree->RootWidget);
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	WidgetBP->WidgetTree->RootWidget = PatchVariation(WidgetBP->WidgetTree->RootWidget);
 
-	Widget->WidgetTree->SetFlags(RF_Transactional);
-	Widget->WidgetTree->Modify();
+	WidgetBP->WidgetTree->SetFlags(RF_Transactional);
+	WidgetBP->WidgetTree->Modify();
 
-	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBP);
 
-	return IsButton ? nullptr : Super::PatchPreInsertWidget(WidgetToPatch);
+	if (IsButton)
+	{
+		return nullptr;
+	}
+	else
+	{
+		IsDoingInPlace = true;
+		TObjectPtr<UWidget> Widget = Super::PatchPreInsertWidget(WidgetToPatch);
+		IsDoingInPlace = false;
+		return Widget;
+	}
+}
+
 UObject* UFigmaComponentSet::GetAssetOuter() const
 {
 	if (IsDoingInPlace && ParentNode)
@@ -177,21 +216,22 @@ bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)
 	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
 	{
 		if(Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
+			continue;
+
+		FEdGraphPinType MemberType;
+		FillType(Property.Value, MemberType);
+		FString PropertyName = Property.Key;//TODO: Remove '#id'
+		if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
 		{
-			Builder.AddVariation(WidgetBP, Property.Key, Property.Value);
+			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
 			AddedMemberVariable = true;
 		}
-		else
-		{
-			FEdGraphPinType MemberType;
-			FillType(Property.Value, MemberType);
-			FString PropertyName = Property.Key;//TODO: Remove '#id'
-			if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
-			{
-				FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
-				AddedMemberVariable = true;
-			}
-		}
+	}
+
+	for (FSwitcherBuilder& SwitcherBuilder : Builders)
+	{
+		SwitcherBuilder.AddVariation(WidgetBP);
+		AddedMemberVariable = true;
 	}
 
 	return AddedMemberVariable;

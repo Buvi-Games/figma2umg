@@ -18,14 +18,18 @@ public:
 	GENERATED_BODY()
 	virtual ~FSwitcherBuilder() = default;
 
-	TObjectPtr<UWidgetSwitcher> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName);
-	void AddVariation(UWidgetBlueprint* WidgetBP, const FString& Key, const FFigmaComponentPropertyDefinition& Value);
+	TObjectPtr<UWidgetSwitcher> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter);
+	void AddVariation(UWidgetBlueprint* WidgetBP);
 
 	void Reset();
+	void SetProperty(const FString& InPropertyName, const FFigmaComponentPropertyDefinition& InDefinition);
+
+	TObjectPtr<UWidgetSwitcher> GetWidgetSwitcher() const { return WidgetSwitcher; }
 private:
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> WidgetSwitcher = nullptr;
 
-	UPROPERTY()
-	FString FunctionName;
+	FString PropertyName;
+	FFigmaComponentPropertyDefinition PropertyDefinition;
+
 };
