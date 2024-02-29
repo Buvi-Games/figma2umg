@@ -25,6 +25,7 @@ public:
 	void SetProperty(const FString& InPropertyName, const FFigmaComponentPropertyDefinition& InDefinition);
 
 	TObjectPtr<UWidgetSwitcher> GetWidgetSwitcher() const { return WidgetSwitcher; }
+	FString GetPropertyName() const {return PropertyName;}
 private:
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> WidgetSwitcher = nullptr;

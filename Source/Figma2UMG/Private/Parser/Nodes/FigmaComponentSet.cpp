@@ -19,15 +19,20 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 	static FString Hovered = FString("Hovered");
 	static FString Pressed = FString("Pressed");
 
-	for (const TPair<FString, FFigmaComponentPropertyDefinition>& pair : ComponentPropertyDefinitions)
+	for (const TPair<FString, FFigmaComponentPropertyDefinition>& Property : ComponentPropertyDefinitions)
 	{
-		if (pair.Value.Type == EFigmaComponentPropertyType::VARIANT)
+		if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
 		{
-			const bool hasHovered = pair.Value.VariantOptions.Find(Hovered) != INDEX_NONE;
-			const bool hasPressed = pair.Value.VariantOptions.Find(Pressed) != INDEX_NONE;
-			if (hasHovered && hasPressed)
-			{
+//			const bool hasHovered = Property.Value.VariantOptions.Find(Hovered) != INDEX_NONE;
+//			const bool hasPressed = Property.Value.VariantOptions.Find(Pressed) != INDEX_NONE;
+//			if (hasHovered && hasPressed)
+//			{
 //				IsButton = true;
+//			}
+//			else
+			{
+				FSwitcherBuilder& SwitcherBuilder = Builders.Add_GetRef(FSwitcherBuilder());
+				SwitcherBuilder.SetProperty(Property.Key, Property.Value);
 			}
 		}
 	}
@@ -87,13 +92,8 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 	const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
 	TObjectPtr<UWidgetSwitcher> TopWidgetSwitcher = nullptr;
 	TObjectPtr<UWidgetSwitcher> ParentWidgetSwitcher = nullptr;
-	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	for (FSwitcherBuilder& SwitcherBuilder : Builders)
 	{
-		if (Property.Value.Type != EFigmaComponentPropertyType::VARIANT)
-			continue;
-
-		FSwitcherBuilder& SwitcherBuilder = Builders.Add_GetRef(FSwitcherBuilder());
-		SwitcherBuilder.SetProperty(Property.Key, Property.Value);
 		if(TopWidgetSwitcher == nullptr)
 		{
 			SwitcherBuilder.Patch(WidgetToPatch, GetAssetOuter());
@@ -102,7 +102,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		else
 		{
 			TArray<UWidget*> ChildrenWidgets = ParentWidgetSwitcher->GetAllChildren();
-			if (UWidget** FoundChild = ChildrenWidgets.FindByPredicate([Property](const UWidget* Widget) {return Widget && Widget->IsA<UWidget>() && Widget->GetName() == Property.Key; }))
+			if (UWidget** FoundChild = ChildrenWidgets.FindByPredicate([SwitcherBuilder](const UWidget* Widget) {return Widget && Widget->IsA<UWidget>() && Widget->GetName() == SwitcherBuilder.GetPropertyName(); }))
 			{
 				SwitcherBuilder.Patch((*FoundChild), GetAssetOuter());
 			}

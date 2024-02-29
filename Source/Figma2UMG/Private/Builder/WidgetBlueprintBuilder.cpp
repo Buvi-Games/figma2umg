@@ -8,12 +8,16 @@
 #include "K2Node_FunctionEntry.h"
 #include "K2Node_FunctionResult.h"
 #include "K2Node_SwitchString.h"
+#include "K2Node_VariableSet.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 static const FVector2D BaseSize = FVector2D(300.0f, 150.0f);
 static const FVector2D Pan = FVector2D(20.0f, 20.0f);
+static const FName DefaultPinName("Default");
+static const FName TargetPinName("Target");
+static const FName SelfPinName("Self");
 
 void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FBPVariableDescription& VariableDescription, const FName& VariableName)
 {
@@ -84,7 +88,22 @@ void WidgetBlueprintBuilder::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> W
 	const FVector2D StartPos = FVector2D(FunctionEntry->NodePosX, FunctionEntry->NodePosY);
 	
 	const FVector2D SwitchPosition = StartPos + FVector2D(BaseSize.X + Pan.X, 0.0f);
-	PatchSwitchStringNode(FunctionGraph, SwitchPosition, FunctionEntry->GetThenPin(), PinNames);
+	UK2Node_SwitchString* SwitchNode = PatchSwitchStringNode(FunctionGraph, SwitchPosition, FunctionEntry->GetThenPin(), PinNames);
+
+	UEdGraphPin* InputValue = FunctionEntry->FindPin(PropertyName, EGPD_Output);
+	if(InputValue)
+	{
+		InputValue->MakeLinkTo(SwitchNode->GetSelectionPin());
+	}
+	
+	for (int i = 0; i < PinNames.Num(); i++)
+	{
+		const FString& Value = PinNames[i];
+		UEdGraphPin* ExecPin = SwitchNode->FindPin(Value, EGPD_Output);
+		int index = (Value == DefaultPinName) ? SwitchNode->PinNames.Num() : SwitchNode->PinNames.IndexOfByKey(Value);
+		const FVector2D SetPosition = SwitchPosition + FVector2D(BaseSize.X + Pan.X, ((BaseSize.Y*0.75f) + Pan.Y) * index);
+		PatchVariableSetNode(WidgetBP, FunctionGraph, ExecPin, nullptr, UWidgetSwitcher::StaticClass(), i, SetPosition);
+	}
 }
 
 void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidgetSwitcher> WidgetSwitcher, const FString& PropertyName, TArray<FString> Values)
@@ -112,17 +131,45 @@ void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> Wi
 	if (!SwitchNode)
 		return;
 
-	
+	TObjectPtr<class UEdGraphNode>* FoundNode = FunctionGraph->Nodes.FindByPredicate([](const TObjectPtr<class UEdGraphNode> Node) { return Node && Node->IsA<UK2Node_FunctionEntry>(); });
+	UK2Node_FunctionEntry* FunctionEntry = FoundNode ? Cast<UK2Node_FunctionEntry>(*FoundNode) : nullptr;
+	UEdGraphPin* InputValue = FunctionEntry ? FunctionEntry->FindPin(PropertyName, EGPD_Output) : nullptr;
+	if (InputValue)
+	{
+		InputValue->MakeLinkTo(SwitchNode->GetSelectionPin());
+	}
+
 	const FVector2D StartPos = FVector2D(SwitchNode->NodePosX, SwitchNode->NodePosY);
 
-	const FVector2D GetPosition = StartPos + FVector2D(0.0f, -BaseSize.Y - Pan.Y);
-	UK2Node_VariableGet* Target = PatchVariableGetNode(WidgetBP, FunctionGraph, *PropertyName, GetPosition);
-
-	for (FString Value : Values)
+	const FVector2D GetPosition = StartPos + FVector2D(0.0f, BaseSize.Y  + Pan.Y);
+	UK2Node_VariableGet* TargetGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, *PropertyName, GetPosition);
+	UEdGraphPin* TargetOutPin = TargetGetNode ? TargetGetNode->GetValuePin() : nullptr;
+	if (TargetOutPin)
 	{
-	//	WIP
-//		SwitchNode->FindPin(Value)
-//			PatchVariableSetNode(WidgetBP, FunctionGraph, Target, UK2Node_SwitchString::StaticClass(), 0);
+		float AverageSetY = 0.0f;
+		int SetNodeCount = 0;
+
+		TArray<UK2Node_VariableSet*> ExistingSetNodes;
+		FunctionGraph->GetNodesOfClass<UK2Node_VariableSet>(ExistingSetNodes);
+		for (UK2Node_VariableSet* SetNode : ExistingSetNodes)
+		{
+			UEdGraphPin* TargetInPin = SetNode->FindPin(SelfPinName, EGPD_Input);
+			if (TargetInPin && TargetInPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object && TargetInPin->PinType.PinSubCategoryObject == UWidgetSwitcher::StaticClass())
+			{
+				TargetOutPin->MakeLinkTo(TargetInPin);
+				SetNodeCount++;
+				AverageSetY += SetNode->NodePosY;
+			}
+		}
+
+		if (SetNodeCount > 0)
+		{
+			AverageSetY = (AverageSetY / SetNodeCount) + BaseSize.Y;
+			if (TargetGetNode->NodePosY < AverageSetY)
+			{
+				TargetGetNode->NodePosY = AverageSetY;
+			}
+		}
 	}
 }
 
@@ -272,6 +319,47 @@ UK2Node_VariableGet* WidgetBlueprintBuilder::PatchVariableGetNode(TObjectPtr<UWi
 	return nullptr;
 }
 
+UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation)
+{
+	static const FName ActiveWidgetIndex("ActiveWidgetIndex");
+	TObjectPtr<UK2Node_VariableSet> VariableSetNode = nullptr;
+	const TObjectPtr<UEdGraphNode> FoundNode = (ExecPin && !ExecPin->LinkedTo.IsEmpty()) ? ExecPin->LinkedTo[0]->GetOwningNode() : nullptr;
+	if (FoundNode)
+	{
+		VariableSetNode = Cast<UK2Node_VariableSet>(FoundNode);
+	}
+	else
+	{
+		const UEdGraphSchema_K2* K2_Schema = Cast<const UEdGraphSchema_K2>(Graph->GetSchema());
+		if (K2_Schema)
+		{
+			VariableSetNode = K2_Schema->SpawnVariableSetNode(NodeLocation, Graph, ActiveWidgetIndex, TargetObjectType);
+			//VariableSetNode->SetFlags(RF_Transactional);
+			//VariableSetNode->AllocateDefaultPins();
+			//VariableSetNode->PostPlacedNewNode();
+
+			//VariableSetNode->AutowireNewNode(Target);
+		}
+	}
+	VariableSetNode->NodePosX = static_cast<int32>(NodeLocation.X);
+	VariableSetNode->NodePosY = static_cast<int32>(NodeLocation.Y);
+
+	UEdGraphPin* ExecutePin = VariableSetNode->GetExecPin();
+	if (ExecPin && ExecutePin)
+	{
+		ExecPin->BreakAllPinLinks();
+		ExecPin->MakeLinkTo(ExecutePin);
+	}
+
+	UEdGraphPin* IndexPin = VariableSetNode->FindPin(ActiveWidgetIndex, EGPD_Input);
+	if(IndexPin)
+	{
+		IndexPin->DefaultValue = FString::FromInt(Value);
+	}
+
+	return nullptr;
+}
+
 UK2Node_IfThenElse* WidgetBlueprintBuilder::PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, UEdGraphPin* ConditionValuePin, UEdGraphPin* ThenReturnPin, UEdGraphPin* ElseReturnPin)
 {
 	UK2Node_IfThenElse* IfThenElseNode = nullptr;
@@ -374,27 +462,28 @@ UK2Node_SwitchString* WidgetBlueprintBuilder::PatchSwitchStringNode(UEdGraph* Gr
 		ExecPin->MakeLinkTo(ExecutePin);
 	}
 
-	static const FName DefaultPinName("Default");
+	bool HasDefault = false;
 	for (int i = 0; i < PinNames.Num(); i++)
 	{
 		const FName PinName = *PinNames[i];
-
+		const int Index = HasDefault ? (i - 1) : i;
 		UEdGraphPin* ThenExecPin = nullptr;
 		if (PinName == DefaultPinName)
 		{
 			ThenExecPin = SwitchNode->FindPin(DefaultPinName, EGPD_Output);
+			HasDefault = true;
 		}
 		else
 		{
-			if(SwitchNode->PinNames.Num() <= i)
+			if(SwitchNode->PinNames.Num() <= Index)
 			{
 				SwitchNode->PinNames.Add(PinName);
 				ThenExecPin = SwitchNode->CreatePin(EGPD_Output, UEdGraphSchema_K2::PC_Exec, PinName);
 				ThenExecPin->bAllowFriendlyName = false;
 			}
-			else if(SwitchNode->PinNames[i] != PinName)
+			else if(SwitchNode->PinNames[Index] != PinName)
 			{
-				SwitchNode->PinNames[i] = PinName;
+				SwitchNode->PinNames[Index] = PinName;
 				ThenExecPin = SwitchNode->FindPin(PinName, EGPD_Output);
 				if(ThenExecPin)
 				{

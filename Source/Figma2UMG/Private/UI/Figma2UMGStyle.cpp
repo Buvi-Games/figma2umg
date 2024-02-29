@@ -53,6 +53,9 @@ TUniquePtr< FSlateStyleSet > FFigma2UMGStyle::Create()
 
 void FFigma2UMGStyle::SetIcon(const FString& StyleName, const FString& ResourcePath)
 {
+	if (!FSlateApplication::IsInitialized())
+		return;
+
 	FSlateStyleSet* Style = MSStyleInstance.Get();
 
 	FString Name(GetContextName().ToString());
@@ -67,6 +70,9 @@ void FFigma2UMGStyle::SetIcon(const FString& StyleName, const FString& ResourceP
 
 void FFigma2UMGStyle::SetSVGIcon(const FString& StyleName, const FString& ResourcePath)
 {
+	if (!FSlateApplication::IsInitialized())
+		return;
+
 	FSlateStyleSet* Style = MSStyleInstance.Get();
 
 	FString Name(GetContextName().ToString());
