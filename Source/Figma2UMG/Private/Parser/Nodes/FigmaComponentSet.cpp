@@ -103,6 +103,16 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
 
 	return IsButton ? nullptr : Super::PatchPreInsertWidget(WidgetToPatch);
+UObject* UFigmaComponentSet::GetAssetOuter() const
+{
+	if (IsDoingInPlace && ParentNode)
+	{
+		return ParentNode->GetAssetOuter();
+	}
+	else
+	{
+		return Super::GetAssetOuter();
+	}
 }
 
 void UFigmaComponentSet::PostInsert() const

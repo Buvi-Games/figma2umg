@@ -70,7 +70,7 @@ public:
 
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const;
 
-	UObject* GetAssetOuter() const;
+	virtual UObject* GetAssetOuter() const;
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
 	TObjectPtr<UFigmaNode> FindTypeByID(const UClass* Class, const FString& ID);
 

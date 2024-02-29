@@ -20,6 +20,7 @@ public:
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual void PrePatchWidget() override;
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual UObject* GetAssetOuter() const override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
