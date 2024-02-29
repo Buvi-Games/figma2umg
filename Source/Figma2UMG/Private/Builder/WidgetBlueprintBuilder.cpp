@@ -120,6 +120,9 @@ void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> Wi
 
 	for (FString Value : Values)
 	{
+	//	WIP
+//		SwitchNode->FindPin(Value)
+//			PatchVariableSetNode(WidgetBP, FunctionGraph, Target, UK2Node_SwitchString::StaticClass(), 0);
 	}
 }
 
@@ -405,6 +408,21 @@ UK2Node_SwitchString* WidgetBlueprintBuilder::PatchSwitchStringNode(UEdGraph* Gr
 			}
 		}
 
+		if (ThenExecPin)
+		{
+			const int PinIndex = SwitchNode->GetPinIndex(ThenExecPin);
+			FVector2D SetterPosition = NodeLocation + FVector2D(BaseSize.X + Pan.X, (BaseSize.Y + Pan.Y) * PinIndex);
+			if (ThenExecPin->LinkedTo.Num() == 1)
+			{
+//				UEdGraphNode* LinkedNode = ThenExecPin->LinkedTo[0]->GetOwningNode();
+				//if(LinkedNode->IsA<>())
+			}
+			else
+			{
+				
+			}			
+		}
+	}
 
 	return SwitchNode;
 }
