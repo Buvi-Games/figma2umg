@@ -6,6 +6,7 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Parser/FigmaFile.h"
@@ -27,7 +28,7 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 			const bool hasPressed = pair.Value.VariantOptions.Find(Pressed) != INDEX_NONE;
 			if (hasHovered && hasPressed)
 			{
-				IsButton = true;
+//				IsButton = true;
 			}
 		}
 	}
@@ -76,78 +77,56 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	}
 }
 
+TObjectPtr<UWidget> UFigmaComponentSet::Patch(TObjectPtr<UWidget> WidgetToPatch)
+{
+	TObjectPtr<UWidgetSwitcher> WidgetSwitcher = Builder.Patch(WidgetToPatch, GetAssetOuter(), FString(""));
+
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	{
+		if(Property.Value.Type != EFigmaComponentPropertyType::VARIANT)
+			continue;
+
+	}
+
+	return WidgetSwitcher;
+}
+
 TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
 	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
-	WidgetToPatch = Widget->WidgetTree->RootWidget;
-	Widget->WidgetTree->RootWidget = Patch(WidgetToPatch);
+	Widget->WidgetTree->RootWidget = Patch(Widget->WidgetTree->RootWidget);
 
 	Widget->WidgetTree->SetFlags(RF_Transactional);
 	Widget->WidgetTree->Modify();
 
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
 
-	TObjectPtr<UWidget> WidgetInstance = nullptr;
-	if (ParentNode)
-	{
-		TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
-		TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
-
-		TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
-		UWidget* NewWidget = Template->Create(OwningObject);
-
-		if (NewWidget)
-		{
-			NewWidget->CreatedFromPalette();
-		}
-
-		WidgetInstance = NewWidget;
-	}
-
-	TObjectPtr<UPanelWidget> PanelWidget = GetContainerWidget();
-	IFigmaContainer::ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([PanelWidget](UFigmaNode& ChildNode, const int Index)
-		{
-			TObjectPtr<UWidget> OldWidget = PanelWidget->GetChildAt(Index);
-			TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
-			if (NewWidget)
-			{
-				if (NewWidget != OldWidget)
-				{
-					PanelWidget->SetFlags(RF_Transactional);
-					PanelWidget->Modify();
-
-					if (Index < PanelWidget->GetChildrenCount())
-					{
-						PanelWidget->ReplaceChildAt(Index, NewWidget);
-					}
-					else
-					{
-						PanelWidget->AddChild(NewWidget);
-					}
-				}
-			}
-		}));
-
-	return nullptr;
+	return IsButton ? nullptr : Super::PatchPreInsertWidget(WidgetToPatch);
 }
 
 void UFigmaComponentSet::PostInsert() const
 {
-	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
-	if (!WidgetBp)
-		return;
-
-	Super::PatchBinds(WidgetBp);
+	if (!IsButton)
+	{
+		Super::PostInsert();
+	}
 }
 
 void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 {
-	Super::PatchBinds(WidgetBp);
+	if (!IsButton)
+	{
+		Super::PatchBinds(WidgetBp);
+	}
 }
 
 void UFigmaComponentSet::PrePatchWidget()
 {
-	Super::PrePatchWidget();
+	if (!IsButton)
+	{
+		Super::PrePatchWidget();
+	}
 }
 
 TArray<UFigmaNode*>& UFigmaComponentSet::GetChildren()
@@ -178,23 +157,30 @@ void UFigmaComponentSet::FillType(const FFigmaComponentPropertyDefinition& Def, 
 		// MemberType.PinSubCategoryObject = ?
 		break;
 	case EFigmaComponentPropertyType::VARIANT:
-		//TODO:
 		break;
 	}
 }
 
-bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* Widget) const
+bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)
 {
 	bool AddedMemberVariable = false;
 	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
 	{
-		FEdGraphPinType MemberType;
-		FillType(Property.Value, MemberType);
-		FString PropertyName = Property.Key;//TODO: Remove '#id'
-		if (FBlueprintEditorUtils::AddMemberVariable(Widget, *PropertyName, MemberType, Property.Value.DefaultValue))
+		if(Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
 		{
-			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(Widget, *PropertyName, false);
+			Builder.AddVariation(WidgetBP, Property.Key, Property.Value);
 			AddedMemberVariable = true;
+		}
+		else
+		{
+			FEdGraphPinType MemberType;
+			FillType(Property.Value, MemberType);
+			FString PropertyName = Property.Key;//TODO: Remove '#id'
+			if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
+			{
+				FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
+				AddedMemberVariable = true;
+			}
 		}
 	}
 
@@ -208,8 +194,4 @@ void UFigmaComponentSet::PatchBinds()
 		return;
 
 	Super::PatchBinds(WidgetBp);
-}
-
-void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
-{
 }

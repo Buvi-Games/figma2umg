@@ -61,6 +61,42 @@ void WidgetBlueprintBuilder::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP
 	AddBindingProperty(WidgetBP, TextBlock, "Text", VariableName);
 }
 
+void WidgetBlueprintBuilder::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, const FString& PropertyName, const FBPVariableDescription* VariableMap)
+{
+	if (!WidgetBP || !VariableMap)
+		return;
+
+	FString FunctionName = "Set" + PropertyName;
+	TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+		{
+			return Graph.GetName() == FunctionName;
+		});
+	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+	if (!FunctionGraph)
+	{
+		FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBP, FBlueprintEditorUtils::FindUniqueKismetName(WidgetBP, FunctionName), UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+
+		FBlueprintEditorUtils::AddFunctionGraph<UClass>(WidgetBP, FunctionGraph, true, nullptr);
+	}
+
+	/*UK2Node_FunctionEntry* FunctionEntry = */PatchFunctionEntry(FunctionGraph, PropertyName, UEdGraphSchema_K2::PC_String, EPinContainerType::None, VariableMap->DefaultValue);
+}
+
+void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidgetSwitcher> WidgetSwitcher, const FString& PropertyName)
+{
+	if (!WidgetBP || !WidgetSwitcher)
+		return;
+
+	FString FunctionName = "Set" + PropertyName;
+	TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+		{
+			return Graph.GetName() == FunctionName;
+		});
+	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+	if (!FunctionGraph)
+		return;
+}
+
 void WidgetBlueprintBuilder::SetPropertyValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, const FFigmaComponentProperty& ComponentProperty)
 {
 	if (!Widget)
@@ -140,6 +176,43 @@ void WidgetBlueprintBuilder::AddBindingProperty(TObjectPtr<UWidgetBlueprint> Wid
 
 	WidgetBP->Bindings.Remove(Binding);
 	WidgetBP->Bindings.AddUnique(Binding);
+}
+
+UK2Node_FunctionEntry* WidgetBlueprintBuilder::PatchFunctionEntry(UEdGraph* Graph, const FString VarName, FName VarType, EPinContainerType VarContainerType, const FString& DefaultValue)
+{
+	TObjectPtr<class UEdGraphNode>* FoundNode = Graph->Nodes.FindByPredicate([](const TObjectPtr<class UEdGraphNode> Node) { return Node && Node->IsA<UK2Node_FunctionEntry>(); });
+	UK2Node_FunctionEntry* FunctionEntry = FoundNode ? Cast<UK2Node_FunctionEntry>(*FoundNode) : nullptr;
+	if (!FunctionEntry)
+	{
+		FunctionEntry = NewObject<UK2Node_FunctionEntry>(Graph, UK2Node_FunctionEntry::StaticClass());
+		FunctionEntry->CreateNewGuid();
+		FunctionEntry->SetFlags(RF_Transactional);
+		FunctionEntry->AllocateDefaultPins();
+		FunctionEntry->PostPlacedNewNode();
+
+		Graph->Modify();
+		// the FBlueprintMenuActionItem should do the selecting
+		Graph->AddNode(FunctionEntry, /*bFromUI =*/false, /*bSelectNewNode =*/false);
+	}
+
+	TSharedPtr<FUserPinInfo>* InputPtr = FunctionEntry->UserDefinedPins.FindByPredicate([VarName](const TSharedPtr<FUserPinInfo> Pin) { return Pin->PinName == VarName; });
+	TSharedPtr<FUserPinInfo> Input = InputPtr ? *InputPtr : nullptr;
+	if(Input)
+	{
+		Input->PinType.PinCategory = VarType;
+		Input->PinType.ContainerType = VarContainerType;
+		Input->DesiredPinDirection = EGPD_Output;
+	}
+	else
+	{
+		FEdGraphPinType PinType;
+		PinType.PinCategory = VarType;
+		PinType.ContainerType = VarContainerType;
+
+		FunctionEntry->CreateUserDefinedPin(*VarName, PinType, EGPD_Output);
+	}
+
+	return FunctionEntry;
 }
 
 UK2Node_VariableGet* WidgetBlueprintBuilder::PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation)

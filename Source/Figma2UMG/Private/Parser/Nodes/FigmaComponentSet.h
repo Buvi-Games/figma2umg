@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
+#include "Builder/SwitcherBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Parser/Properties/FigmaComponentPropertyDefinition.h"
 
@@ -26,6 +27,7 @@ public:
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 
 	// IWidgetOwner
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void PostInsert() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
@@ -33,12 +35,15 @@ public:
 	virtual TArray<UFigmaNode*>& GetChildren() override;
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 
-	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget) const;
-	void PatchBinds();
 
 protected:
+	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);
+	void PatchBinds();
+
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
+
+	FSwitcherBuilder Builder;
 
 	bool IsButton = false;
 	TArray<UFigmaNode*> Empty;
