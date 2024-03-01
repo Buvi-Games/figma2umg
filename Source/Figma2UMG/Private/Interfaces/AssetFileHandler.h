@@ -6,6 +6,7 @@
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
+#include "Figma2UMGModule.h"
 #include "PackageTools.h"
 #include "ObjectTools.h"
 
@@ -69,6 +70,8 @@ AssetType* IFigmaFileHandle::GetOrCreateAsset(FactoryType* Factory)
 			{
 				Factory = NewObject<FactoryType>(FactoryType::StaticClass());
 			}
+
+			UE_LOG_Figma2UMG(Display, TEXT("Create UAsset %s of type %s"), *PackagePath, *AssetClass);
 			TypedAsset = Cast<AssetType>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
 		}
 
