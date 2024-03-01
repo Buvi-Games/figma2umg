@@ -177,23 +177,10 @@ void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
 	CurrentProcessDelegate = ProcessDelegate;
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			for (TPair<FString, FFigmaComponentRef>& Element : Components)
+			PatchPreInsertWidget();
+			InsertSubWidgets();
+			if (PatchPostInsertWidget())
 			{
-				if (!Element.Value.Remote)
-					continue;
-
-				if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
-				{
-					Component->PatchPreInsertWidget(nullptr);
-					Component->PatchPostInsertWidget();
-				}
-			}
-
-			if (Document)
-			{
-				Document->PatchPreInsertWidget(nullptr);
-				Document->PatchPostInsertWidget();
-
 				PatchWidgetBinds();
 				PatchWidgetProperties();
 
@@ -269,6 +256,66 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	{
 //		CurrentProcessDelegate.Unbind();
 	}
+}
+
+void UFigmaFile::PatchPreInsertWidget()
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		{
+			Component->PatchPreInsertWidget(nullptr);
+		}
+	}
+
+	if (Document)
+	{
+		Document->PatchPreInsertWidget(nullptr);
+	}
+}
+
+void UFigmaFile::InsertSubWidgets()
+{
+
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		{
+			Component->InsertSubWidgets();
+		}
+	}
+
+	if (Document)
+	{
+		Document->InsertSubWidgets();
+	}
+}
+
+bool UFigmaFile::PatchPostInsertWidget()
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		{
+			Component->PatchPostInsertWidget();
+		}
+	}
+
+	if (Document)
+	{
+		Document->PatchPostInsertWidget();
+		return true;
+	}
+	return false;
 }
 
 void UFigmaFile::PatchWidgetBinds()
