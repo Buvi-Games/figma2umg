@@ -126,7 +126,9 @@ void SImporterWidget::OnRequestFinished(eRequestStatus Status, FString InMessage
 		}
 		else
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("-----------------------------------------------------"));
 			UE_LOG_Figma2UMG(Display, TEXT("%s"), *InMessage);
+			UE_LOG_Figma2UMG(Display, TEXT("-----------------------------------------------------"));
 		}
 	}
 	else

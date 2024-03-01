@@ -53,7 +53,7 @@ void UFigmaImporter::Run()
 	{
 		if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
 		{
-			UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API", *FileKey));
+			UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
 		}
 	}
 	else
@@ -331,7 +331,7 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 		return;
 	}
 
-	UE_LOG_Figma2UMG(Display, TEXT("Requesting images."));
+	UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]"));
 	RequestedImages.Reset();
 	File->BuildImageDependency(FileKey, RequestedImages);
 
@@ -360,7 +360,7 @@ void UFigmaImporter::RequestImageURLs()
 		//Todo: Manage images from Libs
 		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
 		{
-			UE_LOG_Figma2UMG(Display, TEXT("Requesting %u images in file %s from Figma API.", Requests->Requests.Num(), *Requests->FileKey));
+			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
 		}
 	}
 	else
@@ -383,6 +383,7 @@ void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
 		FText OutFailReason;
 		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]  %u images received from Figma API."), ImagesRequestResult.Images.Num());
 			for (TPair<FString, FString> Element : ImagesRequestResult.Images)
 			{
 				RequestedImages.SetURL(Element.Key, Element.Value);
@@ -401,7 +402,7 @@ void UFigmaImporter::DownloadNextImage()
 	FImageRequest* ImageRequest = RequestedImages.GetNextToDownload();
 	if (ImageRequest)
 	{
-		UE_LOG_Figma2UMG(Display, TEXT("Downloading image %s at %s.", *ImageRequest->ImageName, *ImageRequest->URL));
+		UE_LOG_Figma2UMG(Display, TEXT("Downloading image %s at %s."), *ImageRequest->ImageName, *ImageRequest->URL);
 		ImageRequest->StartDownload(OnImageDownloadRequestCompleted);
 	}
 	else
@@ -430,7 +431,7 @@ void UFigmaImporter::OnPatchUAssets(bool Succeeded)
 		return;
 	}
 
-	UE_LOG_Figma2UMG(Display, TEXT("Post-patch UAssets.", *ImageRequest->ImageName, *ImageRequest->URL));
+	UE_LOG_Figma2UMG(Display, TEXT("Post-patch UAssets."));
 	File->PostPatch(OnPostPatchUAssetsDelegate);
 }
 
