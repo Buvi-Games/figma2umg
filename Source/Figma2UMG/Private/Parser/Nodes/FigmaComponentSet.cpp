@@ -63,21 +63,7 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 	if (PatchPropertiesToWidget(WidgetBP))
 	{
-		FCompilerResultsLog LogResults;
-		LogResults.SetSourcePath(WidgetBP->GetPathName());
-		LogResults.BeginEvent(TEXT("Compile"));
-		LogResults.bLogDetailedResults = true;
-
-		FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
-
-		Asset = nullptr;
-		WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
-	}
-
-	FFigmaComponentSetRef* ComponentSetRef = FigmaFile ? FigmaFile->FindComponentSetRef(GetId()) : nullptr;
-	if (ComponentSetRef)
-	{
-		ComponentSetRef->SetAsset(GetAsset<UWidgetBlueprint>());
+		CompileAndRefresh();
 	}
 }
 
@@ -208,6 +194,25 @@ void UFigmaComponentSet::FillType(const FFigmaComponentPropertyDefinition& Def, 
 	case EFigmaComponentPropertyType::VARIANT:
 		break;
 	}
+}
+
+void UFigmaComponentSet::CompileAndRefresh()
+{
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	if (!WidgetBP)
+		return;
+
+	Asset = nullptr;
+	AssetOuter = nullptr;
+
+	FCompilerResultsLog LogResults;
+	LogResults.SetSourcePath(WidgetBP->GetPathName());
+	LogResults.BeginEvent(TEXT("Compile"));
+	LogResults.bLogDetailedResults = true;
+
+	FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
+
+	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 }
 
 bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)

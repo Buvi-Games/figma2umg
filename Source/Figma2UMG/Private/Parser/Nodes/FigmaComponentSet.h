@@ -37,6 +37,8 @@ public:
 
 
 protected:
+	void CompileAndRefresh();
+
 	TObjectPtr<UWidget> PatchVariation(TObjectPtr<UWidget> WidgetToPatch);
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);
 	void PatchBinds();
