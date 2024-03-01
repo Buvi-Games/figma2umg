@@ -25,9 +25,6 @@ private:
 	FReply DoImport();
 	void OnRequestFinished(eRequestStatus Status, FString InMessage);
 
-	void SetMessage(const FString& Text, bool IsError = false);
-	void ResetMessage();
-
 	virtual void NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, FProperty* PropertyThatChanged) override;
 
 	TObjectPtr<URequestParams> Properties;
@@ -38,6 +35,4 @@ private:
 	FText ImportButtonTooltip;
 
 	int RowCount = 0;
-
-	TSharedPtr<STextBlock> Message;
 };

@@ -6,6 +6,7 @@
 #include "FigmaImportSubsystem.h"
 #include "TimerManager.h"
 #include "REST/RequestParams.h"
+#include <Figma2UMGModule.h>
 
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 
@@ -58,22 +59,6 @@ void SImporterWidget::Construct(const FArguments& InArgs)
 		];
 	RowCount++;
 
-	Content->AddSlot(0, RowCount)
-		.ColumnSpan(2)
-		.VAlign(VAlign_Top)
-		.HAlign(HAlign_Fill)
-		[
-			SNew(SBorder)
-				.BorderImage(FAppStyle::Get().GetBrush("Brushes.Panel"))
-				.HAlign(HAlign_Center)
-				.VAlign(VAlign_Center)
-				.Padding(8.f)
-				[
-					SAssignNew(Message, STextBlock)
-						.Visibility(EVisibility::Collapsed)
-						.Justification(ETextJustify::Center)
-				]
-		];
 }
 
 void SImporterWidget::AddPropertyView(TSharedRef<SGridPanel> Content)
@@ -121,7 +106,7 @@ FReply SImporterWidget::DoImport()
 	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
 	if (Importer)
 	{
-		SetMessage(TEXT("Connecting with Figma"));
+		UE_LOG_Figma2UMG(Display, TEXT("Connecting with Figma"));
 		ImportButton->SetEnabled(false);
 		Importer->Request(Properties, FOnFigmaImportUpdateStatusCB::CreateRaw(this, &SImporterWidget::OnRequestFinished));
 	}
@@ -131,43 +116,25 @@ FReply SImporterWidget::DoImport()
 
 void SImporterWidget::OnRequestFinished(eRequestStatus Status, FString InMessage)
 {
-	bool Error = Status == eRequestStatus::Failed;
+	bool IsError = Status == eRequestStatus::Failed;
 	if (Status == eRequestStatus::Succeeded || Status == eRequestStatus::Failed)
 	{
 		ImportButton->SetEnabled(true);
-		SetMessage(InMessage);
-
-		FTimerHandle UnusedHandle;
-		TSharedRef<FTimerManager> WorldTimerManager = GEditor->GetTimerManager();
-		WorldTimerManager->SetTimer(UnusedHandle, FTimerDelegate::CreateRaw(this, &SImporterWidget::ResetMessage), 5.0f, false, 5.0f);
+		if (IsError)
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("%s"), *InMessage);
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("-----------------------------------------------------"));
+			UE_LOG_Figma2UMG(Display, TEXT("%s"), *InMessage);
+			UE_LOG_Figma2UMG(Display, TEXT("-----------------------------------------------------"));
+		}
 	}
 	else
 	{
-		SetMessage(InMessage);
+		UE_LOG_Figma2UMG(Display, TEXT("%s"), *InMessage);
 	}
-}
-
-void SImporterWidget::SetMessage(const FString& Text, bool IsError)
-{
-	Message->SetVisibility(EVisibility::Visible);
-	FString CurrentText = Message->GetText().ToString();
-	CurrentText = CurrentText + TEXT('\r') + Text;
-	Message->SetText(FText::FromString(CurrentText));
-	if(IsError)
-	{
-		Message->SetColorAndOpacity(FLinearColor::Red);
-	}
-	else
-	{
-		Message->SetColorAndOpacity(FLinearColor::White);
-	}
-}
-
-void SImporterWidget::ResetMessage()
-{
-	Message->SetVisibility(EVisibility::Collapsed);
-	Message->SetColorAndOpacity(FLinearColor::White);
-	Message->SetText(FText::FromString(""));
 }
 
 void SImporterWidget::NotifyPostChange(const FPropertyChangedEvent& PropertyChangedEvent, FProperty* PropertyThatChanged)

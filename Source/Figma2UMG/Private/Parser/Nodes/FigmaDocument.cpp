@@ -46,6 +46,7 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 	WidgetToPatch = Widget->WidgetTree->RootWidget;
 	if (WidgetToPatch && Cast<UPanelWidget>(WidgetToPatch)->GetChildrenCount() != Children.Num())
 	{
+		UE_LOG_Figma2UMG(Warning, TEXT("Mismatching of document pages from previous import. Importing %i and previously was %i"), Children.Num(), Cast<UPanelWidget>(WidgetToPatch)->GetChildrenCount());
 		if (Children.Num() == 1)
 		{
 			FString CanvasName = Children[0]->GetUniqueName();
