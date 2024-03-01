@@ -237,7 +237,7 @@ void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
 
 void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile, TObjectPtr<UFigmaComponent> Component, TMap<FString, FFigmaComponentRef>& PendingComponents)
 {
-	UE_LOG_Figma2UMG(VeryVerbose, TEXT("Adding remote Component %s key:%s"), *ComponentRef.Name, *ComponentRef.Key);
+	UE_LOG_Figma2UMG(Display, TEXT("Adding remote Component %s key:%s"), *ComponentRef.Name, *ComponentRef.Key);
 
 	ComponentRef.RemoteFileKey = LibraryFile.Key;
 	ComponentRef.SetComponent(Component);
@@ -252,7 +252,7 @@ void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPai
 
 		if (LibraryFile.Value->Components.Contains(SubInstance->GetComponentId()))
 		{
-			UE_LOG_Figma2UMG(VeryVerbose, TEXT("Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->GetComponentId());
+			UE_LOG_Figma2UMG(Display, TEXT("Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->GetComponentId());
 			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubInstance->GetComponentId()];
 			if (!RemoteCommponentRef.Remote)
 			{

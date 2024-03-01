@@ -35,6 +35,10 @@ UWidgetBlueprint* IFigmaFileHandle::GetOrCreateAsset<UWidgetBlueprint, UWidgetBl
 			UE_LOG_Figma2UMG(Display, TEXT("Create UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());
 			WidgetAsset = Cast<UWidgetBlueprint>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
 		}
+		else
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("Loading UAsset %s/%s of type %s"), *PackagePath, *AssetName, *UWidgetBlueprint::StaticClass()->GetDisplayNameText().ToString());
+		}
 
 		Asset = WidgetAsset;
 		AssetOuter = WidgetAsset->WidgetTree;

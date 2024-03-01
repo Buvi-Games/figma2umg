@@ -74,6 +74,10 @@ AssetType* IFigmaFileHandle::GetOrCreateAsset(FactoryType* Factory)
 			UE_LOG_Figma2UMG(Display, TEXT("Create UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());
 			TypedAsset = Cast<AssetType>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
 		}
+		else
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("Loading UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetType::StaticClass()->GetDisplayNameText().ToString());
+		}
 
 		Asset = TypedAsset;
 		AssetOuter = TypedAsset;

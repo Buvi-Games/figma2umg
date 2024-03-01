@@ -73,7 +73,7 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	TObjectPtr<UWidget> WidgetInstance = nullptr;
 	if (ParentNode)
 	{
-		UE_LOG_Figma2UMG(Verbose, TEXT("Adding in-place Instance for Component %s. This should be a template."), *GetUniqueName());
+		UE_LOG_Figma2UMG(Display, TEXT("Adding in-place Instance for Component %s. This should be a template."), *GetUniqueName());
 
 		TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
 		TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
@@ -103,7 +103,7 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 					PanelWidget->SetFlags(RF_Transactional);
 					PanelWidget->Modify();
 
-					UE_LOG_Figma2UMG(Verbose, TEXT("[Widget Insert] Parent %s Child %s."), *NodeName, *ChildNode.GetNodeName());
+					UE_LOG_Figma2UMG(Display, TEXT("[Widget Insert] Parent [%s] Child [%s]."), *NodeName, *ChildNode.GetNodeName());
 					if (Index < PanelWidget->GetChildrenCount())
 					{
 						PanelWidget->ReplaceChildAt(Index, NewWidget);

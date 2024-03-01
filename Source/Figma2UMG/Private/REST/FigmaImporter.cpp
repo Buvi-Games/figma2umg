@@ -383,7 +383,7 @@ void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
 		FText OutFailReason;
 		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 		{
-			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]  %u images received from Figma API."), ImagesRequestResult.Images.Num());
+			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] %u images received from Figma API."), ImagesRequestResult.Images.Num());
 			for (TPair<FString, FString> Element : ImagesRequestResult.Images)
 			{
 				RequestedImages.SetURL(Element.Key, Element.Value);
@@ -439,7 +439,7 @@ void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
 {
 	if (Succeeded)
 	{
-		UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + TEXT("was successfully imported."));
+		UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + TEXT(" was successfully imported."));
 	}
 	else
 	{

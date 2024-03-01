@@ -16,12 +16,12 @@ TObjectPtr<UWidget> UFigmaCanvas::PatchPreInsertWidget(TObjectPtr<UWidget> Widge
 		{
 			WidgetToPatch->Rename(*GetUniqueName());
 		}
-		UE_LOG_Figma2UMG(Verbose, TEXT("%s Patching Canvas "), *GetUniqueName());
+		UE_LOG_Figma2UMG(Display, TEXT("%s Patching Canvas "), *GetUniqueName());
 		Canvas = Cast<UCanvasPanel>(WidgetToPatch);
 	}
 	else
 	{
-		UE_LOG_Figma2UMG(Verbose, TEXT("%s New Canvas"), *GetUniqueName());
+		UE_LOG_Figma2UMG(Display, TEXT("%s New Canvas"), *GetUniqueName());
 		Canvas = NewObject<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
 	}
 

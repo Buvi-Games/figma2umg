@@ -184,7 +184,7 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 						ParentWidget->SetFlags(RF_Transactional);
 						ParentWidget->Modify();
 
-						UE_LOG_Figma2UMG(Verbose, TEXT("[Widget Insert] Parent %s Child %s."), *NodeName, *ChildNode.GetNodeName());
+						UE_LOG_Figma2UMG(Display, TEXT("[Widget Insert] Parent [%s] Child [%s]."), *NodeName, *ChildNode.GetNodeName());
 						if (Index < ParentWidget->GetChildrenCount())
 						{
 							ParentWidget->ReplaceChildAt(Index, NewWidget);
