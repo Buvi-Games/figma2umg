@@ -3,12 +3,8 @@
 
 #include "REST/ImageRequest.h"
 
-#include "EditorDirectories.h"
+#include "Figma2UMGModule.h"
 #include "HttpModule.h"
-#include "ImageCoreUtils.h"
-#include "ImageUtils.h"
-#include "TextureCompiler.h"
-#include "AssetRegistry/AssetRegistryModule.h"
 #include "Interfaces/IHttpResponse.h"
 
 
@@ -122,6 +118,8 @@ void FImageRequest::HandleImageDownload(FHttpRequestPtr HttpRequest, FHttpRespon
 	else
 	{
 		Status = eRequestStatus::Failed;
+
+		UE_LOG_Figma2UMG(Warning, TEXT("Failed to download image at %s.", *URL));
 		OnImageRequestCompleteDelegate.ExecuteIfBound(false);
 	}
 

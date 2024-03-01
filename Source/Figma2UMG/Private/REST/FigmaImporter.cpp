@@ -4,6 +4,7 @@
 #include "REST/FigmaImporter.h"
 
 #include "Defines.h"
+#include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
 #include "JsonObjectConverter.h"
 #include "RequestParams.h"
@@ -52,7 +53,7 @@ void UFigmaImporter::Run()
 	{
 		if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
 		{
-			UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
+			UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API", *FileKey));
 		}
 	}
 	else
@@ -181,10 +182,10 @@ bool UFigmaImporter::ParseRequestReceived(FString MessagePrefix, UVaRestRequestJ
 		switch (status)
 		{
 		case EVaRestRequestStatus::NotStarted:
-			UpdateStatus(eRequestStatus::NotStarted, MessagePrefix + TEXT("EVaRestRequestStatus::NotStarted."));
+			UE_LOG_Figma2UMG(Warning, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::NotStarted."));
 			break;
 		case EVaRestRequestStatus::Processing:
-			UpdateStatus(eRequestStatus::Processing, MessagePrefix + TEXT("EVaRestRequestStatus::Processing"));
+			UE_LOG_Figma2UMG(Warning, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Processing."));
 			break;
 		case EVaRestRequestStatus::Failed:
 			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed"));
@@ -193,7 +194,7 @@ bool UFigmaImporter::ParseRequestReceived(FString MessagePrefix, UVaRestRequestJ
 			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed_ConnectionError"));
 			break;
 		case EVaRestRequestStatus::Succeeded:
-			UpdateStatus(eRequestStatus::Processing, MessagePrefix + TEXT("EVaRestRequestStatus::Succeeded - Parsing"));
+			UE_LOG_Figma2UMG(Display, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Succeeded"));
 			UVaRestJsonObject* responseJson = Request->GetResponseObject();
 			if (!responseJson)
 			{
@@ -248,8 +249,8 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 
 					File->FixRemoteReferences(LibraryFileKeys);
 
+					UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
 					File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
-					UpdateStatus(eRequestStatus::Processing, TEXT("Creating UAssets."));
 				}
 				else
 				{
@@ -268,7 +269,7 @@ void UFigmaImporter::DownloadNextDependency()
 			CurrentLibraryFileKey = Lib.Key;
 			if (CreateRequest(FIGMA_ENDPOINT_FILES, CurrentLibraryFileKey, FString(), OnVaRestLibraryFileRequestDelegate))
 			{
-				UpdateStatus(eRequestStatus::Processing, TEXT("Requesting library file from Figma API."));
+				UE_LOG_Figma2UMG(Display, TEXT("Requesting library file %s from Figma API"), *CurrentLibraryFileKey);
 			}
 			return;
 		}
@@ -276,7 +277,7 @@ void UFigmaImporter::DownloadNextDependency()
 
 	if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
 	{
-		UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
+		UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
 	}
 }
 
@@ -306,7 +307,7 @@ void UFigmaImporter::OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Reque
 				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, CurrentFile->StaticClass(), CurrentFile, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 				{
 					CurrentFile->PostSerialize(ContentRootFolder, JsonObj);
-					UpdateStatus(eRequestStatus::Processing, TEXT("Library file ") + CurrentFile->GetFileName() + TEXT(" downloaded."));
+					UE_LOG_Figma2UMG(Display, TEXT("Library file %s downloaded."), *CurrentFile->GetFileName());
 					DownloadNextDependency();
 				}
 				else
@@ -325,7 +326,7 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 		return;
 	}
 
-	UpdateStatus(eRequestStatus::Processing, TEXT("Requesting images."));
+	UE_LOG_Figma2UMG(Display, TEXT("Requesting images."));
 	RequestedImages.Reset();
 	File->BuildImageDependency(FileKey, RequestedImages);
 
@@ -335,7 +336,7 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 	}
 	else
 	{
-		UpdateStatus(eRequestStatus::Processing, TEXT("Patching UAssets."));
+		UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
 		File->Patch(OnPatchUAssetsDelegate);
 	}
 }
@@ -354,7 +355,7 @@ void UFigmaImporter::RequestImageURLs()
 		//Todo: Manage images from Libs
 		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
 		{
-			UpdateStatus(eRequestStatus::Processing, TEXT("Requesting file from Figma API."));
+			UE_LOG_Figma2UMG(Display, TEXT("Requesting %u images in file %s from Figma API.", Requests->Requests.Num(), *Requests->FileKey));
 		}
 	}
 	else
@@ -394,7 +395,7 @@ void UFigmaImporter::DownloadNextImage()
 	FImageRequest* ImageRequest = RequestedImages.GetNextToDownload();
 	if (ImageRequest)
 	{
-		UpdateStatus(eRequestStatus::Processing, TEXT("Downloading image ")+ ImageRequest->ImageName + TEXT(" at ") + ImageRequest->URL);
+		UE_LOG_Figma2UMG(Display, TEXT("Downloading image %s at %s.", *ImageRequest->ImageName, *ImageRequest->URL));
 		ImageRequest->StartDownload(OnImageDownloadRequestCompleted);
 	}
 	else
@@ -423,7 +424,7 @@ void UFigmaImporter::OnPatchUAssets(bool Succeeded)
 		return;
 	}
 
-	UpdateStatus(eRequestStatus::Processing, TEXT("Post-patch UAssets."));
+	UE_LOG_Figma2UMG(Display, TEXT("Post-patch UAssets.", *ImageRequest->ImageName, *ImageRequest->URL));
 	File->PostPatch(OnPostPatchUAssetsDelegate);
 }
 

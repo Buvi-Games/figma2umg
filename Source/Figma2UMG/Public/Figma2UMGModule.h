@@ -28,10 +28,10 @@ FIGMA2UMG_API DECLARE_LOG_CATEGORY_EXTERN(LogFigma2UMG, Log, All);
 
 #define UE_LOG_Figma2UMG(Verbosity, Format, ...)																\
 {																												\
-	UE_LOG(LogFigma2UMG, Verbosity, TEXT("%s%s"), *FString::Printf(Format, ##__VA_ARGS__));						\
+	UE_LOG(LogFigma2UMG, Verbosity, Format, ##__VA_ARGS__);														\
 }
 
 #define UE_CLOG_Figma2UMG(Conditional, Verbosity, Format, ...)																\
 {																															\
-	UE_CLOG(Conditional, LogFigma2UMG, Verbosity, TEXT("%s%s"), *FString::Printf(Format, ##__VA_ARGS__));					\
+	UE_CLOG(Conditional, LogFigma2UMG, Verbosity, Format, ##__VA_ARGS__);													\
 }
