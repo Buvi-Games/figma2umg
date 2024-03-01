@@ -245,9 +245,14 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 				FText OutFailReason;
 				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 				{
+					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
 					File->PostSerialize(ContentRootFolder, JsonObj);
 
-					File->FixRemoteReferences(LibraryFileKeys);
+					if (LibraryFileKeys.Num() > 0)
+					{
+						UE_LOG_Figma2UMG(Display, TEXT("Fix Remote References"));
+						File->FixRemoteReferences(LibraryFileKeys);
+					}
 
 					UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
 					File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
@@ -360,6 +365,7 @@ void UFigmaImporter::RequestImageURLs()
 	}
 	else
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
 		File->Patch(OnPatchUAssetsDelegate);
 	}
 }
