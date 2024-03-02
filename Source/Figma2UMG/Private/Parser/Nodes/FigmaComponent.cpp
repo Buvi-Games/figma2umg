@@ -55,12 +55,6 @@ void UFigmaComponent::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	}
 
 	RefAsset = WidgetBP;
-
-	FFigmaComponentRef* ComponentRef = FigmaFile ? FigmaFile->FindComponentRef(GetId()) : nullptr;
-	if (ComponentRef)
-	{
-		ComponentRef->SetComponent(this);
-	}
 }
 
 
