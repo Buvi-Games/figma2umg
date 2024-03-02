@@ -59,7 +59,7 @@ void UFigmaComponent::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	FFigmaComponentRef* ComponentRef = FigmaFile ? FigmaFile->FindComponentRef(GetId()) : nullptr;
 	if (ComponentRef)
 	{
-		ComponentRef->SetAsset(GetAsset<UWidgetBlueprint>());
+		ComponentRef->SetComponent(this);
 	}
 }
 

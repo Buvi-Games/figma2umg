@@ -96,6 +96,30 @@ TObjectPtr<UFigmaComponentSet> UFigmaFile::FindComponentSetByKey(const FString& 
 	return nullptr;
 }
 
+void UFigmaFile::FixComponentSetRef()
+{
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
+	{
+		if (ComponentPair.Value.ComponentSetId.IsEmpty())
+			continue;
+
+		if (ComponentPair.Value.Remote)
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("File %s's Component %s is part of a remote ComponentSet %s."), *Name, *ComponentPair.Value.Name, *ComponentPair.Value.ComponentSetId);
+			continue;
+		}
+
+		if (ComponentSets.Contains(ComponentPair.Value.ComponentSetId))
+		{
+			ComponentPair.Value.SetComponentSet(&ComponentSets[ComponentPair.Value.ComponentSetId]);
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("File %s's Component %s is part of a ComponentSet %i not found."), *Name, *ComponentPair.Value.Name, *ComponentPair.Value.ComponentSetId);
+		}
+	}
+}
+
 void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
 {
 	TMap<FString, FFigmaComponentRef> PendingComponents;
@@ -146,11 +170,10 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 				{
 					Component->LoadOrCreateAssets(this);
 					UWidgetBlueprint* Asset = Component->GetAsset<UWidgetBlueprint>();
-					Element.Value.SetAsset(Asset);
 					TObjectPtr<UFigmaFile> OriginalFile = Component->GetFigmaFile();
 					if (OriginalFile && OriginalFile->Components.Contains(Element.Key))
 					{
-						OriginalFile->Components[Element.Key].SetAsset(Asset);
+						OriginalFile->Components[Element.Key].SetComponent(Component);
 					}
 				}
 			}
@@ -267,6 +290,13 @@ void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPai
 
 	ComponentRef.RemoteFileKey = LibraryFile.Key;
 	ComponentRef.SetComponent(Component);
+	if (!ComponentRef.ComponentSetId.IsEmpty())
+	{
+		if (FFigmaComponentSetRef* ComponentSet = LibraryFile.Value->FindComponentSetRef(ComponentRef.ComponentSetId))
+		{
+			ComponentRef.SetComponentSet(ComponentSet);
+		}
+	}
 
 	TArray<UFigmaInstance*> SubInstances;
 	Component->GetAllChildrenByType(SubInstances);

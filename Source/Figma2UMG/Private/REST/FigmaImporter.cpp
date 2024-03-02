@@ -248,6 +248,13 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
 					File->PostSerialize(ContentRootFolder, JsonObj);
 
+					for (TPair<FString, TObjectPtr<UFigmaFile>> LibPair : LibraryFileKeys)
+					{
+						LibPair.Value->FixComponentSetRef();
+					}
+
+					File->FixComponentSetRef();
+
 					if (LibraryFileKeys.Num() > 0)
 					{
 						UE_LOG_Figma2UMG(Display, TEXT("Fix Remote References"));

@@ -35,7 +35,7 @@ public:
 	FFigmaComponentSetRef* FindComponentSetRef(const FString& ComponentSetId);
 	TObjectPtr<UFigmaComponentSet> FindComponentSetByKey(const FString& Key);
 
-
+	void FixComponentSetRef();
 	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
 	void BuildImageDependency(FString FileKey, FImageRequests& ImageRequests);

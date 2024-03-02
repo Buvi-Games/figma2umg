@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaComponentSetRef.h"
 #include "FigmaDocumentationLink.h"
 #include "FigmaReference.h"
 #include "Parser/Nodes/FigmaComponent.h"
@@ -24,13 +25,26 @@ public:
 	void SetComponent(TObjectPtr<UFigmaComponent> Value) { FigmaComponent = Value; }
 	TObjectPtr<UFigmaComponent>  GetComponent() const { return FigmaComponent; }
 
-	void SetAsset(TObjectPtr<UWidgetBlueprint> Value) { ComponentAsset = Value; }
-	TObjectPtr<UWidgetBlueprint>  GetAsset() const { return ComponentAsset; }
+	void SetComponentSet(FFigmaComponentSetRef* Value) { FigmaComponentSetRef = Value; }
+
+	TObjectPtr<UWidgetBlueprint>  GetAsset() const
+	{
+		if (FigmaComponentSetRef)
+		{
+			return FigmaComponentSetRef->GetAsset();
+		}
+
+		if (FigmaComponent)
+		{
+			return FigmaComponent->GetAsset<UWidgetBlueprint>();
+		}
+
+		return nullptr;
+	}
 
 protected:
 	UPROPERTY()
 	TObjectPtr<UFigmaComponent> FigmaComponent = nullptr;
 
-	UPROPERTY()
-	TObjectPtr<UWidgetBlueprint> ComponentAsset = nullptr;
+	FFigmaComponentSetRef* FigmaComponentSetRef = nullptr;
 };
