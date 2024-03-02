@@ -9,6 +9,9 @@
 #include "Components/WidgetSwitcher.h"
 #include "Parser/Properties/FigmaComponentProperty.h"
 
+class UK2Node_CallFunction;
+class UK2Node_CallFunctionOnMember;
+class UK2Node_Event;
 class UK2Node_SwitchString;
 class UK2Node_FunctionEntry;
 class UK2Node_FunctionResult;
@@ -35,5 +38,7 @@ private:
 	static FIGMA2UMG_API UK2Node_IfThenElse* PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, UEdGraphPin* ConditionValuePin, UEdGraphPin* ThenReturnPin, UEdGraphPin* ElseReturnPin);
 	static FIGMA2UMG_API UK2Node_SwitchString* PatchSwitchStringNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, const TArray<FString>& PinNames);
 	static FIGMA2UMG_API UK2Node_FunctionResult* PatchFunctionResult(UEdGraph* Graph, FVector2D NodeLocation, const FString& ReturnValue);
+
+	static const UK2Node_CallFunction* AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UUserWidget> Widget, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation);
 
 };

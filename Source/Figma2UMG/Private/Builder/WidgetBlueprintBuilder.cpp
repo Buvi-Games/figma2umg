@@ -3,6 +3,10 @@
 
 #include "Builder/WidgetBlueprintBuilder.h"
 
+#include "BlueprintFunctionNodeSpawner.h"
+#include "Figma2UMGModule.h"
+#include "K2Node_CallFunctionOnMember.h"
+#include "K2Node_Event.h"
 #include "K2Node_VariableGet.h"
 #include "K2Node_IfThenElse.h"
 #include "K2Node_FunctionEntry.h"
@@ -11,13 +15,13 @@
 #include "K2Node_VariableSet.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/UserWidget.h"
+#include "Blueprint/WidgetTree.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 
 static const FVector2D BaseSize = FVector2D(300.0f, 150.0f);
 static const FVector2D Pan = FVector2D(20.0f, 20.0f);
 static const FName DefaultPinName("Default");
 static const FName TargetPinName("Target");
-static const FName SelfPinName("Self");
 
 void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FBPVariableDescription& VariableDescription, const FName& VariableName)
 {
@@ -153,7 +157,7 @@ void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> Wi
 		FunctionGraph->GetNodesOfClass<UK2Node_VariableSet>(ExistingSetNodes);
 		for (UK2Node_VariableSet* SetNode : ExistingSetNodes)
 		{
-			UEdGraphPin* TargetInPin = SetNode->FindPin(SelfPinName, EGPD_Input);
+			UEdGraphPin* TargetInPin = SetNode->FindPin(UEdGraphSchema_K2::PSC_Self, EGPD_Input);
 			if (TargetInPin && TargetInPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object && TargetInPin->PinType.PinSubCategoryObject == UWidgetSwitcher::StaticClass())
 			{
 				TargetOutPin->MakeLinkTo(TargetInPin);
@@ -179,33 +183,109 @@ void WidgetBlueprintBuilder::SetPropertyValue(TObjectPtr<UUserWidget> Widget, co
 		return;
 
 	UClass* WidgetClass = Widget->GetClass();
-	FProperty* Property = WidgetClass ? FindFProperty<FProperty>(WidgetClass, VariableName) : nullptr;
-	if(Property)
+	switch (ComponentProperty.Type)
 	{
-		switch (ComponentProperty.Type)
+		case EFigmaComponentPropertyType::BOOLEAN:
 		{
-			case EFigmaComponentPropertyType::BOOLEAN:
+			FProperty* Property = WidgetClass ? FindFProperty<FProperty>(WidgetClass, VariableName) : nullptr;
+			if (Property)
 			{
 				static FString True("True");
 				const FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property);
 				void* Value = BoolProperty->ContainerPtrToValuePtr<uint8>(Widget);
 				BoolProperty->SetPropertyValue(Value, ComponentProperty.Value.Compare(True, ESearchCase::IgnoreCase) == 0);
 			}
-			break;
-			case EFigmaComponentPropertyType::TEXT:
+		}
+		break;
+		case EFigmaComponentPropertyType::TEXT:
+		{
+
+			FProperty* Property = WidgetClass ? FindFProperty<FProperty>(WidgetClass, VariableName) : nullptr;
+			if (Property)
 			{
 				const FStrProperty* StringProperty = CastField<FStrProperty>(Property);
 				void* Value = StringProperty->ContainerPtrToValuePtr<uint8>(Widget);
 				StringProperty->SetPropertyValue(Value, ComponentProperty.Value);
 			}
-			break;
-			case EFigmaComponentPropertyType::INSTANCE_SWAP:
-				//TODO:
-			break;
-			case EFigmaComponentPropertyType::VARIANT:
-				//TODO:
-			break;
 		}
+		break;
+		case EFigmaComponentPropertyType::INSTANCE_SWAP:
+			//TODO:
+		break;
+		case EFigmaComponentPropertyType::VARIANT:
+			if (UWidgetTree* ParentTree = Cast<UWidgetTree>(Widget->GetOuter()))
+			{
+				TObjectPtr<UWidgetBlueprint> WidgetBP = Cast<UWidgetBlueprint>(ParentTree->GetOuter());
+				if (WidgetBP)
+				{
+					TObjectPtr<UEdGraph> EventGraph = nullptr;
+					TObjectPtr<UK2Node_Event> EventNode = nullptr;
+					for (TObjectPtr<UEdGraph> CurrEventGraph : WidgetBP->UbergraphPages)
+					{
+						TObjectPtr<UEdGraphNode>* FoundNode = CurrEventGraph->Nodes.FindByPredicate([](const TObjectPtr<UEdGraphNode> Node)
+							{
+								TObjectPtr<UK2Node_Event> EventNode = Cast<UK2Node_Event>(Node);
+								return EventNode && EventNode->EventReference.GetMemberName() == "PreConstruct";
+							});
+						if (FoundNode)
+						{
+							EventNode = Cast<UK2Node_Event>(*FoundNode);
+							EventGraph = CurrEventGraph;
+						}
+					}
+					
+					if (EventNode)
+					{
+						UEdGraphPin* ThenPin = EventNode->GetThenPin();
+						if(!ThenPin)
+						{
+							UE_LOG_Figma2UMG(Error, TEXT("Can't find PreConstruct->ThenPin in UWidgetBlueprint %s."), *WidgetBP->GetName());
+							return;
+						}
+
+						while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
+						{
+							UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
+							if (!ConnectedNode)
+							{
+								break;
+							}
+							else if (ConnectedNode->IsA<UK2Node_CallFunctionOnMember>())
+							{
+								UK2Node_CallFunctionOnMember* CallFunctionNode = Cast<UK2Node_CallFunctionOnMember>(ConnectedNode);
+								if (CallFunctionNode->MemberVariableToCallOn.GetMemberName() == Widget->GetName())
+								{
+									//Nothing to do.
+									return;
+								}
+							}
+
+							ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
+						}
+
+						const FVector2D StartPos(EventNode->NodePosX, EventNode->NodePosY);
+						const FVector2D GetGraphPosition = StartPos + FVector2D(BaseSize.X + Pan.X, BaseSize.Y + Pan.Y);
+						const UK2Node_VariableGet* VariableGetNode = PatchVariableGetNode(WidgetBP, EventGraph, *Widget->GetName(), GetGraphPosition);
+
+						const FVector2D CallFunctionPosition = StartPos + FVector2D(BaseSize.X + Pan.X, 0.0f);
+						FString FunctionName = "Set" + VariableName.ToString();
+						FFieldVariant Field = FindUFieldOrFProperty(WidgetClass, *FunctionName);
+						UFunction* Function = Field.Get<UFunction>();
+						const UK2Node_CallFunction* CallFunctionNode = AddCallFunctionOnMemberNode(EventGraph, Widget, Function,  ThenPin, VariableGetNode->GetValuePin(), CallFunctionPosition);
+
+						UEdGraphPin* InputValue = CallFunctionNode->FindPin(VariableName, EGPD_Input);
+						if (InputValue)
+						{
+							InputValue->DefaultValue = ComponentProperty.Value;
+						}
+					}
+					else
+					{
+						UE_LOG_Figma2UMG(Error, TEXT("Can't find PreConstruct in UWidgetBlueprint %s."), *WidgetBP->GetName());
+					}
+				}
+			}
+		break;
 	}
 }
 
@@ -554,3 +634,28 @@ UK2Node_FunctionResult* WidgetBlueprintBuilder::PatchFunctionResult(UEdGraph* Gr
 	
 	return FunctionResult;
 }
+
+const UK2Node_CallFunction* WidgetBlueprintBuilder::AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UUserWidget> Widget, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation)
+{
+	UBlueprintFunctionNodeSpawner* Spawner = UBlueprintFunctionNodeSpawner::Create(Function, Graph);
+	TSet<FBindingObject> Bindings;
+	Bindings.Add(FBindingObject(Widget));
+	UEdGraphNode* Node = Spawner->Invoke(Graph, Bindings, NodeLocation);
+	if (Node)
+	{
+		UEdGraphPin* ExecutePin = Node->FindPin(UEdGraphSchema_K2::PN_Execute);
+		if(ExecPin && ExecutePin)
+		{
+			ExecPin->MakeLinkTo(ExecutePin);
+		}
+
+
+		UEdGraphPin* TargetInPin = Node->FindPin(UEdGraphSchema_K2::PSC_Self);
+		if(TargetInPin && TargetPin)
+		{
+			TargetPin->MakeLinkTo(TargetInPin);
+		}
+	}
+	return Cast<UK2Node_CallFunction>(Node);
+}
+
