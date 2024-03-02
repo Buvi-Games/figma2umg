@@ -101,6 +101,50 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		}
 		ParentWidgetSwitcher = SwitcherBuilder.GetWidgetSwitcher();
 	}
+
+	for (TPair< FString, FFigmaComponentPropertyDefinition> PropertyDefinition : ComponentPropertyDefinitions)
+	{
+		for (int index = 0; index < PropertyDefinition.Value.VariantOptions.Num(); index++)
+		{
+			FString VariantOption = PropertyDefinition.Value.VariantOptions[index];
+			FString ChildName = PropertyDefinition.Key + "=" + VariantOption;
+
+			UFigmaNode** Found = Children.FindByPredicate([ChildName](UFigmaNode* Node) {return Node->GetNodeName() == ChildName; });
+			if(Found)
+			{
+				UFigmaNode* Child = *Found;
+				UFigmaComponent* Component = Cast<UFigmaComponent>(Child);
+				if (!Component)
+				{
+					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s has Child %s of type %s. Component type expected."), *GetNodeName(), *Child->GetNodeName(), *Child->GetClass()->GetDisplayNameText().ToString());
+					continue;
+				}
+
+				if (TObjectPtr<UWidgetSwitcher> Switcher = FindSwitcher(PropertyDefinition.Key))
+				{
+					TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
+					TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
+					if (OldWidget)
+					{
+						Switcher->ReplaceChildAt(index, NewWidget);
+					}
+					else
+					{
+						Switcher->AddChild(NewWidget);
+					}
+				}
+				else
+				{
+					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s can't fins UWidgetSwitcher %s."), *GetNodeName(), *PropertyDefinition.Key);
+				}
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s don't have expected Child %s."), *GetNodeName(), *ChildName);
+			}
+		}
+	}
+
 	return TopWidgetSwitcher;
 	
 }
@@ -249,4 +293,25 @@ void UFigmaComponentSet::PatchBinds()
 		return;
 
 	Super::PatchBinds(WidgetBp);
+}
+
+TObjectPtr<UWidgetSwitcher> UFigmaComponentSet::FindSwitcher(const FString& SwitcherName) const
+{
+	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
+	TArray<UWidget*> Widgets;
+	WidgetBp->WidgetTree->GetAllWidgets(Widgets);
+
+	for (UWidget* Widget : Widgets)
+	{
+		UWidgetSwitcher* Switcher = Cast<UWidgetSwitcher>(Widget);
+		if (!Switcher)
+			continue;
+
+		if (Switcher->GetName() == SwitcherName)
+		{
+			return Switcher;
+		}
+	}
+
+	return nullptr;
 }

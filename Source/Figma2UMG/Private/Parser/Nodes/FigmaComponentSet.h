@@ -43,6 +43,8 @@ protected:
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);
 	void PatchBinds();
 
+	TObjectPtr<UWidgetSwitcher> FindSwitcher(const FString& SwitcherName) const;
+
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
 

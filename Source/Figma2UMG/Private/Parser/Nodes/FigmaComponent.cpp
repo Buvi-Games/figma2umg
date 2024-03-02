@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/FigmaComponent.h"
 
+#include "FigmaInstance.h"
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
@@ -86,19 +87,7 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	{
 		UE_LOG_Figma2UMG(Display, TEXT("Adding in-place Instance for Component %s. This should be a template."), *GetUniqueName());
 
-		TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
-		TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
-
-		TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
-		UWidget* NewWidget = Template->Create(OwningObject);
-
-		if (NewWidget)
-		{
-			NewWidget->CreatedFromPalette();
-		}
-
-		WidgetInstance = NewWidget;
-		InstanceAsset = WidgetInstance;
+		InstanceAsset = WidgetInstance = CreateInstance(ParentNode->GetAssetOuter());
 	}
 
 	TObjectPtr<UPanelWidget> PanelWidget = GetContainerWidget();
@@ -189,6 +178,36 @@ void UFigmaComponent::PatchBinds()
 		return;
 
 	Super::PatchBinds(WidgetBp);
+}
+
+UWidget* UFigmaComponent::CreateInstance(UObject* InAssetOuter) const
+{
+	TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(InAssetOuter);
+	if (!OwningObject)
+	{
+		if(InAssetOuter)
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaComponent::CreateInstance] AssetOuter %s is of type %s but we requite a UWidgetTree"), *InAssetOuter->GetName(), *InAssetOuter->GetClass()->GetDisplayNameText().ToString());
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaComponent::CreateInstance] AssetOuter is nullptr"));
+		}
+
+		return nullptr;
+	}
+	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
+	TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
+
+	TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
+	UWidget* NewWidget = Template->Create(OwningObject);
+
+	if (NewWidget)
+	{
+		NewWidget->CreatedFromPalette();
+	}
+
+	return NewWidget;
 }
 
 void UFigmaComponent::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
