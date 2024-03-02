@@ -57,6 +57,9 @@ protected:
 	void AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile, TObjectPtr<UFigmaComponent> Component, TMap<FString, FFigmaComponentRef>& PendingComponents);
 	void ExecuteDelegate(const bool Succeeded);
 
+	void PatchPreInsertWidget();
+	bool PatchPostInsertWidget();
+
 	void PatchWidgetProperties();
 	void PatchWidgetBinds();
 

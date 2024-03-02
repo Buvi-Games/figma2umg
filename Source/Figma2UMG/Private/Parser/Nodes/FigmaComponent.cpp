@@ -70,6 +70,8 @@ void UFigmaComponent::PrePatchWidget()
 
 TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
+	UE_LOG_Figma2UMG(Display, TEXT("PatchPreInsertWidget [%s]"), *GetUniqueName());
+
 	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
 	WidgetToPatch = Widget->WidgetTree->RootWidget;
 	Widget->WidgetTree->RootWidget = Patch(WidgetToPatch);
@@ -82,6 +84,8 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	TObjectPtr<UWidget> WidgetInstance = nullptr;
 	if (ParentNode)
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("Adding in-place Instance for Component %s. This should be a template."), *GetUniqueName());
+
 		TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
 		TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
 
@@ -98,7 +102,8 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	}
 
 	TObjectPtr<UPanelWidget> PanelWidget = GetContainerWidget();
-	IFigmaContainer::ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([PanelWidget](UFigmaNode& ChildNode, const int Index)
+	FString NodeName = GetNodeName();
+	IFigmaContainer::ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, PanelWidget](UFigmaNode& ChildNode, const int Index)
 		{
 			TObjectPtr<UWidget> OldWidget = PanelWidget->GetChildAt(Index);
 			TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
@@ -109,6 +114,7 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 					PanelWidget->SetFlags(RF_Transactional);
 					PanelWidget->Modify();
 
+					UE_LOG_Figma2UMG(Display, TEXT("[Widget Insert] Parent [%s] Child [%s]."), *NodeName, *ChildNode.GetNodeName());
 					if (Index < PanelWidget->GetChildrenCount())
 					{
 						PanelWidget->ReplaceChildAt(Index, NewWidget);

@@ -3,6 +3,7 @@
 
 #include "Parser/FigmaFile.h"
 
+#include "Figma2UMGModule.h"
 #include "Interfaces/FigmaImageRequester.h"
 #include "Nodes/FigmaDocument.h"
 #include "Nodes/FigmaInstance.h"
@@ -103,7 +104,6 @@ void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>
 		if (!Element.Value.Remote)
 			continue;
 
-		
 		if(Element.Value.GetComponent() != nullptr)
 			continue;
 
@@ -215,23 +215,11 @@ void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
 	CurrentProcessDelegate = ProcessDelegate;
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			for (TPair<FString, FFigmaComponentRef>& Element : Components)
+			FGCScopeGuard GCScopeGuard;
+
+			PatchPreInsertWidget();
+			if (PatchPostInsertWidget())
 			{
-				if (!Element.Value.Remote)
-					continue;
-
-				if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
-				{
-					Component->PatchPreInsertWidget(nullptr);
-					Component->PatchPostInsertWidget();
-				}
-			}
-
-			if (Document)
-			{
-				Document->PatchPreInsertWidget(nullptr);
-				Document->PatchPostInsertWidget();
-
 				PatchWidgetBinds();
 				PatchWidgetProperties();
 
@@ -275,6 +263,8 @@ void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
 
 void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile, TObjectPtr<UFigmaComponent> Component, TMap<FString, FFigmaComponentRef>& PendingComponents)
 {
+	UE_LOG_Figma2UMG(Display, TEXT("Adding remote Component %s key:%s"), *ComponentRef.Name, *ComponentRef.Key);
+
 	ComponentRef.RemoteFileKey = LibraryFile.Key;
 	ComponentRef.SetComponent(Component);
 
@@ -288,6 +278,7 @@ void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPai
 
 		if (LibraryFile.Value->Components.Contains(SubInstance->GetComponentId()))
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->GetComponentId());
 			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubInstance->GetComponentId()];
 			if (!RemoteCommponentRef.Remote)
 			{
@@ -304,6 +295,46 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	{
 //		CurrentProcessDelegate.Unbind();
 	}
+}
+
+void UFigmaFile::PatchPreInsertWidget()
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		{
+			Component->PatchPreInsertWidget(nullptr);
+		}
+	}
+
+	if (Document)
+	{
+		Document->PatchPreInsertWidget(nullptr);
+	}
+}
+
+bool UFigmaFile::PatchPostInsertWidget()
+{
+	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (!Element.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		{
+			Component->PatchPostInsertWidget();
+		}
+	}
+
+	if (Document)
+	{
+		Document->PatchPostInsertWidget();
+		return true;
+	}
+	return false;
 }
 
 void UFigmaFile::PatchWidgetBinds()

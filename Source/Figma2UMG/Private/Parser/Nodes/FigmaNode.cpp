@@ -162,6 +162,8 @@ void UFigmaNode::PrePatchWidget()
 
 TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
+	UE_LOG_Figma2UMG(Display, TEXT("PatchPreInsertWidget [%s]"), *GetUniqueName());
+
 	UPanelWidget* ParentWidget = Cast<UPanelWidget>(WidgetToPatch);
 	if(IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
 	{
@@ -172,7 +174,8 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 	IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this);
 	if (FigmaContainer && ParentWidget)
 	{
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([ParentWidget](UFigmaNode& ChildNode, const int Index)
+		FString NodeName = GetNodeName();
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, ParentWidget](UFigmaNode& ChildNode, const int Index)
 			{
 				TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
 				TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
@@ -183,6 +186,7 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 						ParentWidget->SetFlags(RF_Transactional);
 						ParentWidget->Modify();
 
+						UE_LOG_Figma2UMG(Display, TEXT("[Widget Insert] Parent [%s] Child [%s]."), *NodeName, *ChildNode.GetNodeName());
 						if (Index < ParentWidget->GetChildrenCount())
 						{
 							ParentWidget->ReplaceChildAt(Index, NewWidget);
@@ -199,8 +203,14 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 	return WidgetToPatch;
 }
 
+void UFigmaNode::InsertSubWidgets()
+{
+}
+
 void UFigmaNode::PatchPostInsertWidget()
 {
+	UE_LOG_Figma2UMG(Display, TEXT("PatchPostInsertWidget [%s]"), *GetUniqueName());
+
 	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
 	{
 		if (TObjectPtr<UWidget> Widget = WidgetOwner->GetTopWidget())
