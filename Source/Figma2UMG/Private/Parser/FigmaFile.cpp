@@ -177,8 +177,9 @@ void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
 	CurrentProcessDelegate = ProcessDelegate;
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
+			FGCScopeGuard GCScopeGuard;
+
 			PatchPreInsertWidget();
-			InsertSubWidgets();
 			if (PatchPostInsertWidget())
 			{
 				PatchWidgetBinds();
@@ -274,26 +275,6 @@ void UFigmaFile::PatchPreInsertWidget()
 	if (Document)
 	{
 		Document->PatchPreInsertWidget(nullptr);
-	}
-}
-
-void UFigmaFile::InsertSubWidgets()
-{
-
-	for (TPair<FString, FFigmaComponentRef>& Element : Components)
-	{
-		if (!Element.Value.Remote)
-			continue;
-
-		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
-		{
-			Component->InsertSubWidgets();
-		}
-	}
-
-	if (Document)
-	{
-		Document->InsertSubWidgets();
 	}
 }
 

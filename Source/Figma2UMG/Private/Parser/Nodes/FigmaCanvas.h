@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/FigmaContainer.h"
+#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaColor.h"
 #include "Parser/Properties/FigmaExportSetting.h"
@@ -12,14 +13,26 @@
 
 #include "FigmaCanvas.generated.h"
 
+class UCanvasPanel;
+
 UCLASS()
-class UFigmaCanvas : public UFigmaNode, public IFigmaContainer
+class UFigmaCanvas : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
 {
 public:
 	GENERATED_BODY()
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override { return FVector2D::ZeroVector; }
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
+
+	// IWidgetOwner
+	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void Reset() override;
+	virtual TObjectPtr<UWidget> GetTopWidget() const override;
+	virtual FVector2D GetTopWidgetPosition() const override;
+
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
+
+	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
@@ -40,4 +53,7 @@ protected:
 
 	UPROPERTY()
 	TArray<FFigmaExportSetting> ExportSettings;
+
+	UPROPERTY()
+	UCanvasPanel* Canvas;
 };

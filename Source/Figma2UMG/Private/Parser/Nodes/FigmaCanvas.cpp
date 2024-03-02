@@ -6,11 +6,15 @@
 #include "Figma2UMGModule.h"
 #include "Components/CanvasPanel.h"
 
-
-TObjectPtr<UWidget> UFigmaCanvas::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
+void UFigmaCanvas::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
-	UCanvasPanel* Canvas = nullptr;
-	if(WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
+	Function.ExecuteIfBound(*Canvas);
+}
+
+TObjectPtr<UWidget> UFigmaCanvas::Patch(TObjectPtr<UWidget> WidgetToPatch)
+{
+	Canvas = nullptr;
+	if (WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
 	{
 		if (WidgetToPatch->GetName() != GetUniqueName())
 		{
@@ -25,8 +29,29 @@ TObjectPtr<UWidget> UFigmaCanvas::PatchPreInsertWidget(TObjectPtr<UWidget> Widge
 		Canvas = NewObject<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
 	}
 
-
-	Super::PatchPreInsertWidget(Canvas);
-
 	return Canvas;
+}
+
+void UFigmaCanvas::Reset()
+{
+	Canvas = nullptr;
+}
+
+TObjectPtr<UWidget> UFigmaCanvas::GetTopWidget() const
+{
+	return Canvas;
+}
+
+FVector2D UFigmaCanvas::GetTopWidgetPosition() const
+{
+	return FVector2D::Zero();
+}
+
+TObjectPtr<UPanelWidget> UFigmaCanvas::GetContainerWidget() const
+{
+	return Canvas;
+}
+
+void UFigmaCanvas::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
+{
 }

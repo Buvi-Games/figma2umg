@@ -54,7 +54,6 @@ protected:
 	void ExecuteDelegate(const bool Succeeded);
 
 	void PatchPreInsertWidget();
-	void InsertSubWidgets();
 	bool PatchPostInsertWidget();
 
 	void PatchWidgetProperties();
