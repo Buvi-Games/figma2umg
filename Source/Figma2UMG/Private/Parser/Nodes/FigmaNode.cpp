@@ -162,6 +162,8 @@ void UFigmaNode::PrePatchWidget()
 
 TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
+	UE_LOG_Figma2UMG(Display, TEXT("PatchPreInsertWidget [%s]"), *GetUniqueName());
+
 	UPanelWidget* ParentWidget = Cast<UPanelWidget>(WidgetToPatch);
 	if(IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
 	{
@@ -201,8 +203,14 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 	return WidgetToPatch;
 }
 
+void UFigmaNode::InsertSubWidgets()
+{
+}
+
 void UFigmaNode::PatchPostInsertWidget()
 {
+	UE_LOG_Figma2UMG(Display, TEXT("PatchPostInsertWidget [%s]"), *GetUniqueName());
+
 	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
 	{
 		if (TObjectPtr<UWidget> Widget = WidgetOwner->GetTopWidget())

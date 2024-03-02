@@ -61,6 +61,8 @@ void UFigmaComponent::PrePatchWidget()
 
 TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
+	UE_LOG_Figma2UMG(Display, TEXT("PatchPreInsertWidget [%s]"), *GetUniqueName());
+
 	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
 	WidgetToPatch = Widget->WidgetTree->RootWidget;
 	Widget->WidgetTree->RootWidget = Patch(WidgetToPatch);
