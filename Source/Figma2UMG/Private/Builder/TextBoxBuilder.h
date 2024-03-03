@@ -21,6 +21,7 @@ public:
 	void Reset();
 
 	float ConvertFontSizeFromDisplayToNative(float DisplayFontSize) const;
+	void SetupWidget(TObjectPtr<UWidget> Widget);
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> TextBlock = nullptr;

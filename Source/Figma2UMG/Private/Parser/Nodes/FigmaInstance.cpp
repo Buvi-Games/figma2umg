@@ -89,6 +89,28 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	return WidgetToPatch;
 }
 
+void UFigmaInstance::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaInstance %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+
+	if (!IsMissingComponent)
+	{
+		InstanceAsset = Widget;
+		if (!InstanceAsset)
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[SetupWidget] UFigmaInstance %s received a null UWidget."), *GetNodeName());
+		}
+	}
+	else
+	{
+		BuilderFallback.SetupWidget(Widget);
+		InstanceAsset = BuilderFallback.Image;
+	}
+}
+
 void UFigmaInstance::PostInsert() const
 {
 	TObjectPtr<UWidget> TopWidget = GetTopWidget();

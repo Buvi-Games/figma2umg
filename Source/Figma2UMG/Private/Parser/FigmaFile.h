@@ -60,8 +60,14 @@ protected:
 	void PatchPreInsertWidget();
 	bool PatchPostInsertWidget();
 
-	void PatchWidgetProperties();
+	void PatchWidgetProperties() const;
 	void PatchWidgetBinds();
+
+	void CompileBPs();
+	void ReloadBPAssets();
+	void ResetWidgets();
+	void LoadAssets();
+	void FindWidgets();
 
 	UPROPERTY()
 	int SchemaVersion = 0;

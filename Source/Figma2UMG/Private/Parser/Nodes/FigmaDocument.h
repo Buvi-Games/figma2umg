@@ -23,6 +23,7 @@ public:
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const override { return FigmaFile; }
 	virtual void PrePatchWidget() override;
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;

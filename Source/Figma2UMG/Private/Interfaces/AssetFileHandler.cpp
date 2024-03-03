@@ -8,6 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
 
 template <>
 UWidgetBlueprint* IFigmaFileHandle::GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>(UWidgetBlueprintFactory* Factory)
@@ -128,4 +129,32 @@ void IFigmaFileHandle::ResetAsset()
 {
 	Asset = nullptr;
 	AssetOuter = nullptr;
+}
+
+void IFigmaFileHandle::CompileBP(FString NodeNameForLog)
+{
+	if(!Asset)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("Trying to compile %s but there is no UAsset."), *NodeNameForLog);
+		return;
+	}
+
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	if (!WidgetBP)
+	{
+		//Should be fine, this is not a BP
+		return;
+	}
+
+	Asset = nullptr;
+	AssetOuter = nullptr;
+
+	FCompilerResultsLog LogResults;
+	LogResults.SetSourcePath(WidgetBP->GetPathName());
+	LogResults.BeginEvent(TEXT("Compile"));
+	LogResults.bLogDetailedResults = true;
+
+	FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
+
+	LoadAsset<UWidgetBlueprint>();
 }

@@ -19,6 +19,8 @@ public:
 	virtual ~FSwitcherBuilder() = default;
 
 	TObjectPtr<UWidgetSwitcher> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter);
+	void SetupWidget(TObjectPtr<UWidget> Widget);
+	void FindAndSetWidget(const TArray<UWidget*>& Widgets);
 	void AddVariation(UWidgetBlueprint* WidgetBP);
 
 	void Reset();
@@ -26,6 +28,7 @@ public:
 
 	TObjectPtr<UWidgetSwitcher> GetWidgetSwitcher() const { return WidgetSwitcher; }
 	FString GetPropertyName() const {return PropertyName;}
+
 private:
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> WidgetSwitcher = nullptr;

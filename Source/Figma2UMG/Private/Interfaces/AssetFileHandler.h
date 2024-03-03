@@ -42,6 +42,7 @@ public:
 	UObject* GetOuter() const { return AssetOuter; }
 
 	void ResetAsset();
+	void CompileBP(FString NodeNameForLog);
 protected:
 	template<class AssetType, class FactoryType>
 	AssetType* GetOrCreateAsset(FactoryType* Factory = nullptr);

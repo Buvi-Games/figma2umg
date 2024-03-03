@@ -49,6 +49,7 @@ public:
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
 	virtual void PostInsert() const override;
 	virtual void Reset() override;
 

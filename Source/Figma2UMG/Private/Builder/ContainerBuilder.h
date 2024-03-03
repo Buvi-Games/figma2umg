@@ -22,6 +22,7 @@ public:
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName) override;
+	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
 	virtual void Reset() override;
 
 	void SetLayout(EFigmaLayoutMode InLayoutMode, EFigmaLayoutWrap InLayoutWrap);
@@ -33,7 +34,7 @@ private:
 	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName);
 
 	UPROPERTY()
-	TObjectPtr<UPanelWidget> Canvas = nullptr;
+	TObjectPtr<UPanelWidget> Conainter = nullptr;
 
 	EFigmaLayoutMode LayoutMode = EFigmaLayoutMode::NONE;
 	EFigmaLayoutWrap LayoutWrap = EFigmaLayoutWrap::NO_WRAP;
@@ -82,6 +83,6 @@ TObjectPtr<WidgetType> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatc
 		}
 	}
 
-	Canvas = PatchedWidget;
+	Conainter = PatchedWidget;
 	return PatchedWidget;
 }

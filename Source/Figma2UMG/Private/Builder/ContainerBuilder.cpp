@@ -3,6 +3,7 @@
 
 #include "Builder/ContainerBuilder.h"
 
+#include "Figma2UMGModule.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/HorizontalBox.h"
@@ -16,9 +17,9 @@ void FContainerBuilder::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 
 	Super::ForEach(Function);
 
-	if (Canvas)
+	if (Conainter)
 	{
-		Function.ExecuteIfBound(*Canvas);
+		Function.ExecuteIfBound(*Conainter);
 	}
 }
 
@@ -31,7 +32,7 @@ void FContainerBuilder::SetLayout(EFigmaLayoutMode InLayoutMode, EFigmaLayoutWra
 TObjectPtr<UWidget> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName)
 {
 	Super::Patch(WidgetToPatch, AssetOuter, WidgetName);
-	Canvas = nullptr;
+	Conainter = nullptr;
 	
 	switch (LayoutMode)
 	{
@@ -72,10 +73,35 @@ TObjectPtr<UWidget> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, 
 
 }
 
+void FContainerBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	FBorderBuilder::SetupWidget(Widget);
+	if (const TObjectPtr<UBorder> BorderWrapper = GetBorder())
+	{
+		Conainter = Cast<UPanelWidget>(BorderWrapper->GetContent());
+	}
+	else
+	{
+		Conainter = Cast<UPanelWidget>(Widget);
+	}
+
+	if(!Conainter)
+	{
+		if (Widget)
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[FContainerBuilder::SetupWidget] Fail to setup UPanelWidget from UWidget %s of type %s."), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[FContainerBuilder::SetupWidget] Fail to setup UPanelWidget from a null Widget."));
+		}
+	}
+}
+
 void FContainerBuilder::Reset()
 {
 	Super::Reset();
-	Canvas = nullptr;
+	Conainter = nullptr;
 }
 
 TObjectPtr<UWidget> FContainerBuilder::GetTopWidget() const
@@ -87,11 +113,11 @@ TObjectPtr<UWidget> FContainerBuilder::GetTopWidget() const
 	}
 	else
 	{
-		return Canvas;
+		return Conainter;
 	}
 }
 
 TObjectPtr<UPanelWidget> FContainerBuilder::GetContainerWidget() const
 {
-	return Canvas;
+	return Conainter;
 }

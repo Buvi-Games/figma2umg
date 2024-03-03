@@ -52,6 +52,16 @@ TObjectPtr<UWidget> UFigmaText::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	return Builder.TextBlock;
 }
 
+void UFigmaText::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaText %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+
+	Builder.SetupWidget(Widget);
+}
+
 void UFigmaText::PostInsert() const
 {
 	TObjectPtr<UWidget> TopWidget = GetTopWidget();

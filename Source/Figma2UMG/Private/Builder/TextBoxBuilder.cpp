@@ -3,6 +3,7 @@
 
 #include "Builder/TextBoxBuilder.h"
 
+#include "Figma2UMGModule.h"
 #include "Components/TextBlock.h"
 #include "Engine/UserInterfaceSettings.h"
 #include "Parser/Properties/FigmaPaint.h"
@@ -56,4 +57,21 @@ float FTextBoxBuilder::ConvertFontSizeFromDisplayToNative(float DisplayFontSize)
 	const float NativeSize = DisplayFontSize * FontDisplayDPI / static_cast<float>(FontConstants::RenderDPI);
 	const float RoundedSize = FMath::GridSnap(NativeSize, 0.01f);
 	return RoundedSize;
+}
+
+void FTextBoxBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	TextBlock = Cast<UTextBlock>(Widget);
+
+	if (!TextBlock)
+	{
+		if (Widget)
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[FTextBoxBuilder::SetupWidget] Fail to setup UPanelWidget from UWidget %s of type %s."), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[FTextBoxBuilder::SetupWidget] Fail to setup UPanelWidget from a null Widget."));
+		}
+	}
 }

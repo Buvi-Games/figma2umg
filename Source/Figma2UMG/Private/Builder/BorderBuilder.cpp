@@ -95,6 +95,26 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 	return Border;
 }
 
+void FBorderBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	Border = Cast<UBorder>(Widget);
+	if (!Border)
+	{
+		const bool RequireBorder = ((Fill && Fill->Visible) || (Stroke && Stroke->Visible));
+		if (RequireBorder || ALWAYS_BORDER)
+		{
+			if(Widget)
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[FBorderBuilder::SetupWidget] Fail to setup UBorder from UWidget %s of type %s."), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Warning, TEXT("[FBorderBuilder::SetupWidget] Fail to setup UBorder from a null UWidget."));
+			}
+		}
+	}
+}
+
 void FBorderBuilder::SetFill() const
 {
 	if (Border)
