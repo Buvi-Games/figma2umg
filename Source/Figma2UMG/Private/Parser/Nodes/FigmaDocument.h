@@ -28,6 +28,7 @@ public:
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* InFigmaFile) override;
+	virtual void LoadAssets() override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); }

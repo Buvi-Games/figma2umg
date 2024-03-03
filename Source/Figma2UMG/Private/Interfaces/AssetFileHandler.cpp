@@ -107,7 +107,24 @@ UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>
 	return TextureAsset;
 }
 
-void IFigmaFileHandle::Reset()
+template <>
+UWidgetBlueprint* IFigmaFileHandle::LoadAsset<UWidgetBlueprint>()
+{
+	const FString PackagePath = UPackageTools::SanitizePackageName(GetPackagePath());
+	const FString AssetName = ObjectTools::SanitizeInvalidChars(GetAssetName(), INVALID_OBJECTNAME_CHARACTERS);
+	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
+
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
+	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
+
+	Asset = WidgetAsset;
+	AssetOuter = WidgetAsset ? WidgetAsset->WidgetTree : nullptr;
+
+	return WidgetAsset;
+}
+
+void IFigmaFileHandle::ResetAsset()
 {
 	Asset = nullptr;
 	AssetOuter = nullptr;

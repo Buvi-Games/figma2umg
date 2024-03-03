@@ -26,6 +26,11 @@ void UFigmaDocument::LoadOrCreateAssets(UFigmaFile* InFigmaFile)
 	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 }
 
+void UFigmaDocument::LoadAssets()
+{
+	LoadAsset<UWidgetBlueprint>();
+}
+
 void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 {
 	FigmaFile = InFigmaFile;

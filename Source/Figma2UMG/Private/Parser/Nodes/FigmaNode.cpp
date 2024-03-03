@@ -262,7 +262,7 @@ void UFigmaNode::PostPatchWidget()
 			FEditorFileUtils::PromptForCheckoutAndSave({ Texture->GetPackage() }, Params);
 		}
 
-		FileHandle->Reset();
+		FileHandle->ResetAsset();
 	}
 
 	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))

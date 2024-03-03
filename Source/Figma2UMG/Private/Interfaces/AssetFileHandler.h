@@ -33,15 +33,21 @@ public:
 	UFUNCTION()
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) = 0;
 
+	UFUNCTION()
+	virtual void LoadAssets() = 0;
+
 	UObject* GetAsset() const { return Asset; }
 	template<class Type>
 	Type* GetAsset() const { return Cast<Type>(Asset); }
 	UObject* GetOuter() const { return AssetOuter; }
 
-	void Reset();
+	void ResetAsset();
 protected:
 	template<class AssetType, class FactoryType>
 	AssetType* GetOrCreateAsset(FactoryType* Factory = nullptr);
+
+	template<class AssetType>
+	AssetType* LoadAsset();
 
 	UObject* Asset = nullptr;
 	UObject* AssetOuter = nullptr;
@@ -89,3 +95,20 @@ AssetType* IFigmaFileHandle::GetOrCreateAsset(FactoryType* Factory)
 	return TypedAsset;
 }
 
+
+template <class AssetType>
+AssetType* IFigmaFileHandle::LoadAsset()
+{
+	const FString PackagePath = UPackageTools::SanitizePackageName(GetPackagePath());
+	const FString AssetName = ObjectTools::SanitizeInvalidChars(GetAssetName(), INVALID_OBJECTNAME_CHARACTERS);
+	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
+
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
+	AssetType* TypedAsset = Cast<AssetType>(AssetData.FastGetAsset(true));
+
+	Asset = TypedAsset;
+	AssetOuter = TypedAsset;
+
+	return TypedAsset;
+}

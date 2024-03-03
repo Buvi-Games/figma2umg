@@ -107,6 +107,7 @@ void UFigmaInstance::Reset()
 {
 	InstanceAsset = nullptr;
 	BuilderFallback.Reset();
+	ResetAsset();
 }
 
 TObjectPtr<UWidget> UFigmaInstance::GetTopWidget() const
@@ -129,7 +130,8 @@ void UFigmaInstance::AddImageRequest(FString FileKey, FImageRequests& ImageReque
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
 	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
-	if (ComponentAsset == nullptr)
+	IsMissingComponent = ComponentAsset == nullptr;
+	if (IsMissingComponent)
 	{
 		//We don't have the Component Asset, import as a Texture as a PlaceHolder
 		ImageRequests.AddRequest(FileKey, GetNodeName(), GetId(), OnRawImageReceivedCB);
@@ -163,6 +165,14 @@ FString UFigmaInstance::GetAssetName() const
 void UFigmaInstance::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 	// Don't do anything here. Need to wait for the Image stage, in case the Component is missing.
+}
+
+void UFigmaInstance::LoadAssets()
+{
+	if (IsMissingComponent)
+	{
+		MissingComponentTexture = LoadAsset<UTexture2D>();
+	}
 }
 
 void UFigmaInstance::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const

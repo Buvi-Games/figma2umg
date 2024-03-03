@@ -22,6 +22,12 @@ void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const
 	ComponentRef->SetComponent(this);
 }
 
+void UFigmaComponent::Reset()
+{
+	Super::Reset();
+	ResetAsset();
+}
+
 FString UFigmaComponent::GetPackagePath() const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
@@ -51,10 +57,15 @@ void UFigmaComponent::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 		FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
 
 		Asset = nullptr;
-		WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+		WidgetBP = LoadAsset<UWidgetBlueprint>();
 	}
 
 	RefAsset = WidgetBP;
+}
+
+void UFigmaComponent::LoadAssets()
+{
+	RefAsset = LoadAsset<UWidgetBlueprint>();
 }
 
 

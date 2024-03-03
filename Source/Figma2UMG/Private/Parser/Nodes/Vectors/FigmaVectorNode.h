@@ -43,6 +43,7 @@ public:
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
+	virtual void LoadAssets() override;
 
 	// IWidgetOwner
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;

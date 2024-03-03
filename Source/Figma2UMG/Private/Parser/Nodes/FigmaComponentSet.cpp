@@ -67,6 +67,11 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	}
 }
 
+void UFigmaComponentSet::LoadAssets()
+{
+	LoadAsset<UWidgetBlueprint>();
+}
+
 TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
 {
 	if (IsButton)
@@ -182,6 +187,12 @@ UObject* UFigmaComponentSet::GetAssetOuter() const
 	{
 		return Super::GetAssetOuter();
 	}
+}
+
+void UFigmaComponentSet::Reset()
+{
+	Super::Reset();
+	ResetAsset();
 }
 
 void UFigmaComponentSet::PostInsert() const

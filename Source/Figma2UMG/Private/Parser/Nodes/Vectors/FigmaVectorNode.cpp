@@ -52,6 +52,11 @@ void UFigmaVectorNode::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 }
 
+void UFigmaVectorNode::LoadAssets()
+{
+	LoadAsset<UTexture2D>();
+}
+
 void UFigmaVectorNode::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
 	if (Builder.Image)
@@ -104,6 +109,7 @@ void UFigmaVectorNode::PostInsert() const
 void UFigmaVectorNode::Reset()
 {
 	Builder.Reset();
+	ResetAsset();
 }
 
 TObjectPtr<UWidget> UFigmaVectorNode::GetTopWidget() const
