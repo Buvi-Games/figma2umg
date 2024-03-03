@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/FigmaComponent.h"
 
+#include "FigmaInstance.h"
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
@@ -11,6 +12,15 @@
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
+
+void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	Super::PostSerialize(InParent, JsonObj);
+
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(GetId());
+	ComponentRef->SetComponent(this);
+}
 
 FString UFigmaComponent::GetPackagePath() const
 {
@@ -45,12 +55,6 @@ void UFigmaComponent::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	}
 
 	RefAsset = WidgetBP;
-
-	FFigmaComponentRef* ComponentRef = FigmaFile ? FigmaFile->FindComponentRef(GetId()) : nullptr;
-	if (ComponentRef)
-	{
-		ComponentRef->SetAsset(GetAsset<UWidgetBlueprint>());
-	}
 }
 
 
@@ -77,19 +81,7 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 	{
 		UE_LOG_Figma2UMG(Display, TEXT("Adding in-place Instance for Component %s. This should be a template."), *GetUniqueName());
 
-		TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
-		TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
-
-		TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
-		UWidget* NewWidget = Template->Create(OwningObject);
-
-		if (NewWidget)
-		{
-			NewWidget->CreatedFromPalette();
-		}
-
-		WidgetInstance = NewWidget;
-		InstanceAsset = WidgetInstance;
+		InstanceAsset = WidgetInstance = CreateInstance(ParentNode->GetAssetOuter());
 	}
 
 	TObjectPtr<UPanelWidget> PanelWidget = GetContainerWidget();
@@ -182,13 +174,34 @@ void UFigmaComponent::PatchBinds()
 	Super::PatchBinds(WidgetBp);
 }
 
-void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+UWidget* UFigmaComponent::CreateInstance(UObject* InAssetOuter) const
 {
-	Super::PostSerialize(InParent, JsonObj);
+	TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(InAssetOuter);
+	if (!OwningObject)
+	{
+		if(InAssetOuter)
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaComponent::CreateInstance] AssetOuter %s is of type %s but we requite a UWidgetTree"), *InAssetOuter->GetName(), *InAssetOuter->GetClass()->GetDisplayNameText().ToString());
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaComponent::CreateInstance] AssetOuter is nullptr"));
+		}
 
-	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
-	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(GetId());
-	ComponentRef->SetComponent(this);
+		return nullptr;
+	}
+	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
+	TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
+
+	TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
+	UWidget* NewWidget = Template->Create(OwningObject);
+
+	if (NewWidget)
+	{
+		NewWidget->CreatedFromPalette();
+	}
+
+	return NewWidget;
 }
 
 void UFigmaComponent::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const

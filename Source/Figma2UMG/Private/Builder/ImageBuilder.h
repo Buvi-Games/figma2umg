@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-#include "FImageBuilder.generated.h"
+#include "ImageBuilder.generated.h"
 
 class UImage;
 

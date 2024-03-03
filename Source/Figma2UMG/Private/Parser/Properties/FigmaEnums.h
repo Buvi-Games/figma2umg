@@ -195,3 +195,12 @@ enum class EScaleMode
 	TILE,
 	STRETCH,
 };
+
+UENUM()
+enum class EFigmaComponentPropertyType
+{
+	BOOLEAN,
+	INSTANCE_SWAP,
+	TEXT,
+	VARIANT,
+};

@@ -3,6 +3,7 @@
 
 #include "Builder/BorderBuilder.h"
 
+#include "Figma2UMGModule.h"
 #include "Components/Border.h"
 #include "Parser/Properties/FigmaPaint.h"
 
@@ -56,7 +57,14 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		{
 			if (Border->GetName() != WidgetName)
 			{
-				Border->Rename(*WidgetName);
+				if (StaticFindObject(nullptr, Border->GetOuter(), *WidgetName, true))
+				{
+					UE_LOG_Figma2UMG(Error, TEXT("Failt to rename %s to %s. Name already exists."), *Border->GetName(), *WidgetName);
+				}
+				else
+				{
+					Border->Rename(*WidgetName);
+				}
 			}
 		}
 		else

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
-#include "Builder/FImageBuilder.h"
+#include "Builder/ImageBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaImageRequester.h"
 #include "Interfaces/FigmaRefHandle.h"

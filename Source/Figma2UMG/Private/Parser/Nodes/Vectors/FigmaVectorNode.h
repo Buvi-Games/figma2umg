@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/FImageBuilder.h"
+#include "Builder/ImageBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaImageRequester.h"
 #include "Interfaces/WidgetOwner.h"
