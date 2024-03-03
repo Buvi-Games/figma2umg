@@ -27,6 +27,16 @@ TObjectPtr<UWidget> UFigmaGroup::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	return Builder.Patch(WidgetToPatch, GetAssetOuter(), GetUniqueName());
 }
 
+void UFigmaGroup::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaGroup %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+
+	Builder.SetupWidget(Widget);
+}
+
 void UFigmaGroup::PostInsert() const
 {
 	TObjectPtr<UWidget> TopWidget = GetTopWidget();

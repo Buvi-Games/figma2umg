@@ -26,6 +26,7 @@ public:
 	virtual void ForEach(const FOnEachFunction& Function) = 0;
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) = 0;
+	virtual void SetupWidget(TObjectPtr<UWidget> Widget) = 0;
 	virtual void PostInsert() const;
 	virtual void Reset() = 0;
 

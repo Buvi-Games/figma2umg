@@ -52,6 +52,7 @@ public:
 
 	virtual void PrePatchWidget();
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch);
+	virtual void SetWidget(TObjectPtr<UWidget> WidgetToPatch);
 	virtual void InsertSubWidgets();
 	virtual void PatchPostInsertWidget();
 	void PostPatchWidget();

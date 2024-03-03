@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/FigmaSection.h"
 
+#include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
@@ -42,6 +43,16 @@ TObjectPtr<UWidget> UFigmaSection::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
 	Builder.SetupBorder(Fills, Strokes, StrokeWeight, StrokeAlign, FVector4::Zero(), 0.0f);
 	return Builder.Patch(WidgetToPatch, GetAssetOuter(), GetUniqueName());
+}
+
+void UFigmaSection::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaSection %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+
+	Builder.SetupWidget(Widget);
 }
 
 void UFigmaSection::PostInsert() const

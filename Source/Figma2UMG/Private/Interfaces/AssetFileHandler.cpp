@@ -8,6 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
 
 template <>
 UWidgetBlueprint* IFigmaFileHandle::GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>(UWidgetBlueprintFactory* Factory)
@@ -107,8 +108,53 @@ UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>
 	return TextureAsset;
 }
 
-void IFigmaFileHandle::Reset()
+template <>
+UWidgetBlueprint* IFigmaFileHandle::LoadAsset<UWidgetBlueprint>()
+{
+	const FString PackagePath = UPackageTools::SanitizePackageName(GetPackagePath());
+	const FString AssetName = ObjectTools::SanitizeInvalidChars(GetAssetName(), INVALID_OBJECTNAME_CHARACTERS);
+	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
+
+	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
+	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
+	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
+
+	Asset = WidgetAsset;
+	AssetOuter = WidgetAsset ? WidgetAsset->WidgetTree : nullptr;
+
+	return WidgetAsset;
+}
+
+void IFigmaFileHandle::ResetAsset()
 {
 	Asset = nullptr;
 	AssetOuter = nullptr;
+}
+
+void IFigmaFileHandle::CompileBP(FString NodeNameForLog)
+{
+	if(!Asset)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("Trying to compile %s but there is no UAsset."), *NodeNameForLog);
+		return;
+	}
+
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	if (!WidgetBP)
+	{
+		//Should be fine, this is not a BP
+		return;
+	}
+
+	Asset = nullptr;
+	AssetOuter = nullptr;
+
+	FCompilerResultsLog LogResults;
+	LogResults.SetSourcePath(WidgetBP->GetPathName());
+	LogResults.BeginEvent(TEXT("Compile"));
+	LogResults.bLogDetailedResults = true;
+
+	FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
+
+	LoadAsset<UWidgetBlueprint>();
 }

@@ -20,12 +20,15 @@ public:
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual void PrePatchWidget() override;
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
 	virtual UObject* GetAssetOuter() const override;
+	virtual void Reset() override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
+	virtual void LoadAssets() override;
 
 	// IWidgetOwner
 	virtual void PostInsert() const override;
@@ -35,10 +38,7 @@ public:
 	virtual TArray<UFigmaNode*>& GetChildren() override;
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 
-
 protected:
-	void CompileAndRefresh();
-
 	TObjectPtr<UWidget> PatchVariation(TObjectPtr<UWidget> WidgetToPatch);
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);
 	void PatchBinds();

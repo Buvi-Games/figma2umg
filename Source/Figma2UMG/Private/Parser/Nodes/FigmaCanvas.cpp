@@ -32,6 +32,27 @@ TObjectPtr<UWidget> UFigmaCanvas::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	return Canvas;
 }
 
+void UFigmaCanvas::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaCanvas %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+
+	Canvas = Cast<UCanvasPanel>(Widget);
+	if(!Canvas)
+	{
+		if (Widget)
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[SetupWidget] UFigmaCanvas %s fail to setup UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[SetupWidget] UFigmaCanvas %s received a null UWidget."), *GetNodeName());
+		}
+	}
+}
+
 void UFigmaCanvas::Reset()
 {
 	Canvas = nullptr;

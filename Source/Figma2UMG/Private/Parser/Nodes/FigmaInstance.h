@@ -26,6 +26,7 @@ public:
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
 	virtual void PostInsert() const override;
 	virtual void Reset() override;
 
@@ -43,6 +44,7 @@ public:
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
+	virtual void LoadAssets() override;
 
 	void PatchComponentProperty() const;
 	FString GetComponentId() const { return ComponentId; }
@@ -227,6 +229,7 @@ protected:
 	UPROPERTY()
 	FImageBuilder BuilderFallback;
 
+	bool IsMissingComponent = false;
 	UPROPERTY()
 	TObjectPtr<UTexture> MissingComponentTexture = nullptr;
 };

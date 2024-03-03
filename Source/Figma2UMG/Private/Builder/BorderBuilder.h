@@ -21,6 +21,7 @@ public:
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function);
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName);
+	virtual void SetupWidget(TObjectPtr<UWidget> Widget);
 	virtual void Reset();
 
 	void SetupBorder(const TArray<FFigmaPaint>& Fills, const TArray<FFigmaPaint>& Strokes, float InStrokeWeight, const EFigmaStrokeAlign& InStrokeAlign, const FVector4& InCornerRadii, const float InCornerSmoothing);

@@ -23,11 +23,13 @@ public:
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const override { return FigmaFile; }
 	virtual void PrePatchWidget() override;
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* InFigmaFile) override;
+	virtual void LoadAssets() override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); }

@@ -22,6 +22,13 @@ void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const
 	ComponentRef->SetComponent(this);
 }
 
+void UFigmaComponent::Reset()
+{
+	Super::Reset();
+	ResetAsset();
+	InstanceAsset = nullptr;
+}
+
 FString UFigmaComponent::GetPackagePath() const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
@@ -43,18 +50,15 @@ void UFigmaComponent::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 	if (PatchPropertiesToWidget(WidgetBP))
 	{
-		FCompilerResultsLog LogResults;
-		LogResults.SetSourcePath(WidgetBP->GetPathName());
-		LogResults.BeginEvent(TEXT("Compile"));
-		LogResults.bLogDetailedResults = true;
-
-		FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
-
-		Asset = nullptr;
-		WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+		CompileBP(GetNodeName());
 	}
 
 	RefAsset = WidgetBP;
+}
+
+void UFigmaComponent::LoadAssets()
+{
+	RefAsset = LoadAsset<UWidgetBlueprint>();
 }
 
 
@@ -111,6 +115,29 @@ TObjectPtr<UWidget> UFigmaComponent::PatchPreInsertWidget(TObjectPtr<UWidget> Wi
 		}));
 
 	return WidgetInstance;
+}
+
+void UFigmaComponent::SetWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetWidget] UFigmaComponent %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	Super::SetWidget(WidgetBP->WidgetTree->RootWidget);
+
+	if (ParentNode)
+	{
+		InstanceAsset = Widget;
+	}
+
+	TObjectPtr<UPanelWidget> PanelWidget = GetContainerWidget();
+	IFigmaContainer::ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([ PanelWidget](UFigmaNode& ChildNode, const int Index)
+		{
+			TObjectPtr<UWidget> Widget = PanelWidget->GetChildAt(Index);
+			ChildNode.SetWidget(Widget);
+		}));
 }
 
 void UFigmaComponent::PostInsert() const

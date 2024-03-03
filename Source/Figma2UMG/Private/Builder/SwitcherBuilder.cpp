@@ -3,6 +3,7 @@
 
 #include "Builder/SwitcherBuilder.h"
 
+#include "Figma2UMGModule.h"
 #include "WidgetBlueprintBuilder.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/WidgetSwitcher.h"
@@ -14,6 +15,29 @@ TObjectPtr<UWidgetSwitcher> FSwitcherBuilder::Patch(TObjectPtr<UWidget> WidgetTo
 	WidgetBlueprintBuilder::PatchSwitchFunction(Cast<UWidgetBlueprint>(AssetOuter->GetOuter()), WidgetSwitcher, PropertyName, PropertyDefinition.VariantOptions);
 
 	return WidgetSwitcher;
+}
+
+void FSwitcherBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
+{
+	WidgetSwitcher = Cast<UWidgetSwitcher>(Widget);
+	if (!WidgetSwitcher)
+	{
+		if (Widget)
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[FSwitcherBuilder::SetupWidget] Fail to setup UPanelWidget from UWidget %s of type %s."), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[FSwitcherBuilder::SetupWidget] Fail to setup UPanelWidget from a null Widget."));
+		}
+	}
+}
+
+void FSwitcherBuilder::FindAndSetWidget(const TArray<UWidget*>& Widgets)
+{
+	FString NameToFind = PropertyName;
+	UWidget* const* Found = Widgets.FindByPredicate([NameToFind](const UWidget* Widget) {return Widget->IsA<UWidgetSwitcher>() && Widget->GetName() == NameToFind; });
+	SetupWidget(Found ? (*Found) : nullptr);
 }
 
 void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)

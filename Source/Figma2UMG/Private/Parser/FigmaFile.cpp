@@ -123,20 +123,20 @@ void UFigmaFile::FixComponentSetRef()
 void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
 {
 	TMap<FString, FFigmaComponentRef> PendingComponents;
-	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
-		if (!Element.Value.Remote)
+		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if(Element.Value.GetComponent() != nullptr)
+		if(ComponentPair.Value.GetComponent() != nullptr)
 			continue;
 
 		for (const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile : LibraryFiles)
 		{
-			TObjectPtr<UFigmaComponent> Component = LibraryFile.Value->FindComponentByKey(Element.Value.Key);
+			TObjectPtr<UFigmaComponent> Component = LibraryFile.Value->FindComponentByKey(ComponentPair.Value.Key);
 			if (Component != nullptr)
 			{
-				AddRemoteComponent(Element.Value, LibraryFile, Component, PendingComponents);
+				AddRemoteComponent(ComponentPair.Value, LibraryFile, Component, PendingComponents);
 				break;
 			}
 		}
@@ -160,20 +160,20 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			for (TPair<FString, FFigmaComponentRef>& Element : Components)
+			for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 			{
-				if (!Element.Value.Remote)
+				if (!ComponentPair.Value.Remote)
 					continue;
 
-				TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent();
+				TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
 				if (Component)
 				{
 					Component->LoadOrCreateAssets(this);
 					UWidgetBlueprint* Asset = Component->GetAsset<UWidgetBlueprint>();
 					TObjectPtr<UFigmaFile> OriginalFile = Component->GetFigmaFile();
-					if (OriginalFile && OriginalFile->Components.Contains(Element.Key))
+					if (OriginalFile && OriginalFile->Components.Contains(ComponentPair.Key))
 					{
-						OriginalFile->Components[Element.Key].SetComponent(Component);
+						OriginalFile->Components[ComponentPair.Key].SetComponent(Component);
 					}
 				}
 			}
@@ -201,21 +201,21 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 
 void UFigmaFile::BuildImageDependency(FString FileKey, FImageRequests& ImageRequests)
 {
-	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
-		if (!Element.Value.Remote)
+		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if (Element.Value.RemoteFileKey.IsEmpty())
+		if (ComponentPair.Value.RemoteFileKey.IsEmpty())
 			continue;
 
-		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 		{
 			TArray<IFigmaImageRequester*> ComponentImageRequests;
 			Component->GetAllChildrenByType(ComponentImageRequests);
 			for (IFigmaImageRequester* FileNode : ComponentImageRequests)
 			{
-				FileNode->AddImageRequest(Element.Value.RemoteFileKey, ImageRequests);
+				FileNode->AddImageRequest(ComponentPair.Value.RemoteFileKey, ImageRequests);
 			}
 		}
 	}
@@ -243,6 +243,8 @@ void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
 			PatchPreInsertWidget();
 			if (PatchPostInsertWidget())
 			{
+				CompileBPs();
+				ReloadBPAssets();
 				PatchWidgetBinds();
 				PatchWidgetProperties();
 
@@ -260,12 +262,12 @@ void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
 	CurrentProcessDelegate = ProcessDelegate;
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			for (TPair<FString, FFigmaComponentRef>& Element : Components)
+			for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 			{
-				if (!Element.Value.Remote)
+				if (!ComponentPair.Value.Remote)
 					continue;
 
-				if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+				if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 				{
 					Component->PostPatchWidget();
 				}
@@ -329,12 +331,12 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 
 void UFigmaFile::PatchPreInsertWidget()
 {
-	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
-		if (!Element.Value.Remote)
+		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 		{
 			Component->PatchPreInsertWidget(nullptr);
 		}
@@ -348,12 +350,12 @@ void UFigmaFile::PatchPreInsertWidget()
 
 bool UFigmaFile::PatchPostInsertWidget()
 {
-	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
-		if (!Element.Value.Remote)
+		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if (TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent())
+		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 		{
 			Component->PatchPostInsertWidget();
 		}
@@ -369,10 +371,10 @@ bool UFigmaFile::PatchPostInsertWidget()
 
 void UFigmaFile::PatchWidgetBinds()
 {
-	for (TPair<FString, FFigmaComponentRef>& Element : Components)
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
-		TObjectPtr<UFigmaComponent> Component = Element.Value.GetComponent();
-		TObjectPtr<UWidgetBlueprint> WidgetBP = Element.Value.GetAsset();
+		TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
+		TObjectPtr<UWidgetBlueprint> WidgetBP = ComponentPair.Value.GetAsset();
 		if (!Component || !WidgetBP)
 			continue;
 
@@ -380,8 +382,7 @@ void UFigmaFile::PatchWidgetBinds()
 	}
 }
 
-
-void UFigmaFile::PatchWidgetProperties()
+void UFigmaFile::PatchWidgetProperties() const
 {
 	TArray<UFigmaInstance*> AllInstances;
 	if (Document)
@@ -392,5 +393,135 @@ void UFigmaFile::PatchWidgetProperties()
 	for (UFigmaInstance* FigmaInstance : AllInstances)
 	{
 		FigmaInstance->PatchComponentProperty();
+	}
+}
+
+void UFigmaFile::CompileBPs()
+{
+	for (TPair<FString, FFigmaComponentRef>& ComponentRef : Components)
+	{
+		if (!ComponentRef.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
+		{
+			Component->CompileBP(Component->GetNodeName());
+		}
+	}
+
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetRef : ComponentSets)
+	{
+		if (!ComponentSetRef.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
+		{
+			ComponentSet->CompileBP(ComponentSet->GetNodeName());
+		}
+	}
+
+	TArray<IFigmaFileHandle*> AllUAssets;
+	if (Document)
+	{
+		AllUAssets.Add(Document);
+		Document->GetAllChildrenByType(AllUAssets);
+	}
+
+	for (IFigmaFileHandle* FigmaInstance : AllUAssets)
+	{
+		FigmaInstance->CompileBP(Cast<UFigmaNode>(FigmaInstance)->GetNodeName());
+	}
+}
+
+void UFigmaFile::ReloadBPAssets()
+{
+	ResetWidgets();
+	LoadAssets();
+	FindWidgets();
+}
+
+void UFigmaFile::ResetWidgets()
+{
+	TArray<IWidgetOwner*> AllWidgets;
+	if (Document)
+	{
+		Document->GetAllChildrenByType(AllWidgets);
+	}
+
+	for (IWidgetOwner* FigmaInstance : AllWidgets)
+	{
+		FigmaInstance->Reset();
+	}
+
+	for (TPair<FString, FFigmaComponentRef>& ComponentRef : Components)
+	{
+		if (TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
+		{
+			Component->Reset();
+		}
+	}
+
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetRef : ComponentSets)
+	{
+		if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
+		{
+			ComponentSet->Reset();
+		}
+	}
+}
+
+void UFigmaFile::LoadAssets()
+{
+	TArray<IFigmaFileHandle*> AllUAssets;
+	if (Document)
+	{
+		AllUAssets.Add(Document);
+		Document->GetAllChildrenByType(AllUAssets);
+	}
+
+	for (IFigmaFileHandle* FigmaInstance : AllUAssets)
+	{
+		FigmaInstance->LoadAssets();
+	}
+
+	for (TPair<FString, FFigmaComponentRef>& ComponentRef : Components)
+	{
+		if (!ComponentRef.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
+		{
+			Component->LoadAssets();
+		}
+	}
+
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetRef : ComponentSets)
+	{
+		if (!ComponentSetRef.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
+		{
+			ComponentSet->LoadAssets();
+		}
+	}
+}
+
+void UFigmaFile::FindWidgets()
+{
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
+	{
+		if (!ComponentPair.Value.Remote)
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
+		{
+			Component->SetWidget(nullptr);
+		}
+	}
+
+	if (Document)
+	{
+		Document->SetWidget(nullptr);
 	}
 }

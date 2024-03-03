@@ -203,6 +203,31 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 	return WidgetToPatch;
 }
 
+void UFigmaNode::SetWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetWidget] UFigmaNode %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+	UPanelWidget* ParentWidget = Cast<UPanelWidget>(Widget);
+	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
+	{
+		WidgetOwner->SetupWidget(Widget);
+		ParentWidget = WidgetOwner->GetContainerWidget();
+	}
+
+	IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this);
+	if (FigmaContainer && ParentWidget)
+	{
+		FString NodeName = GetNodeName();
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, ParentWidget](UFigmaNode& ChildNode, const int Index)
+			{
+				TObjectPtr<UWidget> ChildWidget = ParentWidget->GetChildAt(Index);
+				ChildNode.SetWidget(ChildWidget);
+			}));
+	}
+}
+
 void UFigmaNode::InsertSubWidgets()
 {
 }
@@ -262,7 +287,7 @@ void UFigmaNode::PostPatchWidget()
 			FEditorFileUtils::PromptForCheckoutAndSave({ Texture->GetPackage() }, Params);
 		}
 
-		FileHandle->Reset();
+		FileHandle->ResetAsset();
 	}
 
 	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))

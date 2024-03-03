@@ -63,8 +63,13 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 	if (PatchPropertiesToWidget(WidgetBP))
 	{
-		CompileAndRefresh();
+		CompileBP(GetNodeName());
 	}
+}
+
+void UFigmaComponentSet::LoadAssets()
+{
+	LoadAsset<UWidgetBlueprint>();
 }
 
 TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
@@ -172,6 +177,30 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 	}
 }
 
+void UFigmaComponentSet::SetWidget(TObjectPtr<UWidget> Widget)
+{
+	if (Widget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetWidget] UFigmaComponentSet %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+	}
+
+	if (IsButton)
+	{
+	}
+	else
+	{
+		Super::SetWidget(Widget);
+
+		UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+		TArray<UWidget*> Widgets;
+		WidgetBP->WidgetTree->GetAllWidgets(Widgets);
+		for (FSwitcherBuilder& SwitcherBuilder : Builders)
+		{
+			SwitcherBuilder.FindAndSetWidget(Widgets);
+		}
+	}
+}
+
 UObject* UFigmaComponentSet::GetAssetOuter() const
 {
 	if (IsDoingInPlace && ParentNode)
@@ -181,6 +210,16 @@ UObject* UFigmaComponentSet::GetAssetOuter() const
 	else
 	{
 		return Super::GetAssetOuter();
+	}
+}
+
+void UFigmaComponentSet::Reset()
+{
+	Super::Reset();
+	ResetAsset();
+	for (FSwitcherBuilder& SwitcherBuilder : Builders)
+	{
+		SwitcherBuilder.Reset();
 	}
 }
 
@@ -238,25 +277,6 @@ void UFigmaComponentSet::FillType(const FFigmaComponentPropertyDefinition& Def, 
 	case EFigmaComponentPropertyType::VARIANT:
 		break;
 	}
-}
-
-void UFigmaComponentSet::CompileAndRefresh()
-{
-	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
-	if (!WidgetBP)
-		return;
-
-	Asset = nullptr;
-	AssetOuter = nullptr;
-
-	FCompilerResultsLog LogResults;
-	LogResults.SetSourcePath(WidgetBP->GetPathName());
-	LogResults.BeginEvent(TEXT("Compile"));
-	LogResults.bLogDetailedResults = true;
-
-	FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::None, &LogResults);
-
-	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 }
 
 bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)

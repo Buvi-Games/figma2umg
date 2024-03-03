@@ -26,6 +26,11 @@ void UFigmaDocument::LoadOrCreateAssets(UFigmaFile* InFigmaFile)
 	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
 }
 
+void UFigmaDocument::LoadAssets()
+{
+	LoadAsset<UWidgetBlueprint>();
+}
+
 void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 {
 	FigmaFile = InFigmaFile;
@@ -95,4 +100,17 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Widget);
 
 	return WidgetToPatch;
+}
+
+void UFigmaDocument::SetWidget(TObjectPtr<UWidget> Widget)
+{
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	if (Children.Num() == 1)
+	{
+		Children[0]->SetWidget(WidgetBP->WidgetTree->RootWidget);
+	}
+	else
+	{
+		Super::SetWidget(WidgetBP->WidgetTree->RootWidget);
+	}
 }
