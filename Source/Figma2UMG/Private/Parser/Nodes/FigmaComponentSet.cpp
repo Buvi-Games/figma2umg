@@ -16,20 +16,15 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 {
 	Super::PostSerialize(InParent, JsonObj);
 
-	static FString Hovered = FString("Hovered");
-	static FString Pressed = FString("Pressed");
-
 	for (const TPair<FString, FFigmaComponentPropertyDefinition>& Property : ComponentPropertyDefinitions)
 	{
 		if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
 		{
-//			const bool hasHovered = Property.Value.VariantOptions.Find(Hovered) != INDEX_NONE;
-//			const bool hasPressed = Property.Value.VariantOptions.Find(Pressed) != INDEX_NONE;
-//			if (hasHovered && hasPressed)
-//			{
-//				IsButton = true;
-//			}
-//			else
+			if (Property.Value.IsButton())
+			{
+				HasButton = true;
+			}
+			else
 			{
 				FSwitcherBuilder& SwitcherBuilder = Builders.Add_GetRef(FSwitcherBuilder());
 				SwitcherBuilder.SetProperty(Property.Key, Property.Value);
@@ -74,7 +69,7 @@ void UFigmaComponentSet::LoadAssets()
 
 TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
 {
-	if (IsButton)
+	if (HasButton)
 	{
 		//TODO
 		return WidgetToPatch;
@@ -164,7 +159,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBP);
 
-	if (IsButton)
+	if (HasButton)
 	{
 		return nullptr;
 	}
@@ -184,7 +179,7 @@ void UFigmaComponentSet::SetWidget(TObjectPtr<UWidget> Widget)
 		UE_LOG_Figma2UMG(Display, TEXT("[SetWidget] UFigmaComponentSet %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
 	}
 
-	if (IsButton)
+	if (HasButton)
 	{
 	}
 	else
@@ -225,7 +220,7 @@ void UFigmaComponentSet::Reset()
 
 void UFigmaComponentSet::PostInsert() const
 {
-	if (!IsButton)
+	if (!HasButton)
 	{
 		Super::PostInsert();
 	}
@@ -233,7 +228,7 @@ void UFigmaComponentSet::PostInsert() const
 
 void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 {
-	if (!IsButton)
+	if (!HasButton)
 	{
 		Super::PatchBinds(WidgetBp);
 	}
@@ -241,7 +236,7 @@ void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 
 void UFigmaComponentSet::PrePatchWidget()
 {
-	if (!IsButton)
+	if (!HasButton)
 	{
 		Super::PrePatchWidget();
 	}
@@ -249,7 +244,7 @@ void UFigmaComponentSet::PrePatchWidget()
 
 TArray<UFigmaNode*>& UFigmaComponentSet::GetChildren()
 {
-	if (IsButton)
+	if (HasButton)
 	{
 		return Empty;
 	}

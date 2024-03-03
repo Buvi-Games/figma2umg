@@ -51,6 +51,6 @@ protected:
 	TArray<FSwitcherBuilder> Builders;
 
 	bool IsDoingInPlace = false;
-	bool IsButton = false;
+	bool HasButton = false;
 	TArray<UFigmaNode*> Empty;
 };
