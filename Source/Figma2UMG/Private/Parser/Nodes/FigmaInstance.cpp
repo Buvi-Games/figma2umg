@@ -40,30 +40,29 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
 	if (ComponentAsset)
 	{
-		if (WidgetToPatch && WidgetToPatch.IsA<UWidget>())
+		if (WidgetToPatch && WidgetToPatch.GetClass()->ClassGeneratedBy == ComponentAsset)
 		{
-			//TODO: Check if it's the correct Template
 			InstanceAsset = WidgetToPatch;
 			return WidgetToPatch;
 		}
 		else if (ParentNode)
 		{
 			TObjectPtr<UWidgetTree> OwningObject = Cast<UWidgetTree>(ParentNode->GetAssetOuter());
-			TSubclassOf<UUserWidget> UserWidgetClass = ComponentAsset->GetBlueprintClass();
 
+			TSubclassOf<UUserWidget> UserWidgetClass = ComponentAsset->GetBlueprintClass();
 			TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(ComponentAsset), UserWidgetClass);
-			UWidget* NewWidget = Template->Create(OwningObject);
-			if (NewWidget)
+			WidgetToPatch = Template->Create(OwningObject);
+			if (WidgetToPatch)
 			{
 				//if (NewWidget->GetName() != GetUniqueName())
 				//{
 				//	NewWidget->Rename(*GetUniqueName());
 				//}
-				NewWidget->CreatedFromPalette();
+				WidgetToPatch->CreatedFromPalette();
 			}
 
-			InstanceAsset = NewWidget;
-			return NewWidget;
+			InstanceAsset = WidgetToPatch;
+			return WidgetToPatch;
 		}
 	}
 	else if (MissingComponentTexture)
