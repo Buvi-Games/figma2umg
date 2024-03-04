@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
+#include "Builder/ButtonBuilder.h"
 #include "Builder/SwitcherBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Parser/Properties/FigmaComponentPropertyDefinition.h"
@@ -48,9 +49,9 @@ protected:
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
 
-	TArray<FSwitcherBuilder> Builders;
+	TArray<FSwitcherBuilder> SwitchBuilders;
+	TArray<FButtonBuilder> ButtonBuilders;
 
 	bool IsDoingInPlace = false;
-	bool HasButton = false;
 	TArray<UFigmaNode*> Empty;
 };

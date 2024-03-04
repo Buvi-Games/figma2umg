@@ -6,8 +6,6 @@
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintBuilder.h"
-#include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"

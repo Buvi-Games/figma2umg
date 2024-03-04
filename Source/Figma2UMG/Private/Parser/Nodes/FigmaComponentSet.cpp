@@ -8,7 +8,6 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
-#include "Kismet2/KismetEditorUtilities.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
 
@@ -21,12 +20,13 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 		if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
 		{
 			if (Property.Value.IsButton())
-			{
-				HasButton = true;
+			{				
+				FButtonBuilder& ButtonBuilder = ButtonBuilders.Add_GetRef(FButtonBuilder());
+				ButtonBuilder.SetProperty(Property.Key, Property.Value);
 			}
 			else
 			{
-				FSwitcherBuilder& SwitcherBuilder = Builders.Add_GetRef(FSwitcherBuilder());
+				FSwitcherBuilder& SwitcherBuilder = SwitchBuilders.Add_GetRef(FSwitcherBuilder());
 				SwitcherBuilder.SetProperty(Property.Key, Property.Value);
 			}
 		}
@@ -69,16 +69,12 @@ void UFigmaComponentSet::LoadAssets()
 
 TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
 {
-	if (HasButton)
-	{
-		//TODO
-		return WidgetToPatch;
-	}
-
 	const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
 	TObjectPtr<UWidgetSwitcher> TopWidgetSwitcher = nullptr;
 	TObjectPtr<UWidgetSwitcher> ParentWidgetSwitcher = nullptr;
-	for (FSwitcherBuilder& SwitcherBuilder : Builders)
+
+	//Todo: Properly handle Button + Switch
+	for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
 	{
 		if(TopWidgetSwitcher == nullptr)
 		{
@@ -100,6 +96,19 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 			}
 		}
 		ParentWidgetSwitcher = SwitcherBuilder.GetWidgetSwitcher();
+	}
+
+	for (FButtonBuilder& ButtonBuilder : ButtonBuilders)
+	{
+		if(ParentWidgetSwitcher)
+		{
+			//Todo: Find the proper child to replace
+			WidgetToPatch = ButtonBuilder.Patch(ParentWidgetSwitcher->GetChildrenCount() == 0 ? nullptr : ParentWidgetSwitcher->GetChildAt(0), GetAssetOuter());
+		}
+		else
+		{
+			WidgetToPatch = ButtonBuilder.Patch(WidgetToPatch, GetAssetOuter());
+		}
 	}
 
 	for (TPair< FString, FFigmaComponentPropertyDefinition> PropertyDefinition : ComponentPropertyDefinitions)
@@ -145,7 +154,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		}
 	}
 
-	return TopWidgetSwitcher;
+	return TopWidgetSwitcher ? TopWidgetSwitcher : WidgetToPatch;
 	
 }
 
@@ -159,7 +168,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBP);
 
-	if (HasButton)
+	if (!ButtonBuilders.IsEmpty())
 	{
 		return nullptr;
 	}
@@ -179,17 +188,27 @@ void UFigmaComponentSet::SetWidget(TObjectPtr<UWidget> Widget)
 		UE_LOG_Figma2UMG(Display, TEXT("[SetWidget] UFigmaComponentSet %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
 	}
 
-	if (HasButton)
+	UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	TArray<UWidget*> Widgets;
+	WidgetBP->WidgetTree->GetAllWidgets(Widgets);
+	if (!ButtonBuilders.IsEmpty())
 	{
+		//Todo: Properly handle Button + Switch
+		for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
+		{
+			SwitcherBuilder.FindAndSetWidget(Widgets);
+		}
+
+		for (FButtonBuilder& ButtonBuilder : ButtonBuilders)
+		{
+			ButtonBuilder.SetupWidget(WidgetBP->WidgetTree->RootWidget);
+		}
 	}
 	else
 	{
 		Super::SetWidget(Widget);
 
-		UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
-		TArray<UWidget*> Widgets;
-		WidgetBP->WidgetTree->GetAllWidgets(Widgets);
-		for (FSwitcherBuilder& SwitcherBuilder : Builders)
+		for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
 		{
 			SwitcherBuilder.FindAndSetWidget(Widgets);
 		}
@@ -212,15 +231,19 @@ void UFigmaComponentSet::Reset()
 {
 	Super::Reset();
 	ResetAsset();
-	for (FSwitcherBuilder& SwitcherBuilder : Builders)
+	for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
 	{
 		SwitcherBuilder.Reset();
+	}
+	for (FButtonBuilder& ButtonBuilder : ButtonBuilders)
+	{
+		ButtonBuilder.Reset();
 	}
 }
 
 void UFigmaComponentSet::PostInsert() const
 {
-	if (!HasButton)
+	if (ButtonBuilders.IsEmpty())
 	{
 		Super::PostInsert();
 	}
@@ -228,7 +251,7 @@ void UFigmaComponentSet::PostInsert() const
 
 void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 {
-	if (!HasButton)
+	if (ButtonBuilders.IsEmpty())
 	{
 		Super::PatchBinds(WidgetBp);
 	}
@@ -236,7 +259,7 @@ void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 
 void UFigmaComponentSet::PrePatchWidget()
 {
-	if (!HasButton)
+	if (ButtonBuilders.IsEmpty())
 	{
 		Super::PrePatchWidget();
 	}
@@ -244,7 +267,7 @@ void UFigmaComponentSet::PrePatchWidget()
 
 TArray<UFigmaNode*>& UFigmaComponentSet::GetChildren()
 {
-	if (HasButton)
+	if (!ButtonBuilders.IsEmpty())
 	{
 		return Empty;
 	}
@@ -292,7 +315,7 @@ bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)
 		}
 	}
 
-	for (FSwitcherBuilder& SwitcherBuilder : Builders)
+	for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
 	{
 		SwitcherBuilder.AddVariation(WidgetBP);
 		AddedMemberVariable = true;
