@@ -271,12 +271,19 @@ void WidgetBlueprintBuilder::SetPropertyValue(TObjectPtr<UUserWidget> Widget, co
 						FString FunctionName = "Set" + VariableName.ToString();
 						FFieldVariant Field = FindUFieldOrFProperty(WidgetClass, *FunctionName);
 						UFunction* Function = Field.Get<UFunction>();
-						const UK2Node_CallFunction* CallFunctionNode = AddCallFunctionOnMemberNode(EventGraph, Widget, Function,  ThenPin, VariableGetNode->GetValuePin(), CallFunctionPosition);
-
-						UEdGraphPin* InputValue = CallFunctionNode->FindPin(VariableName, EGPD_Input);
-						if (InputValue)
+						if(Function)
 						{
-							InputValue->DefaultValue = ComponentProperty.Value;
+							const UK2Node_CallFunction* CallFunctionNode = AddCallFunctionOnMemberNode(EventGraph, Widget, Function,  ThenPin, VariableGetNode->GetValuePin(), CallFunctionPosition);
+
+							UEdGraphPin* InputValue = CallFunctionNode->FindPin(VariableName, EGPD_Input);
+							if (InputValue)
+							{
+								InputValue->DefaultValue = ComponentProperty.Value;
+							}
+						}
+						else
+						{
+							UE_LOG_Figma2UMG(Error, TEXT("Can't find UFunction %s in UWidgetBlueprintClass %s."), *FunctionName, *WidgetClass->GetName());
 						}
 					}
 					else
