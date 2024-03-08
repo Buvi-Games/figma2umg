@@ -13,10 +13,10 @@
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	OnVaRestFileRequestDelegate.BindUFunction(this, FName("OnFigmaFileRequestReceived"));
-	OnVaRestLibraryFileRequestDelegate.BindUFunction(this, FName("OnFigmaLibraryFileRequestReceived"));
+	OnVaRestFileRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaFileRequestReceived);
+	OnVaRestLibraryFileRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaLibraryFileRequestReceived);
 	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
-	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
+	OnVaRestImagesRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaImagesRequestReceived);
 	OnImageDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleImageDownload);
 	OnPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPatchUAssets);
 	OnPostPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPostPatchUAssets);
@@ -62,15 +62,8 @@ void UFigmaImporter::Run()
 	}
 }	
 
-bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate)
+bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnFileRequestCompleteDelegate& CallDelegate)
 {
-	UVaRestSubsystem* VARestSubsystem = GEngine->GetEngineSubsystem<UVaRestSubsystem>();
-	if (!VARestSubsystem)
-	{
-		UpdateStatus(eRequestStatus::Failed, TEXT("Can't find EngineSubsystem UVaRest"));
-		return false;
-	}
-
 	FString URL;
 	TArray<FStringFormatArg> args;
 	args.Add(FIGMA_BASE_URL);
@@ -86,51 +79,71 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 		URL = FString::Format(TEXT("{0}{1}{2}?ids={3}"), args);
 	}
 
-	UVaRestJsonObject* VaRestJson = VARestSubsystem->ConstructVaRestJsonObject();
-	TSharedRef<FJsonObject> JsonObject = MakeShared<FJsonObject>();
-	JsonObject->SetStringField(FIGMA_ACCESSTOLKENS_HEADER, AccessToken);
-	VaRestJson->SetRootObject(JsonObject);
+//	UVaRestJsonObject* VaRestJson = VARestSubsystem->ConstructVaRestJsonObject();
+//	TSharedRef<FJsonObject> JsonObject = MakeShared<FJsonObject>();
+//	JsonObject->SetStringField(FIGMA_ACCESSTOLKENS_HEADER, AccessToken);
+//	VaRestJson->SetRootObject(JsonObject);
+//
+//	//pVARestSubsystem->CallURL(URL, EVaRestRequestVerb::GET, EVaRestRequestContentType::json, VaRestJson, OnVaRestDelegate);
+//
+//	UVaRestRequestJSON* Request = VARestSubsystem->ConstructVaRestRequest();
+//
+//	Request->SetVerb(EVaRestRequestVerb::GET);
+//	Request->SetContentType(static_cast<EVaRestRequestContentType>(-1));
+//	Request->SetHeader(FIGMA_ACCESSTOLKENS_HEADER, AccessToken);
+//	Request->SetHeader(FString("Host"), FIGMA_HOST);
+//
+//	//Response.Request = Request;
+//	//Response.Callback = VaRestCallDelegate;
+//	//
+//	//Response.CompleteDelegateHandle = Request->OnStaticRequestComplete.AddUObject(this, &UFigmaImporter::OnCurrentRequestComplete);
+//	//Response.FailDelegateHandle = Request->OnStaticRequestFail.AddUObject(this, &UFigmaImporter::OnCurrentRequestFail);
+//
+//	Request->ResetResponseData();
+//	Request->ProcessURL(URL);
+//
+//	// This section bellow is a hack due to the FCurlHttpRequest::SetupRequest() always adding the header Content-Length. Adding it makes the Figma AIP return the error 400 
+//	// To avoid reimplementing the curl class, we need to maually remove the Header item.
+//	// This will need update and check if it has any change in the FCurlHttpRequest size so the memory offset of Header changed.
+//
+//	int HeaderAddressOffset = 0;
+//
+//#if WITH_CURL
+//#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 3 && ENGINE_PATCH_VERSION == 2)
+//	HeaderAddressOffset = 256;
+//#endif
+//#endif
+//
+//	if (HeaderAddressOffset > 0)
+//	{
+//		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = Request->GetHttpRequest();
+//		IHttpRequest* HttpRequestPtr = &(HttpRequest.Get());
+//		void* HeaderAddress = reinterpret_cast<void*>(reinterpret_cast<int64>(HttpRequestPtr) + HeaderAddressOffset);
+//		TMap<FString, FString>* HeadersPtr = static_cast<TMap<FString, FString>*>(HeaderAddress);
+//		HeadersPtr->Remove(TEXT("Content-Length"));
+//	}
+//
+//	// End of Hack
 
-	//pVARestSubsystem->CallURL(URL, EVaRestRequestVerb::GET, EVaRestRequestContentType::json, VaRestJson, OnVaRestDelegate);
+	return true;
+}
 
-	UVaRestRequestJSON* Request = VARestSubsystem->ConstructVaRestRequest();
-
-	Request->SetVerb(EVaRestRequestVerb::GET);
-	Request->SetContentType(static_cast<EVaRestRequestContentType>(-1));
-	Request->SetHeader(FIGMA_ACCESSTOLKENS_HEADER, AccessToken);
-	Request->SetHeader(FString("Host"), FIGMA_HOST);
-
-	Response.Request = Request;
-	Response.Callback = VaRestCallDelegate;
-
-	Response.CompleteDelegateHandle = Request->OnStaticRequestComplete.AddUObject(this, &UFigmaImporter::OnCurrentRequestComplete);
-	Response.FailDelegateHandle = Request->OnStaticRequestFail.AddUObject(this, &UFigmaImporter::OnCurrentRequestFail);
-
-	Request->ResetResponseData();
-	Request->ProcessURL(URL);
-
-	// This section bellow is a hack due to the FCurlHttpRequest::SetupRequest() always adding the header Content-Length. Adding it makes the Figma AIP return the error 400 
-	// To avoid reimplementing the curl class, we need to maually remove the Header item.
-	// This will need update and check if it has any change in the FCurlHttpRequest size so the memory offset of Header changed.
-
-	int HeaderAddressOffset = 0;
-
-#if WITH_CURL
-#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 3 && ENGINE_PATCH_VERSION == 2)
-	HeaderAddressOffset = 256;
-#endif
-#endif
-
-	if (HeaderAddressOffset > 0)
+bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate)
+{
+	FString URL;
+	TArray<FStringFormatArg> args;
+	args.Add(FIGMA_BASE_URL);
+	args.Add(EndPoint);
+	args.Add(CurrentFileKey);
+	if (RequestIds.IsEmpty())
 	{
-		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = Request->GetHttpRequest();
-		IHttpRequest* HttpRequestPtr = &(HttpRequest.Get());
-		void* HeaderAddress = reinterpret_cast<void*>(reinterpret_cast<int64>(HttpRequestPtr) + HeaderAddressOffset);
-		TMap<FString, FString>* HeadersPtr = static_cast<TMap<FString, FString>*>(HeaderAddress);
-		HeadersPtr->Remove(TEXT("Content-Length"));
+		URL = FString::Format(TEXT("{0}{1}{2}"), args);
 	}
-
-	// End of Hack
+	else
+	{
+		args.Add(RequestIds);
+		URL = FString::Format(TEXT("{0}{1}{2}?ids={3}"), args);
+	}
 
 	return true;
 }
@@ -152,123 +165,122 @@ void UFigmaImporter::UpdateStatus(eRequestStatus Status, FString Message)
 	}
 }
 
-void UFigmaImporter::OnCurrentRequestComplete(UVaRestRequestJSON* Request)
+//void UFigmaImporter::OnCurrentRequestComplete(UVaRestRequestJSON* Request)
+//{
+//	Request->OnStaticRequestComplete.Remove(Response.CompleteDelegateHandle);
+//	Request->OnStaticRequestFail.Remove(Response.FailDelegateHandle);
+//
+//	Response.Callback.ExecuteIfBound(Request);
+//
+//	Response.Request = nullptr;
+//	Response.Callback.Unbind();
+//}
+//
+//void UFigmaImporter::OnCurrentRequestFail(UVaRestRequestJSON* Request)
+//{
+//	Request->OnStaticRequestComplete.Remove(Response.CompleteDelegateHandle);
+//	Request->OnStaticRequestFail.Remove(Response.FailDelegateHandle);
+//
+//	Response.Callback.ExecuteIfBound(Request);
+//
+//	Response.Request = nullptr;
+//	Response.Callback.Unbind();
+//}
+
+//bool UFigmaImporter::ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request)
+//{
+//	if (Request)
+//	{
+//		const EVaRestRequestStatus status = Request->GetStatus();
+//		switch (status)
+//		{
+//		case EVaRestRequestStatus::NotStarted:
+//			UE_LOG_Figma2UMG(Warning, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::NotStarted."));
+//			break;
+//		case EVaRestRequestStatus::Processing:
+//			UE_LOG_Figma2UMG(Warning, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Processing."));
+//			break;
+//		case EVaRestRequestStatus::Failed:
+//			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed"));
+//			break;
+//		case EVaRestRequestStatus::Failed_ConnectionError:
+//			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed_ConnectionError"));
+//			break;
+//		case EVaRestRequestStatus::Succeeded:
+//			UE_LOG_Figma2UMG(Display, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Succeeded"));
+//			UVaRestJsonObject* responseJson = Request->GetResponseObject();
+//			if (!responseJson)
+//			{
+//				UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("VaRestJson has no response object"));
+//
+//				return false;
+//			}
+//
+//			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
+//			if (JsonObj->HasField("status") && JsonObj->HasField("err"))
+//			{
+//				UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField("err"));
+//
+//				return false;
+//			}
+//
+//			return true;
+//			
+//		}
+//	}
+//	else
+//	{
+//		UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("Result from Figma request is nullptr."));
+//	}
+//	return false;
+//}
+
+void UFigmaImporter::OnFigmaFileRequestReceived(TObjectPtr<UFigmaFile> InFile, const TArray<uint8>& RawData)
 {
-	Request->OnStaticRequestComplete.Remove(Response.CompleteDelegateHandle);
-	Request->OnStaticRequestFail.Remove(Response.FailDelegateHandle);
-
-	Response.Callback.ExecuteIfBound(Request);
-
-	Response.Request = nullptr;
-	Response.Callback.Unbind();
-}
-
-void UFigmaImporter::OnCurrentRequestFail(UVaRestRequestJSON* Request)
-{
-	Request->OnStaticRequestComplete.Remove(Response.CompleteDelegateHandle);
-	Request->OnStaticRequestFail.Remove(Response.FailDelegateHandle);
-
-	Response.Callback.ExecuteIfBound(Request);
-
-	Response.Request = nullptr;
-	Response.Callback.Unbind();
-}
-
-bool UFigmaImporter::ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request)
-{
-	if (Request)
+	if (InFile)
 	{
-		const EVaRestRequestStatus status = Request->GetStatus();
-		switch (status)
-		{
-		case EVaRestRequestStatus::NotStarted:
-			UE_LOG_Figma2UMG(Warning, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::NotStarted."));
-			break;
-		case EVaRestRequestStatus::Processing:
-			UE_LOG_Figma2UMG(Warning, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Processing."));
-			break;
-		case EVaRestRequestStatus::Failed:
-			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed"));
-			break;
-		case EVaRestRequestStatus::Failed_ConnectionError:
-			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EVaRestRequestStatus::Failed_ConnectionError"));
-			break;
-		case EVaRestRequestStatus::Succeeded:
-			UE_LOG_Figma2UMG(Display, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Succeeded"));
-			UVaRestJsonObject* responseJson = Request->GetResponseObject();
-			if (!responseJson)
-			{
-				UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("VaRestJson has no response object"));
-
-				return false;
-			}
-
-			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-			if (JsonObj->HasField("status") && JsonObj->HasField("err"))
-			{
-				UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField("err"));
-
-				return false;
-			}
-
-			return true;
-			
-		}
-	}
-	else
-	{
-		UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("Result from Figma request is nullptr."));
-	}
-	return false;
-}
-
-void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
-{
-	if (ParseRequestReceived(TEXT("[Figma file request] "), Request))
-	{
-		UVaRestJsonObject* responseJson = Request->GetResponseObject();
-		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-
-		
-		const FString FigmaFilename = JsonObj->GetStringField("Name");
+		const FString FigmaFilename = InFile->GetFileName();
 		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
-		const FString RawText = Request->GetResponseContentAsString(false);
-		FFileHelper::SaveStringToFile(RawText, *FullFilename);
+		FFileHelper::SaveArrayToFile(RawData, *FullFilename);
 
-		File = NewObject<UFigmaFile>();
+		File = InFile;
 
-		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj]()
+		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, InFile]()
 			{
 				constexpr int64 CheckFlags = 0;
 				constexpr int64 SkipFlags = 0;
 				constexpr bool StrictMode = false;
 				FText OutFailReason;
-				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
-				{
-					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
-					File->PostSerialize(ContentRootFolder, JsonObj);
-
-					for (TPair<FString, TObjectPtr<UFigmaFile>> LibPair : LibraryFileKeys)
-					{
-						LibPair.Value->FixComponentSetRef();
-					}
-
-					File->FixComponentSetRef();
-
-					if (LibraryFileKeys.Num() > 0)
-					{
-						UE_LOG_Figma2UMG(Display, TEXT("Fix Remote References"));
-						File->FixRemoteReferences(LibraryFileKeys);
-					}
-
-					UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
-					File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
-				}
-				else
+				//if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+				//{
+				//	UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
+				//	File->PostSerialize(ContentRootFolder, JsonObj);
+				//
+				//	for (TPair<FString, TObjectPtr<UFigmaFile>> LibPair : LibraryFileKeys)
+				//	{
+				//		LibPair.Value->FixComponentSetRef();
+				//	}
+				//
+				//	File->FixComponentSetRef();
+				//
+				//	if (LibraryFileKeys.Num() > 0)
+				//	{
+				//		UE_LOG_Figma2UMG(Display, TEXT("Fix Remote References"));
+				//		File->FixRemoteReferences(LibraryFileKeys);
+				//	}
+				//
+				//	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
+				//	File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
+				//}
+				//else
 				{
 					UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
 				}
 			});
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("[Figma file request] Failed to download file."));
 	}
 }
 
@@ -293,40 +305,38 @@ void UFigmaImporter::DownloadNextDependency()
 	}
 }
 
-void UFigmaImporter::OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Request)
+void UFigmaImporter::OnFigmaLibraryFileRequestReceived(TObjectPtr<UFigmaFile> LibraryFile, const TArray<uint8>& RawData)
 {
-	if (ParseRequestReceived(TEXT("[Figma library file request] "), Request))
+	if (LibraryFile)
 	{
-		UVaRestJsonObject* responseJson = Request->GetResponseObject();
-		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-
-
-		const FString FigmaFilename = JsonObj->GetStringField("Name");
+		const FString FigmaFilename = LibraryFile->GetFileName();
 		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
-		const FString RawText = Request->GetResponseContentAsString(false);
-		FFileHelper::SaveStringToFile(RawText, *FullFilename);
+		FFileHelper::SaveArrayToFile(RawData, *FullFilename);
 
-		UFigmaFile* CurrentFile = NewObject<UFigmaFile>();
-		LibraryFileKeys[CurrentLibraryFileKey] = CurrentFile;
+		LibraryFileKeys[CurrentLibraryFileKey] = LibraryFile;
 		CurrentLibraryFileKey = nullptr;
 
-		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj, CurrentFile]()
+		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, LibraryFile]()
 			{
 				constexpr int64 CheckFlags = 0;
 				constexpr int64 SkipFlags = 0;
 				constexpr bool StrictMode = false;
 				FText OutFailReason;
-				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, CurrentFile->StaticClass(), CurrentFile, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+				//if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, LibraryFile->StaticClass(), LibraryFile, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 				{
-					CurrentFile->PostSerialize(ContentRootFolder, JsonObj);
-					UE_LOG_Figma2UMG(Display, TEXT("Library file %s downloaded."), *CurrentFile->GetFileName());
-					DownloadNextDependency();
+					//LibraryFile->PostSerialize(ContentRootFolder, JsonObj);
+					//UE_LOG_Figma2UMG(Display, TEXT("Library file %s downloaded."), *LibraryFile->GetFileName());
+					//DownloadNextDependency();
 				}
-				else
+				//else
 				{
 					UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
 				}
 			});
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("[Figma library file request] Failed to download file."));
 	}
 }
 
@@ -377,18 +387,16 @@ void UFigmaImporter::RequestImageURLs()
 	}
 }
 
-void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
+void UFigmaImporter::OnFigmaImagesRequestReceived(bool Succeeded, const FImagesRequestResult& result)
 {
-	if (ParseRequestReceived(TEXT("[Figma images request] "), Request))
+	if (Succeeded)
 	{
-		UVaRestJsonObject* responseJson = Request->GetResponseObject();
-		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-
 		constexpr int64 CheckFlags = 0;
 		constexpr int64 SkipFlags = 0;
 		constexpr bool StrictMode = false;
 		FText OutFailReason;
-		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+		ImagesRequestResult = result;
+		if (ImagesRequestResult.Err.IsEmpty())
 		{
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] %u images received from Figma API."), ImagesRequestResult.Images.Num());
 			for (TPair<FString, FString> Element : ImagesRequestResult.Images)
@@ -399,8 +407,12 @@ void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
 		}
 		else
 		{
-			UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
+			UpdateStatus(eRequestStatus::Failed, TEXT("[Figma images request]") + ImagesRequestResult.Err);
 		}
+	}
+	else
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("[Figma images request] Failed to download file."));
 	}
 }
 

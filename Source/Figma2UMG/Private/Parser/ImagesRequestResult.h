@@ -18,6 +18,6 @@ public:
 	TMap<FString, FString> Images;
 
 	UPROPERTY()
-	int Status;
+	int Status = 0;
 	
 };

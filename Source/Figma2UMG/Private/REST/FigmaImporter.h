@@ -3,8 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FileRequest.h"
 #include "ImageRequest.h"
-#include "VaRestSubsystem.h"
+#include "ImagesGenerationRequest.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/ImagesRequestResult.h"
 
@@ -26,20 +27,19 @@ public:
 	void Run();
 
 protected:
-	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate);
+	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnFileRequestCompleteDelegate& CallDelegate);
+	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
 
-	void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
-	void OnCurrentRequestFail(UVaRestRequestJSON* Request);
+	//void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
+	//void OnCurrentRequestFail(UVaRestRequestJSON* Request);
 
-	UFUNCTION()
-	bool ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request);
+	//UFUNCTION()
+	//bool ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request);
 
-	UFUNCTION()
-	void OnFigmaFileRequestReceived(UVaRestRequestJSON* Request);
+	void OnFigmaFileRequestReceived(TObjectPtr<UFigmaFile> File, const TArray<uint8>& RawData);
 
-	UFUNCTION()
-	void OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Request);
+	void OnFigmaLibraryFileRequestReceived(TObjectPtr<UFigmaFile> LibraryFile, const TArray<uint8>& RawData);
 	void DownloadNextDependency();
 
 	UFUNCTION()
@@ -48,7 +48,7 @@ protected:
 	void RequestImageURLs();
 
 	UFUNCTION()
-	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
+	void OnFigmaImagesRequestReceived(bool Succeeded, const FImagesRequestResult& result);
 
 	void DownloadNextImage();
 
@@ -61,15 +61,15 @@ protected:
 	UFUNCTION()
 	void OnPostPatchUAssets(bool Succeeded);
 
-	FVaRestCallDelegate OnVaRestLibraryFileRequestDelegate;
-	FVaRestCallDelegate OnVaRestFileRequestDelegate;
+	FOnFileRequestCompleteDelegate OnVaRestLibraryFileRequestDelegate;
+	FOnFileRequestCompleteDelegate OnVaRestFileRequestDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
-	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
+	FOnImageGenerationRequestCompleteDelegate OnVaRestImagesRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
 	FProcessFinishedDelegate OnPatchUAssetsDelegate;
 	FProcessFinishedDelegate OnPostPatchUAssetsDelegate;
 
-	FVaRestCallResponse Response;
+	//FVaRestCallResponse Response;
 
 	FString AccessToken;
 	FString FileKey;
