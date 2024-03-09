@@ -13,6 +13,8 @@
 
 class URequestParams;
 class UFigmaFile;
+class UFileRequest;
+class UImagesGenerationRequest;
 
 DECLARE_DELEGATE_TwoParams(FOnFigmaImportUpdateStatusCB, eRequestStatus, FString);
 
@@ -27,8 +29,8 @@ public:
 	void Run();
 
 protected:
-	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnFileRequestCompleteDelegate& CallDelegate);
-	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate);
+	bool CreateRequest(const FString& CurrentFileKey, const FString& RequestIds, const FOnFileRequestCompleteDelegate& CallDelegate);
+	bool CreateRequest(const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
 
 	//void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
@@ -85,6 +87,12 @@ protected:
 
 	UPROPERTY()
 	TMap<FString, TObjectPtr<UFigmaFile>> LibraryFileKeys;
+
+	UPROPERTY()
+	TObjectPtr<UFileRequest> FileRequest = nullptr;
+
+	UPROPERTY()
+	TObjectPtr<UImagesGenerationRequest> ImagesGenerationRequest = nullptr;
 
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;

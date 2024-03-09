@@ -51,7 +51,7 @@ void UFigmaImporter::Run()
 {
 	if(LibraryFileKeys.IsEmpty())
 	{
-		if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
+		if (CreateRequest(FileKey, Ids, OnVaRestFileRequestDelegate))
 		{
 			UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
 		}
@@ -62,12 +62,12 @@ void UFigmaImporter::Run()
 	}
 }	
 
-bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnFileRequestCompleteDelegate& CallDelegate)
+bool UFigmaImporter::CreateRequest(const FString& CurrentFileKey, const FString& RequestIds, const FOnFileRequestCompleteDelegate& CallDelegate)
 {
 	FString URL;
 	TArray<FStringFormatArg> args;
 	args.Add(FIGMA_BASE_URL);
-	args.Add(EndPoint);
+	args.Add(FIGMA_ENDPOINT_FILES);
 	args.Add(CurrentFileKey);
 	if (RequestIds.IsEmpty())
 	{
@@ -79,6 +79,9 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 		URL = FString::Format(TEXT("{0}{1}{2}?ids={3}"), args);
 	}
 
+	FileRequest = NewObject<UFileRequest>();
+	FileRequest->Setup(AccessToken, URL, CallDelegate);
+	FileRequest->StartDownload();
 //	UVaRestJsonObject* VaRestJson = VARestSubsystem->ConstructVaRestJsonObject();
 //	TSharedRef<FJsonObject> JsonObject = MakeShared<FJsonObject>();
 //	JsonObject->SetStringField(FIGMA_ACCESSTOLKENS_HEADER, AccessToken);
@@ -128,12 +131,12 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 	return true;
 }
 
-bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate)
+bool UFigmaImporter::CreateRequest(const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate)
 {
 	FString URL;
 	TArray<FStringFormatArg> args;
 	args.Add(FIGMA_BASE_URL);
-	args.Add(EndPoint);
+	args.Add(FIGMA_ENDPOINT_IMAGES);
 	args.Add(CurrentFileKey);
 	if (RequestIds.IsEmpty())
 	{
@@ -144,6 +147,10 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 		args.Add(RequestIds);
 		URL = FString::Format(TEXT("{0}{1}{2}?ids={3}"), args);
 	}
+
+	ImagesGenerationRequest = NewObject<UImagesGenerationRequest>();
+	ImagesGenerationRequest->Setup(AccessToken, URL, CallDelegate);
+	ImagesGenerationRequest->StartDownload();
 
 	return true;
 }
@@ -291,7 +298,7 @@ void UFigmaImporter::DownloadNextDependency()
 		if (Lib.Value == nullptr)
 		{
 			CurrentLibraryFileKey = Lib.Key;
-			if (CreateRequest(FIGMA_ENDPOINT_FILES, CurrentLibraryFileKey, FString(), OnVaRestLibraryFileRequestDelegate))
+			if (CreateRequest(CurrentLibraryFileKey, FString(), OnVaRestLibraryFileRequestDelegate))
 			{
 				UE_LOG_Figma2UMG(Display, TEXT("Requesting library file %s from Figma API"), *CurrentLibraryFileKey);
 			}
@@ -299,7 +306,7 @@ void UFigmaImporter::DownloadNextDependency()
 		}
 	}
 
-	if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
+	if (CreateRequest(FileKey, Ids, OnVaRestFileRequestDelegate))
 	{
 		UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
 	}
@@ -375,7 +382,7 @@ void UFigmaImporter::RequestImageURLs()
 		}
 
 		//Todo: Manage images from Libs
-		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
+		if (CreateRequest(Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
 		{
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
 		}

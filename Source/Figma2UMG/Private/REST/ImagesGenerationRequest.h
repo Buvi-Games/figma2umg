@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Enums.h"
+#include "FigmaRequest.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Parser/ImagesRequestResult.h"
 #include "ImagesGenerationRequest.generated.h"
@@ -11,28 +12,16 @@
 
 DECLARE_DELEGATE_TwoParams(FOnImageGenerationRequestCompleteDelegate, bool, const FImagesRequestResult&);
 
-USTRUCT()
-struct FImagesGenerationRequest
+UCLASS()
+class UImagesGenerationRequest : public UObject, public IFigmaRequest
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY()
-	FString ImageName;
+	void Setup(const FString& InAccessToken, const FString& InURL, const FOnImageGenerationRequestCompleteDelegate& Delegate);
 
-	UPROPERTY()
-	FString Id;
-
-	UPROPERTY()
-	FString URL;
-
-	void StartDownload(const FOnImageGenerationRequestCompleteDelegate& Delegate);
-
-	eRequestStatus GetStatus() const { return Status; }
-private:
-	void HandleFigmaDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
+protected:
+	virtual void HandleFigmaDownload(const TArray<uint8>& RawData) override;
 
 	FOnImageGenerationRequestCompleteDelegate OnImageRequestCompleteDelegate;
-
-	eRequestStatus Status = eRequestStatus::NotStarted;
 };
 

@@ -4,49 +4,26 @@
 #include "REST/ImagesGenerationRequest.h"
 
 #include "Figma2UMGModule.h"
-#include "HttpModule.h"
-#include "Interfaces/IHttpResponse.h"
 
 
-void FImagesGenerationRequest::StartDownload(const FOnImageGenerationRequestCompleteDelegate& Delegate)
+void UImagesGenerationRequest::Setup(const FString& InAccessToken, const FString& InURL, const FOnImageGenerationRequestCompleteDelegate& Delegate)
 {
+	AccessToken = InAccessToken;
+	URL = InURL;
 	OnImageRequestCompleteDelegate = Delegate;
-	Status = eRequestStatus::Processing;
-
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-
-	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FImagesGenerationRequest::HandleFigmaDownload);
-	HttpRequest->SetURL(URL);
-	HttpRequest->SetVerb(TEXT("GET"));
-	HttpRequest->ProcessRequest();
-
 }
 
-void FImagesGenerationRequest::HandleFigmaDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
+void UImagesGenerationRequest::HandleFigmaDownload(const TArray<uint8>& RawData)
 {
-	if (bSucceeded && HttpResponse.IsValid() && HttpResponse->GetContentLength() > 0)
+	FImagesRequestResult result;
+	if (Status == eRequestStatus::Succeeded)
 	{
-		const int dataSize = HttpResponse->GetContentLength();
-
-		TArray<uint8> RawData;
-		RawData.Empty(dataSize);
-		RawData.AddUninitialized(dataSize);
-		FMemory::Memcpy(RawData.GetData(), HttpResponse->GetContent().GetData(), dataSize);
-
-		Status = eRequestStatus::Succeeded;
-		FImagesRequestResult result;
+		// TODO: Parse
 		OnImageRequestCompleteDelegate.ExecuteIfBound(true, result);
 	}
 	else
 	{
-		Status = eRequestStatus::Failed;
-
 		UE_LOG_Figma2UMG(Warning, TEXT("Failed to download image at %s."), *URL);
-		OnImageRequestCompleteDelegate.ExecuteIfBound(false, FImagesRequestResult());
+		OnImageRequestCompleteDelegate.ExecuteIfBound(false, result);
 	}
-
-	//if (HttpRequest)
-	//{
-	//	HttpRequest->OnProcessRequestComplete().Unbind();
-	//}
 }
