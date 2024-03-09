@@ -4,6 +4,7 @@
 #include "REST/ImagesGenerationRequest.h"
 
 #include "Figma2UMGModule.h"
+#include "JsonObjectConverter.h"
 
 
 void UImagesGenerationRequest::Setup(const FString& InAccessToken, const FString& InURL, const FOnImageGenerationRequestCompleteDelegate& Delegate)
@@ -13,13 +14,25 @@ void UImagesGenerationRequest::Setup(const FString& InAccessToken, const FString
 	OnImageRequestCompleteDelegate = Delegate;
 }
 
-void UImagesGenerationRequest::HandleFigmaDownload(const TArray<uint8>& RawData)
+void UImagesGenerationRequest::HandleFigmaDownload(const TArray<uint8>& RawData, const TSharedRef<FJsonObject>& JsonObject)
 {
 	FImagesRequestResult result;
 	if (Status == eRequestStatus::Succeeded)
 	{
-		// TODO: Parse
-		OnImageRequestCompleteDelegate.ExecuteIfBound(true, result);
+		constexpr int64 CheckFlags = 0;
+		constexpr int64 SkipFlags = 0;
+		constexpr bool StrictMode = false;
+		FText OutFailReason;
+		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObject, FImagesRequestResult::StaticStruct(), &result, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
+			OnImageRequestCompleteDelegate.ExecuteIfBound(true, result);
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("Failed to parse restult of %s. Fail Reason = %s"), *URL, *OutFailReason.ToString());
+			OnImageRequestCompleteDelegate.ExecuteIfBound(false, result);
+		}
 	}
 	else
 	{

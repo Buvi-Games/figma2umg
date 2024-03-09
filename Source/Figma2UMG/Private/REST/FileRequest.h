@@ -17,12 +17,12 @@ class UFileRequest : public UObject, public IFigmaRequest
 {
 	GENERATED_BODY()
 public:
-	void Setup(const FString& InAccessToken, const FString& InURL, const FOnFileRequestCompleteDelegate& Delegate);
+	void Setup(const FString& InAccessToken, const FString& InURL, const FOnFileRequestCompleteDelegate& Delegate, const FString& InContentRootFolder);
 
 protected:
-	virtual void HandleFigmaDownload(const TArray<uint8>& RawData) override;
+	virtual void HandleFigmaDownload(const TArray<uint8>& RawData, const TSharedRef<FJsonObject>& JsonObject) override;
 
-
+	FString ContentRootFolder;
 	FOnFileRequestCompleteDelegate OnRequestCompleteDelegate;
 };
 

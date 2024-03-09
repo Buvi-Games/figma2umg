@@ -20,7 +20,7 @@ public:
 	void Setup(const FString& InAccessToken, const FString& InURL, const FOnImageGenerationRequestCompleteDelegate& Delegate);
 
 protected:
-	virtual void HandleFigmaDownload(const TArray<uint8>& RawData) override;
+	virtual void HandleFigmaDownload(const TArray<uint8>& RawData, const TSharedRef<FJsonObject>& JsonObject) override;
 
 	FOnImageGenerationRequestCompleteDelegate OnImageRequestCompleteDelegate;
 };

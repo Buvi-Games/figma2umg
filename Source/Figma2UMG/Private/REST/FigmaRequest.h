@@ -26,7 +26,7 @@ private:
 	void HandleFigmaDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
 protected:
-	virtual void HandleFigmaDownload(const TArray<uint8>& RawData) = 0;
+	virtual void HandleFigmaDownload(const TArray<uint8>& RawData, const TSharedRef<FJsonObject>& JsonObject) = 0;
 
 	FString AccessToken;
 	FString URL;
