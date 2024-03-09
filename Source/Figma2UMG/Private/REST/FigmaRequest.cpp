@@ -54,8 +54,7 @@ void IFigmaRequest::HandleFigmaDownload(FHttpRequestPtr HttpRequest, FHttpRespon
 		RawData.AddUninitialized(dataSize);
 		FMemory::Memcpy(RawData.GetData(), HttpResponse->GetContent().GetData(), dataSize);
 
-		FString JsonString = BytesToString(RawData.GetData(), RawData.Num());
-		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
+		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(*HttpResponse->GetContentAsString());
 		TSharedPtr<FJsonObject> OutJsonObj;
 		if (FJsonSerializer::Deserialize(Reader, OutJsonObj))
 		{
@@ -66,7 +65,7 @@ void IFigmaRequest::HandleFigmaDownload(FHttpRequestPtr HttpRequest, FHttpRespon
 		{
 			Status = eRequestStatus::Failed;
 
-			UE_LOG_Figma2UMG(Error, TEXT("Failed to download %s. Result= %s"), *URL, *JsonString);
+			UE_LOG_Figma2UMG(Error, TEXT("Failed to download %s. Result= %s"), *URL, *HttpResponse->GetContentAsString());
 			TArray<uint8> Empty;
 			TSharedRef<FJsonObject> EmptyJsonObj = MakeShared<FJsonObject>();
 			HandleFigmaDownload(Empty, EmptyJsonObj);
