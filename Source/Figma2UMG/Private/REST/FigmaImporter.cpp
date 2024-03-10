@@ -13,10 +13,10 @@
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
-	OnVaRestFileRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaFileRequestReceived);
-	OnVaRestLibraryFileRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaLibraryFileRequestReceived);
+	OnFileRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaFileRequestReceived);
+	OnLibraryFileRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaLibraryFileRequestReceived);
 	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
-	OnVaRestImagesRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaImagesRequestReceived);
+	OnImagesRequestDelegate.BindUObject(this, &UFigmaImporter::OnFigmaImagesRequestReceived);
 	OnImageDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleImageDownload);
 	OnPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPatchUAssets);
 	OnPostPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPostPatchUAssets);
@@ -51,7 +51,7 @@ void UFigmaImporter::Run()
 {
 	if(LibraryFileKeys.IsEmpty())
 	{
-		if (CreateRequest(FileKey, Ids, OnVaRestFileRequestDelegate))
+		if (CreateRequest(FileKey, Ids, OnFileRequestDelegate))
 		{
 			UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
 		}
@@ -169,7 +169,7 @@ void UFigmaImporter::DownloadNextDependency()
 		if (Lib.Value == nullptr)
 		{
 			CurrentLibraryFileKey = Lib.Key;
-			if (CreateRequest(CurrentLibraryFileKey, FString(), OnVaRestLibraryFileRequestDelegate))
+			if (CreateRequest(CurrentLibraryFileKey, FString(), OnLibraryFileRequestDelegate))
 			{
 				UE_LOG_Figma2UMG(Display, TEXT("Requesting library file %s from Figma API"), *CurrentLibraryFileKey);
 			}
@@ -177,7 +177,7 @@ void UFigmaImporter::DownloadNextDependency()
 		}
 	}
 
-	if (CreateRequest(FileKey, Ids, OnVaRestFileRequestDelegate))
+	if (CreateRequest(FileKey, Ids, OnFileRequestDelegate))
 	{
 		UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
 	}
@@ -241,7 +241,7 @@ void UFigmaImporter::RequestImageURLs()
 		}
 
 		//Todo: Manage images from Libs
-		if (CreateRequest(Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
+		if (CreateRequest(Requests->FileKey, ImageIdsFormated, OnImagesRequestDelegate))
 		{
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
 		}
