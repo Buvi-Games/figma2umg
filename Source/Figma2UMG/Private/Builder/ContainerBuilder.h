@@ -29,6 +29,7 @@ public:
 
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
+
 private:
 	template<class WidgetType>
 	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName);

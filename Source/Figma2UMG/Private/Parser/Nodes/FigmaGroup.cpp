@@ -4,6 +4,7 @@
 #include "Parser/Nodes/FigmaGroup.h"
 
 #include "FigmaComponent.h"
+#include "Builder/ButtonBuilder.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -21,10 +22,16 @@ void UFigmaGroup::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 
 TObjectPtr<UWidget> UFigmaGroup::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
-	FVector4 corners = RectangleCornerRadii.Num() == 4 ? FVector4(RectangleCornerRadii[0], RectangleCornerRadii[1], RectangleCornerRadii[2], RectangleCornerRadii[3]) : FVector4(CornerRadius, CornerRadius, CornerRadius, CornerRadius);
-	Builder.SetupBorder(Fills, Strokes, StrokeWeight, StrokeAlign, corners, CornerSmoothing);
+	FVector4 Corners = RectangleCornerRadii.Num() == 4 ? FVector4(RectangleCornerRadii[0], RectangleCornerRadii[1], RectangleCornerRadii[2], RectangleCornerRadii[3]) : FVector4(CornerRadius, CornerRadius, CornerRadius, CornerRadius);
+	Builder.SetupBorder(Fills, Strokes, StrokeWeight, StrokeAlign, Corners, CornerSmoothing);
 	Builder.SetLayout(LayoutMode, LayoutWrap);
 	return Builder.Patch(WidgetToPatch, GetAssetOuter(), GetUniqueName());
+}
+
+void UFigmaGroup::SetupBrush(FSlateBrush& Brush) const
+{
+	FVector4 Corners = RectangleCornerRadii.Num() == 4 ? FVector4(RectangleCornerRadii[0], RectangleCornerRadii[1], RectangleCornerRadii[2], RectangleCornerRadii[3]) : FVector4(CornerRadius, CornerRadius, CornerRadius, CornerRadius);
+	Builder.SetupBrush(Brush, Fills, Strokes, StrokeWeight, StrokeAlign, Corners, CornerSmoothing);
 }
 
 void UFigmaGroup::SetupWidget(TObjectPtr<UWidget> Widget)

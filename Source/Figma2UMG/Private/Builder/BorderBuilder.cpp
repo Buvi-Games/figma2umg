@@ -115,6 +115,34 @@ void FBorderBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 	}
 }
 
+
+void FBorderBuilder::SetupBrush(FSlateBrush& Brush, const TArray<FFigmaPaint> Fills, const TArray<FFigmaPaint> Strokes, float InStrokeWeight, EFigmaStrokeAlign InStrokeAlign, const FVector4& InCornerRadii, float InCornerSmoothing) const
+{
+	if (!Fills.IsEmpty() && Fills[0].Visible)
+	{
+		Brush.TintColor = Fills[0].Color.GetLinearColor();
+	}
+	else
+	{
+		Brush.TintColor = FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	}
+
+	if (!Strokes.IsEmpty())
+	{
+		Brush.OutlineSettings.Color = Stroke->Color.GetLinearColor();
+		Brush.OutlineSettings.Width = StrokeWeight;
+	}
+	else
+	{
+		Brush.OutlineSettings.Color = FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
+		Brush.OutlineSettings.Width = 0.0f;
+
+	}
+
+	Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+	Brush.OutlineSettings.CornerRadii = CornerRadii;
+}
+
 void FBorderBuilder::SetFill() const
 {
 	if (Border)

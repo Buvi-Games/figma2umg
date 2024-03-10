@@ -5,6 +5,7 @@
 
 #include "Figma2UMGModule.h"
 #include "Components/Button.h"
+#include "Parser/Nodes/FigmaComponent.h"
 
 TObjectPtr<UWidget> FButtonBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter)
 {
@@ -62,7 +63,68 @@ void FButtonBuilder::SetProperty(const FString& InPropertyName, const FFigmaComp
 	PropertyDefinition = InDefinition;
 }
 
+FString FButtonBuilder::GetDefaultName() const
+{
+	return PropertyName + TEXT("=Default");
+}
+
+FString FButtonBuilder::GetHoveredName() const
+{
+	return PropertyName + TEXT("=Hovered");
+}
+
+FString FButtonBuilder::GetPressedName() const
+{
+	return PropertyName + TEXT("=Pressed");
+}
+
+FString FButtonBuilder::GetDisabledName() const
+{
+	return PropertyName + TEXT("=Disabled");
+}
+
+FString FButtonBuilder::GetFocusedName() const
+{
+	return PropertyName + TEXT("=Focused");
+}
+
+
 TObjectPtr<UButton> FButtonBuilder::GetWidget() const
 {
 	return Button;
+}
+
+void FButtonBuilder::PatchStyle(const UFigmaComponent* DefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const
+{
+	if(!Button)
+		return;
+
+	FButtonStyle Style = Button->GetStyle();
+
+	if (DefaultComponent)
+	{
+		DefaultComponent->SetupBrush(Style.Normal);
+	}
+
+	if (HoveredComponent)
+	{
+		HoveredComponent->SetupBrush(Style.Hovered);
+	}
+
+	if (PressedComponent)
+	{
+		PressedComponent->SetupBrush(Style.Pressed);
+	}
+
+	if (DisabledComponent)
+	{
+		DisabledComponent->SetupBrush(Style.Disabled);
+	}
+
+	if (FocusedComponent)
+	{
+		//TODO
+	}
+
+	Button->SetStyle(Style);
 }

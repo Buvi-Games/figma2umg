@@ -22,6 +22,8 @@
 
 #include "FigmaGroup.generated.h"
 
+struct FButtonBuilder;
+
 UCLASS()
 class UFigmaGroup : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
 {
@@ -48,6 +50,8 @@ public:
 
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
+
+	void SetupBrush(FSlateBrush& Brush) const;
 protected:
 
 	UPROPERTY()

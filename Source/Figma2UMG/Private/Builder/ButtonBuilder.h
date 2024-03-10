@@ -3,12 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaComponentPropertyDefinition.h"
 
 #include "ButtonBuilder.generated.h"
 
 class UWidget;
 class UButton;
+class UFigmaComponent;
 
 USTRUCT()
 struct FIGMA2UMG_API FButtonBuilder
@@ -21,7 +23,16 @@ public:
 	void Reset();
 	void SetProperty(const FString& InPropertyName, const FFigmaComponentPropertyDefinition& InDefinition);
 
+	FString GetDefaultName() const;
+	FString GetHoveredName() const;
+	FString GetPressedName() const;
+	FString GetDisabledName() const;
+	FString GetFocusedName() const;
+
 	TObjectPtr<UButton> GetWidget() const;
+
+	void PatchStyle(const UFigmaComponent* DefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const;
+
 private:
 
 	UPROPERTY()

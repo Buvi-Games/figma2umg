@@ -108,6 +108,25 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		else
 		{
 			WidgetToPatch = ButtonBuilder.Patch(WidgetToPatch, GetAssetOuter());
+			FString DefaultName = ButtonBuilder.GetDefaultName();
+			FString HoveredName = ButtonBuilder.GetHoveredName();
+			FString PressedName = ButtonBuilder.GetPressedName();
+			FString DisabledName = ButtonBuilder.GetDisabledName();
+			FString FocusedName = ButtonBuilder.GetFocusedName();
+
+			UFigmaNode** FoundDefaultNode = Children.FindByPredicate([DefaultName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(DefaultName, ESearchCase::IgnoreCase) == 0; });
+			UFigmaNode** FoundHoveredNode = Children.FindByPredicate([HoveredName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(HoveredName, ESearchCase::IgnoreCase) == 0; });
+			UFigmaNode** FoundPressedNode = Children.FindByPredicate([PressedName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(PressedName, ESearchCase::IgnoreCase) == 0; });
+			UFigmaNode** FoundDisabledNode = Children.FindByPredicate([DisabledName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(DisabledName, ESearchCase::IgnoreCase) == 0; });
+			UFigmaNode** FoundFocusedNode = Children.FindByPredicate([FocusedName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(FocusedName, ESearchCase::IgnoreCase) == 0; });
+
+			UFigmaComponent* DefaultComponent = FoundDefaultNode ? Cast<UFigmaComponent>(*FoundDefaultNode) : nullptr;
+			UFigmaComponent* HoveredComponent = FoundHoveredNode ? Cast<UFigmaComponent>(*FoundHoveredNode) : nullptr;
+			UFigmaComponent* PressedComponent = FoundPressedNode ? Cast<UFigmaComponent>(*FoundPressedNode) : nullptr;
+			UFigmaComponent* DisabledComponent = FoundDisabledNode ? Cast<UFigmaComponent>(*FoundDisabledNode) : nullptr;
+			UFigmaComponent* FocusedComponent = FoundFocusedNode ? Cast<UFigmaComponent>(*FoundFocusedNode) : nullptr;
+
+			ButtonBuilder.PatchStyle(DefaultComponent, HoveredComponent, PressedComponent, DisabledComponent, FocusedComponent);
 		}
 	}
 

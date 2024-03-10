@@ -25,6 +25,7 @@ public:
 	virtual void Reset();
 
 	void SetupBorder(const TArray<FFigmaPaint>& Fills, const TArray<FFigmaPaint>& Strokes, float InStrokeWeight, const EFigmaStrokeAlign& InStrokeAlign, const FVector4& InCornerRadii, const float InCornerSmoothing);
+	void SetupBrush(FSlateBrush& Brush, const TArray<FFigmaPaint> Fills, const TArray<FFigmaPaint> Strokes, float InStrokeWeight, EFigmaStrokeAlign InStrokeAlign, const FVector4& InCornerRadii, float InCornerSmoothing) const;
 
 	virtual TObjectPtr<UWidget> GetTopWidget() const;
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const;
