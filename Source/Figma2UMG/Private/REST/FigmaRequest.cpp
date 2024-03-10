@@ -49,10 +49,9 @@ void IFigmaRequest::StartDownload()
 
 void IFigmaRequest::HandleFigmaDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
 {
-	if (bSucceeded && HttpResponse.IsValid() && HttpResponse->GetContentLength() > 0)
+    const int dataSize = HttpResponse.IsValid() ? HttpResponse->GetContentLength() : 0;
+	if (bSucceeded && (dataSize > 0))
 	{
-		const int dataSize = HttpResponse->GetContentLength();
-
 		TArray<uint8> RawData;
 		RawData.Empty(dataSize);
 		RawData.AddUninitialized(dataSize);
