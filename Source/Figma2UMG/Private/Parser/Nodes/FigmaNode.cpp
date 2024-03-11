@@ -86,9 +86,14 @@ TObjectPtr<UFigmaFile> UFigmaNode::GetFigmaFile() const
 
 UObject* UFigmaNode::GetAssetOuter() const
 {
-	if(const IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
+	if (const IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
 	{
-		return FileHandle->GetOuter();
+		UObject* Outer = FileHandle->GetOuter();
+		if(Outer == nullptr && ParentNode && ParentNode->IsA<UFigmaComponentSet>())
+		{
+			return ParentNode->GetAssetOuter();
+		}
+		return Outer;
 	}
 	else if (ParentNode)
 	{

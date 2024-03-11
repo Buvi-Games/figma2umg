@@ -26,11 +26,51 @@ TObjectPtr<UWidget> FButtonBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 	}
 	else
 	{
+		if (WidgetToPatch && WidgetToPatch->GetName() == PropertyName)
+		{
+			FString OldName = PropertyName + "_OLD";
+			WidgetToPatch->Rename(*OldName);
+		}
 		Button = NewObject<UButton>(AssetOuter, *PropertyName);
 		if (WidgetToPatch)
 		{
 			Button->SetContent(WidgetToPatch);
 		}
+	}
+
+	if (Button && DefaultComponent)
+	{
+		Button->SetContent(ContainerBuilder.Patch(Button->GetContent(), AssetOuter, ""));
+		FString ParentName = PropertyName;
+		TObjectPtr<UPanelWidget> PanelWidget = ContainerBuilder.GetContainerWidget();
+		IFigmaContainer* Container = DefaultComponent;
+		Container->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([ParentName, PanelWidget](UFigmaNode& ChildNode, const int Index)
+			{
+				TObjectPtr<UWidget> OldWidget = PanelWidget->GetChildAt(Index);
+				TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
+				if (NewWidget)
+				{
+					if (NewWidget != OldWidget)
+					{
+						PanelWidget->SetFlags(RF_Transactional);
+						PanelWidget->Modify();
+
+						UE_LOG_Figma2UMG(Display, TEXT("[Widget Insert] Parent [%s] Child [%s]."), *ParentName, *ChildNode.GetNodeName());
+						if (Index < PanelWidget->GetChildrenCount())
+						{
+							PanelWidget->ReplaceChildAt(Index, NewWidget);
+						}
+						else
+						{
+							PanelWidget->AddChild(NewWidget);
+						}
+					}
+				}
+			}));
+
+
+
+
 	}
 
 	return Button;
@@ -49,6 +89,10 @@ void FButtonBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 		{
 			UE_LOG_Figma2UMG(Warning, TEXT("[FBorderBuilder::SetupWidget] Fail to setup UBorder from a null UWidget."));
 		}
+	}
+	if (Button)
+	{
+		ContainerBuilder.SetupWidget(Button->GetContent());
 	}
 }
 
@@ -94,16 +138,16 @@ TObjectPtr<UButton> FButtonBuilder::GetWidget() const
 	return Button;
 }
 
-void FButtonBuilder::PatchStyle(const UFigmaComponent* DefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const
+void FButtonBuilder::PatchStyle(const UFigmaComponent* InDefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const
 {
 	if(!Button)
 		return;
 
 	FButtonStyle Style = Button->GetStyle();
 
-	if (DefaultComponent)
+	if (InDefaultComponent)
 	{
-		DefaultComponent->SetupBrush(Style.Normal);
+		InDefaultComponent->SetupBrush(Style.Normal);
 	}
 
 	if (HoveredComponent)
@@ -127,4 +171,13 @@ void FButtonBuilder::PatchStyle(const UFigmaComponent* DefaultComponent, const U
 	}
 
 	Button->SetStyle(Style);
+}
+
+void FButtonBuilder::SetDefaultComponent(UFigmaComponent* InDefaultComponent)
+{
+	DefaultComponent = InDefaultComponent;
+	if (DefaultComponent)
+	{
+		DefaultComponent->SetupLayout(ContainerBuilder);
+	}
 }

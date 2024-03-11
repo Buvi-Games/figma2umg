@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/ContainerBuilder.h"
+#include "Builder/BorderBuilder.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
@@ -52,6 +52,7 @@ public:
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
 	void SetupBrush(FSlateBrush& Brush) const;
+	void SetupLayout(FContainerBuilder& ContainerBuilder);
 protected:
 
 	UPROPERTY()
@@ -214,5 +215,5 @@ protected:
 	TMap<EFigmaStyleType, FString> Styles;
 
 	UPROPERTY()
-	FContainerBuilder Builder;
+	FBorderBuilder Builder;
 };

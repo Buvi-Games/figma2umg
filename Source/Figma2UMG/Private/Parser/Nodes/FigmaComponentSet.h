@@ -53,5 +53,5 @@ protected:
 	TArray<FButtonBuilder> ButtonBuilders;
 
 	bool IsDoingInPlace = false;
-	TArray<UFigmaNode*> Empty;
+	TArray<UFigmaNode*> ButtonSubNodes;
 };

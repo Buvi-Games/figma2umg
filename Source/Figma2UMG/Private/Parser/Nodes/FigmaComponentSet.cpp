@@ -23,6 +23,14 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 			{				
 				FButtonBuilder& ButtonBuilder = ButtonBuilders.Add_GetRef(FButtonBuilder());
 				ButtonBuilder.SetProperty(Property.Key, Property.Value);
+
+				FString DefaultName = ButtonBuilder.GetDefaultName();
+				UFigmaNode** FoundDefaultNode = Children.FindByPredicate([DefaultName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(DefaultName, ESearchCase::IgnoreCase) == 0; });
+				UFigmaComponent* DefaultComponent = FoundDefaultNode ? Cast<UFigmaComponent>(*FoundDefaultNode) : nullptr;
+				if (DefaultComponent)
+				{
+					ButtonBuilder.SetDefaultComponent(DefaultComponent);
+				}
 			}
 			else
 			{
@@ -35,6 +43,8 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentSetRef* ComponentSetRef = FigmaFile->FindComponentSetRef(GetId());
 	ComponentSetRef->SetComponentSet(this);
+
+
 }
 
 FString UFigmaComponentSet::GetPackagePath() const
@@ -108,6 +118,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		else
 		{
 			WidgetToPatch = ButtonBuilder.Patch(WidgetToPatch, GetAssetOuter());
+
 			FString DefaultName = ButtonBuilder.GetDefaultName();
 			FString HoveredName = ButtonBuilder.GetHoveredName();
 			FString PressedName = ButtonBuilder.GetPressedName();
@@ -127,6 +138,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 			UFigmaComponent* FocusedComponent = FoundFocusedNode ? Cast<UFigmaComponent>(*FoundFocusedNode) : nullptr;
 
 			ButtonBuilder.PatchStyle(DefaultComponent, HoveredComponent, PressedComponent, DisabledComponent, FocusedComponent);
+
 		}
 	}
 
@@ -288,7 +300,17 @@ TArray<UFigmaNode*>& UFigmaComponentSet::GetChildren()
 {
 	if (!ButtonBuilders.IsEmpty())
 	{
-		return Empty;
+		ButtonSubNodes.Reset();
+
+		for (FButtonBuilder& ButtonBuilder : ButtonBuilders)
+		{
+			if (UFigmaComponent* DefaultComponent = ButtonBuilder.GetDefaultComponent())
+			{
+				ButtonSubNodes.Append(DefaultComponent->GetChildren());
+			}
+		}
+
+		return ButtonSubNodes;
 	}
 
 	return Super::GetChildren();

@@ -4,7 +4,6 @@
 #include "Builder/ContainerBuilder.h"
 
 #include "Figma2UMGModule.h"
-#include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/HorizontalBox.h"
 #include "Components/VerticalBox.h"
@@ -14,8 +13,6 @@ void FContainerBuilder::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
 	if (!Function.IsBound())
 		return;
-
-	Super::ForEach(Function);
 
 	if (Conainter)
 	{
@@ -31,7 +28,6 @@ void FContainerBuilder::SetLayout(EFigmaLayoutMode InLayoutMode, EFigmaLayoutWra
 
 TObjectPtr<UWidget> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName)
 {
-	Super::Patch(WidgetToPatch, AssetOuter, WidgetName);
 	Conainter = nullptr;
 	
 	switch (LayoutMode)
@@ -75,15 +71,7 @@ TObjectPtr<UWidget> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, 
 
 void FContainerBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 {
-	FBorderBuilder::SetupWidget(Widget);
-	if (const TObjectPtr<UBorder> BorderWrapper = GetBorder())
-	{
-		Conainter = Cast<UPanelWidget>(BorderWrapper->GetContent());
-	}
-	else
-	{
-		Conainter = Cast<UPanelWidget>(Widget);
-	}
+	Conainter = Cast<UPanelWidget>(Widget);
 
 	if(!Conainter)
 	{
@@ -100,21 +88,12 @@ void FContainerBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 
 void FContainerBuilder::Reset()
 {
-	Super::Reset();
 	Conainter = nullptr;
 }
 
 TObjectPtr<UWidget> FContainerBuilder::GetTopWidget() const
 {
-	TObjectPtr<UBorder> BorderWrapper = GetBorder();
-	if (BorderWrapper)
-	{
-		return BorderWrapper;
-	}
-	else
-	{
-		return Conainter;
-	}
+	return Conainter;
 }
 
 TObjectPtr<UPanelWidget> FContainerBuilder::GetContainerWidget() const

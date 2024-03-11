@@ -39,6 +39,7 @@ public:
 	void PatchBinds();
 
 	UWidget* CreateInstance(UObject* AssetOuter) const;
+
 protected:
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 

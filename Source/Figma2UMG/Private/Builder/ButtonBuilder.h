@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ContainerBuilder.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaComponentPropertyDefinition.h"
 
@@ -31,8 +32,9 @@ public:
 
 	TObjectPtr<UButton> GetWidget() const;
 
-	void PatchStyle(const UFigmaComponent* DefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const;
-
+	void PatchStyle(const UFigmaComponent* InDefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const;
+	void SetDefaultComponent(UFigmaComponent* InDefaultComponent);
+	UFigmaComponent* GetDefaultComponent() const { return DefaultComponent; }
 private:
 
 	UPROPERTY()
@@ -40,4 +42,8 @@ private:
 
 	FString PropertyName;
 	FFigmaComponentPropertyDefinition PropertyDefinition;
+
+	UPROPERTY()
+	UFigmaComponent* DefaultComponent = nullptr;
+	FContainerBuilder ContainerBuilder;
 };

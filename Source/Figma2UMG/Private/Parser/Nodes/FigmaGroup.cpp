@@ -34,6 +34,11 @@ void UFigmaGroup::SetupBrush(FSlateBrush& Brush) const
 	Builder.SetupBrush(Brush, Fills, Strokes, StrokeWeight, StrokeAlign, Corners, CornerSmoothing);
 }
 
+void UFigmaGroup::SetupLayout(FContainerBuilder& ContainerBuilder)
+{
+	ContainerBuilder.SetLayout(LayoutMode, LayoutWrap);
+}
+
 void UFigmaGroup::SetupWidget(TObjectPtr<UWidget> Widget)
 {
 	if (Widget)
