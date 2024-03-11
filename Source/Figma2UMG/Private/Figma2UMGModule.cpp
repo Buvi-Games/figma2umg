@@ -41,7 +41,7 @@ void FFigma2UMGModule::ShutdownModule()
 
 	if (ISettingsModule* SettingsModule = FModuleManager::GetModulePtr<ISettingsModule>("Settings"))
 	{
-		SettingsModule->UnregisterSettings("Project", "Plugins", "Figma2UMG");
+		SettingsModule->UnregisterSettings("Project", "Plugins", "VaRest");
 	}
 
 	if (!GExitPurge)

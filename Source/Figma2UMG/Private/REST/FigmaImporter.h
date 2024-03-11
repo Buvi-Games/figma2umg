@@ -33,6 +33,12 @@ protected:
 	bool CreateRequest(const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
 
+	//void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
+	//void OnCurrentRequestFail(UVaRestRequestJSON* Request);
+
+	//UFUNCTION()
+	//bool ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request);
+
 	void OnFigmaFileRequestReceived(TObjectPtr<UFigmaFile> File, const TArray<uint8>& RawData);
 
 	void OnFigmaLibraryFileRequestReceived(TObjectPtr<UFigmaFile> LibraryFile, const TArray<uint8>& RawData);
@@ -57,13 +63,15 @@ protected:
 	UFUNCTION()
 	void OnPostPatchUAssets(bool Succeeded);
 
-	FOnFileRequestCompleteDelegate OnLibraryFileRequestDelegate;
-	FOnFileRequestCompleteDelegate OnFileRequestDelegate;
+	FOnFileRequestCompleteDelegate OnVaRestLibraryFileRequestDelegate;
+	FOnFileRequestCompleteDelegate OnVaRestFileRequestDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
-	FOnImageGenerationRequestCompleteDelegate OnImagesRequestDelegate;
+	FOnImageGenerationRequestCompleteDelegate OnVaRestImagesRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
 	FProcessFinishedDelegate OnPatchUAssetsDelegate;
 	FProcessFinishedDelegate OnPostPatchUAssetsDelegate;
+
+	//FVaRestCallResponse Response;
 
 	FString AccessToken;
 	FString FileKey;
