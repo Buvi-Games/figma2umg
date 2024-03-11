@@ -49,6 +49,7 @@ public class Figma2UMG : ModuleRules
                 "BlueprintGraph",
                 "ToolMenus",
                 "ContentBrowserData",
+                "VaRest",
                 "Json",
                 "JsonUtilities",
                 "HTTP",
