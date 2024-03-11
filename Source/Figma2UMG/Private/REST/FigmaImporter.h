@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FileRequest.h"
 #include "ImageRequest.h"
-#include "ImagesGenerationRequest.h"
+#include "VaRestSubsystem.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/ImagesRequestResult.h"
 
@@ -13,8 +12,6 @@
 
 class URequestParams;
 class UFigmaFile;
-class UFileRequest;
-class UImagesGenerationRequest;
 
 DECLARE_DELEGATE_TwoParams(FOnFigmaImportUpdateStatusCB, eRequestStatus, FString);
 
@@ -29,19 +26,20 @@ public:
 	void Run();
 
 protected:
-	bool CreateRequest(const FString& CurrentFileKey, const FString& RequestIds, const FOnFileRequestCompleteDelegate& CallDelegate);
-	bool CreateRequest(const FString& CurrentFileKey, const FString& RequestIds, const FOnImageGenerationRequestCompleteDelegate& CallDelegate);
+	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
 
-	//void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
-	//void OnCurrentRequestFail(UVaRestRequestJSON* Request);
+	void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
+	void OnCurrentRequestFail(UVaRestRequestJSON* Request);
 
-	//UFUNCTION()
-	//bool ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request);
+	UFUNCTION()
+	bool ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request);
 
-	void OnFigmaFileRequestReceived(TObjectPtr<UFigmaFile> File, const TArray<uint8>& RawData);
+	UFUNCTION()
+	void OnFigmaFileRequestReceived(UVaRestRequestJSON* Request);
 
-	void OnFigmaLibraryFileRequestReceived(TObjectPtr<UFigmaFile> LibraryFile, const TArray<uint8>& RawData);
+	UFUNCTION()
+	void OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Request);
 	void DownloadNextDependency();
 
 	UFUNCTION()
@@ -50,7 +48,7 @@ protected:
 	void RequestImageURLs();
 
 	UFUNCTION()
-	void OnFigmaImagesRequestReceived(bool Succeeded, const FImagesRequestResult& result);
+	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
 
 	void DownloadNextImage();
 
@@ -63,15 +61,15 @@ protected:
 	UFUNCTION()
 	void OnPostPatchUAssets(bool Succeeded);
 
-	FOnFileRequestCompleteDelegate OnVaRestLibraryFileRequestDelegate;
-	FOnFileRequestCompleteDelegate OnVaRestFileRequestDelegate;
+	FVaRestCallDelegate OnVaRestLibraryFileRequestDelegate;
+	FVaRestCallDelegate OnVaRestFileRequestDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
-	FOnImageGenerationRequestCompleteDelegate OnVaRestImagesRequestDelegate;
+	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
 	FProcessFinishedDelegate OnPatchUAssetsDelegate;
 	FProcessFinishedDelegate OnPostPatchUAssetsDelegate;
 
-	//FVaRestCallResponse Response;
+	FVaRestCallResponse Response;
 
 	FString AccessToken;
 	FString FileKey;
@@ -87,12 +85,6 @@ protected:
 
 	UPROPERTY()
 	TMap<FString, TObjectPtr<UFigmaFile>> LibraryFileKeys;
-
-	UPROPERTY()
-	TObjectPtr<UFileRequest> FileRequest = nullptr;
-
-	UPROPERTY()
-	TObjectPtr<UImagesGenerationRequest> ImagesGenerationRequest = nullptr;
 
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;
