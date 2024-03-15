@@ -6,6 +6,7 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/FigmaFile.h"
@@ -75,6 +76,17 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 void UFigmaComponentSet::LoadAssets()
 {
 	LoadAsset<UWidgetBlueprint>();
+}
+
+TObjectPtr<UWidget> UFigmaComponentSet::GetTopWidget() const
+{
+	const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+	return WidgetBP->WidgetTree->RootWidget;
+}
+
+TObjectPtr<UPanelWidget> UFigmaComponentSet::GetContainerWidget() const
+{
+	return Super::GetContainerWidget();
 }
 
 TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
@@ -277,6 +289,13 @@ void UFigmaComponentSet::PostInsert() const
 	if (ButtonBuilders.IsEmpty())
 	{
 		Super::PostInsert();
+	}
+	else
+	{
+		for (const FButtonBuilder& ButtonBuilder : ButtonBuilders)
+		{
+			ButtonBuilder.PostInsert();
+		}
 	}
 }
 

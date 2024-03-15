@@ -27,7 +27,6 @@ public:
 
 	void SetLayout(EFigmaLayoutMode InLayoutMode, EFigmaLayoutWrap InLayoutWrap);
 
-	virtual TObjectPtr<UWidget> GetTopWidget() const;
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const;
 
 private:

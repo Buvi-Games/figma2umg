@@ -76,6 +76,14 @@ TObjectPtr<UWidget> FButtonBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 	return Button;
 }
 
+void FButtonBuilder::PostInsert() const
+{
+	if (DefaultComponent)
+	{
+		DefaultComponent->PostInsertWidgets(Button, ContainerBuilder.GetContainerWidget());
+	}
+}
+
 void FButtonBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 {
 	Button = Cast<UButton>(Widget);
@@ -148,6 +156,8 @@ void FButtonBuilder::PatchStyle(const UFigmaComponent* InDefaultComponent, const
 	if (InDefaultComponent)
 	{
 		InDefaultComponent->SetupBrush(Style.Normal);
+		const FMargin Padding = InDefaultComponent->GetPadding();
+		Style.SetNormalPadding(Padding);
 	}
 
 	if (HoveredComponent)
@@ -158,6 +168,8 @@ void FButtonBuilder::PatchStyle(const UFigmaComponent* InDefaultComponent, const
 	if (PressedComponent)
 	{
 		PressedComponent->SetupBrush(Style.Pressed);
+		const FMargin Padding = InDefaultComponent->GetPadding();
+		Style.SetPressedPadding(Padding);
 	}
 
 	if (DisabledComponent)

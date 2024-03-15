@@ -42,7 +42,7 @@ public:
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsert() const override;
+	virtual void PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UPanelWidget> ContentWidget) const override;
 	virtual void Reset() override;
 
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
@@ -53,6 +53,8 @@ public:
 
 	void SetupBrush(FSlateBrush& Brush) const;
 	void SetupLayout(FContainerBuilder& ContainerBuilder);
+
+	FMargin GetPadding() const;
 protected:
 
 	UPROPERTY()

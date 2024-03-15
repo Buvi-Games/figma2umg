@@ -20,6 +20,7 @@ public:
 	GENERATED_BODY()
 
 	TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter);
+	void PostInsert() const;
 	void SetupWidget(TObjectPtr<UWidget> Widget);
 	void Reset();
 	void SetProperty(const FString& InPropertyName, const FFigmaComponentPropertyDefinition& InDefinition);
@@ -33,8 +34,10 @@ public:
 	TObjectPtr<UButton> GetWidget() const;
 
 	void PatchStyle(const UFigmaComponent* InDefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const;
+
 	void SetDefaultComponent(UFigmaComponent* InDefaultComponent);
 	UFigmaComponent* GetDefaultComponent() const { return DefaultComponent; }
+
 private:
 
 	UPROPERTY()

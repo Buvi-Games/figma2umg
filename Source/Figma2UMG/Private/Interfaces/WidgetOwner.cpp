@@ -4,6 +4,7 @@
 #include "Interfaces/WidgetOwner.h"
 
 #include "Components/BorderSlot.h"
+#include "Components/ButtonSlot.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/VerticalBoxSlot.h"
@@ -12,8 +13,15 @@
 
 void IWidgetOwner::PostInsert() const
 {
-	const TObjectPtr<UWidget> Widget = GetTopWidget();
-	SetPosition(Widget, GetTopWidgetPosition());
+	PostInsertWidgets(GetTopWidget(), GetContainerWidget());
+}
+
+void IWidgetOwner::PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UPanelWidget> ContentWidget) const
+{
+	if (TopWidget)
+	{
+		SetPosition(TopWidget, GetTopWidgetPosition());
+	}
 }
 
 void IWidgetOwner::SetPosition(TObjectPtr<UWidget> Widget, const FVector2D& Position) const
@@ -96,6 +104,10 @@ void IWidgetOwner::SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLef
 		{
 			WrapBoxSlot->SetPadding(Padding);
 		}
+		else if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(Widget->Slot))
+		{
+			ButtonSlot->SetPadding(Padding);
+		}
 	}
 }
 
@@ -128,6 +140,11 @@ void IWidgetOwner::SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizonta
 		{
 			WrapBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
 			WrapBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(Widget->Slot))
+		{
+			ButtonSlot->SetHorizontalAlignment(HorizontalAlignment);
+			ButtonSlot->SetVerticalAlignment(VerticalAlignment);
 		}
 	}
 }

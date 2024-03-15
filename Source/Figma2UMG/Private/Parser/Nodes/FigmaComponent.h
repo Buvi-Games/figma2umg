@@ -35,6 +35,7 @@ public:
 	virtual void PostInsert() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
+
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget) const;
 	void PatchBinds();
 

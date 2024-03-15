@@ -32,6 +32,8 @@ public:
 	virtual void LoadAssets() override;
 
 	// IWidgetOwner
+	virtual TObjectPtr<UWidget> GetTopWidget() const override;
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 	virtual void PostInsert() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 

@@ -49,7 +49,7 @@ TObjectPtr<UWidget> FBorderBuilder::GetTopWidget() const
 	}
 	else
 	{
-		return ContainerBuilder.GetTopWidget();
+		return ContainerBuilder.GetContainerWidget();
 	}
 }
 
@@ -111,7 +111,7 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 	if (Border)
 	{
 		ContainerBuilder.Patch(Border->GetContent(), AssetOuter, "");
-		Border->SetContent(ContainerBuilder.GetTopWidget());
+		Border->SetContent(ContainerBuilder.GetContainerWidget());
 	}
 	else
 	{

@@ -65,7 +65,7 @@ TObjectPtr<UWidget> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, 
 	break;
 	}
 
-	return GetTopWidget();
+	return Conainter;
 
 }
 
@@ -89,11 +89,6 @@ void FContainerBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 void FContainerBuilder::Reset()
 {
 	Conainter = nullptr;
-}
-
-TObjectPtr<UWidget> FContainerBuilder::GetTopWidget() const
-{
-	return Conainter;
 }
 
 TObjectPtr<UPanelWidget> FContainerBuilder::GetContainerWidget() const

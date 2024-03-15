@@ -49,16 +49,25 @@ void UFigmaGroup::SetupWidget(TObjectPtr<UWidget> Widget)
 	Builder.SetupWidget(Widget);
 }
 
-void UFigmaGroup::PostInsert() const
+void UFigmaGroup::PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UPanelWidget> ContentWidget) const
 {
-	TObjectPtr<UWidget> TopWidget = GetTopWidget();
-	if (!TopWidget)
-		return;
+	IWidgetOwner::PostInsertWidgets(TopWidget, ContentWidget);
+	if (TopWidget)
+	{
+		SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
+	}
 
-	IWidgetOwner::PostInsert();
-
-	SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
-	SetPadding(GetContainerWidget(), PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
+	if (ContentWidget)
+	{
+		if(TopWidget->IsA<UButton>())
+		{
+			SetPadding(ContentWidget, 0.0f, 0.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			SetPadding(ContentWidget, PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
+		}
+	}
 }
 
 void UFigmaGroup::Reset()
@@ -100,4 +109,16 @@ void UFigmaGroup::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 			WidgetOwner->PatchBinds(WidgetBp);
 		}
 	}
+}
+
+
+FMargin UFigmaGroup::GetPadding() const
+{
+	FMargin Padding;
+	Padding.Left = PaddingLeft;
+	Padding.Right = PaddingRight;
+	Padding.Top = PaddingTop;
+	Padding.Bottom = PaddingBottom;
+
+	return Padding;
 }
