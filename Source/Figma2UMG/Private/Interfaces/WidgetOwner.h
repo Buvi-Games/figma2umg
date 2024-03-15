@@ -43,6 +43,7 @@ public:
 
 	void SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizontal TextAlignHorizontal, EFigmaTextAlignVertical TextAlignVertical) const;
 
+	void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget) const;
 protected:
 	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
 	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;

@@ -40,6 +40,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	{
 		if (WidgetToPatch && WidgetToPatch.GetClass()->ClassGeneratedBy == ComponentAsset)
 		{
+			TryRenameWidget(GetUniqueName(), WidgetToPatch);
 			InstanceAsset = WidgetToPatch;
 			return WidgetToPatch;
 		}
@@ -52,10 +53,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 			WidgetToPatch = Template->Create(OwningObject);
 			if (WidgetToPatch)
 			{
-				//if (NewWidget->GetName() != GetUniqueName())
-				//{
-				//	NewWidget->Rename(*GetUniqueName());
-				//}
+				TryRenameWidget(GetUniqueName(), WidgetToPatch);
 				WidgetToPatch->CreatedFromPalette();
 			}
 

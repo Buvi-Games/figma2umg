@@ -132,6 +132,18 @@ void IWidgetOwner::SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizonta
 	}
 }
 
+void IWidgetOwner::TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget) const
+{
+	if (!Widget)
+		return;
+
+	if (Widget->GetName().Contains(InName, ESearchCase::IgnoreCase))
+		return;
+
+	const FString UniqueName = MakeUniqueObjectName(Widget->GetOuter(), Widget->GetClass(), *InName).ToString();
+	Widget->Rename(*UniqueName);
+}
+
 EHorizontalAlignment IWidgetOwner::Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const
 {
 	switch (TextAlignHorizontal)
