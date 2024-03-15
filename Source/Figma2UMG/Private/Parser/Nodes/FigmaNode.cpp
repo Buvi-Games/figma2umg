@@ -183,6 +183,18 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, ParentWidget](UFigmaNode& ChildNode, const int Index)
 			{
 				TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
+				if (OldWidget == nullptr)
+				{
+					TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
+					for (TObjectPtr<UWidget> Widget : AllChildren)
+					{
+						if (Widget->GetName().Contains(ChildNode.GetNodeName(), ESearchCase::IgnoreCase) || ChildNode.GetNodeName().Contains(Widget->GetName(), ESearchCase::IgnoreCase))
+						{
+							OldWidget = Widget;
+							break;
+						}
+					}
+				}
 				TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
 				if (NewWidget)
 				{
