@@ -33,6 +33,12 @@
 #include "Vectors/FigmaVectorNode.h"
 #include "Vectors/FigmaWashiTape.h"
 
+FString UFigmaNode::GetIdForName() const
+{
+	FString IdForName = Id.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
+	return IdForName;
+}
+
 FString UFigmaNode::GetNodeName() const
 {
 	return Name;
@@ -40,8 +46,7 @@ FString UFigmaNode::GetNodeName() const
 
 FString UFigmaNode::GetUniqueName() const
 {
-	FString IdReplace = Id.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
-	return Name + "--" + IdReplace;
+	return Name + "--" + GetIdForName();
 }
 
 ESlateVisibility UFigmaNode::GetVisibility() const
