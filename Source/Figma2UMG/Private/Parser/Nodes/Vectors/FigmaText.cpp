@@ -32,7 +32,7 @@ TObjectPtr<UWidget> UFigmaText::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	{
 		if (Builder.TextBlock->GetName() != GetUniqueName())
 		{
-			Builder.TextBlock->Rename(*GetUniqueName());
+			IWidgetOwner::TryRenameWidget(GetUniqueName(), Builder.TextBlock);
 		}
 	}
 	else

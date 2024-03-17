@@ -53,22 +53,13 @@ TObjectPtr<WidgetType> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatc
 			PatchedWidget = Cast<WidgetType>(BorderWrapperOld->GetContent());
 		}
 
-		if (WidgetToPatch)
-		{
-			if (WidgetToPatch->GetName() == WidgetName)
-			{
-				FString OldName = (WidgetName + "_OLD");
-				WidgetToPatch->Rename(*OldName);
-			}
-		}
-
 		if (!PatchedWidget)
 		{
 			PatchedWidget = WidgetName.IsEmpty() ? NewObject<WidgetType>(AssetOuter) : NewObject<WidgetType>(AssetOuter, *WidgetName);
 		}
 		else if (PatchedWidget->GetName() != WidgetName)
 		{
-			PatchedWidget->Rename(*WidgetName);
+			IWidgetOwner::TryRenameWidget(WidgetName, PatchedWidget);
 		}
 	}
 

@@ -70,10 +70,7 @@ TObjectPtr<UWidget> UFigmaVectorNode::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	Builder.Image = Cast<UImage>(WidgetToPatch);
 	if (Builder.Image)
 	{
-		if (Builder.Image->GetName() != GetUniqueName())
-		{
-			Builder.Image->Rename(*GetUniqueName());
-		}
+		IWidgetOwner::TryRenameWidget(GetUniqueName(), Builder.Image);
 	}
 	else
 	{

@@ -7,6 +7,7 @@
 #include "WidgetBlueprintBuilder.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/WidgetSwitcher.h"
+#include "Interfaces/WidgetOwner.h"
 
 TObjectPtr<UWidgetSwitcher> FSwitcherBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter)
 {
@@ -79,7 +80,7 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 	}
 	else if (WidgetSwitcher->GetName() != PropertyName)
 	{
-		WidgetSwitcher->Rename(*PropertyName);
+		IWidgetOwner::TryRenameWidget(PropertyName, WidgetSwitcher);
 	}
 
 	WidgetBlueprintBuilder::CreateSwitchFunction(WidgetBP, PropertyName, PropertyDefinition.VariantOptions);

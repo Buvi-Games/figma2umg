@@ -75,7 +75,7 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 			}
 			else if (MainWidget->GetName() != GetUniqueName())
 			{
-				MainWidget->Rename(*GetUniqueName());
+				IWidgetOwner::TryRenameWidget(GetUniqueName(), MainWidget);
 			}
 		}
 	}
@@ -92,7 +92,7 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 		}
 		else if (MainWidget->GetName() != GetUniqueName())
 		{
-			MainWidget->Rename(*GetUniqueName());
+			IWidgetOwner::TryRenameWidget(GetUniqueName(), MainWidget);
 		}
 	}
 

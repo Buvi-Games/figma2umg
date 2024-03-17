@@ -68,7 +68,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		{
 			if (BuilderFallback.Image->GetName() != GetUniqueName())
 			{
-				BuilderFallback.Image->Rename(*GetUniqueName());
+				IWidgetOwner::TryRenameWidget(GetUniqueName(), BuilderFallback.Image);
 			}
 		}
 		else

@@ -16,10 +16,7 @@ TObjectPtr<UWidget> UFigmaCanvas::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	Canvas = nullptr;
 	if (WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
 	{
-		if (WidgetToPatch->GetName() != GetUniqueName())
-		{
-			WidgetToPatch->Rename(*GetUniqueName());
-		}
+		IWidgetOwner::TryRenameWidget(GetUniqueName(), WidgetToPatch);
 		UE_LOG_Figma2UMG(Display, TEXT("%s Patching Canvas "), *GetUniqueName());
 		Canvas = Cast<UCanvasPanel>(WidgetToPatch);
 	}

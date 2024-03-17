@@ -12,17 +12,7 @@ TObjectPtr<UWidget> FButtonBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 	Button = Cast<UButton>(WidgetToPatch);
 	if (Button)
 	{
-		if (Button->GetName() != PropertyName)
-		{
-			if (StaticFindObject(nullptr, Button->GetOuter(), *PropertyName, true))
-			{
-				UE_LOG_Figma2UMG(Error, TEXT("Failt to rename %s to %s. Name already exists."), *Button->GetName(), *PropertyName);
-			}
-			else
-			{
-				Button->Rename(*PropertyName);
-			}
-		}
+		IWidgetOwner::TryRenameWidget(PropertyName, Button);
 	}
 	else
 	{
