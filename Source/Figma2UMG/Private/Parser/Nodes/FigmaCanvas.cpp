@@ -23,7 +23,7 @@ TObjectPtr<UWidget> UFigmaCanvas::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	else
 	{
 		UE_LOG_Figma2UMG(Display, TEXT("%s New Canvas"), *GetUniqueName());
-		Canvas = NewObject<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
+		Canvas = IWidgetOwner::NewWidget<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
 	}
 
 	return Canvas;

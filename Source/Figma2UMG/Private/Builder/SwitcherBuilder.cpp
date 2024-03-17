@@ -61,13 +61,7 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 	WidgetSwitcher = Found ? Cast<UWidgetSwitcher>(*Found) : nullptr;
 	if (WidgetSwitcher == nullptr)
 	{
-		if(WidgetBP->WidgetTree->RootWidget && WidgetBP->WidgetTree->RootWidget.GetName() == PropertyName)
-		{
-			const FString OldName = PropertyName + "_OLD";
-			WidgetBP->WidgetTree->RootWidget->Rename(*OldName);
-		}
-
-		WidgetSwitcher = NewObject<UWidgetSwitcher>(WidgetBP->WidgetTree, *PropertyName);
+		WidgetSwitcher = IWidgetOwner::NewWidget<UWidgetSwitcher>(WidgetBP->WidgetTree, *PropertyName);
 		if (SwitchWidgets.IsEmpty())
 		{
 			WidgetBP->WidgetTree->RootWidget = WidgetSwitcher;

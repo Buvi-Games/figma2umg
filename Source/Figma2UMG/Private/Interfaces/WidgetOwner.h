@@ -45,7 +45,17 @@ public:
 	void SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizontal TextAlignHorizontal, EFigmaTextAlignVertical TextAlignVertical) const;
 
 	static void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget);
+
+	template<class Type>
+	static Type* NewWidget(UObject* TreeViewOuter, const FString& InName);
 protected:
 	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
 	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;
 };
+
+template <class Type>
+Type* IWidgetOwner::NewWidget(UObject* TreeViewOuter, const FString& InName)
+{
+	const FString UniqueName = MakeUniqueObjectName(TreeViewOuter, Type::StaticClass(), *InName).ToString();
+	return NewObject<Type>(TreeViewOuter, *UniqueName);
+}

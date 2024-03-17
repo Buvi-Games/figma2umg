@@ -16,12 +16,7 @@ TObjectPtr<UWidget> FButtonBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 	}
 	else
 	{
-		if (WidgetToPatch && WidgetToPatch->GetName() == PropertyName)
-		{
-			FString OldName = PropertyName + "_OLD";
-			WidgetToPatch->Rename(*OldName);
-		}
-		Button = NewObject<UButton>(AssetOuter, *PropertyName);
+		Button = IWidgetOwner::NewWidget<UButton>(AssetOuter, *PropertyName);
 		if (WidgetToPatch)
 		{
 			Button->SetContent(WidgetToPatch);

@@ -70,12 +70,8 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		}
 		else
 		{
-			if(WidgetToPatch && WidgetToPatch->GetName() == WidgetName)
-			{
-				FString OldName = WidgetName + "_OLD";
-				WidgetToPatch->Rename(*OldName);
-			}
-			Border = NewObject<UBorder>(AssetOuter, *WidgetName);
+			Border = IWidgetOwner::NewWidget<UBorder>(AssetOuter, *WidgetName);
+
 			if (WidgetToPatch)
 			{
 				Border->SetContent(WidgetToPatch);

@@ -74,7 +74,7 @@ TObjectPtr<UWidget> UFigmaVectorNode::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	}
 	else
 	{
-		Builder.Image = NewObject<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
+		Builder.Image = IWidgetOwner::NewWidget<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
 	}
 
 	UTexture2D* Texture = GetAsset<UTexture2D>();

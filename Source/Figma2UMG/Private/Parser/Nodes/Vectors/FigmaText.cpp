@@ -37,7 +37,7 @@ TObjectPtr<UWidget> UFigmaText::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	}
 	else
 	{
-		Builder.TextBlock = NewObject<UTextBlock>(GetAssetOuter(), *GetUniqueName());
+		Builder.TextBlock = IWidgetOwner::NewWidget<UTextBlock>(GetAssetOuter(), *GetUniqueName());
 	}
 
 	Builder.TextBlock->SetText(FText::FromString(Characters));

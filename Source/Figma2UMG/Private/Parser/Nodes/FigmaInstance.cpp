@@ -73,7 +73,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		}
 		else
 		{
-			BuilderFallback.Image = NewObject<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
+			BuilderFallback.Image = IWidgetOwner::NewWidget<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
 		}
 
 		BuilderFallback.Image->SetBrushFromTexture(GetAsset<UTexture2D>(), true);

@@ -55,7 +55,7 @@ TObjectPtr<WidgetType> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatc
 
 		if (!PatchedWidget)
 		{
-			PatchedWidget = WidgetName.IsEmpty() ? NewObject<WidgetType>(AssetOuter) : NewObject<WidgetType>(AssetOuter, *WidgetName);
+			PatchedWidget = WidgetName.IsEmpty() ? NewObject<WidgetType>(AssetOuter) : IWidgetOwner::NewWidget<WidgetType>(AssetOuter, *WidgetName);
 		}
 		else if (PatchedWidget->GetName() != WidgetName)
 		{

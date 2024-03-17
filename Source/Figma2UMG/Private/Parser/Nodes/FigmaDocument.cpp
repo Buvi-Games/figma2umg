@@ -70,7 +70,7 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 			if (MainWidget == nullptr)
 			{
 				UPanelWidget* OldRootWidget = Cast<UPanelWidget>(WidgetToPatch);
-				WidgetToPatch = MainWidget = NewObject<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
+				WidgetToPatch = MainWidget = IWidgetOwner::NewWidget<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
 				MainWidget->AddChild(OldRootWidget);
 			}
 			else if (MainWidget->GetName() != GetUniqueName())
@@ -88,7 +88,7 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 		UPanelWidget* MainWidget = WidgetToPatch ? Cast<UWidgetSwitcher>(WidgetToPatch) : nullptr;
 		if (MainWidget == nullptr)
 		{
-			WidgetToPatch = MainWidget = NewObject<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
+			WidgetToPatch = MainWidget = IWidgetOwner::NewWidget<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
 		}
 		else if (MainWidget->GetName() != GetUniqueName())
 		{
