@@ -193,6 +193,9 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 					TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
 					for (TObjectPtr<UWidget> Widget : AllChildren)
 					{
+						if (Widget == nullptr)
+							continue;
+
 						if (Widget->GetName().Contains(ChildNode.GetIdForName(), ESearchCase::IgnoreCase))
 						{
 							OldWidget = Widget;
