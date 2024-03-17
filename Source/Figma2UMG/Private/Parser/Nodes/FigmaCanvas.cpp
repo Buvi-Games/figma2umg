@@ -16,17 +16,14 @@ TObjectPtr<UWidget> UFigmaCanvas::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	Canvas = nullptr;
 	if (WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
 	{
-		if (WidgetToPatch->GetName() != GetUniqueName())
-		{
-			WidgetToPatch->Rename(*GetUniqueName());
-		}
+		IWidgetOwner::TryRenameWidget(GetUniqueName(), WidgetToPatch);
 		UE_LOG_Figma2UMG(Display, TEXT("%s Patching Canvas "), *GetUniqueName());
 		Canvas = Cast<UCanvasPanel>(WidgetToPatch);
 	}
 	else
 	{
 		UE_LOG_Figma2UMG(Display, TEXT("%s New Canvas"), *GetUniqueName());
-		Canvas = NewObject<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
+		Canvas = IWidgetOwner::NewWidget<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
 	}
 
 	return Canvas;

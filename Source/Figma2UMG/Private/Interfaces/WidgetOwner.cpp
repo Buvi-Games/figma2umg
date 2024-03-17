@@ -149,7 +149,7 @@ void IWidgetOwner::SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizonta
 	}
 }
 
-void IWidgetOwner::TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget) const
+void IWidgetOwner::TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget)
 {
 	if (!Widget)
 		return;

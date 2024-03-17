@@ -70,14 +70,11 @@ TObjectPtr<UWidget> UFigmaVectorNode::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	Builder.Image = Cast<UImage>(WidgetToPatch);
 	if (Builder.Image)
 	{
-		if (Builder.Image->GetName() != GetUniqueName())
-		{
-			Builder.Image->Rename(*GetUniqueName());
-		}
+		IWidgetOwner::TryRenameWidget(GetUniqueName(), Builder.Image);
 	}
 	else
 	{
-		Builder.Image = NewObject<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
+		Builder.Image = IWidgetOwner::NewWidget<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName());
 	}
 
 	UTexture2D* Texture = GetAsset<UTexture2D>();

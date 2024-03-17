@@ -7,6 +7,7 @@
 #include "WidgetBlueprintBuilder.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/WidgetSwitcher.h"
+#include "Interfaces/WidgetOwner.h"
 
 TObjectPtr<UWidgetSwitcher> FSwitcherBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter)
 {
@@ -60,13 +61,7 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 	WidgetSwitcher = Found ? Cast<UWidgetSwitcher>(*Found) : nullptr;
 	if (WidgetSwitcher == nullptr)
 	{
-		if(WidgetBP->WidgetTree->RootWidget && WidgetBP->WidgetTree->RootWidget.GetName() == PropertyName)
-		{
-			const FString OldName = PropertyName + "_OLD";
-			WidgetBP->WidgetTree->RootWidget->Rename(*OldName);
-		}
-
-		WidgetSwitcher = NewObject<UWidgetSwitcher>(WidgetBP->WidgetTree, *PropertyName);
+		WidgetSwitcher = IWidgetOwner::NewWidget<UWidgetSwitcher>(WidgetBP->WidgetTree, *PropertyName);
 		if (SwitchWidgets.IsEmpty())
 		{
 			WidgetBP->WidgetTree->RootWidget = WidgetSwitcher;
@@ -79,7 +74,7 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 	}
 	else if (WidgetSwitcher->GetName() != PropertyName)
 	{
-		WidgetSwitcher->Rename(*PropertyName);
+		IWidgetOwner::TryRenameWidget(PropertyName, WidgetSwitcher);
 	}
 
 	WidgetBlueprintBuilder::CreateSwitchFunction(WidgetBP, PropertyName, PropertyDefinition.VariantOptions);

@@ -66,26 +66,12 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		Border = Cast<UBorder>(WidgetToPatch);
 		if (Border)
 		{
-			if (Border->GetName() != WidgetName)
-			{
-				if (StaticFindObject(nullptr, Border->GetOuter(), *WidgetName, true))
-				{
-					UE_LOG_Figma2UMG(Error, TEXT("Failt to rename %s to %s. Name already exists."), *Border->GetName(), *WidgetName);
-				}
-				else
-				{
-					Border->Rename(*WidgetName);
-				}
-			}
+			IWidgetOwner::TryRenameWidget(WidgetName, Border);
 		}
 		else
 		{
-			if(WidgetToPatch && WidgetToPatch->GetName() == WidgetName)
-			{
-				FString OldName = WidgetName + "_OLD";
-				WidgetToPatch->Rename(*OldName);
-			}
-			Border = NewObject<UBorder>(AssetOuter, *WidgetName);
+			Border = IWidgetOwner::NewWidget<UBorder>(AssetOuter, *WidgetName);
+
 			if (WidgetToPatch)
 			{
 				Border->SetContent(WidgetToPatch);
