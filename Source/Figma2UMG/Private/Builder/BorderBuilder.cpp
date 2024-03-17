@@ -3,9 +3,11 @@
 
 #include "Builder/BorderBuilder.h"
 
+#include "Components/Widget.h"
 #include "Figma2UMGModule.h"
 #include "Components/Border.h"
 #include "Parser/Properties/FigmaPaint.h"
+#include "UObject/ObjectPtr.h"
 
 #define ALWAYS_BORDER false
 
@@ -18,6 +20,8 @@ void FBorderBuilder::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 	{
 		Function.ExecuteIfBound(*Border);
 	}
+
+	ContainerBuilder.ForEach(Function);
 }
 
 void FBorderBuilder::SetupBorder(const TArray<FFigmaPaint>& Fills, const TArray<FFigmaPaint>& Strokes, float InStrokeWeight, const EFigmaStrokeAlign& InStrokeAlign, const FVector4& InCornerRadii, const float InCornerSmoothing)
@@ -39,12 +43,19 @@ void FBorderBuilder::SetupBorder(const TArray<FFigmaPaint>& Fills, const TArray<
 
 TObjectPtr<UWidget> FBorderBuilder::GetTopWidget() const
 {
-	return Border;
+	if (Border)
+	{
+		return Border;
+	}
+	else
+	{
+		return ContainerBuilder.GetContainerWidget();
+	}
 }
 
 TObjectPtr<UPanelWidget> FBorderBuilder::GetContainerWidget() const
 {
-	return nullptr;
+	return ContainerBuilder.GetContainerWidget();
 }
 
 TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName)
@@ -69,6 +80,11 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		}
 		else
 		{
+			if(WidgetToPatch && WidgetToPatch->GetName() == WidgetName)
+			{
+				FString OldName = WidgetName + "_OLD";
+				WidgetToPatch->Rename(*OldName);
+			}
 			Border = NewObject<UBorder>(AssetOuter, *WidgetName);
 			if (WidgetToPatch)
 			{
@@ -92,14 +108,29 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		Border = nullptr;
 	}
 
-	return Border;
+	if (Border)
+	{
+		ContainerBuilder.Patch(Border->GetContent(), AssetOuter, "");
+		Border->SetContent(ContainerBuilder.GetContainerWidget());
+	}
+	else
+	{
+		ContainerBuilder.Patch(WidgetToPatch, AssetOuter, WidgetName);
+	}
+
+	return GetTopWidget();
 }
 
 void FBorderBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 {
 	Border = Cast<UBorder>(Widget);
-	if (!Border)
+	if (Border)
 	{
+		ContainerBuilder.SetupWidget(Border->GetContent());
+	}
+	else
+	{
+		ContainerBuilder.SetupWidget(Widget);
 		const bool RequireBorder = ((Fill && Fill->Visible) || (Stroke && Stroke->Visible));
 		if (RequireBorder || ALWAYS_BORDER)
 		{
@@ -113,6 +144,41 @@ void FBorderBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 			}
 		}
 	}
+
+
+}
+
+
+void FBorderBuilder::SetupBrush(FSlateBrush& Brush, const TArray<FFigmaPaint>& Fills, const TArray<FFigmaPaint>& Strokes, float InStrokeWeight, EFigmaStrokeAlign InStrokeAlign, const FVector4& InCornerRadii, float InCornerSmoothing) const
+{
+	if (!Fills.IsEmpty() && Fills[0].Visible)
+	{
+		Brush.TintColor = Fills[0].Color.GetLinearColor();
+	}
+	else
+	{
+		Brush.TintColor = FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	}
+
+	if (!Strokes.IsEmpty())
+	{
+		Brush.OutlineSettings.Color = Strokes[0].Color.GetLinearColor();
+		Brush.OutlineSettings.Width = InStrokeWeight;
+	}
+	else
+	{
+		Brush.OutlineSettings.Color = FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
+		Brush.OutlineSettings.Width = 0.0f;
+
+	}
+
+	Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
+	Brush.OutlineSettings.CornerRadii = InCornerRadii;
+}
+
+void FBorderBuilder::SetLayout(EFigmaLayoutMode InLayoutMode, EFigmaLayoutWrap InLayoutWrap)
+{
+	ContainerBuilder.SetLayout(InLayoutMode, InLayoutWrap);
 }
 
 void FBorderBuilder::SetFill() const
@@ -166,4 +232,5 @@ void FBorderBuilder::SetCorner() const
 void FBorderBuilder::Reset()
 {
 	Border = nullptr;
+	ContainerBuilder.Reset();
 }

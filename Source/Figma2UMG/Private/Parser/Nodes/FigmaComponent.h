@@ -35,10 +35,12 @@ public:
 	virtual void PostInsert() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
+
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget) const;
 	void PatchBinds();
 
 	UWidget* CreateInstance(UObject* AssetOuter) const;
+
 protected:
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 

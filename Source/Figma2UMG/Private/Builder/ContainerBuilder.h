@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BorderBuilder.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Interfaces/WidgetOwner.h"
@@ -12,23 +11,24 @@
 #include "ContainerBuilder.generated.h"
 
 struct FFigmaPaint;
+class UWidget;
 
 USTRUCT()
-struct FIGMA2UMG_API FContainerBuilder : public FBorderBuilder
+struct FIGMA2UMG_API FContainerBuilder
 {
 public:
 	GENERATED_BODY()
 
-	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
+	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function);
 
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void Reset() override;
+	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName);
+	virtual void SetupWidget(TObjectPtr<UWidget> Widget);
+	virtual void Reset();
 
 	void SetLayout(EFigmaLayoutMode InLayoutMode, EFigmaLayoutWrap InLayoutWrap);
 
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const;
+
 private:
 	template<class WidgetType>
 	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName);
@@ -44,42 +44,31 @@ template <class WidgetType>
 TObjectPtr<WidgetType> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName)
 {
 	TObjectPtr<WidgetType> PatchedWidget = nullptr;
-	if (const TObjectPtr<UBorder> BorderWrapper = GetBorder())
+
+	PatchedWidget = Cast<WidgetType>(WidgetToPatch);
+	if (!PatchedWidget)
 	{
-		PatchedWidget = Cast<WidgetType>(BorderWrapper->GetContent());
-		if (!PatchedWidget)
+		if(const TObjectPtr<UBorder> BorderWrapperOld = Cast<UBorder>(WidgetToPatch))
 		{
-			PatchedWidget = NewObject<WidgetType>(AssetOuter);
-			BorderWrapper->SetContent(PatchedWidget);
+			PatchedWidget = Cast<WidgetType>(BorderWrapperOld->GetContent());
 		}
-	}
-	else
-	{
-		PatchedWidget = Cast<WidgetType>(WidgetToPatch);
+
+		if (WidgetToPatch)
+		{
+			if (WidgetToPatch->GetName() == WidgetName)
+			{
+				FString OldName = (WidgetName + "_OLD");
+				WidgetToPatch->Rename(*OldName);
+			}
+		}
+
 		if (!PatchedWidget)
 		{
-			if(const TObjectPtr<UBorder> BorderWrapperOld = Cast<UBorder>(WidgetToPatch))
-			{
-				PatchedWidget = Cast<WidgetType>(BorderWrapperOld->GetContent());
-			}
-
-			if (WidgetToPatch)
-			{
-				if (WidgetToPatch->GetName() == WidgetName)
-				{
-					FString OldName = (WidgetName + "_OLD");
-					WidgetToPatch->Rename(*OldName);
-				}
-			}
-
-			if (!PatchedWidget)
-			{
-				PatchedWidget = NewObject<WidgetType>(AssetOuter, *WidgetName);
-			}
-			else if (PatchedWidget->GetName() != WidgetName)
-			{
-				PatchedWidget->Rename(*WidgetName);
-			}
+			PatchedWidget = WidgetName.IsEmpty() ? NewObject<WidgetType>(AssetOuter) : NewObject<WidgetType>(AssetOuter, *WidgetName);
+		}
+		else if (PatchedWidget->GetName() != WidgetName)
+		{
+			PatchedWidget->Rename(*WidgetName);
 		}
 	}
 

@@ -6,8 +6,6 @@
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintBuilder.h"
-#include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
@@ -42,6 +40,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	{
 		if (WidgetToPatch && WidgetToPatch.GetClass()->ClassGeneratedBy == ComponentAsset)
 		{
+			TryRenameWidget(GetUniqueName(), WidgetToPatch);
 			InstanceAsset = WidgetToPatch;
 			return WidgetToPatch;
 		}
@@ -54,10 +53,7 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 			WidgetToPatch = Template->Create(OwningObject);
 			if (WidgetToPatch)
 			{
-				//if (NewWidget->GetName() != GetUniqueName())
-				//{
-				//	NewWidget->Rename(*GetUniqueName());
-				//}
+				TryRenameWidget(GetUniqueName(), WidgetToPatch);
 				WidgetToPatch->CreatedFromPalette();
 			}
 

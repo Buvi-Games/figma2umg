@@ -25,4 +25,18 @@ public:
 
 	UPROPERTY()
 	TArray<FFigmaInstanceSwapPreferredValue> PreferredValues;
+
+	bool IsButton() const;
 };
+
+static FString Hovered = FString("Hovered");
+static FString Pressed = FString("Pressed");
+inline bool FFigmaComponentPropertyDefinition::IsButton() const
+{
+	if (Type != EFigmaComponentPropertyType::VARIANT)
+		return false;
+
+	const bool hasHovered = VariantOptions.Find(Hovered) != INDEX_NONE;
+	const bool hasPressed = VariantOptions.Find(Pressed) != INDEX_NONE;
+	return (hasHovered && hasPressed);
+}

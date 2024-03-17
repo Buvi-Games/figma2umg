@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/ContainerBuilder.h"
+#include "Builder/BorderBuilder.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
@@ -70,5 +70,5 @@ protected:
 	FFigmaRectangle AbsoluteRenderBounds;
 
 	UPROPERTY()
-	FContainerBuilder Builder;
+	FBorderBuilder Builder;
 };

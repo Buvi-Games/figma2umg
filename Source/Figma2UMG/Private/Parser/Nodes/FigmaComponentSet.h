@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
+#include "Builder/ButtonBuilder.h"
 #include "Builder/SwitcherBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Parser/Properties/FigmaComponentPropertyDefinition.h"
@@ -31,6 +32,8 @@ public:
 	virtual void LoadAssets() override;
 
 	// IWidgetOwner
+	virtual TObjectPtr<UWidget> GetTopWidget() const override;
+	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 	virtual void PostInsert() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
@@ -48,9 +51,9 @@ protected:
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
 
-	TArray<FSwitcherBuilder> Builders;
+	TArray<FSwitcherBuilder> SwitchBuilders;
+	TArray<FButtonBuilder> ButtonBuilders;
 
 	bool IsDoingInPlace = false;
-	bool IsButton = false;
-	TArray<UFigmaNode*> Empty;
+	TArray<UFigmaNode*> ButtonSubNodes;
 };

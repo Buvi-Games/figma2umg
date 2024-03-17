@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/ContainerBuilder.h"
+#include "Builder/BorderBuilder.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
@@ -21,6 +21,8 @@
 #include "Parser/Properties/FigmaVector.h"
 
 #include "FigmaGroup.generated.h"
+
+struct FButtonBuilder;
 
 UCLASS()
 class UFigmaGroup : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
@@ -40,7 +42,7 @@ public:
 
 	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsert() const override;
+	virtual void PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UPanelWidget> ContentWidget) const override;
 	virtual void Reset() override;
 
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
@@ -48,6 +50,11 @@ public:
 
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
+
+	void SetupBrush(FSlateBrush& Brush) const;
+	void SetupLayout(FContainerBuilder& ContainerBuilder);
+
+	FMargin GetPadding() const;
 protected:
 
 	UPROPERTY()
@@ -210,5 +217,5 @@ protected:
 	TMap<EFigmaStyleType, FString> Styles;
 
 	UPROPERTY()
-	FContainerBuilder Builder;
+	FBorderBuilder Builder;
 };

@@ -46,18 +46,34 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 	TArray<UWidget*> Widgets;
 	WidgetBP->WidgetTree->GetAllWidgets(Widgets);
 	FString NameToFind = PropertyName;
-	UWidget** Found = Widgets.FindByPredicate([NameToFind](const UWidget* Widget) {return Widget->IsA<UWidgetSwitcher>() && Widget->GetName() == NameToFind; });
+	TArray<UWidgetSwitcher*> SwitchWidgets;
+	for(UWidget* Widget: Widgets)
+	{
+		if(Widget->IsA<UWidgetSwitcher>())
+		{
+			SwitchWidgets.Add(Cast<UWidgetSwitcher>(Widget));
+		}
+	}
+
+
+	UWidgetSwitcher** Found = SwitchWidgets.FindByPredicate([NameToFind](const UWidget* Widget) {return Widget->IsA<UWidgetSwitcher>() && Widget->GetName() == NameToFind; });
 	WidgetSwitcher = Found ? Cast<UWidgetSwitcher>(*Found) : nullptr;
 	if (WidgetSwitcher == nullptr)
 	{
+		if(WidgetBP->WidgetTree->RootWidget && WidgetBP->WidgetTree->RootWidget.GetName() == PropertyName)
+		{
+			const FString OldName = PropertyName + "_OLD";
+			WidgetBP->WidgetTree->RootWidget->Rename(*OldName);
+		}
+
 		WidgetSwitcher = NewObject<UWidgetSwitcher>(WidgetBP->WidgetTree, *PropertyName);
-		if (Widgets.IsEmpty())
+		if (SwitchWidgets.IsEmpty())
 		{
 			WidgetBP->WidgetTree->RootWidget = WidgetSwitcher;
 		}
 		else
 		{
-			UWidgetSwitcher* ParentSwitch = Cast<UWidgetSwitcher>(Widgets.Last());
+			UWidgetSwitcher* ParentSwitch = Cast<UWidgetSwitcher>(SwitchWidgets.Last());
 			ParentSwitch->AddChild(WidgetSwitcher);
 		}
 	}
