@@ -80,8 +80,15 @@ void UFigmaComponentSet::LoadAssets()
 
 TObjectPtr<UWidget> UFigmaComponentSet::GetTopWidget() const
 {
-	const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
-	return WidgetBP->WidgetTree->RootWidget;
+	if (ButtonBuilders.IsEmpty())
+	{
+		return Super::GetTopWidget();
+	}
+	else
+	{
+		const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+		return WidgetBP->WidgetTree->RootWidget;
+	}
 }
 
 TObjectPtr<UPanelWidget> UFigmaComponentSet::GetContainerWidget() const
