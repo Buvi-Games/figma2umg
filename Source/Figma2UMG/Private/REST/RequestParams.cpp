@@ -20,8 +20,9 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 	ContentRootFolder = "/Game/Figma";
 
 	//#if !UE_BUILD_SHIPPING
-	Ids.Add("146:1357");
-	Ids.Add("212:1393");
+	//Ids.Add("146:1357");
+	//Ids.Add("212:1393");
+	Ids.Add("212:1394");
 	//#endif
 
 }
