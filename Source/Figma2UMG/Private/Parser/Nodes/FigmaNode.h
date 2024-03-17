@@ -58,6 +58,7 @@ public:
 	void PostPatchWidget();
 
 	FString GetId() const { return Id; }
+	FString GetIdForName() const;
 
 	FString GetNodeName() const;
 	FString GetUniqueName() const;

@@ -33,6 +33,12 @@
 #include "Vectors/FigmaVectorNode.h"
 #include "Vectors/FigmaWashiTape.h"
 
+FString UFigmaNode::GetIdForName() const
+{
+	FString IdForName = Id.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
+	return IdForName;
+}
+
 FString UFigmaNode::GetNodeName() const
 {
 	return Name;
@@ -40,8 +46,7 @@ FString UFigmaNode::GetNodeName() const
 
 FString UFigmaNode::GetUniqueName() const
 {
-	FString IdReplace = Id.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
-	return Name + "--" + IdReplace;
+	return Name + "--" + GetIdForName();
 }
 
 ESlateVisibility UFigmaNode::GetVisibility() const
@@ -188,7 +193,7 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 					TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
 					for (TObjectPtr<UWidget> Widget : AllChildren)
 					{
-						if (Widget->GetName().Contains(ChildNode.GetNodeName(), ESearchCase::IgnoreCase) || ChildNode.GetNodeName().Contains(Widget->GetName(), ESearchCase::IgnoreCase))
+						if (Widget->GetName().Contains(ChildNode.GetIdForName(), ESearchCase::IgnoreCase))
 						{
 							OldWidget = Widget;
 							break;
