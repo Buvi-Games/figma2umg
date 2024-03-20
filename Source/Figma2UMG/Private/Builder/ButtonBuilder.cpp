@@ -131,6 +131,18 @@ TObjectPtr<UButton> FButtonBuilder::GetWidget() const
 	return Button;
 }
 
+TObjectPtr<UPanelWidget> FButtonBuilder::GetContainerWidget() const
+{
+	if(const TObjectPtr<UPanelWidget> Container = ContainerBuilder.GetContainerWidget())
+	{
+		return Container;
+	}
+	else
+	{
+		return Button;
+	}
+}
+
 void FButtonBuilder::PatchStyle(const UFigmaComponent* InDefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const
 {
 	if(!Button)
