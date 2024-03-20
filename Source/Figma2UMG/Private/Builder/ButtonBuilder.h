@@ -32,6 +32,7 @@ public:
 	FString GetFocusedName() const;
 
 	TObjectPtr<UButton> GetWidget() const;
+	TObjectPtr<UPanelWidget> GetContainerWidget() const;
 
 	void PatchStyle(const UFigmaComponent* InDefaultComponent, const UFigmaComponent* HoveredComponent, const UFigmaComponent* PressedComponent, const UFigmaComponent* DisabledComponent, const UFigmaComponent* FocusedComponent) const;
 

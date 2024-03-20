@@ -37,7 +37,7 @@ void FSwitcherBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 void FSwitcherBuilder::FindAndSetWidget(const TArray<UWidget*>& Widgets)
 {
 	FString NameToFind = PropertyName;
-	UWidget* const* Found = Widgets.FindByPredicate([NameToFind](const UWidget* Widget) {return Widget->IsA<UWidgetSwitcher>() && Widget->GetName() == NameToFind; });
+	UWidget* const* Found = Widgets.FindByPredicate([NameToFind](const UWidget* Widget) {return Widget->IsA<UWidgetSwitcher>() && Widget->GetName().Contains(NameToFind, ESearchCase::IgnoreCase); });
 	SetupWidget(Found ? (*Found) : nullptr);
 }
 
@@ -57,7 +57,7 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 	}
 
 
-	UWidgetSwitcher** Found = SwitchWidgets.FindByPredicate([NameToFind](const UWidget* Widget) {return Widget->IsA<UWidgetSwitcher>() && Widget->GetName() == NameToFind; });
+	UWidgetSwitcher** Found = SwitchWidgets.FindByPredicate([NameToFind](const UWidget* Widget) {return Widget->IsA<UWidgetSwitcher>() && Widget->GetName().Contains(NameToFind, ESearchCase::IgnoreCase); });
 	WidgetSwitcher = Found ? Cast<UWidgetSwitcher>(*Found) : nullptr;
 	if (WidgetSwitcher == nullptr)
 	{

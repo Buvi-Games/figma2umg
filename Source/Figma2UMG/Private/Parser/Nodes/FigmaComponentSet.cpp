@@ -80,13 +80,44 @@ void UFigmaComponentSet::LoadAssets()
 
 TObjectPtr<UWidget> UFigmaComponentSet::GetTopWidget() const
 {
-	const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
-	return WidgetBP->WidgetTree->RootWidget;
+	if (IsDoingInPlace)
+	{
+		return Super::GetTopWidget();
+	}
+	else
+	{
+		const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+		return WidgetBP->WidgetTree->RootWidget;
+	}
 }
 
 TObjectPtr<UPanelWidget> UFigmaComponentSet::GetContainerWidget() const
 {
-	return Super::GetContainerWidget();
+	if (IsDoingInPlace)
+	{
+		return Super::GetContainerWidget();
+	}
+	else
+	{
+		const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+		for (const FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
+		{
+			//Todo: How to select the switch?
+			if (const TObjectPtr<UPanelWidget> Container = SwitcherBuilder.GetWidgetSwitcher())
+			{
+				return Container;
+			}
+		}
+		for (const FButtonBuilder& ButtonBuilder : ButtonBuilders)
+		{
+			if (const TObjectPtr<UPanelWidget> Container = ButtonBuilder.GetContainerWidget())
+			{
+				return Container;
+			}
+		}
+
+		return nullptr;
+	}
 }
 
 TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
@@ -405,7 +436,7 @@ TObjectPtr<UWidgetSwitcher> UFigmaComponentSet::FindSwitcher(const FString& Swit
 		if (!Switcher)
 			continue;
 
-		if (Switcher->GetName() == SwitcherName)
+		if (Switcher->GetName().Contains(SwitcherName))
 		{
 			return Switcher;
 		}
