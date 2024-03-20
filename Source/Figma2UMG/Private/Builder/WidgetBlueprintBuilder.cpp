@@ -146,7 +146,7 @@ void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> Wi
 	const FVector2D StartPos = FVector2D(SwitchNode->NodePosX, SwitchNode->NodePosY);
 
 	const FVector2D GetPosition = StartPos + FVector2D(0.0f, BaseSize.Y  + Pan.Y);
-	UK2Node_VariableGet* TargetGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, *PropertyName, GetPosition);
+	UK2Node_VariableGet* TargetGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, *WidgetSwitcher->GetName(), GetPosition);
 	UEdGraphPin* TargetOutPin = TargetGetNode ? TargetGetNode->GetValuePin() : nullptr;
 	if (TargetOutPin)
 	{
@@ -253,7 +253,7 @@ void WidgetBlueprintBuilder::SetPropertyValue(TObjectPtr<UUserWidget> Widget, co
 							else if (ConnectedNode->IsA<UK2Node_CallFunctionOnMember>())
 							{
 								UK2Node_CallFunctionOnMember* CallFunctionNode = Cast<UK2Node_CallFunctionOnMember>(ConnectedNode);
-								if (CallFunctionNode->MemberVariableToCallOn.GetMemberName() == Widget->GetName())
+								if (Widget->GetName().Contains(CallFunctionNode->MemberVariableToCallOn.GetMemberName().ToString()))
 								{
 									//Nothing to do.
 									return;

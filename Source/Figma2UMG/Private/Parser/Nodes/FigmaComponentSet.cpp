@@ -412,7 +412,7 @@ TObjectPtr<UWidgetSwitcher> UFigmaComponentSet::FindSwitcher(const FString& Swit
 		if (!Switcher)
 			continue;
 
-		if (Switcher->GetName() == SwitcherName)
+		if (Switcher->GetName().Contains(SwitcherName))
 		{
 			return Switcher;
 		}
