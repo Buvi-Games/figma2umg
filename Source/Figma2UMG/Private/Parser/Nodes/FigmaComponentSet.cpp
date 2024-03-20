@@ -80,7 +80,7 @@ void UFigmaComponentSet::LoadAssets()
 
 TObjectPtr<UWidget> UFigmaComponentSet::GetTopWidget() const
 {
-	if (ButtonBuilders.IsEmpty())
+	if (IsDoingInPlace)
 	{
 		return Super::GetTopWidget();
 	}
@@ -93,7 +93,31 @@ TObjectPtr<UWidget> UFigmaComponentSet::GetTopWidget() const
 
 TObjectPtr<UPanelWidget> UFigmaComponentSet::GetContainerWidget() const
 {
-	return Super::GetContainerWidget();
+	if (IsDoingInPlace)
+	{
+		return Super::GetContainerWidget();
+	}
+	else
+	{
+		const UWidgetBlueprint* WidgetBP = GetAsset<UWidgetBlueprint>();
+		for (const FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
+		{
+			//Todo: How to select the switch?
+			if (const TObjectPtr<UPanelWidget> Container = SwitcherBuilder.GetWidgetSwitcher())
+			{
+				return Container;
+			}
+		}
+		for (const FButtonBuilder& ButtonBuilder : ButtonBuilders)
+		{
+			if (const TObjectPtr<UPanelWidget> Container = ButtonBuilder.GetContainerWidget())
+			{
+				return Container;
+			}
+		}
+
+		return nullptr;
+	}
 }
 
 TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> WidgetToPatch)
