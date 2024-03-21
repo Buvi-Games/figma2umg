@@ -103,12 +103,6 @@ void UFigmaFile::FixComponentSetRef()
 		if (ComponentPair.Value.ComponentSetId.IsEmpty())
 			continue;
 
-		if (ComponentPair.Value.Remote)
-		{
-			UE_LOG_Figma2UMG(Error, TEXT("File %s's Component %s is part of a remote ComponentSet %s."), *Name, *ComponentPair.Value.Name, *ComponentPair.Value.ComponentSetId);
-			continue;
-		}
-
 		if (ComponentSets.Contains(ComponentPair.Value.ComponentSetId))
 		{
 			ComponentPair.Value.SetComponentSet(&ComponentSets[ComponentPair.Value.ComponentSetId]);
@@ -122,13 +116,19 @@ void UFigmaFile::FixComponentSetRef()
 
 void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
 {
+	FixRemoteComponentSetReferences(LibraryFiles);
+	FixRemoteComponentReferences(LibraryFiles);
+}
+
+void UFigmaFile::FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
+{
 	TMap<FString, FFigmaComponentRef> PendingComponents;
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
 		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if(ComponentPair.Value.GetComponent() != nullptr)
+		if (ComponentPair.Value.GetComponent() != nullptr)
 			continue;
 
 		for (const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile : LibraryFiles)
@@ -142,7 +142,7 @@ void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>
 		}
 	}
 
-	if(PendingComponents.Num() > 0)
+	if (PendingComponents.Num() > 0)
 	{
 		for (TPair<FString, FFigmaComponentRef>& Element : PendingComponents)
 		{
@@ -150,7 +150,51 @@ void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>
 			Components.Add(Element);
 		}
 
-		FixRemoteReferences(LibraryFiles);
+		FixRemoteComponentReferences(LibraryFiles);
+	}
+}
+
+void UFigmaFile::FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
+{
+	TMap<FString, FFigmaComponentRef> PendingComponents;
+	TMap<FString, FFigmaComponentSetRef> PendingComponentSets;
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	{
+		if (!ComponentSetPair.Value.Remote)
+			continue;
+
+		if (ComponentSetPair.Value.GetComponentSet() != nullptr)
+			continue;
+
+		for (const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile : LibraryFiles)
+		{
+			TObjectPtr<UFigmaComponentSet> Component = LibraryFile.Value->FindComponentSetByKey(ComponentSetPair.Value.Key);
+			if (Component != nullptr)
+			{
+				AddRemoteComponentSet(ComponentSetPair.Value, LibraryFile, Component, PendingComponents, PendingComponentSets);
+				break;
+			}
+		}
+	}
+
+	if (PendingComponents.Num() > 0)
+	{
+		for (TPair<FString, FFigmaComponentRef>& Element : PendingComponents)
+		{
+			Element.Value.Remote = true;
+			Components.Add(Element);
+		}
+	}
+
+	if (PendingComponentSets.Num() > 0)
+	{
+		for (TPair<FString, FFigmaComponentSetRef>& Element : PendingComponentSets)
+		{
+			Element.Value.Remote = true;
+			ComponentSets.Add(Element);
+		}
+
+		FixRemoteComponentSetReferences(LibraryFiles);
 	}
 }
 
@@ -160,6 +204,24 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
+			for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+			{
+				if (!ComponentSetPair.Value.Remote)
+					continue;
+
+				TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
+				if (ComponentSet)
+				{
+					ComponentSet->LoadOrCreateAssets(this);
+					UWidgetBlueprint* Asset = ComponentSet->GetAsset<UWidgetBlueprint>();
+					TObjectPtr<UFigmaFile> OriginalFile = ComponentSet->GetFigmaFile();
+					if (OriginalFile && OriginalFile->Components.Contains(ComponentSetPair.Key))
+					{
+						OriginalFile->ComponentSets[ComponentSetPair.Key].SetComponentSet(ComponentSet);
+					}
+				}
+			}
+
 			for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 			{
 				if (!ComponentPair.Value.Remote)
@@ -286,17 +348,25 @@ void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
 		});
 }
 
-void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPair<FString, TObjectPtr<UFigmaFile>> LibraryFile, TObjectPtr<UFigmaComponent> Component, TMap<FString, FFigmaComponentRef>& PendingComponents)
+void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPair<FString, TObjectPtr<UFigmaFile>>& LibraryFile, TObjectPtr<UFigmaComponent> Component, TMap<FString, FFigmaComponentRef>& PendingComponents)
 {
-	UE_LOG_Figma2UMG(Display, TEXT("Adding remote Component %s key:%s"), *ComponentRef.Name, *ComponentRef.Key);
+	UE_LOG_Figma2UMG(Display, TEXT("[Component] Adding remote Component %s key:%s"), *ComponentRef.Name, *ComponentRef.Key);
 
 	ComponentRef.RemoteFileKey = LibraryFile.Key;
 	ComponentRef.SetComponent(Component);
 	if (!ComponentRef.ComponentSetId.IsEmpty())
 	{
-		if (FFigmaComponentSetRef* ComponentSet = LibraryFile.Value->FindComponentSetRef(ComponentRef.ComponentSetId))
+		if (FFigmaComponentSetRef* RemoteComponentSet = LibraryFile.Value->FindComponentSetRef(ComponentRef.ComponentSetId))
+		{
+			ComponentRef.SetComponentSet(RemoteComponentSet);
+		}
+		else if (FFigmaComponentSetRef* ComponentSet = this->FindComponentSetRef(ComponentRef.ComponentSetId))
 		{
 			ComponentRef.SetComponentSet(ComponentSet);
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[Component] Can't find ComponentSet id %s"), *ComponentRef.ComponentSetId);
 		}
 	}
 
@@ -310,13 +380,61 @@ void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPai
 
 		if (LibraryFile.Value->Components.Contains(SubInstance->GetComponentId()))
 		{
-			UE_LOG_Figma2UMG(Display, TEXT("Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->GetComponentId());
+			UE_LOG_Figma2UMG(Display, TEXT("[Component] Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->GetComponentId());
 			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubInstance->GetComponentId()];
 			if (!RemoteCommponentRef.Remote)
 			{
 				RemoteCommponentRef.RemoteFileKey = LibraryFile.Key;
 			}
-			FFigmaComponentRef& SubCommponentRef = PendingComponents.Add(SubInstance->GetComponentId(), RemoteCommponentRef);
+			FFigmaComponentRef& SubComponentRef = PendingComponents.Add(SubInstance->GetComponentId(), RemoteCommponentRef);
+		}
+	}
+}
+
+void UFigmaFile::AddRemoteComponentSet(FFigmaComponentSetRef& ComponentSetRef, const TPair<FString, TObjectPtr<UFigmaFile>>& LibraryFile, TObjectPtr<UFigmaComponentSet> ComponentSet, TMap<FString, FFigmaComponentRef>& PendingComponents, TMap<FString, FFigmaComponentSetRef>& PendingComponentSets)
+{
+	UE_LOG_Figma2UMG(Display, TEXT("[ComponentSet] Adding remote ComponentSet %s key:%s"), *ComponentSetRef.Name, *ComponentSetRef.Key);
+
+	ComponentSetRef.RemoteFileKey = LibraryFile.Key;
+	ComponentSetRef.SetComponentSet(ComponentSet);
+
+	TArray<UFigmaComponent*> SubComponents;
+	ComponentSet->GetAllChildrenByType(SubComponents);
+
+	for (const UFigmaComponent* SubComponent : SubComponents)
+	{
+		if (PendingComponents.Contains(SubComponent->GetId()))
+			continue;
+
+		if (LibraryFile.Value->Components.Contains(SubComponent->GetId()))
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("[ComponentSet] Adding dependency to Component %s id %s"), *SubComponent->GetNodeName(), *SubComponent->GetId());
+			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubComponent->GetId()];
+			if (!RemoteCommponentRef.Remote)
+			{
+				RemoteCommponentRef.RemoteFileKey = LibraryFile.Key;
+			}
+			FFigmaComponentRef& SubComponentRef = PendingComponents.Add(SubComponent->GetId(), RemoteCommponentRef);
+		}
+	}
+
+
+	TArray<UFigmaComponentSet*> SubComponentSets;
+	ComponentSet->GetAllChildrenByType(SubComponentSets);
+	for (const UFigmaComponentSet* SubComponentSet : SubComponentSets)
+	{
+		if (PendingComponentSets.Contains(SubComponentSet->GetId()))
+			continue;
+
+		if (LibraryFile.Value->ComponentSets.Contains(SubComponentSet->GetId()))
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("[ComponentSet] Adding dependency to ComponentSet %s id %s"), *SubComponentSet->GetNodeName(), *SubComponentSet->GetId());
+			FFigmaComponentSetRef& RemoteComponentSetRef = LibraryFile.Value->ComponentSets[SubComponentSet->GetId()];
+			if (!RemoteComponentSetRef.Remote)
+			{
+				RemoteComponentSetRef.RemoteFileKey = LibraryFile.Key;
+			}
+			FFigmaComponentSetRef& SubComponentRef = PendingComponentSets.Add(SubComponentSet->GetId(), RemoteComponentSetRef);
 		}
 	}
 }
