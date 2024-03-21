@@ -151,6 +151,7 @@ void UFigmaInstance::AddImageRequest(FString FileKey, FImageRequests& ImageReque
 	if (IsMissingComponent)
 	{
 		//We don't have the Component Asset, import as a Texture as a PlaceHolder
+		UE_LOG_Figma2UMG(Warning, TEXT("[Instance] Can't find Component %s for instance %s, import as a Texture as a PlaceHolder"), *ComponentId, *GetNodeName());
 		ImageRequests.AddRequest(FileKey, GetNodeName(), GetId(), OnRawImageReceivedCB);
 	}
 }
