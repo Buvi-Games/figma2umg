@@ -246,13 +246,14 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 	{
 		return nullptr;
 	}
-	else
+	else if (GetAssetOuter())
 	{
 		IsDoingInPlace = true;
 		TObjectPtr<UWidget> Widget = Super::PatchPreInsertWidget(WidgetToPatch);
 		IsDoingInPlace = false;
 		return Widget;
 	}
+	return nullptr;
 }
 
 void UFigmaComponentSet::SetWidget(TObjectPtr<UWidget> Widget)
