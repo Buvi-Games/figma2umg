@@ -81,6 +81,10 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		InstanceAsset = BuilderFallback.Image;
 		return BuilderFallback.Image;
 	}
+	else
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[Patch] UFigmaInstance %s failed to patch."), *GetNodeName());
+	}
 	return WidgetToPatch;
 }
 
