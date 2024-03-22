@@ -41,6 +41,7 @@ public:
 
 	UWidget* CreateInstance(UObject* AssetOuter) const;
 
+	void TryAddComponentPropertyDefinition(FString PropertyId, FFigmaComponentPropertyDefinition Definition);
 protected:
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 

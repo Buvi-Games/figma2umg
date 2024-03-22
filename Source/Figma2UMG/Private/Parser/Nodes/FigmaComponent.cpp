@@ -231,6 +231,14 @@ UWidget* UFigmaComponent::CreateInstance(UObject* InAssetOuter) const
 	return NewWidget;
 }
 
+void UFigmaComponent::TryAddComponentPropertyDefinition(FString PropertyId, FFigmaComponentPropertyDefinition Definition)
+{
+	if (ComponentPropertyDefinitions.Contains(PropertyId))
+		return;
+
+	ComponentPropertyDefinitions.Add(PropertyId, Definition);
+}
+
 void UFigmaComponent::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 {
 }

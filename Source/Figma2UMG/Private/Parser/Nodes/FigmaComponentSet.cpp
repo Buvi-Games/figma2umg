@@ -39,6 +39,17 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 				SwitcherBuilder.SetProperty(Property.Key, Property.Value);
 			}
 		}
+		else
+		{
+			for (UFigmaNode* Child : Children)
+			{
+				UFigmaComponent* ChildComponent = Cast<UFigmaComponent>(Child);
+				if (ChildComponent)
+				{
+					ChildComponent->TryAddComponentPropertyDefinition(Property.Key, Property.Value);
+				}
+			}
+		}
 	}
 
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
