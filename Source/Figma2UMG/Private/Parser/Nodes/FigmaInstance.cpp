@@ -18,6 +18,13 @@ FVector2D UFigmaInstance::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
+void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	Super::PostSerialize(InParent, JsonObj);
+
+	SerializeArray(Children, JsonObj,"Children");
+}
+
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
 	if (TObjectPtr<UWidget> Widget = Cast<UWidget>(InstanceAsset))

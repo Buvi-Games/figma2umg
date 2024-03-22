@@ -21,6 +21,7 @@ public:
 
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override;
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 
 	// IWidgetOwner
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
