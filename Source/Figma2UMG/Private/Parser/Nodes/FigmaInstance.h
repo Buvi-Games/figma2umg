@@ -50,6 +50,8 @@ public:
 	void PatchComponentProperty() const;
 	FString GetComponentId() const { return ComponentId; }
 protected:
+	void ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const;
+
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
 

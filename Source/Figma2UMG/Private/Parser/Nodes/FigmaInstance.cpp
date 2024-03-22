@@ -214,6 +214,9 @@ void UFigmaInstance::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 
 	TObjectPtr<UWidget> Widget = Cast<UWidget>(InstanceAsset);
 	ProcessComponentPropertyReferences(WidgetBp, Widget);
+
+	ProcessChildrenComponentPropertyReferences(WidgetBp, Widget, Children);
+
 }
 
 void UFigmaInstance::PatchComponentProperty() const
@@ -228,5 +231,20 @@ void UFigmaInstance::PatchComponentProperty() const
 	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : ComponentProperties)
 	{
 		WidgetBlueprintBuilder::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
+	}
+}
+
+void UFigmaInstance::ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const
+{
+	for (UFigmaNode* Child : CurrentChildren)
+	{
+		Child->ProcessComponentPropertyReferences(WidgetBp, Widget);
+
+		IFigmaContainer* ContainerChild = Cast<IFigmaContainer>(Child);
+		if (ContainerChild)
+		{
+			TArray<UFigmaNode*>& SubChildren = ContainerChild->GetChildren();
+			ProcessChildrenComponentPropertyReferences(WidgetBp, Widget, SubChildren);
+		}
 	}
 }
