@@ -71,6 +71,59 @@ void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> Wi
 	PatchIfThenElseNode(FunctionGraph, IfThenElseGraphPosition, FunctionEntry ? FunctionEntry->GetThenPin() : nullptr, VariableGetNode->GetValuePin(), VisibleResult->GetExecPin(), CollapsedResult->GetExecPin());
 }
 
+void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UPanelWidget> ContainerWidget, const FString& VariableName)
+{
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] WidgetBP %s is nullptr."));
+		return;
+	}
+
+	if (!ContainerWidget)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] ContainerWidget %s is nullptr."));
+		return;
+	}
+
+	FString FunctionName = "Init" + VariableName;
+	const TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+		{
+			return Graph.GetName() == FunctionName;
+		});
+
+	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+	if (!FunctionGraph)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] Can't find Function %s in UWidgetBlueprint %s."), *FunctionName, *WidgetBP.GetName());
+		return;
+	}
+
+	//TODO: The rest of the function. Get the variable and set in each of the Switcher's child.
+	TObjectPtr<class UEdGraphNode>* FoundEntryNode = FunctionGraph->Nodes.FindByPredicate([](const TObjectPtr<class UEdGraphNode> Node)
+		{
+			return Node && Node->IsA<UK2Node_FunctionEntry>();
+		});
+
+	TObjectPtr<UK2Node_FunctionEntry> FunctionEntry = FoundEntryNode ? Cast<UK2Node_FunctionEntry>(*FoundEntryNode) : nullptr;
+	const FVector2D StartPos = FunctionEntry ? FVector2D(FunctionEntry->NodePosX, FunctionEntry->NodePosY) : FVector2D(0.0f, 0.0f);
+
+	const FVector2D GetChildOffset = FVector2D(0.0f, BaseSize.Y + Pan.Y);
+	const FVector2D GetChildPositionStart = StartPos + FVector2D(BaseSize.X + Pan.X, 0.0f) + GetChildOffset;
+	FVector2D GetVariablePosition = GetChildPositionStart;
+	for (int i = 0; i < ContainerWidget->GetChildrenCount(); i++)
+	{
+		UWidget* Child = ContainerWidget->GetChildAt(i);
+		if (!Child)
+			continue;
+
+		const FVector2D GetChildPosition = GetChildPositionStart + (GetChildOffset * i);
+		PatchVariableGetNode(WidgetBP, FunctionGraph, *Child->GetName(), GetChildPosition);
+		GetVariablePosition = ((GetChildPositionStart + GetChildPosition) * 0.5f) + ((i == 0) ? FVector2D(0.0f, Pan.Y*2.0f) : FVector2D::Zero());
+	}
+
+	PatchVariableGetNode(WidgetBP, FunctionGraph, *VariableName, GetVariablePosition);
+}
+
 void WidgetBlueprintBuilder::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName)
 {
 	AddBindingProperty(WidgetBP, TextBlock, "Text", VariableName);

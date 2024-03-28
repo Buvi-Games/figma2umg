@@ -23,6 +23,7 @@ class WidgetBlueprintBuilder
 {
 public:
 	static FIGMA2UMG_API void PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& VariableName);
+	static FIGMA2UMG_API void PatchInitFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UPanelWidget> ContainerWidget, const FString& VariableName);
 	static FIGMA2UMG_API void PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName);
 	static FIGMA2UMG_API void CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, const FString& PropertyName, const TArray<FString>& PinNames);
 	static FIGMA2UMG_API void PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidgetSwitcher> WidgetSwitcher, const FString& PropertyName, TArray<FString> Values);
