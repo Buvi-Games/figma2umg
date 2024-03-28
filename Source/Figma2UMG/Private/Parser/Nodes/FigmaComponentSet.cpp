@@ -197,61 +197,50 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		}
 	}
 
-
-	for (TPair< FString, FFigmaComponentPropertyDefinition> PropertyDefinition : ComponentPropertyDefinitions)
+	for (const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition : ComponentPropertyDefinitions)
 	{
-		if(PropertyDefinition.Value.Type == EFigmaComponentPropertyType::VARIANT)
+		if (PropertyDefinition.Value.Type != EFigmaComponentPropertyType::VARIANT)
+			continue;
+
+		for (int index = 0; index < PropertyDefinition.Value.VariantOptions.Num(); index++)
 		{
-			for (int index = 0; index < PropertyDefinition.Value.VariantOptions.Num(); index++)
+			FString VariantOption = PropertyDefinition.Value.VariantOptions[index];
+			FString ChildName = PropertyDefinition.Key + "=" + VariantOption;
+
+			UFigmaNode** Found = Children.FindByPredicate([ChildName](UFigmaNode* Node) {return Node->GetNodeName() == ChildName; });
+			if(Found)
 			{
-				FString VariantOption = PropertyDefinition.Value.VariantOptions[index];
-				FString ChildName = PropertyDefinition.Key + "=" + VariantOption;
-
-				UFigmaNode** Found = Children.FindByPredicate([ChildName](UFigmaNode* Node) {return Node->GetNodeName() == ChildName; });
-				if(Found)
+				UFigmaNode* Child = *Found;
+				UFigmaComponent* Component = Cast<UFigmaComponent>(Child);
+				if (!Component)
 				{
-					UFigmaNode* Child = *Found;
-					UFigmaComponent* Component = Cast<UFigmaComponent>(Child);
-					if (!Component)
-					{
-						UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s has Child %s of type %s. Component type expected."), *GetNodeName(), *Child->GetNodeName(), *Child->GetClass()->GetDisplayNameText().ToString());
-						continue;
-					}
+					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s has Child %s of type %s. Component type expected."), *GetNodeName(), *Child->GetNodeName(), *Child->GetClass()->GetDisplayNameText().ToString());
+					continue;
+				}
 
-					if (TObjectPtr<UWidgetSwitcher> Switcher = FindSwitcher(PropertyDefinition.Key))
+				if (TObjectPtr<UWidgetSwitcher> Switcher = FindSwitcher(PropertyDefinition.Key))
+				{
+					TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
+					TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
+					NewWidget->bIsVariable = true;
+					if (OldWidget)
 					{
-						TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
-						TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
-						NewWidget->bIsVariable = true;
-						if (OldWidget)
-						{
-							Switcher->ReplaceChildAt(index, NewWidget);
-						}
-						else
-						{
-							Switcher->AddChild(NewWidget);
-						}
+						Switcher->ReplaceChildAt(index, NewWidget);
 					}
 					else
 					{
-						UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s can't fins UWidgetSwitcher %s."), *GetNodeName(), *PropertyDefinition.Key);
+						Switcher->AddChild(NewWidget);
 					}
 				}
 				else
 				{
-					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s don't have expected Child %s."), *GetNodeName(), *ChildName);
+					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s can't fins UWidgetSwitcher %s."), *GetNodeName(), *PropertyDefinition.Key);
 				}
 			}
-		}
-	}
-
-	for (TPair< FString, FFigmaComponentPropertyDefinition> PropertyDefinition : ComponentPropertyDefinitions)
-	{
-		if (PropertyDefinition.Value.Type != EFigmaComponentPropertyType::VARIANT)
-		{
-			FString PropertyName = PropertyDefinition.Key;
-			FString FunctionName = "Init" + PropertyName;
-			WidgetBlueprintBuilder::CallFunctionFromEventNode(GetAsset<UWidgetBlueprint>(), "PreConstruct", FunctionName);
+			else
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s don't have expected Child %s."), *GetNodeName(), *ChildName);
+			}
 		}
 	}
 
