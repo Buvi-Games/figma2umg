@@ -242,4 +242,8 @@ void UFigmaComponent::TryAddComponentPropertyDefinition(FString PropertyId, FFig
 
 void UFigmaComponent::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 {
+	if(ParentNode && ParentNode->IsA<UFigmaComponentSet>())
+	{
+		Super::PatchBinds(WidgetBp);
+	}
 }
