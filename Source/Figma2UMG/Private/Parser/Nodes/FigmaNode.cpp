@@ -449,7 +449,7 @@ void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 
 		if (PropertyReference.Key == VisibleStr)
 		{
-			WidgetBlueprintBuilder::PatchVisibilityBind(WidgetBP, Widget, *VariableDescription, *PropertyReference.Value);
+			WidgetBlueprintBuilder::PatchVisibilityBind(WidgetBP, Widget, *PropertyReference.Value);
 		}
 		else
 		{

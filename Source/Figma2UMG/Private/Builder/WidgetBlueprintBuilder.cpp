@@ -23,8 +23,14 @@ static const FVector2D Pan = FVector2D(20.0f, 20.0f);
 static const FName DefaultPinName("Default");
 static const FName TargetPinName("Target");
 
-void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FBPVariableDescription& VariableDescription, const FName& VariableName)
+void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& VariableName)
 {
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchVisibilityBind] WidgetBP %s is nullptr."));
+		return;
+	}
+
 	FString FunctionName = "Get_" + Widget.GetName() + "_Visibility";
 	TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
 		{
