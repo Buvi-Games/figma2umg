@@ -28,6 +28,7 @@ public:
 	static FIGMA2UMG_API void PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidgetSwitcher> WidgetSwitcher, const FString& PropertyName, TArray<FString> Values);
 	static FIGMA2UMG_API void SetPropertyValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, const FFigmaComponentProperty& ComponentProperty);
 
+	static FIGMA2UMG_API void CallFunctionFromEventNode(TObjectPtr<UWidgetBlueprint> WidgetBP, const FName& EventName, const FString& FunctionName);
 private:
 	static FIGMA2UMG_API void AddBindingFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName);
 	static FIGMA2UMG_API void AddBindingProperty(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& PropertyName, const FName& MemberPropertyName);
@@ -39,6 +40,6 @@ private:
 	static FIGMA2UMG_API UK2Node_SwitchString* PatchSwitchStringNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, const TArray<FString>& PinNames);
 	static FIGMA2UMG_API UK2Node_FunctionResult* PatchFunctionResult(UEdGraph* Graph, FVector2D NodeLocation, const FString& ReturnValue);
 
-	static const UK2Node_CallFunction* AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UUserWidget> Widget, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation);
+	static const UK2Node_CallFunction* AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UObject> Object, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation);
 
 };
