@@ -546,6 +546,24 @@ void UFigmaFile::PatchWidgetBinds()
 void UFigmaFile::PatchWidgetProperties() const
 {
 	TArray<UFigmaInstance*> AllInstances;
+	for (const TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	{
+		TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
+		if (!ComponentSet || !ComponentSetPair.Value.Remote)
+			continue;
+
+		ComponentSet->GetAllChildrenByType(AllInstances);
+	}
+
+	for (const TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
+	{
+		TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
+		if (!Component || !ComponentPair.Value.Remote)
+			continue;
+
+		Component->GetAllChildrenByType(AllInstances);
+	}
+
 	if (Document)
 	{
 		Document->GetAllChildrenByType(AllInstances);
