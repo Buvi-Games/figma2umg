@@ -225,6 +225,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 					if (OldWidget && OldWidget.GetClass()->ClassGeneratedBy == ComponentAsset)
 					{
 						OldWidget->bIsVariable = true;
+						TryRenameWidget(Component->GetUniqueName(), OldWidget);
 					}
 					else
 					{

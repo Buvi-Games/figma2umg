@@ -228,6 +228,7 @@ UWidget* UFigmaComponent::CreateInstance(UObject* InAssetOuter) const
 		NewWidget->CreatedFromPalette();
 	}
 
+	TryRenameWidget(GetUniqueName(), NewWidget);
 	return NewWidget;
 }
 
