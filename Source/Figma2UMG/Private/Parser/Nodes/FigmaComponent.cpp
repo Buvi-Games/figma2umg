@@ -198,7 +198,7 @@ void UFigmaComponent::PatchBinds()
 	if(!WidgetBp)
 		return;
 
-	Super::PatchBinds(WidgetBp);
+	PatchBinds(WidgetBp);
 }
 
 UWidget* UFigmaComponent::CreateInstance(UObject* InAssetOuter) const

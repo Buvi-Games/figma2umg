@@ -474,7 +474,7 @@ void UFigmaComponentSet::PatchBinds()
 	if (!WidgetBp)
 		return;
 
-	Super::PatchBinds(WidgetBp);
+	PatchBinds(WidgetBp);
 }
 
 TObjectPtr<UWidgetSwitcher> UFigmaComponentSet::FindSwitcher(const FString& SwitcherName) const
