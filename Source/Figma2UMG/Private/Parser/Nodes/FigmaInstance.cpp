@@ -238,6 +238,9 @@ void UFigmaInstance::ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidg
 {
 	for (UFigmaNode* Child : CurrentChildren)
 	{
+		if (Child->IsA<UFigmaInstance>())
+			continue;
+
 		Child->ProcessComponentPropertyReferences(WidgetBp, Widget);
 
 		IFigmaContainer* ContainerChild = Cast<IFigmaContainer>(Child);
