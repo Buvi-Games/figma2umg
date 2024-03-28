@@ -21,6 +21,7 @@ public:
 
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override;
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 
 	// IWidgetOwner
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
@@ -49,6 +50,8 @@ public:
 	void PatchComponentProperty() const;
 	FString GetComponentId() const { return ComponentId; }
 protected:
+	void ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const;
+
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
 
