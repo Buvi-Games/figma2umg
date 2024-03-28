@@ -94,7 +94,7 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
 	if (!FunctionGraph)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] Can't find Function %s in UWidgetBlueprint %s."), *FunctionName, *WidgetBP.GetName());
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] Can't find Function %s in UWidgetBlueprint %s."), *FunctionName, *WidgetBP.GetName());
 		return;
 	}
 
