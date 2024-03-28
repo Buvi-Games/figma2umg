@@ -6,6 +6,7 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintBuilder.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -196,46 +197,56 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		}
 	}
 
+
 	for (TPair< FString, FFigmaComponentPropertyDefinition> PropertyDefinition : ComponentPropertyDefinitions)
 	{
-		for (int index = 0; index < PropertyDefinition.Value.VariantOptions.Num(); index++)
+		if(PropertyDefinition.Value.Type == EFigmaComponentPropertyType::VARIANT)
 		{
-			FString VariantOption = PropertyDefinition.Value.VariantOptions[index];
-			FString ChildName = PropertyDefinition.Key + "=" + VariantOption;
-
-			UFigmaNode** Found = Children.FindByPredicate([ChildName](UFigmaNode* Node) {return Node->GetNodeName() == ChildName; });
-			if(Found)
+			for (int index = 0; index < PropertyDefinition.Value.VariantOptions.Num(); index++)
 			{
-				UFigmaNode* Child = *Found;
-				UFigmaComponent* Component = Cast<UFigmaComponent>(Child);
-				if (!Component)
-				{
-					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s has Child %s of type %s. Component type expected."), *GetNodeName(), *Child->GetNodeName(), *Child->GetClass()->GetDisplayNameText().ToString());
-					continue;
-				}
+				FString VariantOption = PropertyDefinition.Value.VariantOptions[index];
+				FString ChildName = PropertyDefinition.Key + "=" + VariantOption;
 
-				if (TObjectPtr<UWidgetSwitcher> Switcher = FindSwitcher(PropertyDefinition.Key))
+				UFigmaNode** Found = Children.FindByPredicate([ChildName](UFigmaNode* Node) {return Node->GetNodeName() == ChildName; });
+				if(Found)
 				{
-					TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
-					TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
-					if (OldWidget)
+					UFigmaNode* Child = *Found;
+					UFigmaComponent* Component = Cast<UFigmaComponent>(Child);
+					if (!Component)
 					{
-						Switcher->ReplaceChildAt(index, NewWidget);
+						UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s has Child %s of type %s. Component type expected."), *GetNodeName(), *Child->GetNodeName(), *Child->GetClass()->GetDisplayNameText().ToString());
+						continue;
+					}
+
+					if (TObjectPtr<UWidgetSwitcher> Switcher = FindSwitcher(PropertyDefinition.Key))
+					{
+						TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
+						TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
+						if (OldWidget)
+						{
+							Switcher->ReplaceChildAt(index, NewWidget);
+						}
+						else
+						{
+							Switcher->AddChild(NewWidget);
+						}
 					}
 					else
 					{
-						Switcher->AddChild(NewWidget);
+						UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s can't fins UWidgetSwitcher %s."), *GetNodeName(), *PropertyDefinition.Key);
 					}
 				}
 				else
 				{
-					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s can't fins UWidgetSwitcher %s."), *GetNodeName(), *PropertyDefinition.Key);
+					UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s don't have expected Child %s."), *GetNodeName(), *ChildName);
 				}
 			}
-			else
-			{
-				UE_LOG_Figma2UMG(Error, TEXT("UFigmaComponentSet %s don't have expected Child %s."), *GetNodeName(), *ChildName);
-			}
+		}
+		else
+		{
+			FString PropertyName = PropertyDefinition.Key;
+			FString FunctionName = "Init" + PropertyName;
+			WidgetBlueprintBuilder::CallFunctionFromEventNode(GetAsset<UWidgetBlueprint>(), "PreConstruct", FunctionName);
 		}
 	}
 
@@ -416,6 +427,31 @@ bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)
 			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
 			AddedMemberVariable = true;
 		}
+
+		TSet<FName> CurrentVars;
+		FBlueprintEditorUtils::GetClassVariableList(WidgetBP, CurrentVars);
+		if (AddedMemberVariable || CurrentVars.Contains(*PropertyName))
+		{
+			FString FunctionName = "Init" + PropertyName;
+			TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+				{
+					return Graph.GetName() == FunctionName;
+				});
+
+			UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+			if (!FunctionGraph)
+			{
+				FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBP, FBlueprintEditorUtils::FindUniqueKismetName(WidgetBP, FunctionName), UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+
+				FBlueprintEditorUtils::AddFunctionGraph<UClass>(WidgetBP, FunctionGraph, true, nullptr);
+				AddedMemberVariable = true;
+			}
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchPropertiesToWidget] Fail to add member variable %s of type %s."), *PropertyName, *MemberType.PinCategory.ToString());
+		}
+		
 	}
 
 	for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
