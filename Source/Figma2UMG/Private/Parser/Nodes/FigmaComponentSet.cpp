@@ -218,18 +218,26 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 					continue;
 				}
 
+				UWidgetBlueprint* ComponentAsset = Component ? Component->GetAsset<UWidgetBlueprint>() : nullptr;
 				if (TObjectPtr<UWidgetSwitcher> Switcher = FindSwitcher(PropertyDefinition.Key))
 				{
 					TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
-					TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
-					NewWidget->bIsVariable = true;
-					if (OldWidget)
+					if (OldWidget && OldWidget.GetClass()->ClassGeneratedBy == ComponentAsset)
 					{
-						Switcher->ReplaceChildAt(index, NewWidget);
+						OldWidget->bIsVariable = true;
 					}
 					else
 					{
-						Switcher->AddChild(NewWidget);
+						TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
+						NewWidget->bIsVariable = true;
+						if (OldWidget)
+						{
+							Switcher->ReplaceChildAt(index, NewWidget);
+						}
+						else
+						{
+							Switcher->AddChild(NewWidget);
+						}
 					}
 				}
 				else
