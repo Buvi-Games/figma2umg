@@ -36,7 +36,8 @@ private:
 
 	static FIGMA2UMG_API UK2Node_FunctionEntry* PatchFunctionEntry(UEdGraph* Graph, const FString VarName, FName VarType, EPinContainerType VarContainerType);
 	static FIGMA2UMG_API UK2Node_VariableGet* PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation);
-	static FIGMA2UMG_API UK2Node_VariableSet* PatchVariableSetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation);
+	static FIGMA2UMG_API UK2Node_VariableSet* PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation);
+	static FIGMA2UMG_API UK2Node_VariableSet* PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, const FName& VariableName, UEdGraphPin* ValuePin, FVector2D NodeLocation);
 	static FIGMA2UMG_API UK2Node_IfThenElse* PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, UEdGraphPin* ConditionValuePin, UEdGraphPin* ThenReturnPin, UEdGraphPin* ElseReturnPin);
 	static FIGMA2UMG_API UK2Node_SwitchString* PatchSwitchStringNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, const TArray<FString>& PinNames);
 	static FIGMA2UMG_API UK2Node_FunctionResult* PatchFunctionResult(UEdGraph* Graph, FVector2D NodeLocation, const FString& ReturnValue);

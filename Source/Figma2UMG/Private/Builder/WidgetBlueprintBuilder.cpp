@@ -107,9 +107,12 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 	TObjectPtr<UK2Node_FunctionEntry> FunctionEntry = FoundEntryNode ? Cast<UK2Node_FunctionEntry>(*FoundEntryNode) : nullptr;
 	const FVector2D StartPos = FunctionEntry ? FVector2D(FunctionEntry->NodePosX, FunctionEntry->NodePosY) : FVector2D(0.0f, 0.0f);
 
+	UEdGraphPin* ExecPin = FunctionEntry ? FunctionEntry->GetThenPin() : nullptr;
+
 	const FVector2D GetChildOffset = FVector2D(0.0f, BaseSize.Y + Pan.Y);
 	const FVector2D GetChildPositionStart = StartPos + FVector2D(BaseSize.X + Pan.X, 0.0f) + GetChildOffset;
 	FVector2D GetVariablePosition = GetChildPositionStart;
+	UK2Node_VariableGet* VariableGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, *VariableName, GetVariablePosition);
 	for (int i = 0; i < ContainerWidget->GetChildrenCount(); i++)
 	{
 		UWidget* Child = ContainerWidget->GetChildAt(i);
@@ -117,11 +120,29 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 			continue;
 
 		const FVector2D GetChildPosition = GetChildPositionStart + (GetChildOffset * i);
-		PatchVariableGetNode(WidgetBP, FunctionGraph, *Child->GetName(), GetChildPosition);
+		UK2Node_VariableGet* ChildGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, *Child->GetName(), GetChildPosition);
+		if (!ChildGetNode)
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] BluePrint %s Function %s fail to add node to get child %s."), *WidgetBP.GetName(), *FunctionName, *Child->GetName());
+			continue;
+		}
+
 		GetVariablePosition = ((GetChildPositionStart + GetChildPosition) * 0.5f) + ((i == 0) ? FVector2D(0.0f, Pan.Y*2.0f) : FVector2D::Zero());
+
+		const FVector2D SetChildPosition = GetChildPosition + FVector2D(BaseSize.X + Pan.X, 0.0f);
+		const UK2Node_VariableSet* ChildSetVarNode = PatchVariableSetNode(FunctionGraph, ExecPin, ChildGetNode->GetValuePin(), Child->GetClass(), *VariableName, VariableGetNode->GetValuePin(), SetChildPosition);
+		if (ChildSetVarNode)
+		{
+			ExecPin = ChildSetVarNode->GetThenPin();
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] BluePrint %s Function %s fail to add node to set %s in child %s."), *WidgetBP.GetName(), *FunctionName, *VariableName, *Child->GetName());
+		}
 	}
 
-	PatchVariableGetNode(WidgetBP, FunctionGraph, *VariableName, GetVariablePosition);
+	VariableGetNode->NodePosX = static_cast<int32>(GetVariablePosition.X);
+	VariableGetNode->NodePosY = static_cast<int32>(GetVariablePosition.Y);
 }
 
 void WidgetBlueprintBuilder::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName)
@@ -165,7 +186,7 @@ void WidgetBlueprintBuilder::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> W
 		UEdGraphPin* ExecPin = SwitchNode->FindPin(Value, EGPD_Output);
 		int index = (Value == DefaultPinName) ? SwitchNode->PinNames.Num() : SwitchNode->PinNames.IndexOfByKey(Value);
 		const FVector2D SetPosition = SwitchPosition + FVector2D(BaseSize.X + Pan.X, ((BaseSize.Y*0.75f) + Pan.Y) * index);
-		PatchVariableSetNode(WidgetBP, FunctionGraph, ExecPin, nullptr, UWidgetSwitcher::StaticClass(), i, SetPosition);
+		PatchVariableSetNode(FunctionGraph, ExecPin, nullptr, UWidgetSwitcher::StaticClass(), i, SetPosition);
 	}
 }
 
@@ -539,7 +560,7 @@ UK2Node_VariableGet* WidgetBlueprintBuilder::PatchVariableGetNode(TObjectPtr<UWi
 	return nullptr;
 }
 
-UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation)
+UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation)
 {
 	static const FName ActiveWidgetIndex("ActiveWidgetIndex");
 	TObjectPtr<UK2Node_VariableSet> VariableSetNode = nullptr;
@@ -577,7 +598,48 @@ UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(TObjectPtr<UWi
 		IndexPin->DefaultValue = FString::FromInt(Value);
 	}
 
-	return nullptr;
+	return VariableSetNode;
+}
+
+UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, UClass* TargetObjectType, const FName& VariableName, UEdGraphPin* ValuePin, FVector2D NodeLocation)
+{
+	TObjectPtr<UK2Node_VariableSet> VariableSetNode = nullptr;
+	const TObjectPtr<UEdGraphNode> FoundNode = (ExecPin && !ExecPin->LinkedTo.IsEmpty()) ? ExecPin->LinkedTo[0]->GetOwningNode() : nullptr;
+	if (FoundNode)
+	{
+		VariableSetNode = Cast<UK2Node_VariableSet>(FoundNode);
+	}
+	else
+	{
+		const UEdGraphSchema_K2* K2_Schema = Cast<const UEdGraphSchema_K2>(Graph->GetSchema());
+		if (K2_Schema)
+		{
+			VariableSetNode = K2_Schema->SpawnVariableSetNode(NodeLocation, Graph, VariableName, TargetObjectType);
+		}
+	}
+	VariableSetNode->NodePosX = static_cast<int32>(NodeLocation.X);
+	VariableSetNode->NodePosY = static_cast<int32>(NodeLocation.Y);
+
+	UEdGraphPin* TargetInPin = VariableSetNode->FindPin(UEdGraphSchema_K2::PSC_Self);
+	if (TargetInPin && TargetPin)
+	{
+		TargetPin->MakeLinkTo(TargetInPin);
+	}
+
+	UEdGraphPin* ExecutePin = VariableSetNode->GetExecPin();
+	if (ExecPin && ExecutePin)
+	{
+		ExecPin->BreakAllPinLinks();
+		ExecPin->MakeLinkTo(ExecutePin);
+	}
+	
+	UEdGraphPin* InputValuePin = VariableSetNode->FindPin(VariableName);
+	if (InputValuePin && ValuePin)
+	{
+		ValuePin->MakeLinkTo(InputValuePin);
+	}
+
+	return VariableSetNode;
 }
 
 UK2Node_IfThenElse* WidgetBlueprintBuilder::PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, UEdGraphPin* ConditionValuePin, UEdGraphPin* ThenReturnPin, UEdGraphPin* ElseReturnPin)
