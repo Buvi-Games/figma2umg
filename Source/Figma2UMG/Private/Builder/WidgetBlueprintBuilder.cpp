@@ -419,10 +419,10 @@ void WidgetBlueprintBuilder::CallFunctionFromEventNode(TObjectPtr<UWidgetBluepri
 		{
 			break;
 		}
-		else if (ConnectedNode->IsA<UK2Node_CallFunctionOnMember>())
+		else if (ConnectedNode->IsA<UK2Node_CallFunction>())
 		{
-			UK2Node_CallFunctionOnMember* CallFunctionNode = Cast<UK2Node_CallFunctionOnMember>(ConnectedNode);
-			if (WidgetBP->GetName().Contains(CallFunctionNode->MemberVariableToCallOn.GetMemberName().ToString()))
+			UK2Node_CallFunction* CallFunctionNode = Cast<UK2Node_CallFunction>(ConnectedNode);
+			if (CallFunctionNode->GetTargetFunction()->GetName().Equals(FunctionName, ESearchCase::IgnoreCase))
 			{
 				//Nothing to do.
 				return;
@@ -441,7 +441,7 @@ void WidgetBlueprintBuilder::CallFunctionFromEventNode(TObjectPtr<UWidgetBluepri
 
 	if (Function)
 	{
-		const FVector2D CallFunctionPosition = StartPos + FVector2D(StartPos.X + BaseSize.X + Pan.X, StartPos.Y);
+		const FVector2D CallFunctionPosition = StartPos + FVector2D( BaseSize.X + Pan.X, StartPos.Y);
 		AddCallFunctionOnMemberNode(EventGraph, WidgetBP, Function, ThenPin, nullptr, CallFunctionPosition);
 	}
 	else
