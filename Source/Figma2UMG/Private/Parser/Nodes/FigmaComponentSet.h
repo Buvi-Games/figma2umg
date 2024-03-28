@@ -46,6 +46,8 @@ protected:
 	TObjectPtr<UWidget> PatchVariation(TObjectPtr<UWidget> WidgetToPatch);
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);
 
+	void PatchInitFunction(const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition) const;
+
 	TObjectPtr<UWidgetSwitcher> FindSwitcher(const FString& SwitcherName) const;
 
 	UPROPERTY()

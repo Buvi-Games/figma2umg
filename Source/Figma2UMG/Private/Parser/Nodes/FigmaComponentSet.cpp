@@ -353,6 +353,14 @@ void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 	{
 		Super::PatchBinds(WidgetBp);
 	}
+
+	for (const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition : ComponentPropertyDefinitions)
+	{
+		if (PropertyDefinition.Value.Type == EFigmaComponentPropertyType::VARIANT)
+			continue;
+
+		PatchInitFunction(PropertyDefinition);
+	}
 }
 
 void UFigmaComponentSet::PrePatchWidget()
@@ -455,6 +463,43 @@ bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)
 	}
 
 	return AddedMemberVariable;
+}
+
+void UFigmaComponentSet::PatchInitFunction(const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition) const
+{
+	if (PropertyDefinition.Value.Type == EFigmaComponentPropertyType::VARIANT)
+		return;
+
+	FString PropertyName = PropertyDefinition.Key;
+	FString FunctionName = "Init" + PropertyName;
+	WidgetBlueprintBuilder::CallFunctionFromEventNode(GetAsset<UWidgetBlueprint>(), "PreConstruct", FunctionName);
+
+	const TObjectPtr<UWidgetBlueprint> WidgetBP = GetAsset<UWidgetBlueprint>();
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] GetAsset<UWidgetBlueprint> in Node %s is nullptr."), *GetNodeName());
+		return;
+	}
+
+	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
+	TArray<UWidget*> Widgets;
+	WidgetBp->WidgetTree->GetAllWidgets(Widgets);
+
+	bool Patched = false;
+	for (UWidget* Widget : Widgets)
+	{
+		UWidgetSwitcher* Switcher = Cast<UWidgetSwitcher>(Widget);
+		if (!Switcher)
+			continue;
+
+		WidgetBlueprintBuilder::PatchInitFunction(WidgetBP, Switcher, PropertyName);
+		Patched = true;
+	}
+
+	if (!Patched)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] Can't find UWidgetSwitcher for property %s in Node %s."), *PropertyDefinition.Key, *GetNodeName());
+	}
 }
 
 void UFigmaComponentSet::PatchBinds()
