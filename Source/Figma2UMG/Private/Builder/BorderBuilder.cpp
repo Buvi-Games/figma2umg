@@ -60,6 +60,12 @@ TObjectPtr<UPanelWidget> FBorderBuilder::GetContainerWidget() const
 
 TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UObject* AssetOuter, const FString& WidgetName)
 {
+	if (!AssetOuter)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[FBorderBuilder::SetupWiPatchdget] AssetOuter is nullptr."));
+		return nullptr;
+	}
+
 	const bool RequireBorder = ((Fill && Fill->Visible) || (Stroke && Stroke->Visible));
 	if (RequireBorder || ALWAYS_BORDER)
 	{

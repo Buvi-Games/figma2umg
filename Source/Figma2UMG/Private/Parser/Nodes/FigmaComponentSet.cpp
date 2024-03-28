@@ -39,6 +39,17 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 				SwitcherBuilder.SetProperty(Property.Key, Property.Value);
 			}
 		}
+		else
+		{
+			for (UFigmaNode* Child : Children)
+			{
+				UFigmaComponent* ChildComponent = Cast<UFigmaComponent>(Child);
+				if (ChildComponent)
+				{
+					ChildComponent->TryAddComponentPropertyDefinition(Property.Key, Property.Value);
+				}
+			}
+		}
 	}
 
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
@@ -246,13 +257,14 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 	{
 		return nullptr;
 	}
-	else
+	else if (GetAssetOuter())
 	{
 		IsDoingInPlace = true;
 		TObjectPtr<UWidget> Widget = Super::PatchPreInsertWidget(WidgetToPatch);
 		IsDoingInPlace = false;
 		return Widget;
 	}
+	return nullptr;
 }
 
 void UFigmaComponentSet::SetWidget(TObjectPtr<UWidget> Widget)

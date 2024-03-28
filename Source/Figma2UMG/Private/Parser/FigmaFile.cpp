@@ -324,6 +324,17 @@ void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
 	CurrentProcessDelegate = ProcessDelegate;
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
+			for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+			{
+				if (!ComponentSetPair.Value.Remote)
+					continue;
+
+				if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
+				{
+					ComponentSet->PostPatchWidget();
+				}
+			}
+
 			for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 			{
 				if (!ComponentPair.Value.Remote)
@@ -449,12 +460,23 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 
 void UFigmaFile::PatchPreInsertWidget()
 {
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	{
+		if (!ComponentSetPair.Value.Remote)
+			continue;
+
+		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
+		{
+			ComponentSet->PatchPreInsertWidget(nullptr);
+		}
+	}
+
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
 		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
+		if (const TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 		{
 			Component->PatchPreInsertWidget(nullptr);
 		}
@@ -468,12 +490,23 @@ void UFigmaFile::PatchPreInsertWidget()
 
 bool UFigmaFile::PatchPostInsertWidget()
 {
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	{
+		if (!ComponentSetPair.Value.Remote)
+			continue;
+
+		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
+		{
+			ComponentSet->PatchPostInsertWidget();
+		}
+	}
+
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
 		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
+		if (const TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 		{
 			Component->PatchPostInsertWidget();
 		}
@@ -489,6 +522,16 @@ bool UFigmaFile::PatchPostInsertWidget()
 
 void UFigmaFile::PatchWidgetBinds()
 {
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	{
+		TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
+		TObjectPtr<UWidgetBlueprint> WidgetBP = ComponentSetPair.Value.GetAsset();
+		if (!ComponentSet || !WidgetBP)
+			continue;
+
+		ComponentSet->PatchBinds();
+	}
+
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
 		TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
@@ -607,7 +650,7 @@ void UFigmaFile::LoadAssets()
 		if (!ComponentRef.Value.Remote)
 			continue;
 
-		if (TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
+		if (const TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
 		{
 			Component->LoadAssets();
 		}
@@ -618,7 +661,7 @@ void UFigmaFile::LoadAssets()
 		if (!ComponentSetRef.Value.Remote)
 			continue;
 
-		if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
+		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
 		{
 			ComponentSet->LoadAssets();
 		}
@@ -627,12 +670,23 @@ void UFigmaFile::LoadAssets()
 
 void UFigmaFile::FindWidgets()
 {
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	{
+		if (!ComponentSetPair.Value.Remote)
+			continue;
+
+		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
+		{
+			ComponentSet->SetWidget(nullptr);
+		}
+	}
+
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
 		if (!ComponentPair.Value.Remote)
 			continue;
 
-		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
+		if (const TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 		{
 			Component->SetWidget(nullptr);
 		}
