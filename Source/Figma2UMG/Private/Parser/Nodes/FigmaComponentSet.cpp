@@ -243,7 +243,11 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 				}
 			}
 		}
-		else
+	}
+
+	for (TPair< FString, FFigmaComponentPropertyDefinition> PropertyDefinition : ComponentPropertyDefinitions)
+	{
+		if (PropertyDefinition.Value.Type != EFigmaComponentPropertyType::VARIANT)
 		{
 			FString PropertyName = PropertyDefinition.Key;
 			FString FunctionName = "Init" + PropertyName;
