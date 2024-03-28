@@ -222,6 +222,7 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 					{
 						TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
 						TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
+						NewWidget->bIsVariable = true;
 						if (OldWidget)
 						{
 							Switcher->ReplaceChildAt(index, NewWidget);
