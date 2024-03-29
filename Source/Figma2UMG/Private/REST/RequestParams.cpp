@@ -15,6 +15,7 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		AccessToken = Settings->AccessToken;
 		FileKey = Settings->FileKey;
 		LibraryFileKeys = Settings->LibraryFileKeys;
+		DownloadFontsFromGoogle = Settings->DownloadFontsFromGoogle;
 	}
 
 	ContentRootFolder = "/Game/Figma";

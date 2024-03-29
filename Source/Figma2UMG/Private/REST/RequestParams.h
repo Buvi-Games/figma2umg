@@ -25,6 +25,9 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma", ToolTip = "List of Library files to get Components from."))
 	TArray<FString> LibraryFileKeys;
 
+	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Fonts", ToolTip = "Try to download missing fonts from Google."))
+	bool DownloadFontsFromGoogle;
+
 	UPROPERTY(EditAnywhere, meta = (Category = "Unreal", ToolTip = "Local folder where the UAssets will be created. eg '/Game/MyFolder'"))
 	FString ContentRootFolder;
 };
