@@ -18,4 +18,7 @@ public:
 
 	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
 	TArray<FString> LibraryFileKeys;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
+	bool UsePrototypeFlow = true;
 };
