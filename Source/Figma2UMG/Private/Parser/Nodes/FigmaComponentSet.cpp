@@ -6,6 +6,7 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintBuilder.h"
 #include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -196,8 +197,11 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 		}
 	}
 
-	for (TPair< FString, FFigmaComponentPropertyDefinition> PropertyDefinition : ComponentPropertyDefinitions)
+	for (const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition : ComponentPropertyDefinitions)
 	{
+		if (PropertyDefinition.Value.Type != EFigmaComponentPropertyType::VARIANT)
+			continue;
+
 		for (int index = 0; index < PropertyDefinition.Value.VariantOptions.Num(); index++)
 		{
 			FString VariantOption = PropertyDefinition.Value.VariantOptions[index];
@@ -214,17 +218,27 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchVariation(TObjectPtr<UWidget> Widge
 					continue;
 				}
 
+				UWidgetBlueprint* ComponentAsset = Component ? Component->GetAsset<UWidgetBlueprint>() : nullptr;
 				if (TObjectPtr<UWidgetSwitcher> Switcher = FindSwitcher(PropertyDefinition.Key))
 				{
 					TObjectPtr<UWidget> OldWidget = Switcher->GetWidgetAtIndex(index);
-					TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
-					if (OldWidget)
+					if (OldWidget && OldWidget.GetClass()->ClassGeneratedBy == ComponentAsset)
 					{
-						Switcher->ReplaceChildAt(index, NewWidget);
+						OldWidget->bIsVariable = true;
+						TryRenameWidget(Component->GetUniqueName(), OldWidget);
 					}
 					else
 					{
-						Switcher->AddChild(NewWidget);
+						TObjectPtr<UWidget> NewWidget = Component->CreateInstance(WidgetBP->WidgetTree);
+						NewWidget->bIsVariable = true;
+						if (OldWidget)
+						{
+							Switcher->ReplaceChildAt(index, NewWidget);
+						}
+						else
+						{
+							Switcher->AddChild(NewWidget);
+						}
 					}
 				}
 				else
@@ -348,6 +362,14 @@ void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 	{
 		Super::PatchBinds(WidgetBp);
 	}
+
+	for (const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition : ComponentPropertyDefinitions)
+	{
+		if (PropertyDefinition.Value.Type == EFigmaComponentPropertyType::VARIANT)
+			continue;
+
+		PatchInitFunction(PropertyDefinition);
+	}
 }
 
 void UFigmaComponentSet::PrePatchWidget()
@@ -416,6 +438,31 @@ bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)
 			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
 			AddedMemberVariable = true;
 		}
+
+		TSet<FName> CurrentVars;
+		FBlueprintEditorUtils::GetClassVariableList(WidgetBP, CurrentVars);
+		if (AddedMemberVariable || CurrentVars.Contains(*PropertyName))
+		{
+			FString FunctionName = "Init" + PropertyName;
+			TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+				{
+					return Graph.GetName() == FunctionName;
+				});
+
+			UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+			if (!FunctionGraph)
+			{
+				FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBP, FBlueprintEditorUtils::FindUniqueKismetName(WidgetBP, FunctionName), UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+
+				FBlueprintEditorUtils::AddFunctionGraph<UClass>(WidgetBP, FunctionGraph, true, nullptr);
+				AddedMemberVariable = true;
+			}
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchPropertiesToWidget] Fail to add member variable %s of type %s."), *PropertyName, *MemberType.PinCategory.ToString());
+		}
+		
 	}
 
 	for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
@@ -427,13 +474,50 @@ bool UFigmaComponentSet::PatchPropertiesToWidget(UWidgetBlueprint* WidgetBP)
 	return AddedMemberVariable;
 }
 
+void UFigmaComponentSet::PatchInitFunction(const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition) const
+{
+	if (PropertyDefinition.Value.Type == EFigmaComponentPropertyType::VARIANT)
+		return;
+
+	FString PropertyName = PropertyDefinition.Key;
+	FString FunctionName = "Init" + PropertyName;
+	WidgetBlueprintBuilder::CallFunctionFromEventNode(GetAsset<UWidgetBlueprint>(), "PreConstruct", FunctionName);
+
+	const TObjectPtr<UWidgetBlueprint> WidgetBP = GetAsset<UWidgetBlueprint>();
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] GetAsset<UWidgetBlueprint> in Node %s is nullptr."), *GetNodeName());
+		return;
+	}
+
+	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
+	TArray<UWidget*> Widgets;
+	WidgetBp->WidgetTree->GetAllWidgets(Widgets);
+
+	bool Patched = false;
+	for (UWidget* Widget : Widgets)
+	{
+		UWidgetSwitcher* Switcher = Cast<UWidgetSwitcher>(Widget);
+		if (!Switcher)
+			continue;
+
+		WidgetBlueprintBuilder::PatchInitFunction(WidgetBP, Switcher, PropertyName);
+		Patched = true;
+	}
+
+	if (!Patched)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] Can't find UWidgetSwitcher for property %s in Node %s."), *PropertyDefinition.Key, *GetNodeName());
+	}
+}
+
 void UFigmaComponentSet::PatchBinds()
 {
 	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
 	if (!WidgetBp)
 		return;
 
-	Super::PatchBinds(WidgetBp);
+	PatchBinds(WidgetBp);
 }
 
 TObjectPtr<UWidgetSwitcher> UFigmaComponentSet::FindSwitcher(const FString& SwitcherName) const

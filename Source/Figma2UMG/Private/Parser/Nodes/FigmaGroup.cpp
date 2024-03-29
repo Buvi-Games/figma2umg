@@ -100,9 +100,6 @@ void UFigmaGroup::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 
 	for (UFigmaNode* Child : Children)
 	{
-		if (Child->IsA<UFigmaComponent>())
-			continue;
-
 		IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(Child);
 		if (WidgetOwner)
 		{

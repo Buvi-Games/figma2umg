@@ -107,14 +107,36 @@ void UFigmaText::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 				return VariableDescription.VarName == PropertyReference.Value;
 			});
 
-		if (VariableDescription == nullptr)
-			return;
+		if (VariableDescription != nullptr)
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("[ProcessComponentPropertyReference] Variable '%s' found in UWidgetBlueprint %s."), *PropertyReference.Value, *WidgetBP->GetName());
+			TObjectPtr<UTextBlock> TextBlock = Cast<UTextBlock>(Widget);
+			if (TextBlock == nullptr)
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[ProcessComponentPropertyReference] UWidgetBlueprint %s's Widget '%s' is not a UTextBlock. Fail to bind %s."), *WidgetBP->GetName(), *Widget->GetName(), *PropertyReference.Value);
+				return;
+			}
 
-		TObjectPtr<UTextBlock> TextBlock = Cast<UTextBlock>(Widget);
-		if (TextBlock == nullptr)
+			WidgetBlueprintBuilder::PatchTextBind(WidgetBP, TextBlock, *PropertyReference.Value);
 			return;
+		}
+		else
+		{
+			UClass* WidgetClass = Widget->GetClass();
+			FProperty* Property = WidgetClass ? FindFProperty<FProperty>(WidgetClass, *PropertyReference.Value) : nullptr;
+			if (Property)
+			{
+				const FStrProperty* StringProperty = CastField<FStrProperty>(Property);
+				void* Value = StringProperty->ContainerPtrToValuePtr<uint8>(Widget);
+				StringProperty->SetPropertyValue(Value, Characters);
 
-		WidgetBlueprintBuilder::PatchTextBind(WidgetBP, TextBlock, *PropertyReference.Value);
+				UE_LOG_Figma2UMG(Display, TEXT("[ProcessComponentPropertyReference] Variable '%s' found in UWidget %s."), *PropertyReference.Value, *Widget->GetName());
+				return;
+			}
+
+		}
+
+		UE_LOG_Figma2UMG(Error, TEXT("[ProcessComponentPropertyReference] Variable '%s' not found in UWidgetBlueprint %s or UWidget %s."), *PropertyReference.Value, *WidgetBP->GetName(), *Widget->GetName());
 	}
 	else
 	{

@@ -198,7 +198,7 @@ void UFigmaComponent::PatchBinds()
 	if(!WidgetBp)
 		return;
 
-	Super::PatchBinds(WidgetBp);
+	PatchBinds(WidgetBp);
 }
 
 UWidget* UFigmaComponent::CreateInstance(UObject* InAssetOuter) const
@@ -228,6 +228,7 @@ UWidget* UFigmaComponent::CreateInstance(UObject* InAssetOuter) const
 		NewWidget->CreatedFromPalette();
 	}
 
+	TryRenameWidget(GetUniqueName(), NewWidget);
 	return NewWidget;
 }
 
@@ -241,4 +242,5 @@ void UFigmaComponent::TryAddComponentPropertyDefinition(FString PropertyId, FFig
 
 void UFigmaComponent::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 {
+	Super::PatchBinds(WidgetBp);
 }

@@ -442,11 +442,37 @@ void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 			return VariableDescription.VarName == PropertyReference.Value;
 		});
 
-	if(VariableDescription == nullptr)
-		return;
 
-	if (PropertyReference.Key == VisibleStr)
+	if (VariableDescription != nullptr)
 	{
-		WidgetBlueprintBuilder::PatchVisibilityBind(WidgetBP, Widget, *VariableDescription, *PropertyReference.Value);
+		UE_LOG_Figma2UMG(Display, TEXT("[ProcessComponentPropertyReference] Variable '%s' found in UWidgetBlueprint %s."), *PropertyReference.Value, *WidgetBP->GetName());
+
+		if (PropertyReference.Key == VisibleStr)
+		{
+			WidgetBlueprintBuilder::PatchVisibilityBind(WidgetBP, Widget, *PropertyReference.Value);
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[ProcessComponentPropertyReference] Unknown property '%s'."), *PropertyReference.Key);
+		}
+
+		return;
 	}
+	else
+	{
+		UClass* WidgetClass = Widget->GetClass();
+		FProperty* Property = WidgetClass ? FindFProperty<FProperty>(WidgetClass, *PropertyReference.Value) : nullptr;
+		if (Property)
+		{
+			static FString True("True");
+			const FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property);
+			void* Value = BoolProperty->ContainerPtrToValuePtr<uint8>(Widget);
+			BoolProperty->SetPropertyValue(Value, PropertyReference.Value.Compare(True, ESearchCase::IgnoreCase) == 0);
+
+			UE_LOG_Figma2UMG(Display, TEXT("[ProcessComponentPropertyReference] Variable '%s' found in UWidget %s."), *PropertyReference.Key, *Widget->GetName());
+		}
+	}
+
+	UE_LOG_Figma2UMG(Error, TEXT("[ProcessComponentPropertyReference] Variable '%s' not found in UWidgetBlueprint %s or UWidget %s."), *PropertyReference.Value, *WidgetBP->GetName(), *Widget->GetName());
+
 }
