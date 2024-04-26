@@ -39,7 +39,6 @@ public:
 	virtual TArray<UFigmaNode*>& GetChildren() override;
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 
-	void PatchBinds();
 protected:
 	TObjectPtr<UWidget> PatchVariation(TObjectPtr<UWidget> WidgetToPatch);
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);

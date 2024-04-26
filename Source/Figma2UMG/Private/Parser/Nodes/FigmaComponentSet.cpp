@@ -262,7 +262,8 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 	else if (GetAssetOuter())
 	{
 		IsDoingInPlace = true;
-		TObjectPtr<UWidget> Widget = Super::PatchPreInsertWidget(WidgetToPatch);
+		//Jumping the UFigmaFrame::PatchPreInsertWidget since the Flow implementation
+		TObjectPtr<UWidget> Widget = UFigmaGroup::PatchPreInsertWidget(WidgetToPatch);
 		IsDoingInPlace = false;
 		return Widget;
 	}
@@ -294,7 +295,8 @@ void UFigmaComponentSet::SetWidget(TObjectPtr<UWidget> Widget)
 	}
 	else
 	{
-		Super::SetWidget(Widget);
+		//Jumping the UFigmaFrame::SetWidget since the Flow implementation
+		UFigmaGroup::SetWidget(Widget);
 
 		for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
 		{
@@ -497,15 +499,6 @@ void UFigmaComponentSet::PatchInitFunction(const TPair< FString, FFigmaComponent
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] Can't find UWidgetSwitcher for property %s in Node %s."), *PropertyDefinition.Key, *GetNodeName());
 	}
-}
-
-void UFigmaComponentSet::PatchBinds()
-{
-	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
-	if (!WidgetBp)
-		return;
-
-	PatchBinds(WidgetBp);
 }
 
 TObjectPtr<UWidgetSwitcher> UFigmaComponentSet::FindSwitcher(const FString& SwitcherName) const
