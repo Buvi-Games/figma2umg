@@ -12,7 +12,7 @@
 #include "FigmaComponentSet.generated.h"
 
 UCLASS()
-class UFigmaComponentSet : public  UFigmaFrame, public IFigmaFileHandle
+class UFigmaComponentSet : public  UFigmaFrame
 {
 public:
 	GENERATED_BODY()

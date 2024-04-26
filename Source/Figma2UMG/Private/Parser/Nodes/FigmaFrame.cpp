@@ -2,3 +2,42 @@
 
 
 #include "Parser/Nodes/FigmaFrame.h"
+
+#include "WidgetBlueprintFactory.h"
+
+void UFigmaFrame::SetGenerateFile()
+{
+	GenerateFile = true;
+}
+
+FString UFigmaFrame::GetPackagePath() const
+{
+	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+	while (TopParentNode && TopParentNode->GetParentNode())
+	{
+		TopParentNode = TopParentNode->GetParentNode();
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Menu";
+}
+
+FString UFigmaFrame::GetAssetName() const
+{
+	return GetUniqueName();
+}
+
+void UFigmaFrame::LoadOrCreateAssets(UFigmaFile* FigmaFile)
+{
+	if (GenerateFile)
+	{
+		GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+	}
+}
+
+void UFigmaFrame::LoadAssets()
+{
+	if (GenerateFile)
+	{
+		LoadAsset<UWidgetBlueprint>();
+	}
+}

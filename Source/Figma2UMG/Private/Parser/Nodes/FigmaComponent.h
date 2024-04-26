@@ -13,7 +13,7 @@
 struct FEdGraphPinType;
 
 UCLASS()
-class UFigmaComponent : public  UFigmaFrame, public IFigmaFileHandle, public IFigmaRefHandle
+class UFigmaComponent : public  UFigmaFrame, public IFigmaRefHandle
 {
 public:
 	GENERATED_BODY()
