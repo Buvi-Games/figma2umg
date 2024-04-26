@@ -14,7 +14,7 @@
 #include "FigmaInstance.generated.h"
 
 UCLASS()
-class UFigmaInstance : public UFigmaNode, public IWidgetOwner, public IFigmaRefHandle, public IFigmaImageRequester, public IFigmaFileHandle
+class UFigmaInstance : public UFigmaNode, public IWidgetOwner, public IFigmaRefHandle, public IFigmaImageRequester, public IFigmaFileHandle, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
@@ -46,6 +46,11 @@ public:
 	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 	virtual void LoadAssets() override;
+
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
 	void PatchComponentProperty() const;
 	FString GetComponentId() const { return ComponentId; }

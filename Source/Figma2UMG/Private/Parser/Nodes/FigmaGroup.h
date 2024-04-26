@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Builder/BorderBuilder.h"
 #include "Interfaces/FigmaContainer.h"
+#include "Interfaces/FlowTransition.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
@@ -25,7 +26,7 @@
 struct FButtonBuilder;
 
 UCLASS()
-class UFigmaGroup : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
+class UFigmaGroup : public UFigmaNode, public IWidgetOwner, public IFigmaContainer, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
@@ -55,6 +56,11 @@ public:
 	void SetupLayout(FContainerBuilder& ContainerBuilder);
 
 	FMargin GetPadding() const;
+
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 protected:
 
 	UPROPERTY()

@@ -21,7 +21,7 @@ enum class EFigmaLineType
 };
 
 UCLASS()
-class UFigmaText : public UFigmaNode, public IWidgetOwner
+class UFigmaText : public UFigmaNode, public IWidgetOwner, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
@@ -44,6 +44,11 @@ public:
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
+
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
 protected:
 	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const override;

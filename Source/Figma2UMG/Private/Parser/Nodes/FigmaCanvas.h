@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Interfaces/FigmaContainer.h"
+#include "Interfaces/FlowTransition.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaColor.h"
@@ -16,7 +17,7 @@
 class UCanvasPanel;
 
 UCLASS()
-class UFigmaCanvas : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
+class UFigmaCanvas : public UFigmaNode, public IWidgetOwner, public IFigmaContainer, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
@@ -38,6 +39,11 @@ public:
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
+
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override;
+	virtual const float GetTransitionDuration() const override;
+	virtual const EFigmaEasingType GetTransitionEasing() const override;
 protected:
 
 	UPROPERTY()
@@ -45,6 +51,9 @@ protected:
 
 	UPROPERTY()
 	FFigmaColor BackgroundColor;
+
+	UPROPERTY()
+	FString PrototypeStartNodeID;
 
 	UPROPERTY()
 	TArray<FFigmaFlowStartingPoint> FlowStartingPoints;

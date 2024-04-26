@@ -6,6 +6,7 @@
 #include "Builder/ImageBuilder.h"
 #include "Interfaces/AssetFileHandler.h"
 #include "Interfaces/FigmaImageRequester.h"
+#include "Interfaces/FlowTransition.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
@@ -26,7 +27,7 @@
 #include "FigmaVectorNode.generated.h"
 
 UCLASS()
-class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle, public IWidgetOwner
+class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle, public IWidgetOwner, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
@@ -58,6 +59,11 @@ public:
 
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
+
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 protected:
 	UPROPERTY()
 	bool Locked = false;
