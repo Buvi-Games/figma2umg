@@ -7,7 +7,6 @@
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintBuilder.h"
-#include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/FigmaFile.h"
@@ -16,6 +15,7 @@
 void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
+	GenerateFile = true;
 
 	for (const TPair<FString, FFigmaComponentPropertyDefinition>& Property : ComponentPropertyDefinitions)
 	{
@@ -56,8 +56,6 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentSetRef* ComponentSetRef = FigmaFile->FindComponentSetRef(GetId());
 	ComponentSetRef->SetComponentSet(this);
-
-
 }
 
 FString UFigmaComponentSet::GetPackagePath() const
@@ -71,11 +69,6 @@ FString UFigmaComponentSet::GetPackagePath() const
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
 }
 
-FString UFigmaComponentSet::GetAssetName() const
-{
-	return GetUniqueName();
-}
-
 void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
@@ -83,11 +76,6 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	{
 		CompileBP(GetNodeName());
 	}
-}
-
-void UFigmaComponentSet::LoadAssets()
-{
-	LoadAsset<UWidgetBlueprint>();
 }
 
 TObjectPtr<UWidget> UFigmaComponentSet::GetTopWidget() const

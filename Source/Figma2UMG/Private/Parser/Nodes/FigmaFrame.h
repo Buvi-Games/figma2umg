@@ -23,6 +23,7 @@ public:
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
 	virtual void LoadAssets() override;
 
+	virtual UObject* GetAssetOuter() const override;
 protected:
 	UPROPERTY()
 	TArray<FFigmaLayoutGrid> LayoutGrids;

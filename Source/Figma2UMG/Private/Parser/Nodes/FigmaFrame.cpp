@@ -41,3 +41,17 @@ void UFigmaFrame::LoadAssets()
 		LoadAsset<UWidgetBlueprint>();
 	}
 }
+
+UObject* UFigmaFrame::GetAssetOuter() const
+{
+	if (GenerateFile)
+	{
+		return Super::GetAssetOuter();
+	}
+	else if (ParentNode)
+	{
+		return ParentNode->GetAssetOuter();
+	}
+
+	return nullptr;
+}

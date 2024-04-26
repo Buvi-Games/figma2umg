@@ -15,6 +15,7 @@
 void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
+	GenerateFile = true;
 
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(GetId());
@@ -39,11 +40,6 @@ FString UFigmaComponent::GetPackagePath() const
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
 }
 
-FString UFigmaComponent::GetAssetName() const
-{
-	return GetUniqueName();
-}
-
 void UFigmaComponent::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
@@ -59,7 +55,6 @@ void UFigmaComponent::LoadAssets()
 {
 	RefAsset = LoadAsset<UWidgetBlueprint>();
 }
-
 
 void UFigmaComponent::PrePatchWidget()
 {
