@@ -44,6 +44,8 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 	ContentRootFolder = InProperties->ContentRootFolder;
 	RequesterCallback = InRequesterCallback;
+
+	UsePrototypeFlow = InProperties->UsePrototypeFlow;
 }
 
 
@@ -247,6 +249,11 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 				{
 					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
 					File->PostSerialize(ContentRootFolder, JsonObj);
+
+					if (UsePrototypeFlow)
+					{
+						File->PrepareForFlow();
+					}
 
 					for (TPair<FString, TObjectPtr<UFigmaFile>> LibPair : LibraryFileKeys)
 					{
