@@ -101,28 +101,7 @@ void UFigmaFile::PrepareForFlow()
 	if (!Document)
 		return;
 
-	TArray<IFlowTransition*> AllFlowTransitions;
-	Document->GetAllChildrenByType(AllFlowTransitions);
-	for (IFlowTransition* FlowTransition : AllFlowTransitions)
-	{
-		if (!FlowTransition->HasTransition())
-			continue;
-
-		const FString& NodeID = FlowTransition->GetTransitionNodeID();
-		TObjectPtr<UFigmaFrame> Frame = FindByID<UFigmaFrame>(NodeID);
-		if (Frame)
-		{
-			Frame->SetGenerateFile();
-		}
-		else if(TObjectPtr<UFigmaNode> Node = FindByID<UFigmaNode>(NodeID))
-		{
-			UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's contain Node with ID %s and type %s. Expecting a UFigmaFrame type"), *Name, *NodeID, *Node->GetClass()->GetName());
-		}
-		else
-		{
-			UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's doesn't contain Node with ID %s."), *Name, *NodeID);
-		}
-	}
+	Document->PrepareForFlow();
 }
 
 void UFigmaFile::FixComponentSetRef()

@@ -20,6 +20,7 @@ public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PrepareForFlow();
 	virtual FVector2D GetAbsolutePosition() const override;
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 
