@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/BorderBuilder.h"
+#include "Builder/SizeBoxBuilder.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Interfaces/FlowTransition.h"
 #include "Interfaces/WidgetOwner.h"
@@ -223,5 +223,5 @@ protected:
 	TMap<EFigmaStyleType, FString> Styles;
 
 	UPROPERTY()
-	FBorderBuilder Builder;
+	FSizeBoxBuilder Builder;
 };
