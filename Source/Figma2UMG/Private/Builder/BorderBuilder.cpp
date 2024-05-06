@@ -145,7 +145,7 @@ void FBorderBuilder::SetupBrush(FSlateBrush& Brush, const TArray<FFigmaPaint>& F
 {
 	if (!Fills.IsEmpty() && Fills[0].Visible)
 	{
-		Brush.TintColor = Fills[0].Color.GetLinearColor();
+		Brush.TintColor = Fills[0].GetLinearColor();
 	}
 	else
 	{
@@ -154,7 +154,7 @@ void FBorderBuilder::SetupBrush(FSlateBrush& Brush, const TArray<FFigmaPaint>& F
 
 	if (!Strokes.IsEmpty())
 	{
-		Brush.OutlineSettings.Color = Strokes[0].Color.GetLinearColor();
+		Brush.OutlineSettings.Color = Strokes[0].GetLinearColor();
 		Brush.OutlineSettings.Width = InStrokeWeight;
 	}
 	else
@@ -179,7 +179,7 @@ void FBorderBuilder::SetFill() const
 	{
 		if (Fill && Fill->Visible)
 		{
-			Border->SetBrushColor(Fill->Color.GetLinearColor());
+			Border->SetBrushColor(Fill->GetLinearColor());
 		}
 		else
 		{
@@ -195,7 +195,7 @@ void FBorderBuilder::SetStroke() const
 		if(Stroke)
 		{
 			FSlateBrush Brush = Border->Background;
-			Brush.OutlineSettings.Color = Stroke->Color.GetLinearColor();
+			Brush.OutlineSettings.Color = Stroke->GetLinearColor();
 			Brush.OutlineSettings.Width = StrokeWeight;
 			Border->SetBrush(Brush);
 		}

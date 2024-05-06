@@ -41,7 +41,7 @@ void FTextBoxBuilder::SetFill(const FFigmaPaint& Fill)
 	if (!TextBlock)
 		return;
 
-	TextBlock->SetColorAndOpacity(Fill.Color.GetLinearColor());
+	TextBlock->SetColorAndOpacity(Fill.GetLinearColor());
 }
 
 void FTextBoxBuilder::Reset()

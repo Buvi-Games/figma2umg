@@ -57,7 +57,8 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 		if (Children.Num() == 1)
 		{
 			FString CanvasName = Children[0]->GetUniqueName();
-			UWidget** FoundChild = Cast<UPanelWidget>(WidgetToPatch)->GetAllChildren().FindByPredicate([CanvasName](const UWidget* Child)
+			TArray<UWidget*> AllChildren = Cast<UPanelWidget>(WidgetToPatch)->GetAllChildren();
+			UWidget** FoundChild = AllChildren.FindByPredicate([CanvasName](const UWidget* Child)
 				{
 					return Child->GetName() == CanvasName;
 				});
@@ -77,6 +78,22 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 			{
 				IWidgetOwner::TryRenameWidget(GetUniqueName(), MainWidget);
 			}
+
+			for (UFigmaNode* Child : Children)
+			{
+				FString ChildName = Child->GetUniqueName();
+				TArray<UWidget*> AllChildren = MainWidget->GetAllChildren();
+				UWidget** FoundChild = AllChildren.FindByPredicate([ChildName](const UWidget* Child)
+					{
+						return Child->GetName().Contains(ChildName);
+					});
+
+				TObjectPtr<UWidget> SubWidget = Child->PatchPreInsertWidget(FoundChild ? *FoundChild : nullptr);
+				if(!FoundChild && SubWidget)
+				{
+					MainWidget->AddChild(SubWidget);
+				}
+			}
 		}
 	}
 	else if (Children.Num() == 1)
@@ -93,6 +110,22 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 		else if (MainWidget->GetName() != GetUniqueName())
 		{
 			IWidgetOwner::TryRenameWidget(GetUniqueName(), MainWidget);
+		}
+
+		for (UFigmaNode* Child : Children)
+		{
+			FString ChildName = Child->GetUniqueName();
+			TArray<UWidget*> AllChildren = MainWidget->GetAllChildren();
+			UWidget** FoundChild = AllChildren.FindByPredicate([ChildName](const UWidget* Child)
+				{
+					return Child->GetName().Contains(ChildName);
+				});
+
+			TObjectPtr<UWidget> SubWidget = Child->PatchPreInsertWidget(FoundChild ? *FoundChild : nullptr);
+			if (!FoundChild && SubWidget)
+			{
+				MainWidget->AddChild(SubWidget);
+			}
 		}
 	}
 

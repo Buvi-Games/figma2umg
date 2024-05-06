@@ -41,6 +41,7 @@ TObjectPtr<UWidget> UFigmaText::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	}
 
 	Builder.TextBlock->SetText(FText::FromString(Characters));
+	Builder.TextBlock->SetAutoWrapText(true);
 
 	Builder.SetStyle(Style);
 	
