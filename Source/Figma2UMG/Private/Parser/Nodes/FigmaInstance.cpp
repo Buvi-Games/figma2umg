@@ -13,6 +13,16 @@
 #include "REST/ImageRequest.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
+void UFigmaInstance::PrepareForFlow()
+{
+	Super::PrepareForFlow();
+
+	for (UFigmaNode* Child : Children)
+	{
+		Child->PrepareForFlow();
+	}
+}
+
 FVector2D UFigmaInstance::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();

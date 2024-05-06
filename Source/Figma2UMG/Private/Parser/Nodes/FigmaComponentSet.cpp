@@ -7,7 +7,6 @@
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintBuilder.h"
-#include "Components/Button.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/FigmaFile.h"
@@ -16,6 +15,7 @@
 void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
+	GenerateFile = true;
 
 	for (const TPair<FString, FFigmaComponentPropertyDefinition>& Property : ComponentPropertyDefinitions)
 	{
@@ -56,8 +56,6 @@ void UFigmaComponentSet::PostSerialize(const TObjectPtr<UFigmaNode> InParent, co
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentSetRef* ComponentSetRef = FigmaFile->FindComponentSetRef(GetId());
 	ComponentSetRef->SetComponentSet(this);
-
-
 }
 
 FString UFigmaComponentSet::GetPackagePath() const
@@ -71,11 +69,6 @@ FString UFigmaComponentSet::GetPackagePath() const
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
 }
 
-FString UFigmaComponentSet::GetAssetName() const
-{
-	return GetUniqueName();
-}
-
 void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 	UWidgetBlueprint* WidgetBP = GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
@@ -83,11 +76,6 @@ void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 	{
 		CompileBP(GetNodeName());
 	}
-}
-
-void UFigmaComponentSet::LoadAssets()
-{
-	LoadAsset<UWidgetBlueprint>();
 }
 
 TObjectPtr<UWidget> UFigmaComponentSet::GetTopWidget() const
@@ -274,7 +262,8 @@ TObjectPtr<UWidget> UFigmaComponentSet::PatchPreInsertWidget(TObjectPtr<UWidget>
 	else if (GetAssetOuter())
 	{
 		IsDoingInPlace = true;
-		TObjectPtr<UWidget> Widget = Super::PatchPreInsertWidget(WidgetToPatch);
+		//Jumping the UFigmaFrame::PatchPreInsertWidget since the Flow implementation
+		TObjectPtr<UWidget> Widget = UFigmaGroup::PatchPreInsertWidget(WidgetToPatch);
 		IsDoingInPlace = false;
 		return Widget;
 	}
@@ -306,7 +295,8 @@ void UFigmaComponentSet::SetWidget(TObjectPtr<UWidget> Widget)
 	}
 	else
 	{
-		Super::SetWidget(Widget);
+		//Jumping the UFigmaFrame::SetWidget since the Flow implementation
+		UFigmaGroup::SetWidget(Widget);
 
 		for (FSwitcherBuilder& SwitcherBuilder : SwitchBuilders)
 		{
@@ -509,15 +499,6 @@ void UFigmaComponentSet::PatchInitFunction(const TPair< FString, FFigmaComponent
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[UFigmaComponentSet::PatchInitFunction] Can't find UWidgetSwitcher for property %s in Node %s."), *PropertyDefinition.Key, *GetNodeName());
 	}
-}
-
-void UFigmaComponentSet::PatchBinds()
-{
-	TObjectPtr<UWidgetBlueprint> WidgetBp = GetAsset<UWidgetBlueprint>();
-	if (!WidgetBp)
-		return;
-
-	PatchBinds(WidgetBp);
 }
 
 TObjectPtr<UWidgetSwitcher> UFigmaComponentSet::FindSwitcher(const FString& SwitcherName) const

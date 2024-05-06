@@ -12,7 +12,7 @@
 #include "FigmaComponentSet.generated.h"
 
 UCLASS()
-class UFigmaComponentSet : public  UFigmaFrame, public IFigmaFileHandle
+class UFigmaComponentSet : public  UFigmaFrame
 {
 public:
 	GENERATED_BODY()
@@ -27,9 +27,7 @@ public:
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
-	virtual FString GetAssetName() const override;
 	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
-	virtual void LoadAssets() override;
 
 	// IWidgetOwner
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;
@@ -41,7 +39,6 @@ public:
 	virtual TArray<UFigmaNode*>& GetChildren() override;
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 
-	void PatchBinds();
 protected:
 	TObjectPtr<UWidget> PatchVariation(TObjectPtr<UWidget> WidgetToPatch);
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);

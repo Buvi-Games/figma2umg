@@ -50,6 +50,7 @@ public:
 
 	//virtual void PostInsert(UWidget* Widget) const;
 
+	virtual void PrepareForFlow();
 	virtual void PrePatchWidget();
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch);
 	virtual void SetWidget(TObjectPtr<UWidget> WidgetToPatch);

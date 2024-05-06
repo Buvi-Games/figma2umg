@@ -80,6 +80,8 @@ protected:
 
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
+	bool UsePrototypeFlow = false;
+
 	UPROPERTY()
 	TObjectPtr<UFigmaFile> File = nullptr;
 

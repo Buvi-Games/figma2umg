@@ -73,3 +73,18 @@ TObjectPtr<UPanelWidget> UFigmaCanvas::GetContainerWidget() const
 void UFigmaCanvas::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 {
 }
+
+const FString& UFigmaCanvas::GetTransitionNodeID() const
+{
+	return PrototypeStartNodeID;
+}
+
+const float UFigmaCanvas::GetTransitionDuration() const
+{
+	return 0.0f;
+}
+
+const EFigmaEasingType UFigmaCanvas::GetTransitionEasing() const
+{
+	return EFigmaEasingType::LINEAR;
+}

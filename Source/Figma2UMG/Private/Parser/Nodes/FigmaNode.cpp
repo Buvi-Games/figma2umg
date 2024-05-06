@@ -21,6 +21,7 @@
 #include "Builder/WidgetBlueprintBuilder.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "Parser/FigmaFile.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
 #include "Vectors/FigmaBooleanOp.h"
@@ -155,6 +156,45 @@ void UFigmaNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSha
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
 	{
 		SerializeArray(FigmaContainer->GetChildren(), JsonObj, FigmaContainer->GetJsonArrayName());
+	}
+}
+
+void UFigmaNode::PrepareForFlow()
+{
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	if(!FigmaFile)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] Node %s don't have a File."), *Name);
+		return;
+	}
+
+	if (IFlowTransition* FlowTransition = Cast<IFlowTransition>(this))
+	{
+		if (FlowTransition->HasTransition())
+		{
+			const FString& NodeID = FlowTransition->GetTransitionNodeID();
+			TObjectPtr<UFigmaFrame> Frame = FigmaFile->FindByID<UFigmaFrame>(NodeID);
+			if (Frame)
+			{
+				Frame->SetGenerateFile();
+			}
+			else if (TObjectPtr<UFigmaNode> Node = FigmaFile->FindByID<UFigmaNode>(NodeID))
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's contain Node with ID %s and type %s. Expecting a UFigmaFrame type"), *Name, *NodeID, *Node->GetClass()->GetName());
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's doesn't contain Node with ID %s."), *Name, *NodeID);
+			}
+		}
+	}
+
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	{
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
+			{
+				Node.PrepareForFlow();
+			}));
 	}
 }
 

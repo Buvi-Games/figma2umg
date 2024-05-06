@@ -96,6 +96,14 @@ TObjectPtr<UFigmaComponentSet> UFigmaFile::FindComponentSetByKey(const FString& 
 	return nullptr;
 }
 
+void UFigmaFile::PrepareForFlow()
+{
+	if (!Document)
+		return;
+
+	Document->PrepareForFlow();
+}
+
 void UFigmaFile::FixComponentSetRef()
 {
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
@@ -529,7 +537,7 @@ void UFigmaFile::PatchWidgetBinds()
 		if (!ComponentSet || !WidgetBP)
 			continue;
 
-		ComponentSet->PatchBinds();
+		ComponentSet->PatchBluePrintBinds();
 	}
 
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
@@ -539,7 +547,20 @@ void UFigmaFile::PatchWidgetBinds()
 		if (!Component || !WidgetBP)
 			continue;
 
-		Component->PatchBinds();
+		Component->PatchBluePrintBinds();
+	}
+
+	TArray<UFigmaFrame*> AllFrames;
+	if (Document)
+	{
+		Document->GetAllChildrenByType(AllFrames);
+	}
+	for (UFigmaFrame* FigmaFrame : AllFrames)
+	{
+		if(FigmaFrame->IsA<UFigmaComponent>() || FigmaFrame->IsA<UFigmaComponentSet>())
+			continue;
+
+		FigmaFrame->PatchBluePrintBinds();
 	}
 }
 

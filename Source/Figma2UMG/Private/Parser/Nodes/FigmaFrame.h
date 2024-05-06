@@ -4,17 +4,41 @@
 
 #include "CoreMinimal.h"
 #include "FigmaGroup.h"
+#include "Interfaces/AssetFileHandler.h"
+#include "Interfaces/FigmaRefHandle.h"
 #include "Parser/Properties/FigmaLayoutGrid.h"
 
 #include "FigmaFrame.generated.h"
 
 UCLASS()
-class UFigmaFrame : public  UFigmaGroup
+class UFigmaFrame : public  UFigmaGroup, public IFigmaFileHandle, public IFigmaRefHandle
 {
 public:
 	GENERATED_BODY()
 
+	void SetGenerateFile();
+
+	// UFigmaNode
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
+
+	// IFigmaFileHandle
+	virtual FString GetPackagePath() const override;
+	virtual FString GetAssetName() const override;
+	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
+	virtual void LoadAssets() override;
+
+	// IWidgetOwner
+	virtual void PostInsert() const override;
+
+	void PatchBluePrintBinds() const;
+	virtual UObject* GetAssetOuter() const override;
+
+	UWidget* CreateInstance(UObject* InAssetOuter) const;
 protected:
+
 	UPROPERTY()
 	TArray<FFigmaLayoutGrid> LayoutGrids;
+
+	bool GenerateFile = false;
 };

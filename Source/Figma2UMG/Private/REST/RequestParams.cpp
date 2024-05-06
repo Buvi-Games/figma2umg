@@ -15,13 +15,14 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		AccessToken = Settings->AccessToken;
 		FileKey = Settings->FileKey;
 		LibraryFileKeys = Settings->LibraryFileKeys;
+		UsePrototypeFlow = Settings->UsePrototypeFlow;
 	}
 
 	ContentRootFolder = "/Game/Figma";
 
 	//#if !UE_BUILD_SHIPPING
 	//Ids.Add("212:1394"); // Impost Sections
-	Ids.Add("146:1357"); // SectionProperty
+	//Ids.Add("146:1357"); // SectionProperty
 	//Ids.Add("212:1393"); // SectionVariationButton
 	//Ids.Add("294:1393"); // SectionVariation
 	//Ids.Add("212:1395"); // SectionRemoteLib
