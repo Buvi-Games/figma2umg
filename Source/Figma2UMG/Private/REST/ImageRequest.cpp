@@ -177,3 +177,19 @@ FImageRequest* FImageRequests::GetNextToDownload()
 	}
 	return ImageRequest;
 }
+
+int FImageRequests::GetCurrentRequestTotalCount() const
+{
+	if (RequestsPerFile.Num() == 0)
+		return 0;
+
+	int Count = 0;
+	const FImagePerFileRequests& CurrentFile = RequestsPerFile[0];
+	for(const FImageRequest& Request : CurrentFile.Requests)
+	{
+		if (!Request.URL.IsEmpty())
+			Count++;
+	}
+
+	return Count;
+}
