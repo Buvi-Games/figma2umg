@@ -21,6 +21,11 @@ struct FIGMA2UMG_API FFigmaPaint
 public:
 	GENERATED_BODY()
 
+	FLinearColor GetLinearColor() const
+	{
+		return FLinearColor(Color.R, Color.G, Color.B, Opacity);
+	}
+
 	UPROPERTY()
 	EPaintTypes Type;
 
@@ -28,7 +33,7 @@ public:
 	bool Visible = true;
 
 	UPROPERTY()
-	float Opacity;
+	float Opacity = 1.0f;
 
 	UPROPERTY()
 	FFigmaColor Color;

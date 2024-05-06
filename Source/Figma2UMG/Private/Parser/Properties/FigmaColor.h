@@ -12,11 +12,6 @@ struct FIGMA2UMG_API FFigmaColor
 public:
 	GENERATED_BODY()
 
-	FLinearColor GetLinearColor() const
-	{
-		return FLinearColor(R, G, B, A);
-	}
-
 	UPROPERTY()
 	float R = 0.0f;
 
