@@ -7,6 +7,7 @@
 #include "Components/ButtonSlot.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "Components/SizeBoxSlot.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/Widget.h"
 #include "Components/WrapBoxSlot.h"
@@ -60,6 +61,10 @@ void IWidgetOwner::SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size, co
 				CanvasSlot->SetAutoSize(true);
 			}
 		}
+		//else if (USizeBoxSlot* SizeBoxSlot = Cast<USizeBoxSlot>(Widget->Slot))
+		//{
+		//	SizeBoxSlot->SetSize(Size);
+		//}
 		//else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
 		//{
 		//	HorizontalBoxSlot->SetSize(Size);
@@ -87,6 +92,10 @@ void IWidgetOwner::SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLef
 
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
+		}
+		else if (USizeBoxSlot* SizeBoxSlot = Cast<USizeBoxSlot>(Widget->Slot))
+		{
+			SizeBoxSlot->SetPadding(Padding);
 		}
 		else if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
 		{
@@ -120,6 +129,11 @@ void IWidgetOwner::SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizonta
 
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
+		}
+		else if (USizeBoxSlot* SizeBoxSlot = Cast<USizeBoxSlot>(Widget->Slot))
+		{
+			SizeBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			SizeBoxSlot->SetVerticalAlignment(VerticalAlignment);
 		}
 		else if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
 		{
