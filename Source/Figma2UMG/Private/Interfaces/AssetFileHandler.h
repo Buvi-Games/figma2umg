@@ -9,10 +9,13 @@
 #include "Figma2UMGModule.h"
 #include "PackageTools.h"
 #include "ObjectTools.h"
+#include "WidgetBlueprint.h"
+#include "Blueprint/WidgetTree.h"
 
 #include "AssetFileHandler.generated.h"
 
-class UWidgetBlueprint;
+class URawTexture2DFactory;
+class UWidgetBlueprintFactory;
 
 UINTERFACE(BlueprintType, Experimental, meta = (CannotImplementInterfaceInBlueprint))
 class FIGMA2UMG_API UFigmaFileHandle : public UInterface
@@ -46,6 +49,9 @@ public:
 protected:
 	template<class AssetType, class FactoryType>
 	AssetType* GetOrCreateAsset(FactoryType* Factory = nullptr);
+
+	UWidgetBlueprint* GetOrCreateWidgetBlueprint(UWidgetBlueprintFactory* Factory = nullptr);
+	UTexture2D* GetOrCreateTexture2D(URawTexture2DFactory* Factory = nullptr);
 
 	template<class AssetType>
 	AssetType* LoadAsset();
@@ -109,7 +115,16 @@ AssetType* IFigmaFileHandle::LoadAsset()
 	AssetType* TypedAsset = Cast<AssetType>(AssetData.FastGetAsset(true));
 
 	Asset = TypedAsset;
-	AssetOuter = TypedAsset;
+
+	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(TypedAsset);
+	if(WidgetAsset)
+	{
+		AssetOuter = WidgetAsset->WidgetTree;
+	}
+	else
+	{
+		AssetOuter = TypedAsset;
+	}
 
 	return TypedAsset;
 }

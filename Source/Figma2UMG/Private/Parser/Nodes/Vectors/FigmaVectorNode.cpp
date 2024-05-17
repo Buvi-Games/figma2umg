@@ -29,7 +29,7 @@ void UFigmaVectorNode::OnRawImageReceived(TArray<uint8>& RawData)
 	URawTexture2DFactory* Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
 	Factory->DownloadSubFolder = GetFigmaFile()->GetFileName() + TEXT("/Images");
 	Factory->RawData = RawData;
-	GetOrCreateAsset<UTexture2D>(Factory);
+	GetOrCreateTexture2D(Factory);
 }
 
 FString UFigmaVectorNode::GetPackagePath() const
