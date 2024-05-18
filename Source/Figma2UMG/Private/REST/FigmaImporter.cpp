@@ -8,6 +8,7 @@
 #include "FigmaImportSubsystem.h"
 #include "JsonObjectConverter.h"
 #include "RequestParams.h"
+#include "Async/Async.h"
 #include "Parser/FigmaFile.h"
 
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
@@ -116,7 +117,7 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 	Request->ProcessURL(URL);
 
 	// This section bellow is a hack due to the FCurlHttpRequest::SetupRequest() always adding the header Content-Length. Adding it makes the Figma AIP return the error 400 
-	// To avoid reimplementing the curl class, we need to maually remove the Header item.
+	// To avoid reimplementing the curl class, we need to manually remove the Header item.
 	// This will need update and check if it has any change in the FCurlHttpRequest size so the memory offset of Header changed.
 
 	int HeaderAddressOffset = 0;
@@ -124,6 +125,8 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 #if WITH_CURL
 #if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 3 && ENGINE_PATCH_VERSION == 2)
 	HeaderAddressOffset = 256;
+#elif (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 2)
+	HeaderAddressOffset = 200;
 #endif
 #endif
 

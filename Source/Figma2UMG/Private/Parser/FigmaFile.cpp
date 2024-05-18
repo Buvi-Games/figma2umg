@@ -4,6 +4,7 @@
 #include "Parser/FigmaFile.h"
 
 #include "Figma2UMGModule.h"
+#include "Async/Async.h"
 #include "Interfaces/FigmaImageRequester.h"
 #include "Nodes/FigmaDocument.h"
 #include "Nodes/FigmaInstance.h"

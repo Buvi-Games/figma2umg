@@ -8,6 +8,8 @@
 #include "REST/RequestParams.h"
 #include <Figma2UMGModule.h>
 
+#include "Widgets/Layout/SGridPanel.h"
+
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 
 SImporterWidget::SImporterWidget()

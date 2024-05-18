@@ -25,9 +25,11 @@ void FTextBoxBuilder::SetStyle(const FFigmaTypeStyle& Style)
 	case EFigmaTextAlignHorizontal::RIGHT:
 		TextBlock->SetJustification(ETextJustify::Right);
 		break;
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
 	case EFigmaTextAlignHorizontal::JUSTIFIED:
 		TextBlock->SetJustification(ETextJustify::InvariantLeft);
 		break;
+#endif
 	}
 
 	FSlateFontInfo Font = TextBlock->GetFont();
@@ -52,11 +54,15 @@ void FTextBoxBuilder::Reset()
 
 float FTextBoxBuilder::ConvertFontSizeFromDisplayToNative(float DisplayFontSize) const
 {
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
 	const UUserInterfaceSettings* UISettings = GetDefault<UUserInterfaceSettings>();
 	const float FontDisplayDPI = UISettings->GetFontDisplayDPI();
 	const float NativeSize = DisplayFontSize * FontDisplayDPI / static_cast<float>(FontConstants::RenderDPI);
 	const float RoundedSize = FMath::GridSnap(NativeSize, 0.01f);
 	return RoundedSize;
+#else
+	return DisplayFontSize;
+#endif
 }
 
 void FTextBoxBuilder::SetupWidget(TObjectPtr<UWidget> Widget)

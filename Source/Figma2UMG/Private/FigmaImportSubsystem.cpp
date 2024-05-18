@@ -1,6 +1,5 @@
 // Copyright 2024 Buvi Games. All Rights Reserved.
 
-
 #include "FigmaImportSubsystem.h"
 
 #include "UI/SImporterWidget.h"

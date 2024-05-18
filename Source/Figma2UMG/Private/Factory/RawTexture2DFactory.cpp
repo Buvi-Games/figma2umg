@@ -6,6 +6,7 @@
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "ImageUtils.h"
+#include "Misc/FileHelper.h"
 
 URawTexture2DFactory::URawTexture2DFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
