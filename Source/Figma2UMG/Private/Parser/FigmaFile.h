@@ -40,7 +40,7 @@ public:
 	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
 	void BuildImageDependency(FString FileKey, FImageRequests& ImageRequests);
-	void Patch(const FProcessFinishedDelegate& ProcessDelegate);
+	void Patch(const FProcessFinishedDelegate& ProcessDelegate, FScopedSlowTask* Progress);
 	void PostPatch(const FProcessFinishedDelegate& ProcessDelegate);
 
 	template<class NodeType>

@@ -303,19 +303,29 @@ void UFigmaFile::BuildImageDependency(FString FileKey, FImageRequests& ImageRequ
 	}
 }
 
-void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
+void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate, FScopedSlowTask* Progress)
 {
 	CurrentProcessDelegate = ProcessDelegate;
-	AsyncTask(ENamedThreads::GameThread, [this]()
+	AsyncTask(ENamedThreads::GameThread, [this, Progress]()
 		{
 			FGCScopeGuard GCScopeGuard;
 
+			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
 			PatchPreInsertWidget();
+
+			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PostInsert Widgets"));
 			if (PatchPostInsertWidget())
 			{
+				Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
 				CompileBPs();
+
+				Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
 				ReloadBPAssets();
+
+				Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
 				PatchWidgetBinds();
+
+				Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
 				PatchWidgetProperties();
 
 				ExecuteDelegate(true);

@@ -28,6 +28,7 @@ public:
 protected:
 	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
+	void UpdateProgress(float ExpectedWorkThisFrame, const FText& Message);
 
 	void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
 	void OnCurrentRequestFail(UVaRestRequestJSON* Request);
@@ -91,4 +92,6 @@ protected:
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;
 	FImageRequests RequestedImages;
+
+	FScopedSlowTask* Progress = nullptr;
 };
