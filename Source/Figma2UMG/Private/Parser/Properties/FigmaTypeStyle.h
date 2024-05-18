@@ -15,6 +15,8 @@ struct FIGMA2UMG_API FFigmaTypeStyle
 public:
 	GENERATED_BODY()
 
+	void PostSerialize(const TSharedPtr<FJsonObject> JsonObj);
+
 	UPROPERTY()
 	FString FontFamily;
 

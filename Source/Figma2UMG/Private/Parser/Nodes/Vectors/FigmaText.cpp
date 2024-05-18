@@ -7,6 +7,20 @@
 #include "Builder/WidgetBlueprintBuilder.h"
 #include "Components/TextBlock.h"
 
+void UFigmaText::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	Super::PostSerialize(InParent, JsonObj);
+
+	PostSerializeProperty(JsonObj, "fills", Fills);
+	PostSerializeProperty(JsonObj, "strokes", Strokes);
+
+	if (JsonObj->HasTypedField<EJson::Object>("style"))
+	{
+		const TSharedPtr<FJsonObject> StyleJson = JsonObj->GetObjectField("style");
+		Style.PostSerialize(StyleJson);
+	}
+}
+
 FVector2D UFigmaText::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();

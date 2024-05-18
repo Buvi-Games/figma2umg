@@ -9,6 +9,14 @@
 #include "Factory/RawTexture2DFactory.h"
 #include "REST/FigmaImporter.h"
 
+void UFigmaVectorNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	Super::PostSerialize(InParent, JsonObj);
+
+	PostSerializeProperty(JsonObj, "fills", Fills);
+	PostSerializeProperty(JsonObj, "strokes", Strokes);
+}
+
 FVector2D UFigmaVectorNode::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();

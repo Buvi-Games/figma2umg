@@ -21,6 +21,9 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 			DevStatus = JsonObj->GetStringField("type");
 		}
 	}
+
+	PostSerializeProperty(JsonObj, "fills", Fills);
+	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
 FVector2D UFigmaSection::GetAbsolutePosition() const

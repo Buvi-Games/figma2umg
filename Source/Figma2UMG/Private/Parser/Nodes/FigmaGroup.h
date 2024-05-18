@@ -32,6 +32,7 @@ public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
 
 	// IFigmaContainer

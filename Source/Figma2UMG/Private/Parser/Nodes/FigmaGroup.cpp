@@ -10,6 +10,14 @@
 #include "Components/CanvasPanelSlot.h"
 
 
+void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	Super::PostSerialize(InParent, JsonObj);
+
+	PostSerializeProperty(JsonObj, "fills", Fills);
+	PostSerializeProperty(JsonObj, "strokes", Strokes);
+}
+
 FVector2D UFigmaGroup::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();

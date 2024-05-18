@@ -84,6 +84,24 @@ public:
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 
+	template<class PropertyT>
+	void PostSerializeProperty(const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName, TArray<PropertyT>& PropertyArray) const
+	{
+		if (JsonObj->HasTypedField<EJson::Array>(ArrayName))
+		{
+			const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField(ArrayName);
+			for (int i = 0; i < ArrayJson.Num() && PropertyArray.Num(); i++)
+			{
+				const TSharedPtr<FJsonValue>& Item = ArrayJson[i];
+				if (Item.IsValid() && Item->Type == EJson::Object)
+				{
+					const TSharedPtr<FJsonObject>& ItemObject = Item->AsObject();
+					PropertyArray[i].PostSerialize(ItemObject);
+				}
+			}
+		}
+	}
+
 	UFigmaNode* CreateNode(const TSharedPtr<FJsonObject>& JsonObj);
 
 	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const;
