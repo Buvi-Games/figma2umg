@@ -65,14 +65,20 @@ void IWidgetOwner::SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size, co
 		//{
 		//	SizeBoxSlot->SetSize(Size);
 		//}
-		//else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
-		//{
-		//	HorizontalBoxSlot->SetSize(Size);
-		//}
-		//else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
-		//{
-		//	VerticalBoxSlot->SetSize(Size);
-		//}
+		else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+		{
+			FSlateChildSize ChildSize;
+			ChildSize.Value = Size.X;
+			ChildSize.SizeRule = SizeToContent ? ESlateSizeRule::Fill : ESlateSizeRule::Automatic;
+			HorizontalBoxSlot->SetSize(ChildSize);
+		}
+		else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
+		{
+			FSlateChildSize ChildSize;
+			ChildSize.Value = Size.Y;
+			ChildSize.SizeRule = SizeToContent ? ESlateSizeRule::Fill : ESlateSizeRule::Automatic;
+			VerticalBoxSlot->SetSize(ChildSize);
+		}
 		//else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
 		//{
 		//	WrapBoxSlot->SetSize(Size);
