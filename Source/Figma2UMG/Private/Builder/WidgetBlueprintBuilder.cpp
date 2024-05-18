@@ -184,7 +184,7 @@ void WidgetBlueprintBuilder::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> W
 	{
 		const FString& Value = PinNames[i];
 		UEdGraphPin* ExecPin = SwitchNode->FindPin(Value, EGPD_Output);
-		int index = (Value == DefaultPinName) ? SwitchNode->PinNames.Num() : SwitchNode->PinNames.IndexOfByKey(Value);
+		int index = (Value == DefaultPinName.ToString()) ? SwitchNode->PinNames.Num() : SwitchNode->PinNames.IndexOfByKey(*Value);
 		const FVector2D SetPosition = SwitchPosition + FVector2D(BaseSize.X + Pan.X, ((BaseSize.Y*0.75f) + Pan.Y) * index);
 		PatchVariableSetNode(FunctionGraph, ExecPin, nullptr, UWidgetSwitcher::StaticClass(), i, SetPosition);
 	}
@@ -512,7 +512,7 @@ UK2Node_FunctionEntry* WidgetBlueprintBuilder::PatchFunctionEntry(UEdGraph* Grap
 		Graph->AddNode(FunctionEntry, /*bFromUI =*/false, /*bSelectNewNode =*/false);
 	}
 
-	TSharedPtr<FUserPinInfo>* InputPtr = FunctionEntry->UserDefinedPins.FindByPredicate([VarName](const TSharedPtr<FUserPinInfo> Pin) { return Pin->PinName == VarName; });
+	TSharedPtr<FUserPinInfo>* InputPtr = FunctionEntry->UserDefinedPins.FindByPredicate([VarName](const TSharedPtr<FUserPinInfo> Pin) { return Pin->PinName.ToString() == VarName; });
 	TSharedPtr<FUserPinInfo> Input = InputPtr ? *InputPtr : nullptr;
 	if(Input)
 	{

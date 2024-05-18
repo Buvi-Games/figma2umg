@@ -483,7 +483,7 @@ void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 	static const FString VisibleStr("visible");
 	const FBPVariableDescription* VariableDescription = WidgetBP->NewVariables.FindByPredicate([PropertyReference](const FBPVariableDescription& VariableDescription)
 		{
-			return VariableDescription.VarName == PropertyReference.Value;
+			return VariableDescription.VarName.ToString() == PropertyReference.Value;
 		});
 
 
