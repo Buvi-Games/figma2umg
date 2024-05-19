@@ -23,7 +23,7 @@ FString UFigmaDocument::GetAssetName() const
 
 void UFigmaDocument::LoadOrCreateAssets(UFigmaFile* InFigmaFile)
 {
-	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+	GetOrCreateWidgetBlueprint();
 }
 
 void UFigmaDocument::LoadAssets()
@@ -39,7 +39,7 @@ void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 
 void UFigmaDocument::PrePatchWidget()
 {
-	GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+	GetOrCreateWidgetBlueprint();
 
 	Super::PrePatchWidget();
 }

@@ -6,6 +6,7 @@
 
 #include "TextBoxBuilder.generated.h"
 
+class UWidget;
 struct FFigmaTypeStyle;
 struct FFigmaPaint;
 class UTextBlock;

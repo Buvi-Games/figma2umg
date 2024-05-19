@@ -118,7 +118,7 @@ void UFigmaFrame::LoadOrCreateAssets(UFigmaFile* FigmaFile)
 {
 	if (GenerateFile)
 	{
-		GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>();
+		GetOrCreateWidgetBlueprint();
 	}
 }
 
