@@ -1,5 +1,6 @@
 // Copyright 2024 Buvi Games. All Rights Reserved.
 
+#include "FigmaTypeStyle.h"
 
 void FFigmaTypeStyle::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {

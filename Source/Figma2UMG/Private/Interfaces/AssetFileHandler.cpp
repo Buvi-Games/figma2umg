@@ -10,8 +10,7 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 
-template <>
-UWidgetBlueprint* IFigmaFileHandle::GetOrCreateAsset<UWidgetBlueprint, UWidgetBlueprintFactory>(UWidgetBlueprintFactory* Factory)
+UWidgetBlueprint* IFigmaFileHandle::GetOrCreateWidgetBlueprint(UWidgetBlueprintFactory* Factory)
 {
 	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(Asset);
 	if (WidgetAsset == nullptr)
@@ -54,9 +53,7 @@ UWidgetBlueprint* IFigmaFileHandle::GetOrCreateAsset<UWidgetBlueprint, UWidgetBl
 	return WidgetAsset;
 }
 
-
-template <>
-UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>(URawTexture2DFactory* Factory)
+UTexture2D* IFigmaFileHandle::GetOrCreateTexture2D(URawTexture2DFactory* Factory)
 {
 	UTexture2D* TextureAsset = Cast<UTexture2D>(Asset);
 	if (TextureAsset == nullptr)
@@ -106,23 +103,6 @@ UTexture2D* IFigmaFileHandle::GetOrCreateAsset<UTexture2D, URawTexture2DFactory>
 	}
 
 	return TextureAsset;
-}
-
-template <>
-UWidgetBlueprint* IFigmaFileHandle::LoadAsset<UWidgetBlueprint>()
-{
-	const FString PackagePath = UPackageTools::SanitizePackageName(GetPackagePath());
-	const FString AssetName = ObjectTools::SanitizeInvalidChars(GetAssetName(), INVALID_OBJECTNAME_CHARACTERS);
-	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
-
-	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
-	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
-
-	Asset = WidgetAsset;
-	AssetOuter = WidgetAsset ? WidgetAsset->WidgetTree : nullptr;
-
-	return WidgetAsset;
 }
 
 void IFigmaFileHandle::ResetAsset()

@@ -1,5 +1,6 @@
 // Copyright 2024 Buvi Games. All Rights Reserved.
 
+#include "FigmaPaint.h"
 
 void FFigmaPaint::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {

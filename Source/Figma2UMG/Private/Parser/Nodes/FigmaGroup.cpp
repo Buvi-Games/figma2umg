@@ -5,9 +5,8 @@
 
 #include "FigmaComponent.h"
 #include "Builder/ButtonBuilder.h"
-#include "Components/Border.h"
+#include "Components/Button.h"
 #include "Components/CanvasPanel.h"
-#include "Components/CanvasPanelSlot.h"
 
 
 void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
