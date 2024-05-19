@@ -352,6 +352,16 @@ void UFigmaComponentSet::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 	{
 		Super::PatchBinds(WidgetBp);
 	}
+	else
+	{
+		for (FButtonBuilder ButtonBuilder : ButtonBuilders)
+		{
+			if (UFigmaComponent* DefaultComponent = ButtonBuilder.GetDefaultComponent())
+			{
+				DefaultComponent->PatchBinds(WidgetBp);
+			}
+		}
+	}
 
 	for (const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition : ComponentPropertyDefinitions)
 	{

@@ -86,6 +86,17 @@ void FButtonBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 	if (Button)
 	{
 		ContainerBuilder.SetupWidget(Button->GetContent());
+
+		if(DefaultComponent)
+		{
+			TObjectPtr<UPanelWidget> PanelWidget = ContainerBuilder.GetContainerWidget();
+			IFigmaContainer* Container = DefaultComponent;
+			Container->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([PanelWidget](UFigmaNode& ChildNode, const int Index)
+				{
+					TObjectPtr<UWidget> ChildWidget = PanelWidget->GetChildAt(Index);
+					ChildNode.SetWidget(ChildWidget);
+				}));
+		}
 	}
 }
 
