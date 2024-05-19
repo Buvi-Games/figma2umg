@@ -21,6 +21,8 @@ struct FIGMA2UMG_API FFigmaPaint
 public:
 	GENERATED_BODY()
 
+	void PostSerialize(const TSharedPtr<FJsonObject> JsonObj);
+
 	FLinearColor GetLinearColor() const
 	{
 		return FLinearColor(Color.R, Color.G, Color.B, Opacity);
@@ -39,7 +41,7 @@ public:
 	FFigmaColor Color;
 
 	UPROPERTY()
-	EFigmaBlendMode blendMode;
+	EFigmaBlendMode BlendMode;
 
 	UPROPERTY()
 	FFigmaVector GradientHandlePositions;
@@ -50,7 +52,6 @@ public:
 	UPROPERTY()
 	EScaleMode ScaleMode;
 
-	UPROPERTY()
 	FFigmaTransform ImageTransform;
 
 	UPROPERTY()

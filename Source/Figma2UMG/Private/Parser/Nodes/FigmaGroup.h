@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/BorderBuilder.h"
+#include "Builder/SizeBoxBuilder.h"
 #include "Interfaces/FigmaContainer.h"
 #include "Interfaces/FlowTransition.h"
 #include "Interfaces/WidgetOwner.h"
@@ -32,6 +32,7 @@ public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
 
 	// IFigmaContainer
@@ -223,5 +224,5 @@ protected:
 	TMap<EFigmaStyleType, FString> Styles;
 
 	UPROPERTY()
-	FBorderBuilder Builder;
+	FSizeBoxBuilder Builder;
 };

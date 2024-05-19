@@ -348,8 +348,12 @@ void UFigmaNode::PostPatchWidget()
 		}
 		else if (UTexture2D* Texture = Cast<UTexture2D>(Asset))
 		{
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
 			FEditorFileUtils::FPromptForCheckoutAndSaveParams Params;
 			FEditorFileUtils::PromptForCheckoutAndSave({ Texture->GetPackage() }, Params);
+#else
+			FEditorFileUtils::PromptForCheckoutAndSave({ Texture->GetPackage() }, true, false);
+#endif
 		}
 
 		FileHandle->ResetAsset();

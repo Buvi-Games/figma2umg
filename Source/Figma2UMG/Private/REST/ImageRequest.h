@@ -62,6 +62,7 @@ public:
 	void SetURL(const FString& Id, const FString& URL);
 
 	FImageRequest* GetNextToDownload();
+	int GetCurrentRequestTotalCount() const;	
 
 private:
 	UPROPERTY()

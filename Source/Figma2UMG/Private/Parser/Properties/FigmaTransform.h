@@ -12,5 +12,5 @@ struct FIGMA2UMG_API FFigmaTransform
 public:
 	GENERATED_BODY()
 
-protected:
+	FMatrix Matrix = FMatrix::Identity;
 };
