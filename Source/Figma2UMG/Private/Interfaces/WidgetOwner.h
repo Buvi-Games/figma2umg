@@ -11,6 +11,7 @@ class UWidgetBlueprint;
 class UPanelWidget;
 class UWidget;
 class UFigmaNode;
+struct FFigmaLayoutConstraint;
 
 UINTERFACE(BlueprintType, Experimental, meta = (CannotImplementInterfaceInBlueprint))
 class FIGMA2UMG_API UWidgetOwner : public UInterface
@@ -42,6 +43,8 @@ public:
 	void SetSize(TObjectPtr<UWidget> Widget, const FVector2D& Size, const bool SizeToContent = false) const;
 	void SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLeft, const float PaddingRight, const float PaddingTop, const float PaddingBottom) const;
 
+	void SetConstraints(const TObjectPtr<UWidget>& Widget, EFigmaPrimaryAxisAlignItems PrimaryAlign, EFigmaCounterAxisAlignItems SecondaryAlign) const;
+	void SetConstraints(TObjectPtr<UWidget> Widget, const FFigmaLayoutConstraint& InConstraints) const;
 	void SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizontal TextAlignHorizontal, EFigmaTextAlignVertical TextAlignVertical) const;
 
 	static void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget);
@@ -50,7 +53,11 @@ public:
 	static Type* NewWidget(UObject* TreeViewOuter, const FString& InName);
 protected:
 	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
+	EHorizontalAlignment Convert(EFigmaLayoutConstraintHorizontal LayoutConstraint) const;
+	EHorizontalAlignment Convert(EFigmaCounterAxisAlignItems LayoutConstraint) const;
 	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;
+	EVerticalAlignment Convert(EFigmaLayoutConstraintVertical LayoutConstraint) const;
+	EVerticalAlignment Convert(EFigmaPrimaryAxisAlignItems LayoutConstraint) const;
 };
 
 template <class Type>

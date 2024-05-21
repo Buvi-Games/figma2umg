@@ -11,6 +11,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Components/Widget.h"
 #include "Components/WrapBoxSlot.h"
+#include "Parser/Properties/FigmaLayoutConstraint.h"
 
 void IWidgetOwner::PostInsert() const
 {
@@ -126,6 +127,92 @@ void IWidgetOwner::SetPadding(TObjectPtr<UWidget> Widget, const float PaddingLef
 	}
 }
 
+void IWidgetOwner::SetConstraints(const TObjectPtr<UWidget>& Widget, EFigmaPrimaryAxisAlignItems VerticalAlign, EFigmaCounterAxisAlignItems HorizontalAlign) const
+{
+	if (Widget && Widget->Slot)
+	{
+		EHorizontalAlignment HorizontalAlignment = Convert(HorizontalAlign);
+		EVerticalAlignment VerticalAlignment = Convert(VerticalAlign);
+
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
+		{
+		}
+		else if (USizeBoxSlot* SizeBoxSlot = Cast<USizeBoxSlot>(Widget->Slot))
+		{
+			SizeBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			SizeBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
+		{
+			BorderSlot->SetHorizontalAlignment(HorizontalAlignment);
+			BorderSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+		{
+			HorizontalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			HorizontalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
+		{
+			VerticalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			VerticalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
+		{
+			WrapBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			WrapBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(Widget->Slot))
+		{
+			ButtonSlot->SetHorizontalAlignment(HorizontalAlignment);
+			ButtonSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+	}
+}
+
+void IWidgetOwner::SetConstraints(TObjectPtr<UWidget> Widget, const FFigmaLayoutConstraint& InConstraints) const
+{
+	if (Widget && Widget->Slot)
+	{
+		EHorizontalAlignment HorizontalAlignment = Convert(InConstraints.Horizontal);
+		EVerticalAlignment VerticalAlignment = Convert(InConstraints.Vertical);
+
+		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
+		{
+		}
+		else if (USizeBoxSlot* SizeBoxSlot = Cast<USizeBoxSlot>(Widget->Slot))
+		{
+			SizeBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			SizeBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UBorderSlot* BorderSlot = Cast<UBorderSlot>(Widget->Slot))
+		{
+			BorderSlot->SetHorizontalAlignment(HorizontalAlignment);
+			BorderSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
+		{
+			HorizontalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			HorizontalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
+		{
+			VerticalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			VerticalBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
+		{
+			WrapBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
+			WrapBoxSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(Widget->Slot))
+		{
+			ButtonSlot->SetHorizontalAlignment(HorizontalAlignment);
+			ButtonSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+	}
+}
+
 void IWidgetOwner::SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizontal TextAlignHorizontal, EFigmaTextAlignVertical TextAlignVertical) const
 {
 	if (Widget && Widget->Slot)
@@ -197,6 +284,43 @@ EHorizontalAlignment IWidgetOwner::Convert(EFigmaTextAlignHorizontal TextAlignHo
 	return HAlign_Center;
 }
 
+EHorizontalAlignment IWidgetOwner::Convert(EFigmaLayoutConstraintHorizontal LayoutConstraint) const
+{
+	switch (LayoutConstraint)
+	{
+	case EFigmaLayoutConstraintHorizontal::LEFT:
+		return HAlign_Left;
+	case EFigmaLayoutConstraintHorizontal::RIGHT:
+		return HAlign_Right;
+	case EFigmaLayoutConstraintHorizontal::CENTER:
+		return HAlign_Center;
+	case EFigmaLayoutConstraintHorizontal::LEFT_RIGHT:
+		return HAlign_Center;
+	case EFigmaLayoutConstraintHorizontal::SCALE:
+		return HAlign_Fill;
+	}
+
+	return HAlign_Center;
+}
+
+EHorizontalAlignment IWidgetOwner::Convert(EFigmaCounterAxisAlignItems  LayoutConstraint) const
+{
+	switch (LayoutConstraint)
+	{
+	case EFigmaCounterAxisAlignItems::MIN:
+		return HAlign_Left;
+	case EFigmaCounterAxisAlignItems::CENTER:
+		return HAlign_Center;
+	case EFigmaCounterAxisAlignItems::MAX:
+		return HAlign_Right;
+
+	case EFigmaCounterAxisAlignItems::BASELINE:
+		return HAlign_Fill;
+	}
+
+	return HAlign_Center;
+}
+
 EVerticalAlignment IWidgetOwner::Convert(EFigmaTextAlignVertical TextAlignVertical) const
 {
 	switch (TextAlignVertical)
@@ -207,6 +331,43 @@ EVerticalAlignment IWidgetOwner::Convert(EFigmaTextAlignVertical TextAlignVertic
 		return VAlign_Center;
 	case EFigmaTextAlignVertical::BOTTOM:
 		return VAlign_Bottom;
+	}
+
+	return VAlign_Center;
+}
+
+EVerticalAlignment IWidgetOwner::Convert(EFigmaLayoutConstraintVertical LayoutConstraint) const
+{
+	switch (LayoutConstraint)
+	{
+	case EFigmaLayoutConstraintVertical::TOP:
+		return VAlign_Top;
+	case EFigmaLayoutConstraintVertical::BOTTOM:
+		return VAlign_Bottom;
+	case EFigmaLayoutConstraintVertical::CENTER:
+		return VAlign_Center;
+	case EFigmaLayoutConstraintVertical::TOP_BOTTOM:
+		return VAlign_Fill;
+	case EFigmaLayoutConstraintVertical::SCALE:
+		return VAlign_Fill;
+	}
+
+	return VAlign_Center;
+}
+
+EVerticalAlignment IWidgetOwner::Convert(EFigmaPrimaryAxisAlignItems LayoutConstraint) const
+{
+	switch (LayoutConstraint)
+	{
+	case EFigmaPrimaryAxisAlignItems::MIN:
+		return VAlign_Top;
+	case EFigmaPrimaryAxisAlignItems::CENTER:
+		return VAlign_Center;
+	case EFigmaPrimaryAxisAlignItems::MAX:
+		return VAlign_Bottom;
+
+	case EFigmaPrimaryAxisAlignItems::SPACE_BETWEEN:
+		return VAlign_Fill;
 	}
 
 	return VAlign_Center;

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaEnums.h"
 
 #include "FigmaLayoutConstraint.generated.h"
 
@@ -12,5 +13,9 @@ struct FIGMA2UMG_API FFigmaLayoutConstraint
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	EFigmaLayoutConstraintVertical Vertical;
+
+	UPROPERTY()
+	EFigmaLayoutConstraintHorizontal Horizontal;
 };
