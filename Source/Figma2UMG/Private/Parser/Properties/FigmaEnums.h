@@ -88,6 +88,26 @@ enum class EFigmaLayoutAlign
 };
 
 UENUM()
+enum class EFigmaLayoutConstraintVertical
+{
+	TOP,
+	BOTTOM,
+	CENTER,
+	TOP_BOTTOM,
+	SCALE,
+};
+
+UENUM()
+enum class EFigmaLayoutConstraintHorizontal
+{
+	LEFT,
+	RIGHT,
+	CENTER,
+	LEFT_RIGHT,
+	SCALE,
+};
+
+UENUM()
 enum class EFigmaStrokeCap
 {
 	NONE,

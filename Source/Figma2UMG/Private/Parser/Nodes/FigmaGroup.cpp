@@ -62,7 +62,8 @@ void UFigmaGroup::PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UP
 	IWidgetOwner::PostInsertWidgets(TopWidget, ContentWidget);
 	if (TopWidget)
 	{
-		SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
+		const bool SizeToContent = LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || LayoutSizingVertical == EFigmaLayoutSizing::FILL;
+		SetSize(TopWidget, AbsoluteBoundingBox.GetSize(), SizeToContent);
 	}
 
 	if (ContentWidget)
@@ -74,6 +75,7 @@ void UFigmaGroup::PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UP
 		else
 		{
 			SetPadding(ContentWidget, PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
+			SetConstraints(ContentWidget, PrimaryAxisAlignItems, CounterAxisAlignItems);
 		}
 	}
 }

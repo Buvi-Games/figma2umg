@@ -39,7 +39,7 @@ TObjectPtr<UWidget> FSizeBoxBuilder::GetTopWidget() const
 	}
 	else
 	{
-		return BorderBuilder.GetContainerWidget();
+		return BorderBuilder.GetTopWidget();
 	}
 }
 
