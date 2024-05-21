@@ -192,6 +192,9 @@ UWidget* UFigmaFrame::CreateInstance(UObject* InAssetOuter) const
 		return nullptr;
 	}
 	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
+	if (!Widget)
+		return nullptr;
+
 	TSubclassOf<UUserWidget> UserWidgetClass = Widget->GetBlueprintClass();
 
 	TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(Widget), UserWidgetClass);
