@@ -7,7 +7,7 @@ public class Figma2UMG : ModuleRules
 	public Figma2UMG(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-        //bUsePrecompiled = true;
+        bUsePrecompiled = true;
 
         PublicIncludePaths.AddRange(
 			new string[] {
