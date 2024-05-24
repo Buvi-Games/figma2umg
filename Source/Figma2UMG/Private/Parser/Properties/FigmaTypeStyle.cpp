@@ -4,9 +4,10 @@
 
 void FFigmaTypeStyle::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
-	if (JsonObj.IsValid() && JsonObj->HasTypedField<EJson::Array>("fills"))
+	static FString FillsStr("fills");
+	if (JsonObj.IsValid() && JsonObj->HasTypedField<EJson::Array>(FillsStr))
 	{
-		const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField("fills");
+		const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField(FillsStr);
 		for (int i = 0; i < ArrayJson.Num() && Fills.Num(); i++)
 		{
 			const TSharedPtr<FJsonValue>& Item = ArrayJson[i];

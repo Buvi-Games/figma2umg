@@ -4,9 +4,10 @@
 
 void FFigmaPaint::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
-	if (JsonObj.IsValid() && JsonObj->HasTypedField<EJson::Array>("imageTransform"))
+	static FString ImageTransformStr("imageTransform");
+	if (JsonObj.IsValid() && JsonObj->HasTypedField<EJson::Array>(ImageTransformStr))
 	{
-		const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField("imageTransform");
+		const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField(ImageTransformStr);
 		for (int i = 0; i < ArrayJson.Num(); i++)
 		{
 			const TSharedPtr<FJsonValue>& ItemLine = ArrayJson[i];
