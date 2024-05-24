@@ -116,7 +116,10 @@ AssetType* IFigmaFileHandle::LoadAsset()
 
 	Asset = TypedAsset;
 
+PRAGMA_DISABLE_DEPRECATION_WARNINGS
 	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(TypedAsset);
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
 	if(WidgetAsset)
 	{
 		AssetOuter = WidgetAsset->WidgetTree;
