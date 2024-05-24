@@ -34,6 +34,7 @@ public:
 	// UFigmaNode
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
@@ -63,6 +64,7 @@ public:
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 protected:
+	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;

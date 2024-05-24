@@ -7,6 +7,8 @@
 #include "Builder/ButtonBuilder.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
+#include "Components/Spacer.h"
+#include "Components/WrapBox.h"
 
 
 void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
@@ -20,6 +22,24 @@ void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSh
 FVector2D UFigmaGroup::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();
+}
+
+TObjectPtr<UWidget> UFigmaGroup::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
+{
+	TObjectPtr<UWidget> WidgetPatched = Super::PatchPreInsertWidget(WidgetToPatch);
+
+	UPanelWidget* ParentWidget = Cast<UPanelWidget>(WidgetPatched);
+	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
+	{
+		ParentWidget = WidgetOwner->GetContainerWidget();
+	}
+
+	if (ParentWidget)
+	{
+		FixSpacers(ParentWidget);
+	}
+
+	return WidgetPatched;
 }
 
 void UFigmaGroup::ForEach(const IWidgetOwner::FOnEachFunction& Function)
@@ -118,7 +138,6 @@ void UFigmaGroup::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
 	}
 }
 
-
 FMargin UFigmaGroup::GetPadding() const
 {
 	FMargin Padding;
@@ -128,4 +147,53 @@ FMargin UFigmaGroup::GetPadding() const
 	Padding.Bottom = PaddingBottom;
 
 	return Padding;
+}
+
+void UFigmaGroup::FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const
+{
+	if (!PanelWidget)
+		return;
+
+	if (PanelWidget->IsA<UCanvasPanel>() || PanelWidget->IsA<UWrapBox>())
+	{
+		for (int i = 0; i < PanelWidget->GetChildrenCount(); i++)
+		{
+			UWidget* Widget = PanelWidget->GetChildAt(i);
+			if (!Widget || Widget->IsA<USpacer>())
+			{
+				PanelWidget->RemoveChildAt(i);
+				i--;
+			}
+		}
+		if (UWrapBox* WrapBox = Cast<UWrapBox>(PanelWidget))
+		{
+			WrapBox->SetInnerSlotPadding(FVector2D(ItemSpacing, CounterAxisSpacing));
+		}
+	}
+	else
+	{
+		for (int i = 0; i < PanelWidget->GetChildrenCount(); i++)
+		{
+			UWidget* Widget = PanelWidget->GetChildAt(i);
+			const bool ShouldBeSpacer = (((i + 1) % 2) == 0);
+			const bool IsSpacer = Widget && Widget->IsA<USpacer>();
+			if (!Widget || (IsSpacer && !ShouldBeSpacer))
+			{
+				PanelWidget->RemoveChildAt(i);
+				i--;
+			}
+			else if (ShouldBeSpacer && !IsSpacer)
+			{
+				USpacer* Spacer = NewObject<USpacer>(PanelWidget->GetOuter());
+				Spacer->SetSize(FVector2D(ItemSpacing, ItemSpacing));
+				PanelWidget->InsertChildAt(i, Spacer);
+			}
+			else if (ShouldBeSpacer && IsSpacer)
+			{
+				USpacer* Spacer = Cast<USpacer>(Widget);
+				Spacer->SetSize(FVector2D(ItemSpacing, ItemSpacing));
+			}
+		}
+	}
+
 }
