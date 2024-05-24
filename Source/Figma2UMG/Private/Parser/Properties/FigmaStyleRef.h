@@ -11,6 +11,7 @@ UENUM()
 enum class EFigmaStyleType
 {
 	FILL,
+	FILLS,
 	TEXT,
 	EFFECT,
 	GRID
