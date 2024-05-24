@@ -106,6 +106,12 @@ protected:
 	bool IsMask = false;
 
 	UPROPERTY()
+	EFigmaLayoutSizing LayoutSizingHorizontal;
+
+	UPROPERTY()
+	EFigmaLayoutSizing LayoutSizingVertical;
+
+	UPROPERTY()
 	TArray<FFigmaPaint> Fills;
 
 	UPROPERTY()

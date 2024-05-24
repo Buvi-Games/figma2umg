@@ -128,7 +128,7 @@ TObjectPtr<UFigmaNode> UFigmaNode::FindTypeByID(const UClass* Class, const FStri
 	return nullptr;
 }
 
-TObjectPtr<UWidget> UFigmaNode::FindWidgetForNode(UPanelWidget* ParentWidget) const
+TObjectPtr<UWidget> UFigmaNode::FindWidgetForNode(const TObjectPtr<UPanelWidget>& ParentWidget) const
 {
 	if (!ParentWidget)
 		return nullptr;

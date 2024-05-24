@@ -54,10 +54,10 @@ public:
 protected:
 	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
 	EHorizontalAlignment Convert(EFigmaLayoutConstraintHorizontal LayoutConstraint) const;
-	EHorizontalAlignment Convert(EFigmaCounterAxisAlignItems LayoutConstraint) const;
+	EHorizontalAlignment Convert(EFigmaPrimaryAxisAlignItems  LayoutConstraint) const;
 	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;
 	EVerticalAlignment Convert(EFigmaLayoutConstraintVertical LayoutConstraint) const;
-	EVerticalAlignment Convert(EFigmaPrimaryAxisAlignItems LayoutConstraint) const;
+	EVerticalAlignment Convert(EFigmaCounterAxisAlignItems LayoutConstraint) const;
 };
 
 template <class Type>
