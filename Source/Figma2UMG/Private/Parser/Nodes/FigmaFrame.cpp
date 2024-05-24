@@ -66,6 +66,11 @@ TObjectPtr<UWidget> UFigmaFrame::PatchPreInsertWidget(TObjectPtr<UWidget> Widget
 			}
 		}));
 
+	if (PanelWidget)
+	{
+		FixSpacers(PanelWidget);
+	}
+
 	return WidgetInstance;
 }
 
