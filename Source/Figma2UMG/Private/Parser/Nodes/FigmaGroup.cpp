@@ -7,6 +7,7 @@
 #include "Builder/ButtonBuilder.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
+#include "Components/SizeBoxSlot.h"
 #include "Components/Spacer.h"
 #include "Components/WrapBox.h"
 
@@ -75,6 +76,15 @@ void UFigmaGroup::SetupWidget(TObjectPtr<UWidget> Widget)
 	}
 
 	Builder.SetupWidget(Widget);
+
+	// SizeBoxSlot are not ready during PostInsertWidgets
+	TObjectPtr<UWidget> ContentWidget = GetTopWidget();
+	USizeBoxSlot* SizeBoxSlot = ContentWidget ? Cast<USizeBoxSlot>(ContentWidget->Slot) : nullptr;
+	if (SizeBoxSlot)
+	{
+		SetPadding(ContentWidget, PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
+		SetConstraints(ContentWidget, PrimaryAxisAlignItems, CounterAxisAlignItems);
+	}
 }
 
 void UFigmaGroup::PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UPanelWidget> ContentWidget) const
