@@ -14,9 +14,10 @@ void UFigmaText::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSha
 	PostSerializeProperty(JsonObj, "fills", Fills);
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 
-	if (JsonObj->HasTypedField<EJson::Object>("style"))
+	static FString StyleStr("style");
+	if (JsonObj->HasTypedField<EJson::Object>(StyleStr))
 	{
-		const TSharedPtr<FJsonObject> StyleJson = JsonObj->GetObjectField("style");
+		const TSharedPtr<FJsonObject> StyleJson = JsonObj->GetObjectField(StyleStr);
 		Style.PostSerialize(StyleJson);
 	}
 }

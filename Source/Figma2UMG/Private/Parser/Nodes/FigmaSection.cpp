@@ -13,12 +13,14 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 {
 	Super::PostSerialize(InParent, JsonObj);
 
-	if (JsonObj->HasTypedField<EJson::Object>("devStatus"))
+	static FString DevStatusStr("devStatus");
+	static FString TypeStr("type");
+	if (JsonObj->HasTypedField<EJson::Object>(DevStatusStr))
 	{
-		const TSharedPtr<FJsonObject> DevStatusJson = JsonObj->GetObjectField("devStatus");
-		if (DevStatusJson->HasTypedField<EJson::String>("type"))
+		const TSharedPtr<FJsonObject> DevStatusJson = JsonObj->GetObjectField(DevStatusStr);
+		if (DevStatusJson->HasTypedField<EJson::String>(TypeStr))
 		{
-			DevStatus = JsonObj->GetStringField("type");
+			DevStatus = JsonObj->GetStringField(TypeStr);
 		}
 	}
 
