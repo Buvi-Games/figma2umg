@@ -128,6 +128,26 @@ TObjectPtr<UFigmaNode> UFigmaNode::FindTypeByID(const UClass* Class, const FStri
 	return nullptr;
 }
 
+TObjectPtr<UWidget> UFigmaNode::FindWidgetForNode(UPanelWidget* ParentWidget) const
+{
+	if (!ParentWidget)
+		return nullptr;
+
+	TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
+	for (TObjectPtr<UWidget> Widget : AllChildren)
+	{
+		if (Widget == nullptr)
+			continue;
+
+		if (Widget->GetName().Contains(GetIdForName(), ESearchCase::IgnoreCase))
+		{
+			return Widget;
+		}
+	}
+
+	return nullptr;
+}
+
 void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName)
 {
 	Array.Reset();
@@ -227,22 +247,7 @@ TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetT
 		FString NodeName = GetNodeName();
 		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, ParentWidget](UFigmaNode& ChildNode, const int Index)
 			{
-				TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
-				if (OldWidget == nullptr)
-				{
-					TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
-					for (TObjectPtr<UWidget> Widget : AllChildren)
-					{
-						if (Widget == nullptr)
-							continue;
-
-						if (Widget->GetName().Contains(ChildNode.GetIdForName(), ESearchCase::IgnoreCase))
-						{
-							OldWidget = Widget;
-							break;
-						}
-					}
-				}
+				TObjectPtr<UWidget> OldWidget = ChildNode.FindWidgetForNode(ParentWidget);
 				TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
 				if (NewWidget)
 				{
@@ -287,7 +292,7 @@ void UFigmaNode::SetWidget(TObjectPtr<UWidget> Widget)
 		FString NodeName = GetNodeName();
 		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, ParentWidget](UFigmaNode& ChildNode, const int Index)
 			{
-				TObjectPtr<UWidget> ChildWidget = ParentWidget->GetChildAt(Index);
+				TObjectPtr<UWidget> ChildWidget = ChildNode.FindWidgetForNode(ParentWidget);
 				ChildNode.SetWidget(ChildWidget);
 			}));
 	}
@@ -375,10 +380,11 @@ void UFigmaNode::PostPatchWidget()
 
 UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 {
-	if (!JsonObj->HasTypedField<EJson::String>("type"))
+	static FString TypeStr("type");
+	if (!JsonObj->HasTypedField<EJson::String>(TypeStr))
 		return nullptr;
 
-	const FString NodeTypeStr = JsonObj->GetStringField("type");
+	const FString NodeTypeStr = JsonObj->GetStringField(TypeStr);
 	
 	static const FString EnumPath = "/Script/Figma2UMG.ENodeTypes";
 	static UEnum* EnumDef = FindObject<UEnum>(nullptr, *EnumPath, true);

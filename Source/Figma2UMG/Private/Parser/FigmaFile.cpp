@@ -13,11 +13,12 @@
 
 void UFigmaFile::PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)
 {
+	static FString DocumentStr("Document");
 	PackagePath = InPackagePath;
 	if(Document)
 	{
 		Document->SetFigmaFile(this);
-		Document->PostSerialize(nullptr, fileJsonObject->GetObjectField("Document").ToSharedRef());
+		Document->PostSerialize(nullptr, fileJsonObject->GetObjectField(DocumentStr).ToSharedRef());
 	}
 }
 

@@ -27,7 +27,7 @@ void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> Wi
 {
 	if (!WidgetBP)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchVisibilityBind] WidgetBP %s is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchVisibilityBind] WidgetBP is nullptr."));
 		return;
 	}
 
@@ -75,13 +75,13 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 {
 	if (!WidgetBP)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] WidgetBP %s is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] WidgetBP is nullptr."));
 		return;
 	}
 
 	if (!ContainerWidget)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] ContainerWidget %s is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] ContainerWidget is nullptr."));
 		return;
 	}
 
