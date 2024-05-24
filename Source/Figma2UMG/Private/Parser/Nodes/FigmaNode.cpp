@@ -375,10 +375,11 @@ void UFigmaNode::PostPatchWidget()
 
 UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 {
-	if (!JsonObj->HasTypedField<EJson::String>("type"))
+	static FString TypeStr("type");
+	if (!JsonObj->HasTypedField<EJson::String>(TypeStr))
 		return nullptr;
 
-	const FString NodeTypeStr = JsonObj->GetStringField("type");
+	const FString NodeTypeStr = JsonObj->GetStringField(TypeStr);
 	
 	static const FString EnumPath = "/Script/Figma2UMG.ENodeTypes";
 	static UEnum* EnumDef = FindObject<UEnum>(nullptr, *EnumPath, true);

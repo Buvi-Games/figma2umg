@@ -224,10 +224,12 @@ bool UFigmaImporter::ParseRequestReceived(FString MessagePrefix, UVaRestRequestJ
 				return false;
 			}
 
+			static FString StatusStr("status");
+			static FString ErrorStr("err");
 			const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-			if (JsonObj->HasField("status") && JsonObj->HasField("err"))
+			if (JsonObj->HasField(StatusStr) && JsonObj->HasField(ErrorStr))
 			{
-				UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField("err"));
+				UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField(ErrorStr));
 
 				return false;
 			}
