@@ -87,7 +87,48 @@ void UFigmaText::PostInsert() const
 	IWidgetOwner::PostInsert();
 
 	SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
-	SetAlign(TopWidget, Style.TextAlignHorizontal, Style.TextAlignVertical);
+
+	EFigmaTextAlignHorizontal TextAlignHorizontal = Style.TextAlignHorizontal;
+	EFigmaTextAlignVertical TextAlignVertical = Style.TextAlignVertical;
+	if(LayoutSizingHorizontal != EFigmaLayoutSizing::FILL)
+	{
+		switch (Constraints.Horizontal)
+		{
+		case EFigmaLayoutConstraintHorizontal::LEFT:
+			TextAlignHorizontal = EFigmaTextAlignHorizontal::LEFT;
+			break;
+		case EFigmaLayoutConstraintHorizontal::RIGHT:
+			TextAlignHorizontal = EFigmaTextAlignHorizontal::RIGHT;
+			break;
+		case EFigmaLayoutConstraintHorizontal::CENTER:
+			TextAlignHorizontal = EFigmaTextAlignHorizontal::CENTER;
+			break;
+		case EFigmaLayoutConstraintHorizontal::LEFT_RIGHT:
+		case EFigmaLayoutConstraintHorizontal::SCALE:
+			TextAlignHorizontal = EFigmaTextAlignHorizontal::JUSTIFIED;
+			break;
+
+		}
+	}
+	if (LayoutSizingVertical != EFigmaLayoutSizing::FILL)
+	{
+		switch (Constraints.Vertical)
+		{
+		case EFigmaLayoutConstraintVertical::TOP:
+			TextAlignVertical = EFigmaTextAlignVertical::TOP;
+			break;
+		case EFigmaLayoutConstraintVertical::BOTTOM:
+			TextAlignVertical = EFigmaTextAlignVertical::BOTTOM;
+			break;
+		case EFigmaLayoutConstraintVertical::CENTER:
+		case EFigmaLayoutConstraintVertical::TOP_BOTTOM:
+		case EFigmaLayoutConstraintVertical::SCALE:
+			TextAlignVertical = EFigmaTextAlignVertical::CENTER;
+			break;
+
+		}
+	}
+	SetAlign(TopWidget, TextAlignHorizontal, TextAlignVertical);
 }
 
 TObjectPtr<UWidget> UFigmaText::GetTopWidget() const

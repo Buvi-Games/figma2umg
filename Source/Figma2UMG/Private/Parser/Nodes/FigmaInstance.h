@@ -146,10 +146,10 @@ protected:
 	FString LayoutMode = FString("NONE");
 
 	UPROPERTY()
-	FString LayoutSizingHorizontal;
+	EFigmaLayoutSizing LayoutSizingHorizontal;
 
 	UPROPERTY()
-	FString LayoutSizingVertical;
+	EFigmaLayoutSizing LayoutSizingVertical;
 
 	UPROPERTY()
 	FString LayoutWrap = FString("NO_WRAP");
