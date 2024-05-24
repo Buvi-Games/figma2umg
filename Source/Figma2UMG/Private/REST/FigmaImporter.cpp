@@ -253,8 +253,8 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 		UVaRestJsonObject* responseJson = Request->GetResponseObject();
 		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
 
-		
-		const FString FigmaFilename = JsonObj->GetStringField("Name");
+		static FString NameStr("Name");
+		const FString FigmaFilename = JsonObj->GetStringField(NameStr);
 		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
 		const FString RawText = Request->GetResponseContentAsString(false);
 		FFileHelper::SaveStringToFile(RawText, *FullFilename);
@@ -335,7 +335,8 @@ void UFigmaImporter::OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Reque
 		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
 
 
-		const FString FigmaFilename = JsonObj->GetStringField("Name");
+		static FString NameStr("Name");
+		const FString FigmaFilename = JsonObj->GetStringField(NameStr);
 		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
 		const FString RawText = Request->GetResponseContentAsString(false);
 		FFileHelper::SaveStringToFile(RawText, *FullFilename);

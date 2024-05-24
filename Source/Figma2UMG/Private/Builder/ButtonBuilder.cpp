@@ -31,7 +31,7 @@ TObjectPtr<UWidget> FButtonBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		IFigmaContainer* Container = DefaultComponent;
 		Container->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([ParentName, PanelWidget](UFigmaNode& ChildNode, const int Index)
 			{
-				TObjectPtr<UWidget> OldWidget = PanelWidget->GetChildAt(Index);
+				TObjectPtr<UWidget> OldWidget = ChildNode.FindWidgetForNode(PanelWidget);
 				TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
 				if (NewWidget)
 				{
@@ -93,7 +93,7 @@ void FButtonBuilder::SetupWidget(TObjectPtr<UWidget> Widget)
 			IFigmaContainer* Container = DefaultComponent;
 			Container->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([PanelWidget](UFigmaNode& ChildNode, const int Index)
 				{
-					TObjectPtr<UWidget> ChildWidget = PanelWidget->GetChildAt(Index);
+					TObjectPtr<UWidget> ChildWidget = ChildNode.FindWidgetForNode(PanelWidget);
 					ChildNode.SetWidget(ChildWidget);
 				}));
 		}

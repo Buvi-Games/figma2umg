@@ -44,7 +44,7 @@ TObjectPtr<UWidget> UFigmaFrame::PatchPreInsertWidget(TObjectPtr<UWidget> Widget
 	FString NodeName = GetNodeName();
 	IFigmaContainer::ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, PanelWidget](UFigmaNode& ChildNode, const int Index)
 		{
-			TObjectPtr<UWidget> OldWidget = PanelWidget->GetChildAt(Index);
+			TObjectPtr<UWidget> OldWidget = ChildNode.FindWidgetForNode(PanelWidget);
 			TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
 			if (NewWidget)
 			{
@@ -65,6 +65,11 @@ TObjectPtr<UWidget> UFigmaFrame::PatchPreInsertWidget(TObjectPtr<UWidget> Widget
 				}
 			}
 		}));
+
+	if (PanelWidget)
+	{
+		FixSpacers(PanelWidget);
+	}
 
 	return WidgetInstance;
 }
@@ -93,7 +98,7 @@ void UFigmaFrame::SetWidget(TObjectPtr<UWidget> Widget)
 	TObjectPtr<UPanelWidget> PanelWidget = GetContainerWidget();
 	IFigmaContainer::ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([PanelWidget](UFigmaNode& ChildNode, const int Index)
 		{
-			TObjectPtr<UWidget> Widget = PanelWidget->GetChildAt(Index);
+			TObjectPtr<UWidget> Widget = ChildNode.FindWidgetForNode(PanelWidget);
 			ChildNode.SetWidget(Widget);
 		}));
 }
