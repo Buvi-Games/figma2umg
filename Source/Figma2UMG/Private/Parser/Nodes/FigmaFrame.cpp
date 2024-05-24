@@ -73,7 +73,7 @@ void UFigmaFrame::SetWidget(TObjectPtr<UWidget> Widget)
 {
 	if (!GenerateFile)
 	{
-		Super::PatchPreInsertWidget(Widget);
+		Super::SetWidget(Widget);
 		return;
 	}
 
