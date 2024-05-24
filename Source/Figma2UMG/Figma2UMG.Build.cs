@@ -79,7 +79,7 @@ public class Figma2UMG : ModuleRules
     {
         get
         {
-            return (Target.Platform.IsInGroup(UnrealPlatformGroup.Windows) && !Target.WindowsPlatform.bUseXCurl) ||
+            return (Target.Platform.IsInGroup(UnrealPlatformGroup.Windows) /*&& !Target.WindowsPlatform.bUseXCurl For 5.2. Remove this when 5.2 is not supported anymore*/) ||
                    Target.IsInPlatformGroup(UnrealPlatformGroup.Unix) ||
                    Target.IsInPlatformGroup(UnrealPlatformGroup.Android);
         }

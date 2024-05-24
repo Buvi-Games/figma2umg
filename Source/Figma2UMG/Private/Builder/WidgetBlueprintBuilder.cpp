@@ -27,7 +27,7 @@ void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> Wi
 {
 	if (!WidgetBP)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchVisibilityBind] WidgetBP %s is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchVisibilityBind] WidgetBP is nullptr."));
 		return;
 	}
 
@@ -75,13 +75,13 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 {
 	if (!WidgetBP)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] WidgetBP %s is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] WidgetBP is nullptr."));
 		return;
 	}
 
 	if (!ContainerWidget)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] ContainerWidget %s is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] ContainerWidget is nullptr."));
 		return;
 	}
 
@@ -184,7 +184,12 @@ void WidgetBlueprintBuilder::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> W
 	{
 		const FString& Value = PinNames[i];
 		UEdGraphPin* ExecPin = SwitchNode->FindPin(Value, EGPD_Output);
-		int index = (Value == DefaultPinName) ? SwitchNode->PinNames.Num() : SwitchNode->PinNames.IndexOfByKey(Value);
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
+		int index = (Value == DefaultPinName) ? SwitchNode->PinNames.Num() : SwitchNode->PinNames.IndexOfByKey(*Value);
+#else
+		int index = (Value == DefaultPinName.ToString()) ? SwitchNode->PinNames.Num() : SwitchNode->PinNames.IndexOfByKey(*Value);
+#endif
+
 		const FVector2D SetPosition = SwitchPosition + FVector2D(BaseSize.X + Pan.X, ((BaseSize.Y*0.75f) + Pan.Y) * index);
 		PatchVariableSetNode(FunctionGraph, ExecPin, nullptr, UWidgetSwitcher::StaticClass(), i, SetPosition);
 	}
@@ -512,7 +517,11 @@ UK2Node_FunctionEntry* WidgetBlueprintBuilder::PatchFunctionEntry(UEdGraph* Grap
 		Graph->AddNode(FunctionEntry, /*bFromUI =*/false, /*bSelectNewNode =*/false);
 	}
 
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
 	TSharedPtr<FUserPinInfo>* InputPtr = FunctionEntry->UserDefinedPins.FindByPredicate([VarName](const TSharedPtr<FUserPinInfo> Pin) { return Pin->PinName == VarName; });
+#else
+	TSharedPtr<FUserPinInfo>* InputPtr = FunctionEntry->UserDefinedPins.FindByPredicate([VarName](const TSharedPtr<FUserPinInfo> Pin) { return Pin->PinName.ToString() == VarName; });
+#endif
 	TSharedPtr<FUserPinInfo> Input = InputPtr ? *InputPtr : nullptr;
 	if(Input)
 	{
