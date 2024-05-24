@@ -10,6 +10,7 @@
 #include "Components/SizeBoxSlot.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/Widget.h"
+#include "Components/WrapBox.h"
 #include "Components/WrapBoxSlot.h"
 #include "Parser/Properties/FigmaLayoutConstraint.h"
 
@@ -133,6 +134,12 @@ void IWidgetOwner::SetConstraints(const TObjectPtr<UWidget>& Widget, EFigmaPrima
 	{
 		EHorizontalAlignment HorizontalAlignment = Convert(HorizontalAlign);
 		EVerticalAlignment VerticalAlignment = Convert(VerticalAlign);
+		if (UWrapBox* WrapBox = Cast<UWrapBox>(Widget))
+		{
+			WrapBox->SetHorizontalAlignment(HorizontalAlignment);
+			HorizontalAlignment = HAlign_Fill;
+			VerticalAlignment = VAlign_Fill;
+		}
 
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
@@ -176,6 +183,12 @@ void IWidgetOwner::SetConstraints(TObjectPtr<UWidget> Widget, const FFigmaLayout
 	{
 		EHorizontalAlignment HorizontalAlignment = Convert(InConstraints.Horizontal);
 		EVerticalAlignment VerticalAlignment = Convert(InConstraints.Vertical);
+		if (UWrapBox* WrapBox = Cast<UWrapBox>(Widget))
+		{
+			WrapBox->SetHorizontalAlignment(HorizontalAlignment);
+			HorizontalAlignment = HAlign_Fill;
+			VerticalAlignment = VAlign_Fill;
+		}
 
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
@@ -219,6 +232,12 @@ void IWidgetOwner::SetAlign(TObjectPtr<UWidget> Widget, EFigmaTextAlignHorizonta
 	{
 		EHorizontalAlignment HorizontalAlignment = Convert(TextAlignHorizontal);
 		EVerticalAlignment VerticalAlignment = Convert(TextAlignVertical);
+		if (UWrapBox* WrapBox = Cast<UWrapBox>(Widget))
+		{
+			WrapBox->SetHorizontalAlignment(HorizontalAlignment);
+			HorizontalAlignment = HAlign_Fill;
+			VerticalAlignment = VAlign_Fill;
+		}
 
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
