@@ -160,17 +160,36 @@ void UFigmaImporter::UpdateStatus(eRequestStatus Status, FString Message)
 		{
 			ImporterSubsystem->RemoveRequest(this);
 		}
-		delete Progress;
-		Progress = nullptr;
+		ResetProgressBar();
 	}
 }
 
 void UFigmaImporter::UpdateProgress(float ExpectedWorkThisFrame, const FText& Message)
 {
-	AsyncTask(ENamedThreads::GameThread, [this, ExpectedWorkThisFrame, Message]()
+	ProgressThisFrame += ExpectedWorkThisFrame;
+	ProgressMessage = Message;
+	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			Progress->EnterProgressFrame(ExpectedWorkThisFrame, Message);
+			UpdateProgressGameThread();
 		});
+
+}
+
+void UFigmaImporter::UpdateProgressGameThread()
+{
+	const float WorkRemaining = Progress->TotalAmountOfWork - (Progress->CompletedWork + Progress->CurrentFrameScope);
+	if (Progress && ProgressThisFrame > 0.0f)
+	{
+		Progress->EnterProgressFrame(ProgressThisFrame, ProgressMessage);
+		ProgressThisFrame = 0.0f;
+	}
+}
+
+void UFigmaImporter::ResetProgressBar()
+{
+	delete Progress;
+	Progress = nullptr;
+	ProgressThisFrame = 0.0f;
 }
 
 void UFigmaImporter::OnCurrentRequestComplete(UVaRestRequestJSON* Request)
@@ -379,8 +398,7 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 	RequestedImages.Reset();
 	File->BuildImageDependency(FileKey, RequestedImages);
 
-	delete Progress;
-	Progress = nullptr;
+	ResetProgressBar();
 	if (const FImagePerFileRequests* Requests = RequestedImages.GetRequests())
 	{
 		RequestImageURLs();
@@ -397,7 +415,7 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 
 void UFigmaImporter::RequestImageURLs()
 {
-	delete Progress;
+	ResetProgressBar();
 	const FImagePerFileRequests* Requests = RequestedImages.GetRequests();
 	if (Requests)
 	{
