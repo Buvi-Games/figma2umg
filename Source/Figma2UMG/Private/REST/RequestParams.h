@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <Settings/ClassOverrides.h>
+
 #include "RequestParams.generated.h"
 
 
@@ -30,4 +32,7 @@ public:
 
 	UPROPERTY(EditAnywhere, meta = (Category = "Unreal", ToolTip = "Local folder where the UAssets will be created. eg '/Game/MyFolder'"))
 	FString ContentRootFolder;
+
+	UPROPERTY(EditAnywhere, meta = (Category = "Unreal", ToolTip = "Rules to override the widgets by custom ones."))
+	FClassOverrides WidgetOverrides;
 };

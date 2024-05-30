@@ -13,8 +13,6 @@
 class URequestParams;
 class UFigmaFile;
 
-DECLARE_DELEGATE_TwoParams(FOnFigmaImportUpdateStatusCB, eRequestStatus, FString);
-
 UCLASS()
 class UFigmaImporter : public UObject
 {

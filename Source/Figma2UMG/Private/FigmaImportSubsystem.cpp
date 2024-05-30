@@ -2,13 +2,15 @@
 
 #include "FigmaImportSubsystem.h"
 
-#include "UI/SImporterWidget.h"
+#include "REST/FigmaImporter.h"
+#include "REST/RequestParams.h"
 
 
 UFigmaImporter* UFigmaImportSubsystem::Request(const TObjectPtr<URequestParams> InProperties, const FOnFigmaImportUpdateStatusCB& InRequesterCallback)
 {
 	UFigmaImporter* request = Requests.Emplace_GetRef(NewObject<UFigmaImporter>());
-	request->Init(InProperties, InRequesterCallback);
+	WidgetOverrides = &InProperties->WidgetOverrides;
+	request->Init(InProperties, InRequesterCallback);;
 	request->Run();
 	return request;
 }

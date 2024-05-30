@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Parser/Properties/FigmaEnums.h"
+#include "FigmaImportSubsystem.h"
 
 #include "WidgetOwner.generated.h"
 
@@ -64,5 +65,14 @@ template <class Type>
 Type* IWidgetOwner::NewWidget(UObject* TreeViewOuter, const FString& InName)
 {
 	const FString UniqueName = MakeUniqueObjectName(TreeViewOuter, Type::StaticClass(), *InName).ToString();
-	return NewObject<Type>(TreeViewOuter, *UniqueName);
+	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<Type>(InName) : nullptr;
+	if (ClassOverride)
+	{
+		return NewObject<Type>(TreeViewOuter, ClassOverride, *UniqueName);
+	}
+	else
+	{
+		return NewObject<Type>(TreeViewOuter, *UniqueName);
+	}
 }

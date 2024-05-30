@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ClassOverrides.h"
+
 #include "Figma2UMGSettings.generated.h"
 
 UCLASS(config = Engine, defaultconfig)
@@ -21,4 +23,7 @@ public:
 
 	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
 	bool UsePrototypeFlow = true;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
+	FClassOverrides WidgetOverrides;
 };

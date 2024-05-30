@@ -2,7 +2,7 @@
 
 #include "Figma2UMGModule.h"
 
-#include "Figma2UMGSettings.h"
+#include "Settings/Figma2UMGSettings.h"
 #include "ISettingsModule.h"
 #include "UI/Figma2UMGManager.h"
 
