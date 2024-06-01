@@ -11,7 +11,7 @@ UCLASS()
 class UWidgetBuilder : public UObject
 {
 	GENERATED_BODY()
-
+public:
 	void SetNode(const TObjectPtr<UFigmaNode>& InNode);
 
 protected:
