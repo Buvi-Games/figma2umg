@@ -22,7 +22,7 @@ enum class EOverrideConditionCheck
 {
 	StartsWith,
 	Contains,
-	EndsWith,
+	WildCard,
 };
 
 USTRUCT()

@@ -16,9 +16,9 @@ bool FWidgetOverride::Match(const FString& NodeName) const
 	{
 		return NodeName.Contains(NameComparison);
 	}
-	else if (StringCheckType == EOverrideConditionCheck::EndsWith)
+	else if (StringCheckType == EOverrideConditionCheck::WildCard)
 	{
-		return NodeName.EndsWith(NameComparison);
+		return NodeName.MatchesWildcard(NameComparison);
 	}
 
 	return false;
