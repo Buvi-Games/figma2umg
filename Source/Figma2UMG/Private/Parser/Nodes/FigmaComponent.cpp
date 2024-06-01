@@ -29,6 +29,11 @@ void UFigmaComponent::Reset()
 	InstanceAsset = nullptr;
 }
 
+FString UFigmaComponent::GetPackageName() const
+{
+	return GetPackagePath();
+}
+
 FString UFigmaComponent::GetPackagePath() const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;

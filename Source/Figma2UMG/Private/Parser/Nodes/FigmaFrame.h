@@ -21,6 +21,8 @@ public:
 	// UFigmaNode
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
+	virtual IAssetBuilder* CreateAssetBuilder(const FString& InFileKey) override;
+	virtual FString GetPackageName() const override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
@@ -35,6 +37,7 @@ public:
 	virtual UObject* GetAssetOuter() const override;
 
 	UWidget* CreateInstance(UObject* InAssetOuter) const;
+
 protected:
 
 	UPROPERTY()

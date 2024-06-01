@@ -6,6 +6,7 @@
 
 #include "FigmaNode.generated.h"
 
+class IAssetBuilder;
 class UWidgetBlueprint;
 class UFigmaFile;
 class UWidgetTree;
@@ -83,6 +84,9 @@ public:
 
 	const TMap<FString, FString>& GetComponentPropertyReferences() const { return ComponentPropertyReferences; }
 
+	//New Builder API
+	virtual IAssetBuilder* CreateAssetBuilder(const FString& InFileKey) { return nullptr; }
+	virtual FString GetPackageName() const { return FString(); }
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 

@@ -6,6 +6,7 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
@@ -101,6 +102,23 @@ void UFigmaFrame::SetWidget(TObjectPtr<UWidget> Widget)
 			TObjectPtr<UWidget> Widget = ChildNode.FindWidgetForNode(PanelWidget);
 			ChildNode.SetWidget(Widget);
 		}));
+}
+
+IAssetBuilder* UFigmaFrame::CreateAssetBuilder(const FString& InFileKey)
+{
+	if (GenerateFile)
+	{
+		UWidgetBlueprintBuilder* AssetBuilder = NewObject<UWidgetBlueprintBuilder>();
+		AssetBuilder->SetNode(InFileKey, this);
+		return AssetBuilder;
+	}
+
+	return nullptr;
+}
+
+FString UFigmaFrame::GetPackageName() const
+{
+	return GetPackagePath();
 }
 
 FString UFigmaFrame::GetPackagePath() const

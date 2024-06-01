@@ -24,6 +24,7 @@ public:
 	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
 	virtual UObject* GetAssetOuter() const override;
 	virtual void Reset() override;
+	virtual FString GetPackageName() const override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;

@@ -21,6 +21,7 @@ public:
 	// UFigmaNode
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual void Reset() override;
+	virtual FString GetPackageName() const override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;

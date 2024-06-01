@@ -3,9 +3,8 @@
 
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 
-#include "Components/CanvasPanelSlot.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 #include "Components/Image.h"
-#include "Factories/Texture2dFactoryNew.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "REST/FigmaImporter.h"
 
@@ -25,6 +24,18 @@ FVector2D UFigmaVectorNode::GetAbsolutePosition() const
 FVector2D UFigmaVectorNode::GetSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
+}
+
+IAssetBuilder* UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey)
+{
+	UTexture2DBuilder* AssetBuilder = NewObject<UTexture2DBuilder>();
+	AssetBuilder->SetNode(InFileKey, this);
+	return AssetBuilder;
+}
+
+FString UFigmaVectorNode::GetPackageName() const
+{
+	return GetPackagePath();
 }
 
 void UFigmaVectorNode::AddImageRequest(FString FileKey, FImageRequests& ImageRequests)

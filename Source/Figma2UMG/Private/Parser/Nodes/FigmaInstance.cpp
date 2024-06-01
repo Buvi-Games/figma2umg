@@ -6,6 +6,7 @@
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 #include "Components/Image.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
@@ -36,6 +37,27 @@ void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const 
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 
 	SerializeArray(Children, JsonObj,"Children");
+}
+
+IAssetBuilder* UFigmaInstance::CreateAssetBuilder(const FString& InFileKey)
+{
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
+	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
+	IsMissingComponent = ComponentAsset == nullptr;
+	if (IsMissingComponent)
+	{
+		UTexture2DBuilder* AssetBuilder = NewObject<UTexture2DBuilder>();
+		AssetBuilder->SetNode(InFileKey, this);
+		return AssetBuilder;
+	}
+
+	return nullptr;
+}
+
+FString UFigmaInstance::GetPackageName() const
+{
+	return GetPackagePath();
 }
 
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)

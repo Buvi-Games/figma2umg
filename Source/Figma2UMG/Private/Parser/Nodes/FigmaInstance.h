@@ -23,6 +23,8 @@ public:
 	virtual void PrepareForFlow();
 	virtual FVector2D GetAbsolutePosition() const override;
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
+	virtual IAssetBuilder* CreateAssetBuilder(const FString& InFileKey) override;
+	virtual FString GetPackageName() const override;
 
 	// IWidgetOwner
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;

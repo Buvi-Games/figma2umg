@@ -36,6 +36,8 @@ public:
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
 	FVector2D GetSize() const;
+	virtual IAssetBuilder* CreateAssetBuilder(const FString& InFileKey) override;
+	virtual FString GetPackageName() const override;
 
 	// IFigmaImageRequester
 	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;

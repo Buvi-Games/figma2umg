@@ -338,6 +338,11 @@ void UFigmaComponentSet::Reset()
 	}
 }
 
+FString UFigmaComponentSet::GetPackageName() const
+{
+	return GetPackagePath();
+}
+
 void UFigmaComponentSet::PostInsert() const
 {
 	if (ButtonBuilders.IsEmpty())
