@@ -13,7 +13,7 @@ TObjectPtr<UWidgetSwitcher> FSwitcherBuilder::Patch(TObjectPtr<UWidget> WidgetTo
 {
 	WidgetSwitcher = WidgetToPatch ? Cast<UWidgetSwitcher>(WidgetToPatch) : nullptr;
 
-	WidgetBlueprintBuilder::PatchSwitchFunction(Cast<UWidgetBlueprint>(AssetOuter->GetOuter()), WidgetSwitcher, PropertyName, PropertyDefinition.VariantOptions);
+	WidgetBlueprintHelper::PatchSwitchFunction(Cast<UWidgetBlueprint>(AssetOuter->GetOuter()), WidgetSwitcher, PropertyName, PropertyDefinition.VariantOptions);
 
 	return WidgetSwitcher;
 }
@@ -112,7 +112,7 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 		IWidgetOwner::TryRenameWidget(PropertyName, WidgetSwitcher);
 	}
 
-	WidgetBlueprintBuilder::CreateSwitchFunction(WidgetBP, PropertyName, PropertyDefinition.VariantOptions);
+	WidgetBlueprintHelper::CreateSwitchFunction(WidgetBP, PropertyName, PropertyDefinition.VariantOptions);
 }
 
 void FSwitcherBuilder::Reset()

@@ -247,7 +247,7 @@ void UFigmaInstance::PatchComponentProperty() const
 
 	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : ComponentProperties)
 	{
-		WidgetBlueprintBuilder::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
+		WidgetBlueprintHelper::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
 	}
 }
 
