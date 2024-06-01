@@ -9,6 +9,7 @@
 
 #include "FigmaFile.generated.h"
 
+class IAssetBuilder;
 struct FImageRequests;
 class UFigmaDocument;
 
@@ -20,7 +21,7 @@ class UFigmaFile : public UObject
 public:
 	GENERATED_BODY()
 
-	void PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> JsonObj);
+	void PostSerialize(const FString& InFileKey, const FString& InPackagePath, const TSharedRef<FJsonObject> JsonObj);
 
 	void ConvertToAssets();
 
@@ -39,7 +40,7 @@ public:
 	void FixComponentSetRef();
 	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
-	void BuildImageDependency(FString FileKey, FImageRequests& ImageRequests);
+	void BuildImageDependency(FImageRequests& ImageRequests);
 	void Patch(const FProcessFinishedDelegate& ProcessDelegate, FScopedSlowTask* Progress);
 	void PostPatch(const FProcessFinishedDelegate& ProcessDelegate);
 
@@ -54,6 +55,7 @@ public:
 		return nullptr;
 	}
 
+	bool UseNewBuilders = false;
 protected:
 	void FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
@@ -110,7 +112,10 @@ protected:
 	UPROPERTY()
 	TMap<FString, FFigmaStyleRef> Styles;//Not sure if this is correct, probably not
 
+	FString FileKey;
 	FString PackagePath;
 
 	FProcessFinishedDelegate CurrentProcessDelegate;
+
+	TArray<IAssetBuilder*> AssetBuilders;
 };
