@@ -19,7 +19,7 @@ class UK2Node_VariableGet;
 class UK2Node_IfThenElse;
 class UWidgetBlueprint;
 
-class WidgetBlueprintBuilder
+class WidgetBlueprintHelper
 {
 public:
 	static FIGMA2UMG_API void PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& VariableName);

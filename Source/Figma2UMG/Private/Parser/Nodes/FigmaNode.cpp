@@ -18,7 +18,7 @@
 #include "JsonObjectConverter.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
-#include "Builder/WidgetBlueprintBuilder.h"
+#include "Builder/WidgetBlueprintHelper.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Parser/FigmaFile.h"

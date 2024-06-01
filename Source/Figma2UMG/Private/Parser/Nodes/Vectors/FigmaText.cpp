@@ -4,7 +4,7 @@
 #include "Parser/Nodes/Vectors/FigmaText.h"
 
 #include "WidgetBlueprint.h"
-#include "Builder/WidgetBlueprintBuilder.h"
+#include "Builder/WidgetBlueprintHelper.h"
 #include "Components/TextBlock.h"
 
 void UFigmaText::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)

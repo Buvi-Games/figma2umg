@@ -1,7 +1,7 @@
 // Copyright 2024 Buvi Games. All Rights Reserved.
 
 
-#include "Builder/WidgetBlueprintBuilder.h"
+#include "Builder/WidgetBlueprintHelper.h"
 
 #include "BlueprintFunctionNodeSpawner.h"
 #include "Figma2UMGModule.h"
@@ -23,11 +23,11 @@ static const FVector2D Pan = FVector2D(20.0f, 20.0f);
 static const FName DefaultPinName("Default");
 static const FName TargetPinName("Target");
 
-void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& VariableName)
+void WidgetBlueprintHelper::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& VariableName)
 {
 	if (!WidgetBP)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchVisibilityBind] WidgetBP is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintHelper::PatchVisibilityBind] WidgetBP is nullptr."));
 		return;
 	}
 
@@ -71,17 +71,17 @@ void WidgetBlueprintBuilder::PatchVisibilityBind(TObjectPtr<UWidgetBlueprint> Wi
 	PatchIfThenElseNode(FunctionGraph, IfThenElseGraphPosition, FunctionEntry ? FunctionEntry->GetThenPin() : nullptr, VariableGetNode->GetValuePin(), VisibleResult->GetExecPin(), CollapsedResult->GetExecPin());
 }
 
-void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UPanelWidget> ContainerWidget, const FString& VariableName)
+void WidgetBlueprintHelper::PatchInitFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UPanelWidget> ContainerWidget, const FString& VariableName)
 {
 	if (!WidgetBP)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] WidgetBP is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintHelper::PatchInitFunction] WidgetBP is nullptr."));
 		return;
 	}
 
 	if (!ContainerWidget)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] ContainerWidget is nullptr."));
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintHelper::PatchInitFunction] ContainerWidget is nullptr."));
 		return;
 	}
 
@@ -94,7 +94,7 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
 	if (!FunctionGraph)
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] Can't find Function %s in UWidgetBlueprint %s."), *FunctionName, *WidgetBP.GetName());
+		UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintHelper::PatchInitFunction] Can't find Function %s in UWidgetBlueprint %s."), *FunctionName, *WidgetBP.GetName());
 		return;
 	}
 
@@ -123,7 +123,7 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 		UK2Node_VariableGet* ChildGetNode = PatchVariableGetNode(WidgetBP, FunctionGraph, *Child->GetName(), GetChildPosition);
 		if (!ChildGetNode)
 		{
-			UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] BluePrint %s Function %s fail to add node to get child %s."), *WidgetBP.GetName(), *FunctionName, *Child->GetName());
+			UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintHelper::PatchInitFunction] BluePrint %s Function %s fail to add node to get child %s."), *WidgetBP.GetName(), *FunctionName, *Child->GetName());
 			continue;
 		}
 
@@ -137,7 +137,7 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 		}
 		else
 		{
-			UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintBuilder::PatchInitFunction] BluePrint %s Function %s fail to add node to set %s in child %s."), *WidgetBP.GetName(), *FunctionName, *VariableName, *Child->GetName());
+			UE_LOG_Figma2UMG(Error, TEXT("[WidgetBlueprintHelper::PatchInitFunction] BluePrint %s Function %s fail to add node to set %s in child %s."), *WidgetBP.GetName(), *FunctionName, *VariableName, *Child->GetName());
 		}
 	}
 
@@ -145,12 +145,12 @@ void WidgetBlueprintBuilder::PatchInitFunction(TObjectPtr<UWidgetBlueprint> Widg
 	VariableGetNode->NodePosY = static_cast<int32>(GetVariablePosition.Y);
 }
 
-void WidgetBlueprintBuilder::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName)
+void WidgetBlueprintHelper::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UTextBlock> TextBlock, const FName& VariableName)
 {
 	AddBindingProperty(WidgetBP, TextBlock, "Text", VariableName);
 }
 
-void WidgetBlueprintBuilder::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, const FString& PropertyName, const TArray<FString>& PinNames)
+void WidgetBlueprintHelper::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, const FString& PropertyName, const TArray<FString>& PinNames)
 {
 	if (!WidgetBP)
 		return;
@@ -195,7 +195,7 @@ void WidgetBlueprintBuilder::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> W
 	}
 }
 
-void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidgetSwitcher> WidgetSwitcher, const FString& PropertyName, TArray<FString> Values)
+void WidgetBlueprintHelper::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidgetSwitcher> WidgetSwitcher, const FString& PropertyName, TArray<FString> Values)
 {
 	if (!WidgetBP || !WidgetSwitcher)
 		return;
@@ -262,7 +262,7 @@ void WidgetBlueprintBuilder::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> Wi
 	}
 }
 
-void WidgetBlueprintBuilder::SetPropertyValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, const FFigmaComponentProperty& ComponentProperty)
+void WidgetBlueprintHelper::SetPropertyValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, const FFigmaComponentProperty& ComponentProperty)
 {
 	if (!Widget)
 		return;
@@ -379,7 +379,7 @@ void WidgetBlueprintBuilder::SetPropertyValue(TObjectPtr<UUserWidget> Widget, co
 	}
 }
 
-void WidgetBlueprintBuilder::CallFunctionFromEventNode(TObjectPtr<UWidgetBlueprint> WidgetBP, const FName& EventName, const FString& FunctionName)
+void WidgetBlueprintHelper::CallFunctionFromEventNode(TObjectPtr<UWidgetBlueprint> WidgetBP, const FName& EventName, const FString& FunctionName)
 {
 	if (!WidgetBP)
 	{
@@ -455,7 +455,7 @@ void WidgetBlueprintBuilder::CallFunctionFromEventNode(TObjectPtr<UWidgetBluepri
 	}
 }
 
-void WidgetBlueprintBuilder::AddBindingFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName)
+void WidgetBlueprintHelper::AddBindingFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName)
 {
 	UFunction* Function = WidgetBP->SkeletonGeneratedClass->FindFunctionByName(FunctionGraph->GetFName());
 
@@ -483,7 +483,7 @@ void WidgetBlueprintBuilder::AddBindingFunction(TObjectPtr<UWidgetBlueprint> Wid
 	Schema_K2->AddExtraFunctionFlags(FunctionGraph, FUNC_BlueprintPure);
 }
 
-void WidgetBlueprintBuilder::AddBindingProperty(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& PropertyName, const FName& MemberPropertyName)
+void WidgetBlueprintHelper::AddBindingProperty(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& PropertyName, const FName& MemberPropertyName)
 {
 	FProperty* Property = WidgetBP->SkeletonGeneratedClass->FindPropertyByName(MemberPropertyName);
 
@@ -500,7 +500,7 @@ void WidgetBlueprintBuilder::AddBindingProperty(TObjectPtr<UWidgetBlueprint> Wid
 	WidgetBP->Bindings.AddUnique(Binding);
 }
 
-UK2Node_FunctionEntry* WidgetBlueprintBuilder::PatchFunctionEntry(UEdGraph* Graph, const FString VarName, FName VarType, EPinContainerType VarContainerType)
+UK2Node_FunctionEntry* WidgetBlueprintHelper::PatchFunctionEntry(UEdGraph* Graph, const FString VarName, FName VarType, EPinContainerType VarContainerType)
 {
 	TObjectPtr<class UEdGraphNode>* FoundNode = Graph->Nodes.FindByPredicate([](const TObjectPtr<class UEdGraphNode> Node) { return Node && Node->IsA<UK2Node_FunctionEntry>(); });
 	UK2Node_FunctionEntry* FunctionEntry = FoundNode ? Cast<UK2Node_FunctionEntry>(*FoundNode) : nullptr;
@@ -541,7 +541,7 @@ UK2Node_FunctionEntry* WidgetBlueprintBuilder::PatchFunctionEntry(UEdGraph* Grap
 	return FunctionEntry;
 }
 
-UK2Node_VariableGet* WidgetBlueprintBuilder::PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation)
+UK2Node_VariableGet* WidgetBlueprintHelper::PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation)
 {
 	TObjectPtr<class UEdGraphNode>* FoundNode = Graph->Nodes.FindByPredicate([VariableName](const TObjectPtr<class UEdGraphNode> Node)
 		{
@@ -569,7 +569,7 @@ UK2Node_VariableGet* WidgetBlueprintBuilder::PatchVariableGetNode(TObjectPtr<UWi
 	return nullptr;
 }
 
-UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation)
+UK2Node_VariableSet* WidgetBlueprintHelper::PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation)
 {
 	static const FName ActiveWidgetIndex("ActiveWidgetIndex");
 	TObjectPtr<UK2Node_VariableSet> VariableSetNode = nullptr;
@@ -610,7 +610,7 @@ UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(UEdGraph* Grap
 	return VariableSetNode;
 }
 
-UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, UClass* TargetObjectType, const FName& VariableName, UEdGraphPin* ValuePin, FVector2D NodeLocation)
+UK2Node_VariableSet* WidgetBlueprintHelper::PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, UClass* TargetObjectType, const FName& VariableName, UEdGraphPin* ValuePin, FVector2D NodeLocation)
 {
 	TObjectPtr<UK2Node_VariableSet> VariableSetNode = nullptr;
 	const TObjectPtr<UEdGraphNode> FoundNode = (ExecPin && !ExecPin->LinkedTo.IsEmpty()) ? ExecPin->LinkedTo[0]->GetOwningNode() : nullptr;
@@ -651,7 +651,7 @@ UK2Node_VariableSet* WidgetBlueprintBuilder::PatchVariableSetNode(UEdGraph* Grap
 	return VariableSetNode;
 }
 
-UK2Node_IfThenElse* WidgetBlueprintBuilder::PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, UEdGraphPin* ConditionValuePin, UEdGraphPin* ThenReturnPin, UEdGraphPin* ElseReturnPin)
+UK2Node_IfThenElse* WidgetBlueprintHelper::PatchIfThenElseNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, UEdGraphPin* ConditionValuePin, UEdGraphPin* ThenReturnPin, UEdGraphPin* ElseReturnPin)
 {
 	UK2Node_IfThenElse* IfThenElseNode = nullptr;
 	TArray<UK2Node_IfThenElse*> ExistingNodes;
@@ -713,7 +713,7 @@ UK2Node_IfThenElse* WidgetBlueprintBuilder::PatchIfThenElseNode(UEdGraph* Graph,
 	return IfThenElseNode;
 }
 
-UK2Node_SwitchString* WidgetBlueprintBuilder::PatchSwitchStringNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, const TArray<FString>& PinNames)
+UK2Node_SwitchString* WidgetBlueprintHelper::PatchSwitchStringNode(UEdGraph* Graph, FVector2D NodeLocation, UEdGraphPin* ExecPin, const TArray<FString>& PinNames)
 {
 	UK2Node_SwitchString* SwitchNode = nullptr;
 	TArray<UK2Node_SwitchString*> ExistingNodes;
@@ -807,7 +807,7 @@ UK2Node_SwitchString* WidgetBlueprintBuilder::PatchSwitchStringNode(UEdGraph* Gr
 	return SwitchNode;
 }
 
-UK2Node_FunctionResult* WidgetBlueprintBuilder::PatchFunctionResult(UEdGraph* Graph, FVector2D NodeLocation, const FString& ReturnValue)
+UK2Node_FunctionResult* WidgetBlueprintHelper::PatchFunctionResult(UEdGraph* Graph, FVector2D NodeLocation, const FString& ReturnValue)
 {
 	UK2Node_FunctionResult* FunctionResult = nullptr;
 	TObjectPtr<class UEdGraphNode>* FoundNode = Graph->Nodes.FindByPredicate([ReturnValue](const TObjectPtr<class UEdGraphNode> Node)
@@ -846,7 +846,7 @@ UK2Node_FunctionResult* WidgetBlueprintBuilder::PatchFunctionResult(UEdGraph* Gr
 	return FunctionResult;
 }
 
-const UK2Node_CallFunction* WidgetBlueprintBuilder::AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UObject> Object, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation)
+const UK2Node_CallFunction* WidgetBlueprintHelper::AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UObject> Object, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation)
 {
 	UBlueprintFunctionNodeSpawner* Spawner = UBlueprintFunctionNodeSpawner::Create(Function, Graph);
 	TSet<FBindingObject> Bindings;

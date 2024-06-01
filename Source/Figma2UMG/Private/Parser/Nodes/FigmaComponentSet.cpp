@@ -6,7 +6,7 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
-#include "Builder/WidgetBlueprintBuilder.h"
+#include "Builder/WidgetBlueprintHelper.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/FigmaFile.h"

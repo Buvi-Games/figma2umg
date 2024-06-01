@@ -4,7 +4,7 @@
 #include "Builder/SwitcherBuilder.h"
 
 #include "Figma2UMGModule.h"
-#include "WidgetBlueprintBuilder.h"
+#include "WidgetBlueprintHelper.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/WidgetSwitcher.h"
 #include "Interfaces/WidgetOwner.h"
