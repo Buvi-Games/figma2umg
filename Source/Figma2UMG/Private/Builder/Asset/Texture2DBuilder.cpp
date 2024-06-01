@@ -9,13 +9,14 @@
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Factory/RawTexture2DFactory.h"
+#include "Parser/FigmaFile.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 void UTexture2DBuilder::LoadOrCreateAssets()
 {
 	URawTexture2DFactory* Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
-	//Factory->DownloadSubFolder = GetFigmaFile()->GetFileName() + TEXT("/Images");
-	//Factory->RawData = RawData;
+	Factory->DownloadSubFolder = Node->GetFigmaFile()->GetFileName() + TEXT("/Images");
+	Factory->RawData = RawData;
 
 	UTexture2D* TextureAsset = Cast<UTexture2D>(Asset);
 	if (TextureAsset == nullptr)
@@ -73,4 +74,15 @@ void UTexture2DBuilder::LoadAssets()
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
 	Asset = Cast<UTexture2D>(AssetData.FastGetAsset(true));
+}
+
+void UTexture2DBuilder::AddImageRequest(FImageRequests& ImageRequests)
+{
+	OnRawImageReceivedCB.BindUObject(this, &UTexture2DBuilder::OnRawImageReceived);
+	ImageRequests.AddRequest(FileKey, Node->GetNodeName(), Node->GetId(), OnRawImageReceivedCB);
+}
+
+void UTexture2DBuilder::OnRawImageReceived(const TArray<uint8>& InRawData)
+{
+	RawData = InRawData;
 }

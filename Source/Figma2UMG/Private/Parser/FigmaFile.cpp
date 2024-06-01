@@ -347,7 +347,13 @@ void UFigmaFile::BuildImageDependency(FImageRequests& ImageRequests)
 {
 	if(UseNewBuilders)
 	{
-		
+		for (IAssetBuilder* AssetBuilder : AssetBuilders)
+		{
+			if (UTexture2DBuilder* Texture2DBuilder = Cast<UTexture2DBuilder>(AssetBuilder))
+			{
+				Texture2DBuilder->AddImageRequest(ImageRequests);
+			}
+		}
 	}
 	else
 	{

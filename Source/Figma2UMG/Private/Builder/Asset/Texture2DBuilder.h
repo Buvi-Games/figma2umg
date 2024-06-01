@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AssetBuilder.h"
+#include "REST/ImageRequest.h"
 #include "Texture2DBuilder.generated.h"
 
 class UBorder;
@@ -16,7 +17,13 @@ public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
 
+	void AddImageRequest(FImageRequests& ImageRequests);
+	void OnRawImageReceived(const TArray<uint8>& InRawData);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UTexture2D> Asset = nullptr;
+
+	TArray<uint8> RawData;
+	FOnRawImageReceiveDelegate OnRawImageReceivedCB;
 };
