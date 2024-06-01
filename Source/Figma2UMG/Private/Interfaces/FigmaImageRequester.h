@@ -23,12 +23,12 @@ public:
 	IFigmaImageRequester();
 
 	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) = 0;
-	virtual void OnRawImageReceived(TArray<uint8>& RawData) = 0;
+	virtual void OnRawImageReceived(const TArray<uint8>& RawData) = 0;
 
 protected:
 
 	FOnRawImageReceiveDelegate OnRawImageReceivedCB;
 
 private:
-	void OnRawImageReceivedBase(TArray<uint8>& RawData);
+	void OnRawImageReceivedBase(const TArray<uint8>& RawData);
 };

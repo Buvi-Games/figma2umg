@@ -42,7 +42,7 @@ public:
 
 	// IFigmaImageRequester
 	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
-	virtual void OnRawImageReceived(TArray<uint8>& RawData) override;
+	virtual void OnRawImageReceived(const TArray<uint8>& RawData) override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;

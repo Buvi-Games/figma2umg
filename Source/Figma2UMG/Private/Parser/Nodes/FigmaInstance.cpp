@@ -47,6 +47,9 @@ IAssetBuilder* UFigmaInstance::CreateAssetBuilder(const FString& InFileKey)
 	IsMissingComponent = ComponentAsset == nullptr;
 	if (IsMissingComponent)
 	{
+		//We don't have the Component Asset, import as a Texture as a PlaceHolder
+		UE_LOG_Figma2UMG(Warning, TEXT("[Instance] Can't find Component %s for instance %s, import as a Texture as a PlaceHolder"), *ComponentId, *GetNodeName());
+
 		UTexture2DBuilder* AssetBuilder = NewObject<UTexture2DBuilder>();
 		AssetBuilder->SetNode(InFileKey, this);
 		return AssetBuilder;
@@ -206,7 +209,7 @@ void UFigmaInstance::AddImageRequest(FString FileKey, FImageRequests& ImageReque
 	}
 }
 
-void UFigmaInstance::OnRawImageReceived(TArray<uint8>& RawData)
+void UFigmaInstance::OnRawImageReceived(const TArray<uint8>& RawData)
 {
 	URawTexture2DFactory* Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
 	Factory->DownloadSubFolder = GetFigmaFile()->GetFileName() + TEXT("/MissingComponents");

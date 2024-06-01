@@ -43,7 +43,7 @@ void UFigmaVectorNode::AddImageRequest(FString FileKey, FImageRequests& ImageReq
 	ImageRequests.AddRequest(FileKey, GetNodeName(), GetId(), OnRawImageReceivedCB);
 }
 
-void UFigmaVectorNode::OnRawImageReceived(TArray<uint8>& RawData)
+void UFigmaVectorNode::OnRawImageReceived(const TArray<uint8>& RawData)
 {
 	URawTexture2DFactory* Factory = NewObject<URawTexture2DFactory>(URawTexture2DFactory::StaticClass());
 	Factory->DownloadSubFolder = GetFigmaFile()->GetFileName() + TEXT("/Images");

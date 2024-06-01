@@ -8,7 +8,7 @@ IFigmaImageRequester::IFigmaImageRequester()
 	OnRawImageReceivedCB.BindRaw(this, &IFigmaImageRequester::OnRawImageReceivedBase);
 }
 
-void IFigmaImageRequester::OnRawImageReceivedBase(TArray<uint8>& RawData)
+void IFigmaImageRequester::OnRawImageReceivedBase(const TArray<uint8>& RawData)
 {
 	OnRawImageReceived(RawData);
 }
