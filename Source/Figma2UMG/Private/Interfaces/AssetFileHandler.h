@@ -34,7 +34,7 @@ public:
 	virtual FString GetAssetName() const = 0;
 
 	UFUNCTION()
-	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) = 0;
+	virtual void LoadOrCreateAssets() = 0;
 
 	UFUNCTION()
 	virtual void LoadAssets() = 0;

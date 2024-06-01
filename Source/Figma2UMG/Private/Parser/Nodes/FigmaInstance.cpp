@@ -208,7 +208,7 @@ FString UFigmaInstance::GetAssetName() const
 	return GetUniqueName();
 }
 
-void UFigmaInstance::LoadOrCreateAssets(UFigmaFile* FigmaFile)
+void UFigmaInstance::LoadOrCreateAssets()
 {
 	// Don't do anything here. Need to wait for the Image stage, in case the Component is missing.
 }

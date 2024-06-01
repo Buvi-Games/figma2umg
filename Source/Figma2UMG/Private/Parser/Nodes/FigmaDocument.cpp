@@ -21,7 +21,7 @@ FString UFigmaDocument::GetAssetName() const
 	return FigmaFile ? FigmaFile->GetFileName() : FString();
 }
 
-void UFigmaDocument::LoadOrCreateAssets(UFigmaFile* InFigmaFile)
+void UFigmaDocument::LoadOrCreateAssets()
 {
 	GetOrCreateWidgetBlueprint();
 }

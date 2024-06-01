@@ -25,7 +25,7 @@ public:
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
 	virtual FString GetAssetName() const override;
-	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
+	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
 
 	// IWidgetOwner

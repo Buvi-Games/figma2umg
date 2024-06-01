@@ -69,7 +69,7 @@ FString UFigmaComponentSet::GetPackagePath() const
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
 }
 
-void UFigmaComponentSet::LoadOrCreateAssets(UFigmaFile* FigmaFile)
+void UFigmaComponentSet::LoadOrCreateAssets()
 {
 	UWidgetBlueprint* WidgetBP = GetOrCreateWidgetBlueprint();
 	if (PatchPropertiesToWidget(WidgetBP))

@@ -56,7 +56,7 @@ FString UFigmaVectorNode::GetAssetName() const
 	return GetUniqueName();
 }
 
-void UFigmaVectorNode::LoadOrCreateAssets(UFigmaFile* FigmaFile)
+void UFigmaVectorNode::LoadOrCreateAssets()
 {
 }
 

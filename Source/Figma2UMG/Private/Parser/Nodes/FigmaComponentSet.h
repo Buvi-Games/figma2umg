@@ -27,7 +27,7 @@ public:
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;
-	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
+	virtual void LoadOrCreateAssets() override;
 
 	// IWidgetOwner
 	virtual TObjectPtr<UWidget> GetTopWidget() const override;

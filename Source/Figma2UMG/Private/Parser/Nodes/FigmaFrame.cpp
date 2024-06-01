@@ -119,7 +119,7 @@ FString UFigmaFrame::GetAssetName() const
 	return GetUniqueName();
 }
 
-void UFigmaFrame::LoadOrCreateAssets(UFigmaFile* FigmaFile)
+void UFigmaFrame::LoadOrCreateAssets()
 {
 	if (GenerateFile)
 	{
