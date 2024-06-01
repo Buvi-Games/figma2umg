@@ -52,6 +52,9 @@ public:
 
 	template<class Type>
 	static Type* NewWidget(UObject* TreeViewOuter, const FString& InName);
+
+	template<class Type>
+	static Type* NewWidget(UObject* TreeViewOuter, const FString& InName, UClass* ClassOverride);
 protected:
 	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
 	EHorizontalAlignment Convert(EFigmaLayoutConstraintHorizontal LayoutConstraint) const;
@@ -75,4 +78,16 @@ Type* IWidgetOwner::NewWidget(UObject* TreeViewOuter, const FString& InName)
 	{
 		return NewObject<Type>(TreeViewOuter, *UniqueName);
 	}
+}
+
+template <class Type>
+Type* IWidgetOwner::NewWidget(UObject* TreeViewOuter, const FString& InName, UClass* ClassOverride)
+{
+	if(!ClassOverride)
+	{
+		return NewWidget<Type>(TreeViewOuter, InName);
+	}
+
+	const FString UniqueName = MakeUniqueObjectName(TreeViewOuter, ClassOverride, *InName).ToString();
+	return NewObject<Type>(TreeViewOuter, ClassOverride, *UniqueName);
 }

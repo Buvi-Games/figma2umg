@@ -57,9 +57,23 @@ TObjectPtr<WidgetType> FContainerBuilder::Patch(TObjectPtr<UWidget> WidgetToPatc
 		{
 			PatchedWidget = WidgetName.IsEmpty() ? NewObject<WidgetType>(AssetOuter) : IWidgetOwner::NewWidget<WidgetType>(AssetOuter, *WidgetName);
 		}
-		else if (PatchedWidget->GetName() != WidgetName)
+		else
 		{
 			IWidgetOwner::TryRenameWidget(WidgetName, PatchedWidget);
+		}
+	}
+	else
+	{
+		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<WidgetType>(WidgetName) : nullptr;
+		if (ClassOverride && PatchedWidget->GetClass() != ClassOverride)
+		{
+			WidgetType* NewWidget = IWidgetOwner::NewWidget<WidgetType>(AssetOuter, *WidgetName, ClassOverride);
+			while (PatchedWidget->GetChildrenCount() > 0)
+			{
+				NewWidget->AddChild(PatchedWidget->GetChildAt(0));
+			}
+			PatchedWidget = NewWidget;
 		}
 	}
 

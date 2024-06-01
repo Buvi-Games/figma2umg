@@ -78,6 +78,12 @@ TObjectPtr<UWidget> UFigmaVectorNode::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	Builder.Image = Cast<UImage>(WidgetToPatch);
 	if (Builder.Image)
 	{
+		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UImage>(GetUniqueName()) : nullptr;
+		if (ClassOverride && Builder.Image->GetClass() != ClassOverride)
+		{
+			Builder.Image = IWidgetOwner::NewWidget<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName(), ClassOverride);
+		}
 		IWidgetOwner::TryRenameWidget(GetUniqueName(), Builder.Image);
 	}
 	else

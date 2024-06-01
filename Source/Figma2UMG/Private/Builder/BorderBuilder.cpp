@@ -72,6 +72,14 @@ TObjectPtr<UWidget> FBorderBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 		Border = Cast<UBorder>(WidgetToPatch);
 		if (Border)
 		{
+			UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+			UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(WidgetName) : nullptr;
+			if (ClassOverride && Border->GetClass() != ClassOverride)
+			{
+				UBorder* NewBorder = IWidgetOwner::NewWidget<UBorder>(AssetOuter, *WidgetName, ClassOverride);
+				NewBorder->SetContent(Border->GetContent());
+				Border = NewBorder;
+			}
 			IWidgetOwner::TryRenameWidget(WidgetName, Border);
 		}
 		else

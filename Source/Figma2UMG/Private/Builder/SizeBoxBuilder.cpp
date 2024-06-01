@@ -62,6 +62,14 @@ TObjectPtr<UWidget> FSizeBoxBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UO
 		SizeBox = Cast<USizeBox>(WidgetToPatch);
 		if (SizeBox)
 		{
+			UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+			UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<USizeBox>(WidgetName) : nullptr;
+			if (ClassOverride && SizeBox->GetClass() != ClassOverride)
+			{
+				USizeBox* NewSizeBox = IWidgetOwner::NewWidget<USizeBox>(AssetOuter, *WidgetName, ClassOverride);
+				NewSizeBox->SetContent(SizeBox->GetContent());
+				SizeBox = NewSizeBox;
+			}
 			IWidgetOwner::TryRenameWidget(WidgetName, SizeBox);
 		}
 		else

@@ -12,6 +12,14 @@ TObjectPtr<UWidget> FButtonBuilder::Patch(TObjectPtr<UWidget> WidgetToPatch, UOb
 	Button = Cast<UButton>(WidgetToPatch);
 	if (Button)
 	{
+		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(PropertyName) : nullptr;
+		if (ClassOverride && Button->GetClass() != ClassOverride)
+		{
+			UButton* NewButton = IWidgetOwner::NewWidget<UButton>(AssetOuter, *PropertyName, ClassOverride);
+			NewButton->SetContent(Button->GetContent());
+			Button = NewButton;
+		}
 		IWidgetOwner::TryRenameWidget(PropertyName, Button);
 	}
 	else

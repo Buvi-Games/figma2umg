@@ -86,10 +86,14 @@ TObjectPtr<UWidget> UFigmaInstance::Patch(TObjectPtr<UWidget> WidgetToPatch)
 		BuilderFallback.Image = Cast<UImage>(WidgetToPatch);
 		if (BuilderFallback.Image)
 		{
-			if (BuilderFallback.Image->GetName() != GetUniqueName())
+			UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+			UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UImage>(GetUniqueName()) : nullptr;
+			if (ClassOverride && BuilderFallback.Image->GetClass() != ClassOverride)
 			{
-				IWidgetOwner::TryRenameWidget(GetUniqueName(), BuilderFallback.Image);
+				BuilderFallback.Image = IWidgetOwner::NewWidget<UImage>(ParentNode->GetAssetOuter(), *GetUniqueName(), ClassOverride);
 			}
+
+			IWidgetOwner::TryRenameWidget(GetUniqueName(), BuilderFallback.Image);
 		}
 		else
 		{

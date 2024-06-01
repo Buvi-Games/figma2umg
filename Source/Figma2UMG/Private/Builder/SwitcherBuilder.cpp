@@ -68,12 +68,47 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 		}
 		else
 		{
-			UWidgetSwitcher* ParentSwitch = Cast<UWidgetSwitcher>(SwitchWidgets.Last());
+			UWidgetSwitcher* ParentSwitch = SwitchWidgets.Last();
 			ParentSwitch->AddChild(WidgetSwitcher);
 		}
 	}
-	else if (WidgetSwitcher->GetName() != PropertyName)
+	else
 	{
+		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UWidgetSwitcher>(PropertyName) : nullptr;
+		if (ClassOverride && WidgetSwitcher->GetClass() != ClassOverride)
+		{
+			UWidgetSwitcher* NewWidgetSwitcher = IWidgetOwner::NewWidget<UWidgetSwitcher>(WidgetBP->WidgetTree, *PropertyName, ClassOverride);
+			//for(int i = 0; i < WidgetSwitcher->GetChildrenCount(); i++)
+			while (WidgetSwitcher->GetChildrenCount() > 0)
+			{
+				NewWidgetSwitcher->AddChild(WidgetSwitcher->GetChildAt(0));
+			}
+
+			if(WidgetBP->WidgetTree->RootWidget == WidgetSwitcher)
+			{
+				WidgetBP->WidgetTree->RootWidget = NewWidgetSwitcher;
+			}
+
+			for (int i = 0; i < SwitchWidgets.Num(); i++)
+			{
+				if(SwitchWidgets[i] == WidgetSwitcher)
+				{
+					SwitchWidgets[i] = NewWidgetSwitcher;
+				}
+				else
+				{
+					int index = SwitchWidgets[i]->GetChildIndex(WidgetSwitcher);
+					if (index != INDEX_NONE)
+					{
+						SwitchWidgets[i]->InsertChildAt(index, NewWidgetSwitcher);
+						SwitchWidgets[i]->RemoveChild(WidgetSwitcher);
+					}
+				}
+			}
+
+			WidgetSwitcher = NewWidgetSwitcher;
+		}
 		IWidgetOwner::TryRenameWidget(PropertyName, WidgetSwitcher);
 	}
 

@@ -74,8 +74,19 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 				WidgetToPatch = MainWidget = IWidgetOwner::NewWidget<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
 				MainWidget->AddChild(OldRootWidget);
 			}
-			else if (MainWidget->GetName() != GetUniqueName())
+			else
 			{
+				UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+				UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UWidgetSwitcher>(GetUniqueName()) : nullptr;
+				if (ClassOverride && MainWidget->GetClass() != ClassOverride)
+				{
+					UWidgetSwitcher* NewSwitcher = IWidgetOwner::NewWidget<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName(), ClassOverride);
+					while (MainWidget->GetChildrenCount() > 0)
+					{
+						NewSwitcher->AddChild(MainWidget->GetChildAt(0));
+					}
+					WidgetToPatch = MainWidget = NewSwitcher;
+				}
 				IWidgetOwner::TryRenameWidget(GetUniqueName(), MainWidget);
 			}
 
@@ -107,8 +118,19 @@ TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> Wid
 		{
 			WidgetToPatch = MainWidget = IWidgetOwner::NewWidget<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName());
 		}
-		else if (MainWidget->GetName() != GetUniqueName())
+		else
 		{
+			UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+			UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UWidgetSwitcher>(GetUniqueName()) : nullptr;
+			if (ClassOverride && MainWidget->GetClass() != ClassOverride)
+			{
+				UWidgetSwitcher* NewSwitcher = IWidgetOwner::NewWidget<UWidgetSwitcher>(GetAssetOuter(), *GetUniqueName(), ClassOverride);
+				while (MainWidget->GetChildrenCount() > 0)
+				{
+					NewSwitcher->AddChild(MainWidget->GetChildAt(0));
+				}
+				WidgetToPatch = MainWidget = NewSwitcher;
+			}
 			IWidgetOwner::TryRenameWidget(GetUniqueName(), MainWidget);
 		}
 

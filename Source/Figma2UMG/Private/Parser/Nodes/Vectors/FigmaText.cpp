@@ -45,10 +45,14 @@ TObjectPtr<UWidget> UFigmaText::Patch(TObjectPtr<UWidget> WidgetToPatch)
 	Builder.TextBlock = Cast<UTextBlock>(WidgetToPatch);
 	if (Builder.TextBlock)
 	{
-		if (Builder.TextBlock->GetName() != GetUniqueName())
+		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UTextBlock>(GetUniqueName()) : nullptr;
+		if (ClassOverride && Builder.TextBlock->GetClass() != ClassOverride)
 		{
-			IWidgetOwner::TryRenameWidget(GetUniqueName(), Builder.TextBlock);
+			Builder.TextBlock = IWidgetOwner::NewWidget<UTextBlock>(ParentNode->GetAssetOuter(), *GetUniqueName(), ClassOverride);
 		}
+
+		IWidgetOwner::TryRenameWidget(GetUniqueName(), Builder.TextBlock);
 	}
 	else
 	{

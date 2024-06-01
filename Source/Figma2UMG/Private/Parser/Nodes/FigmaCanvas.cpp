@@ -13,12 +13,22 @@ void UFigmaCanvas::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 
 TObjectPtr<UWidget> UFigmaCanvas::Patch(TObjectPtr<UWidget> WidgetToPatch)
 {
-	Canvas = nullptr;
-	if (WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
+	Canvas = Cast<UCanvasPanel>(WidgetToPatch);
+	if (Canvas)
 	{
+		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UCanvasPanel>(GetUniqueName()) : nullptr;
+		if (ClassOverride && Canvas->GetClass() != ClassOverride)
+		{
+			UCanvasPanel* NewCanvas = IWidgetOwner::NewWidget<UCanvasPanel>(GetAssetOuter(), *GetUniqueName(), ClassOverride);
+			while (Canvas->GetChildrenCount() > 0)
+			{
+				NewCanvas->AddChild(Canvas->GetChildAt(0));
+			}
+			Canvas = NewCanvas;
+		}
 		IWidgetOwner::TryRenameWidget(GetUniqueName(), WidgetToPatch);
 		UE_LOG_Figma2UMG(Display, TEXT("%s Patching Canvas "), *GetUniqueName());
-		Canvas = Cast<UCanvasPanel>(WidgetToPatch);
 	}
 	else
 	{
