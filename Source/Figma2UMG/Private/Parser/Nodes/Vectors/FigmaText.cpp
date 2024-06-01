@@ -182,7 +182,7 @@ void UFigmaText::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 				return;
 			}
 
-			WidgetBlueprintBuilder::PatchTextBind(WidgetBP, TextBlock, *PropertyReference.Value);
+			WidgetBlueprintHelper::PatchTextBind(WidgetBP, TextBlock, *PropertyReference.Value);
 			return;
 		}
 		else

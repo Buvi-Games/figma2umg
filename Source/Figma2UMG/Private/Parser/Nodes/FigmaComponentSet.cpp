@@ -488,7 +488,7 @@ void UFigmaComponentSet::PatchInitFunction(const TPair< FString, FFigmaComponent
 
 	FString PropertyName = PropertyDefinition.Key;
 	FString FunctionName = "Init" + PropertyName;
-	WidgetBlueprintBuilder::CallFunctionFromEventNode(GetAsset<UWidgetBlueprint>(), "PreConstruct", FunctionName);
+	WidgetBlueprintHelper::CallFunctionFromEventNode(GetAsset<UWidgetBlueprint>(), "PreConstruct", FunctionName);
 
 	const TObjectPtr<UWidgetBlueprint> WidgetBP = GetAsset<UWidgetBlueprint>();
 	if (!WidgetBP)
@@ -508,7 +508,7 @@ void UFigmaComponentSet::PatchInitFunction(const TPair< FString, FFigmaComponent
 		if (!Switcher)
 			continue;
 
-		WidgetBlueprintBuilder::PatchInitFunction(WidgetBP, Switcher, PropertyName);
+		WidgetBlueprintHelper::PatchInitFunction(WidgetBP, Switcher, PropertyName);
 		Patched = true;
 	}
 
