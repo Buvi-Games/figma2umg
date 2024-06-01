@@ -3,7 +3,8 @@
 
 #include "AssetBuilder.h"
 
-void UAssetBuilder::SetNode(const TObjectPtr<UFigmaNode>& InNode)
+void IAssetBuilder::SetNode(const FString& InFileKey, const UFigmaNode* InNode)
 {
+	FileKey = InFileKey;
 	Node = InNode;
 }

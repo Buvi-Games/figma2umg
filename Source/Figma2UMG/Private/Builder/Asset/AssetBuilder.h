@@ -5,16 +5,29 @@
 #include "CoreMinimal.h"
 #include "AssetBuilder.generated.h"
 
+class UFigmaFile;
 class UFigmaNode;
 
-UCLASS()
-class UAssetBuilder : public UObject
+UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
+class FIGMA2UMG_API UAssetBuilder : public UInterface
 {
 	GENERATED_BODY()
+};
 
-	virtual void SetNode(const TObjectPtr<UFigmaNode>& InNode);
+class FIGMA2UMG_API IAssetBuilder
+{
+	GENERATED_BODY()
+public:
+	UFUNCTION()
+	virtual void SetNode(const FString& InFileKey, const UFigmaNode* InNode);
+
+	UFUNCTION()
+	virtual void LoadOrCreateAssets() = 0;
+
+	UFUNCTION()
+	virtual void LoadAssets() = 0;
 
 protected:
-	UPROPERTY()
-	TObjectPtr<UFigmaNode> Node = nullptr;
+	FString FileKey;
+	const UFigmaNode* Node = nullptr;
 };

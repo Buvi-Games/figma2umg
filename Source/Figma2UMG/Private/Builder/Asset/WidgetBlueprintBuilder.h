@@ -9,12 +9,14 @@
 class UWidgetBlueprint;
 
 UCLASS()
-class UWidgetBlueprintBuilder : public UAssetBuilder
+class UWidgetBlueprintBuilder : public UObject, public IAssetBuilder
 {
-public:
 	GENERATED_BODY()
+public:
+	virtual void LoadOrCreateAssets() override;
+	virtual void LoadAssets() override;
 
 protected:
 	UPROPERTY()
-	TObjectPtr<UWidgetBlueprint> Widget = nullptr;
+	TObjectPtr<UWidgetBlueprint> Asset = nullptr;
 };

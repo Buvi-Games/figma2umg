@@ -9,10 +9,14 @@
 class UBorder;
 
 UCLASS()
-class UTexture2DBuilder : public UAssetBuilder
+class UTexture2DBuilder : public UObject, public IAssetBuilder
 {
-public:
 	GENERATED_BODY()
+public:
+	virtual void LoadOrCreateAssets() override;
+	virtual void LoadAssets() override;
 
 protected:
+	UPROPERTY()
+	TObjectPtr<UTexture2D> Asset = nullptr;
 };
