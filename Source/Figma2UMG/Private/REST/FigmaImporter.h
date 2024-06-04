@@ -82,6 +82,7 @@ protected:
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
 	bool UsePrototypeFlow = false;
+	bool TestNewParserProcess = false;
 
 	UPROPERTY()
 	TObjectPtr<UFigmaFile> File = nullptr;
