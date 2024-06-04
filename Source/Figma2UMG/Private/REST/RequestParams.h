@@ -30,9 +30,10 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Implement the prototype flow."))
 	bool UsePrototypeFlow = true;
 
+	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Rules to override the widgets by custom ones."))
+	FClassOverrides WidgetOverrides;
+
 	UPROPERTY(EditAnywhere, meta = (Category = "Unreal", ToolTip = "Local folder where the UAssets will be created. eg '/Game/MyFolder'"))
 	FString ContentRootFolder;
 
-	UPROPERTY(EditAnywhere, meta = (Category = "Unreal", ToolTip = "Rules to override the widgets by custom ones."))
-	FClassOverrides WidgetOverrides;
 };
