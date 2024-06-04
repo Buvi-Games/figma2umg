@@ -39,6 +39,7 @@ public:
 	void PrepareForFlow();
 	void FixComponentSetRef();
 	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
+	void CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate);
 	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
 	void BuildImageDependency(FImageRequests& ImageRequests);
 	void Patch(const FProcessFinishedDelegate& ProcessDelegate, FScopedSlowTask* Progress);
@@ -63,6 +64,8 @@ protected:
 	void AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPair<FString, TObjectPtr<UFigmaFile>>& LibraryFile, TObjectPtr<UFigmaComponent> Component, TMap<FString, FFigmaComponentRef>& PendingComponents);
 	void AddRemoteComponentSet(FFigmaComponentSetRef& ComponentSetRef, const TPair<FString, TObjectPtr<UFigmaFile>>& LibraryFile, TObjectPtr<UFigmaComponentSet> ComponentSet, TMap<FString, FFigmaComponentRef>& PendingComponents, TMap<FString, FFigmaComponentSetRef>& PendingComponentSets);
 	void ExecuteDelegate(const bool Succeeded);
+
+	void CreateAssetBuilder(UFigmaNode& Node);
 
 	void PatchPreInsertWidget();
 	bool PatchPostInsertWidget();

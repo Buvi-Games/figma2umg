@@ -243,9 +243,15 @@ void UFigmaFile::FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<
 	}
 }
 
-void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate)
+void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate)
 {
 	CurrentProcessDelegate = ProcessDelegate;
+	if (!UseNewBuilders)
+	{
+		ExecuteDelegate(true);
+		return;
+	}
+
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
 			for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
@@ -256,22 +262,15 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 				TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
 				if (ComponentSet)
 				{
-					if (UseNewBuilders)
+					IAssetBuilder* AssetBuilder = ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey);
+					if (AssetBuilder != nullptr)
 					{
-						IAssetBuilder* AssetBuilder = ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey);
-						if (AssetBuilder != nullptr)
-						{
-							AssetBuilders.Add(AssetBuilder);
-							AssetBuilder->LoadOrCreateAssets();
-						}
-						else
-						{
-							UE_LOG_Figma2UMG(Warning, TEXT("[Asset] ComponentSet %s Id %s failed to return a AssetBuilder"), *ComponentSet->GetNodeName(), *ComponentSet->GetIdForName());
-						}
+						AssetBuilders.Add(AssetBuilder);
+						AssetBuilder->LoadOrCreateAssets();
 					}
 					else
 					{
-						ComponentSet->LoadOrCreateAssets();
+						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] ComponentSet %s Id %s failed to return a AssetBuilder"), *ComponentSet->GetNodeName(), *ComponentSet->GetIdForName());
 					}
 				}
 			}
@@ -284,44 +283,83 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 				TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
 				if (Component)
 				{
-					if (UseNewBuilders)
+					IAssetBuilder* AssetBuilder = Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey);
+					if (AssetBuilder != nullptr)
 					{
-						IAssetBuilder* AssetBuilder = Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey);
-						if (AssetBuilder != nullptr)
-						{
-							AssetBuilders.Add(AssetBuilder);
-							AssetBuilder->LoadOrCreateAssets();
-						}
-						else
-						{
-							UE_LOG_Figma2UMG(Warning, TEXT("[Asset] Component %s Id %s failed to return a AssetBuilder"), *Component->GetNodeName(), *Component->GetIdForName());
-						}
+						AssetBuilders.Add(AssetBuilder);
+						AssetBuilder->LoadOrCreateAssets();
 					}
 					else
 					{
-						Component->LoadOrCreateAssets();
+						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] Component %s Id %s failed to return a AssetBuilder"), *Component->GetNodeName(), *Component->GetIdForName());
 					}
 				}
 			}
 
 			if (Document)
 			{
-				if (UseNewBuilders)
+				Document->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([this](UFigmaNode& Node, const int Index)
+					{
+						CreateAssetBuilder(Node);
+					}));
+
+				ExecuteDelegate(true);
+			}
+			else
+			{
+				ExecuteDelegate(false);
+			}
+		});
+}
+
+void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate)
+{
+	CurrentProcessDelegate = ProcessDelegate;
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			if (UseNewBuilders)
+			{
+				for (IAssetBuilder* AssetBuilder : AssetBuilders)
 				{
-					Document->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([this](UFigmaNode& Node, const int Index)
-						{
-							IAssetBuilder* AssetBuilder = Node.CreateAssetBuilder(FileKey);
-							if (AssetBuilder != nullptr)
-							{
-								AssetBuilders.Add(AssetBuilder);
-								if (!Cast<UTexture2DBuilder>(AssetBuilder))
-								{
-									AssetBuilder->LoadOrCreateAssets();
-								}
-							}
-						}));
+					AssetBuilder->LoadOrCreateAssets();
+				}
+
+				if (Document)
+				{
+					ExecuteDelegate(true);
 				}
 				else
+				{
+					ExecuteDelegate(false);
+				}
+			}
+			else
+			{
+				for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+				{
+					if (!ComponentSetPair.Value.Remote)
+						continue;
+
+					TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
+					if (ComponentSet)
+					{
+						ComponentSet->LoadOrCreateAssets();
+					}
+				}
+
+				for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
+				{
+					if (!ComponentPair.Value.Remote)
+						continue;
+
+					TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
+					if (Component)
+					{
+						Component->LoadOrCreateAssets();
+					}
+				}
+
+				if (Document)
 				{
 					TArray<IFigmaFileHandle*> AllFiles;
 					AllFiles.Add(Document);
@@ -332,13 +370,13 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 					{
 						FileNode->LoadOrCreateAssets();
 					}
-				}
 
-				ExecuteDelegate(true);
-			}
-			else
-			{
-				ExecuteDelegate(false);
+					ExecuteDelegate(true);
+				}
+				else
+				{
+					ExecuteDelegate(false);
+				}
 			}
 		});
 }
@@ -396,6 +434,12 @@ void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate, FScopedS
 	AsyncTask(ENamedThreads::GameThread, [this, Progress]()
 		{
 			FGCScopeGuard GCScopeGuard;
+
+			if (UseNewBuilders)
+			{
+				ExecuteDelegate(true);
+				return;
+			}
 
 			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
 			PatchPreInsertWidget();
@@ -560,6 +604,27 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	if (CurrentProcessDelegate.ExecuteIfBound(Succeeded))
 	{
 //		CurrentProcessDelegate.Unbind();
+	}
+}
+
+void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node)
+{
+	IAssetBuilder* AssetBuilder = Node.CreateAssetBuilder(FileKey);
+	if (AssetBuilder != nullptr)
+	{
+		AssetBuilders.Add(AssetBuilder);
+		if (!Cast<UTexture2DBuilder>(AssetBuilder))
+		{
+			AssetBuilder->LoadOrCreateAssets();
+		}
+	}
+
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(&Node))
+	{
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([this](UFigmaNode& Node, const int Index)
+			{
+				CreateAssetBuilder(Node);
+			}));
 	}
 }
 

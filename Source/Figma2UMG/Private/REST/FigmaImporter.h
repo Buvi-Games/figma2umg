@@ -44,6 +44,15 @@ protected:
 	void DownloadNextDependency();
 
 	UFUNCTION()
+	void FixReferences();
+
+	UFUNCTION()
+	void OnBuildersCreated(bool Succeeded);
+
+	UFUNCTION()
+	void BuildImageDependency ();
+
+	UFUNCTION()
 	void OnAssetsCreated(bool Succeeded);
 
 	void RequestImageURLs();
@@ -64,6 +73,7 @@ protected:
 
 	FVaRestCallDelegate OnVaRestLibraryFileRequestDelegate;
 	FVaRestCallDelegate OnVaRestFileRequestDelegate;
+	FProcessFinishedDelegate OnBuildersCreatedDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
 	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;

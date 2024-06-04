@@ -16,6 +16,7 @@ UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 {
 	OnVaRestFileRequestDelegate.BindUFunction(this, FName("OnFigmaFileRequestReceived"));
 	OnVaRestLibraryFileRequestDelegate.BindUFunction(this, FName("OnFigmaLibraryFileRequestReceived"));
+	OnBuildersCreatedDelegate.BindUObject(this, &UFigmaImporter::OnBuildersCreated);
 	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
 	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
 	OnImageDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleImageDownload);
@@ -47,12 +48,13 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 	RequesterCallback = InRequesterCallback;
 
 	UsePrototypeFlow = InProperties->UsePrototypeFlow;
+	TestNewParserProcess = InProperties->TestNewParserProcess;
 }
 
 
 void UFigmaImporter::Run()
 {
-	int WorkCount = (LibraryFileKeys.Num() * 3/*Request, Parse, PostSerialization*/) + 4;//Request, Parse, PostSerialization, Fix
+	int WorkCount = (LibraryFileKeys.Num() * 3/*Request, Parse, PostSerialization*/) + 3/*Request, Parse, PostSerialization*/ + 3;//Fix, Builders, ImageDependency
 	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
 	Progress->MakeDialog();
 	if(LibraryFileKeys.IsEmpty())
@@ -177,7 +179,7 @@ void UFigmaImporter::UpdateProgress(float ExpectedWorkThisFrame, const FText& Me
 
 void UFigmaImporter::UpdateProgressGameThread()
 {
-	const float WorkRemaining = Progress->TotalAmountOfWork - (Progress->CompletedWork + Progress->CurrentFrameScope);
+	const float WorkRemaining = Progress ? (Progress->TotalAmountOfWork - (Progress->CompletedWork + Progress->CurrentFrameScope)) : 0.0f;
 	if (Progress && ProgressThisFrame > 0.0f)
 	{
 		Progress->EnterProgressFrame(ProgressThisFrame, ProgressMessage);
@@ -187,9 +189,12 @@ void UFigmaImporter::UpdateProgressGameThread()
 
 void UFigmaImporter::ResetProgressBar()
 {
-	delete Progress;
-	Progress = nullptr;
-	ProgressThisFrame = 0.0f;
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			delete Progress;
+			Progress = nullptr;
+			ProgressThisFrame = 0.0f;
+		});
 }
 
 void UFigmaImporter::OnCurrentRequestComplete(UVaRestRequestJSON* Request)
@@ -264,88 +269,6 @@ bool UFigmaImporter::ParseRequestReceived(FString MessagePrefix, UVaRestRequestJ
 	return false;
 }
 
-void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
-{
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ParseFile", "Parsing Design File."));
-	if (ParseRequestReceived(TEXT("[Figma file request] "), Request))
-	{
-		UVaRestJsonObject* responseJson = Request->GetResponseObject();
-		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
-
-		static FString NameStr("Name");
-		const FString FigmaFilename = JsonObj->GetStringField(NameStr);
-		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
-		const FString RawText = Request->GetResponseContentAsString(false);
-		FFileHelper::SaveStringToFile(RawText, *FullFilename);
-
-		File = NewObject<UFigmaFile>();
-
-		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj]()
-			{
-				constexpr int64 CheckFlags = 0;
-				constexpr int64 SkipFlags = 0;
-				constexpr bool StrictMode = false;
-				FText OutFailReason;
-				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
-				{
-					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
-					UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeFile", "PostSerialize Design File."));
-					File->PostSerialize(FileKey, ContentRootFolder, JsonObj);
-
-					if (UsePrototypeFlow)
-					{
-						File->PrepareForFlow();
-					}
-
-					for (TPair<FString, TObjectPtr<UFigmaFile>> LibPair : LibraryFileKeys)
-					{
-						LibPair.Value->FixComponentSetRef();
-					}
-
-					File->FixComponentSetRef();
-
-					if (LibraryFileKeys.Num() > 0)
-					{
-						UE_LOG_Figma2UMG(Display, TEXT("Fix Remote References"));
-						File->FixRemoteReferences(LibraryFileKeys);
-					}
-
-					if (File->UseNewBuilders)
-					{
-						UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
-						UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]"));
-						RequestedImages.Reset();
-						File->BuildImageDependency(RequestedImages);
-
-						ResetProgressBar();
-						if (const FImagePerFileRequests* Requests = RequestedImages.GetRequests())
-						{
-							RequestImageURLs();
-						}
-						else
-						{
-
-							Progress = new FScopedSlowTask(7, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
-							Progress->MakeDialog();
-							UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
-							File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
-						}
-					}
-					else
-					{
-						UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets."));
-						UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
-						File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
-					}
-				}
-				else
-				{
-					UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
-				}
-			});
-	}
-}
-
 void UFigmaImporter::DownloadNextDependency()
 {
 	for (TPair<FString, TObjectPtr<UFigmaFile>> Lib : LibraryFileKeys)
@@ -410,74 +333,136 @@ void UFigmaImporter::OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Reque
 	}
 }
 
-void UFigmaImporter::OnAssetsCreated(bool Succeeded)
+void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 {
-	if(!Succeeded)
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ParseFile", "Parsing Design File."));
+	if (ParseRequestReceived(TEXT("[Figma file request] "), Request))
 	{
-		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to create UAssets."));
-		return;
+		UVaRestJsonObject* responseJson = Request->GetResponseObject();
+		const TSharedRef<FJsonObject> JsonObj = responseJson->GetRootObject();
+
+		static FString NameStr("Name");
+		const FString FigmaFilename = JsonObj->GetStringField(NameStr);
+		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/") + FigmaFilename + TEXT("/") + FigmaFilename + TEXT(".figma");
+		const FString RawText = Request->GetResponseContentAsString(false);
+		FFileHelper::SaveStringToFile(RawText, *FullFilename);
+
+		File = NewObject<UFigmaFile>();
+		File->UseNewBuilders = TestNewParserProcess;
+
+		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj]()
+			{
+				constexpr int64 CheckFlags = 0;
+				constexpr int64 SkipFlags = 0;
+				constexpr bool StrictMode = false;
+				FText OutFailReason;
+				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj, File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+				{
+					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
+					UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeFile", "PostSerialize Design File."));
+					File->PostSerialize(FileKey, ContentRootFolder, JsonObj);
+
+					FixReferences();
+				}
+				else
+				{
+					UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
+				}
+			});
 	}
+}
 
-	if (File->UseNewBuilders)
+void UFigmaImporter::FixReferences()
+{
+	AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
+		{
+			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_FixRefs", "Fixing component references."));
+			if (UsePrototypeFlow)
+			{
+				File->PrepareForFlow();
+			}
+
+			for (TPair<FString, TObjectPtr<UFigmaFile>> LibPair : LibraryFileKeys)
+			{
+				LibPair.Value->FixComponentSetRef();
+			}
+
+			File->FixComponentSetRef();
+
+			if (LibraryFileKeys.Num() > 0)
+			{
+				UE_LOG_Figma2UMG(Display, TEXT("Fix Remote References"));
+				File->FixRemoteReferences(LibraryFileKeys);
+			}
+
+			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_FixRefs", "Creating Builders."));
+			File->CreateAssetBuilders(OnBuildersCreatedDelegate);
+		});
+}
+
+void UFigmaImporter::OnBuildersCreated(bool Succeeded)
+{
+	if (Succeeded)
 	{
-		ResetProgressBar();
-		Progress = new FScopedSlowTask(7, NSLOCTEXT("Figma2UMG", "Figma2UMG_Patch", "Patching Widgets"));
-		Progress->MakeDialog();
-
-		UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
-		File->Patch(OnPatchUAssetsDelegate, Progress);
+		BuildImageDependency();
 	}
 	else
 	{
-		UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
-		UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]"));
-		RequestedImages.Reset();
-		File->BuildImageDependency(RequestedImages);
-
-		ResetProgressBar();
-		if (const FImagePerFileRequests* Requests = RequestedImages.GetRequests())
-		{
-			RequestImageURLs();
-		}
-		else
-		{
-			Progress = new FScopedSlowTask(7, NSLOCTEXT("Figma2UMG", "Figma2UMG_Patch", "Patching Widgets"));
-			Progress->MakeDialog();
-
-			UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
-			File->Patch(OnPatchUAssetsDelegate, Progress);
-		}
+		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to create builders."));
 	}
+}
+
+void UFigmaImporter::BuildImageDependency()
+{
+	AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
+		{
+			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
+			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]"));
+			RequestedImages.Reset();
+			File->BuildImageDependency(RequestedImages);
+
+			RequestImageURLs();
+		});
 }
 
 void UFigmaImporter::RequestImageURLs()
 {
-	ResetProgressBar();
-	const FImagePerFileRequests* Requests = RequestedImages.GetRequests();
-	if (Requests)
-	{
-		Progress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
-		Progress->MakeDialog();
-		UpdateProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageRequest", "Requesting Image."));
-		FString ImageIdsFormated = Requests->Requests[0].Id;
-		for (int i = 1; i < Requests->Requests.Num(); i++)
+	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			ImageIdsFormated += "," + Requests->Requests[i].Id;
-		}
+			if (Progress)
+			{
+				delete Progress;
+				Progress = nullptr;
+				ProgressThisFrame = 0.0f;
+			}
 
-		//Todo: Manage images from Libs
-		if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
-		{
-			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
-		}
-	}
-	else
-	{
-		Progress = new FScopedSlowTask(7, NSLOCTEXT("Figma2UMG", "Figma2UMG_Patch", "Patching Widgets"));
-		Progress->MakeDialog();
-		UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
-		File->Patch(OnPatchUAssetsDelegate, Progress);
-	}
+			const FImagePerFileRequests* Requests = RequestedImages.GetRequests();
+			if (Requests)
+			{
+				Progress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
+				Progress->MakeDialog();
+				UpdateProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageRequest", "Requesting Image."));
+				FString ImageIdsFormated = Requests->Requests[0].Id;
+				for (int i = 1; i < Requests->Requests.Num(); i++)
+				{
+					ImageIdsFormated += "," + Requests->Requests[i].Id;
+				}
+
+				//Todo: Manage images from Libs
+				if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
+				{
+					UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
+				}
+			}
+			else
+			{
+				constexpr float WorkCount = 8.0f; //Load/Create, Patch(PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
+				Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
+				Progress->MakeDialog();
+				UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
+				File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
+			}
+		});
 }
 
 void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
@@ -533,6 +518,18 @@ void UFigmaImporter::HandleImageDownload(bool Succeeded)
 	{
 		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to download Image."));
 	}
+}
+
+void UFigmaImporter::OnAssetsCreated(bool Succeeded)
+{
+	if (!Succeeded)
+	{
+		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to create UAssets."));
+		return;
+	}
+
+	UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
+	File->Patch(OnPatchUAssetsDelegate, Progress);
 }
 
 void UFigmaImporter::OnPatchUAssets(bool Succeeded)
