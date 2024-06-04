@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "REST/FigmaImporter.h"
 
+class IDetailsView;
 class SGridPanel;
 
 class SImporterWidget : public SCompoundWidget, public FNotifyHook
