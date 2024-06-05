@@ -50,6 +50,11 @@ FString UFigmaNode::GetUniqueName() const
 	return Name + "--" + GetIdForName();
 }
 
+FString UFigmaNode::GetUAssetName() const
+{
+	return GetUniqueName();
+}
+
 ESlateVisibility UFigmaNode::GetVisibility() const
 {
 	return Visible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed;

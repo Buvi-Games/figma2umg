@@ -24,6 +24,7 @@ public:
 	virtual void PrePatchWidget() override;
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
+	virtual FString GetUAssetName() const override;
 
 	// IFigmaFileHandle
 	virtual FString GetPackagePath() const override;

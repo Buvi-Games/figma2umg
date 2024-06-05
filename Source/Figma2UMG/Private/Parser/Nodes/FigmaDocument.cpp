@@ -169,3 +169,7 @@ void UFigmaDocument::SetWidget(TObjectPtr<UWidget> Widget)
 		Super::SetWidget(WidgetBP->WidgetTree->RootWidget);
 	}
 }
+FString UFigmaDocument::GetUAssetName() const
+{
+	return FigmaFile ? FigmaFile->GetFileName() : FString();
+}
