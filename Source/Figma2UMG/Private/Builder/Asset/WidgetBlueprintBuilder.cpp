@@ -20,7 +20,7 @@ void UWidgetBlueprintBuilder::LoadOrCreateAssets()
 	if (WidgetAsset == nullptr)
 	{
 		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
-		const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUniqueName(), INVALID_OBJECTNAME_CHARACTERS);
+		const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 
 		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
@@ -54,7 +54,7 @@ void UWidgetBlueprintBuilder::LoadOrCreateAssets()
 void UWidgetBlueprintBuilder::LoadAssets()
 {
 	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
-	const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUniqueName(), INVALID_OBJECTNAME_CHARACTERS);
+	const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
