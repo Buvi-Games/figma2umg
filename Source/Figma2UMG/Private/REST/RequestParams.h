@@ -37,6 +37,6 @@ public:
 	FString ContentRootFolder;
 
 	UPROPERTY(EditAnywhere, meta = (Category = "Proto", ToolTip = "Local folder where the UAssets will be created. eg '/Game/MyFolder'"))
-	bool TestNewParserProcess = false;
+	bool TestNewParserProcess = true;
 
 };
