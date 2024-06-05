@@ -574,8 +574,113 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 		return;
 	}
 
+	PatchAssets();
+}
+
+void UFigmaImporter::PatchAssets()
+{
 	UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
-	File->Patch(OnPatchUAssetsDelegate, Progress);
+	if (AssetBuilders.IsEmpty())
+	{
+		File->Patch(OnPatchUAssetsDelegate, Progress);
+	}
+	else
+	{
+		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_CreateWidgetBuilders", "Creating UWidget Builders"));
+		CreateWidgetBuilders();
+
+		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
+		PatchPreInsertWidget();
+
+		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PostInsert Widgets"));
+		if (PatchPostInsertWidget())
+		{
+			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
+			CompileBPs();
+
+			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
+			ReloadBPAssets();
+
+			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
+			PatchWidgetBinds();
+
+			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
+			PatchWidgetProperties();
+
+			UFigmaImporter::OnPatchUAssets(true);
+		}
+		else
+		{
+			UFigmaImporter::OnPatchUAssets(false);
+		}
+	}
+}
+
+void UFigmaImporter::CreateWidgetBuilders()
+{
+	FGCScopeGuard GCScopeGuard;
+	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	{
+		//AssetBuilder->CreateWidgetBuilders();
+	}
+}
+
+void UFigmaImporter::PatchPreInsertWidget()
+{
+	FGCScopeGuard GCScopeGuard;
+	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	{
+		//AssetBuilder->CreateWidgetBuilders();
+	}
+}
+
+bool UFigmaImporter::PatchPostInsertWidget()
+{
+	bool Success = true;
+
+	FGCScopeGuard GCScopeGuard;
+	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	{
+		//AssetBuilder->CreateWidgetBuilders();
+	}
+
+	return Success;
+}
+
+void UFigmaImporter::CompileBPs()
+{
+	FGCScopeGuard GCScopeGuard;
+	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	{
+		//AssetBuilder->CreateWidgetBuilders();
+	}
+}
+
+void UFigmaImporter::ReloadBPAssets()
+{
+	FGCScopeGuard GCScopeGuard;
+	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	{
+		//AssetBuilder->CreateWidgetBuilders();
+	}
+}
+
+void UFigmaImporter::PatchWidgetBinds()
+{
+	FGCScopeGuard GCScopeGuard;
+	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	{
+		//AssetBuilder->CreateWidgetBuilders();
+	}
+}
+
+void UFigmaImporter::PatchWidgetProperties()
+{
+	FGCScopeGuard GCScopeGuard;
+	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	{
+		//AssetBuilder->CreateWidgetBuilders();
+	}
 }
 
 void UFigmaImporter::OnPatchUAssets(bool Succeeded)

@@ -70,11 +70,29 @@ protected:
 	UFUNCTION()
 	void OnAssetsCreated(bool Succeeded);
 
+	UFUNCTION()
+	void PatchAssets();
 
 	UFUNCTION()
-
+	void CreateWidgetBuilders();
 
 	UFUNCTION()
+	void PatchPreInsertWidget();
+
+	UFUNCTION()
+	bool PatchPostInsertWidget();
+
+	UFUNCTION()
+	void CompileBPs();
+
+	UFUNCTION()
+	void ReloadBPAssets();
+
+	UFUNCTION()
+	void PatchWidgetBinds();
+
+	UFUNCTION()
+	void PatchWidgetProperties();
 
 	UFUNCTION()
 	void OnPatchUAssets(bool Succeeded);
