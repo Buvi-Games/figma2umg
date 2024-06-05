@@ -128,7 +128,20 @@ void UWidgetBlueprintBuilder::PatchPreInsertWidget()
 		UE_LOG_Figma2UMG(Error, TEXT("[PatchPreInsertWidget] Missing Blueprint for node %s."), *Node->GetNodeName());
 		return;
 	}
+
+	if (!RootWidgetBuilder)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchPreInsertWidget] Missing Builder for node %s."), *Node->GetNodeName());
+		return;
+	}
+
 	UE_LOG_Figma2UMG(Display, TEXT("[PatchPreInsertWidget] Bluepring %s."), *WidgetBP->GetName());
+	WidgetBP->WidgetTree->RootWidget = RootWidgetBuilder->PatchPreInsertWidget(WidgetBP->WidgetTree, WidgetBP->WidgetTree->RootWidget);
+
+	WidgetBP->WidgetTree->SetFlags(RF_Transactional);
+	WidgetBP->WidgetTree->Modify();
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBP);
 }
 
 bool UWidgetBlueprintBuilder::PatchPostInsertWidget()
