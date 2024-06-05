@@ -297,10 +297,7 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 
 			if (Document)
 			{
-				Document->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([&](UFigmaNode& Node, const int Index)
-					{
-						CreateAssetBuilder(Node, AssetBuilders);
-					}));
+				CreateAssetBuilder(*Document, AssetBuilders);
 
 				ExecuteDelegate(true);
 			}

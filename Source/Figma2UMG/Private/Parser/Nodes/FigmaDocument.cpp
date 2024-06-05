@@ -8,6 +8,7 @@
 
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
+#include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/FigmaFile.h"
 
@@ -169,6 +170,19 @@ void UFigmaDocument::SetWidget(TObjectPtr<UWidget> Widget)
 		Super::SetWidget(WidgetBP->WidgetTree->RootWidget);
 	}
 }
+
+IAssetBuilder* UFigmaDocument::CreateAssetBuilder(const FString& InFileKey)
+{
+	UWidgetBlueprintBuilder* AssetBuilder = NewObject<UWidgetBlueprintBuilder>();
+	AssetBuilder->SetNode(InFileKey, this);
+	return AssetBuilder;
+}
+
+FString UFigmaDocument::GetPackageName() const
+{
+	return GetPackagePath();
+}
+
 FString UFigmaDocument::GetUAssetName() const
 {
 	return FigmaFile ? FigmaFile->GetFileName() : FString();
