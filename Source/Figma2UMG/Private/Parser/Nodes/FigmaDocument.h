@@ -37,6 +37,7 @@ public:
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); }
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
+	virtual const TArray<UFigmaNode*>& GetChildrenConst() const override { return Children; }
 
 	void SetFigmaFile(UFigmaFile* InFigmaFile);
 
