@@ -18,7 +18,7 @@ void IFigmaContainer::ForEach(const FOnEachFunction& Function)
 
 void IFigmaContainer::ForEach(const FOnConstEachFunction& Function) const
 {
-	TArray<const UFigmaNode*>& Children = GetChildrenConst();
+	const TArray<UFigmaNode*>& Children = GetChildrenConst();
 	for (int i = 0; i < Children.Num(); i++)
 	{
 		const UFigmaNode* Child = Children[i];
