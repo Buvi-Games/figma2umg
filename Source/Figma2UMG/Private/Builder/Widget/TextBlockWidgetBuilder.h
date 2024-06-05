@@ -9,7 +9,7 @@
 class UTextBlock;
 
 UCLASS()
-class UTextBlockWidgetBuilder : public UWidgetBuilder
+class UTextBlockWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

@@ -9,7 +9,7 @@
 class USizeBox;
 
 UCLASS()
-class USizeBoxWidgetBuilder : public UWidgetBuilder
+class USizeBoxWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

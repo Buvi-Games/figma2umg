@@ -9,7 +9,7 @@
 class UImage;
 
 UCLASS()
-class UImageWidgetBuilder : public UWidgetBuilder
+class UImageWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

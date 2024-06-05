@@ -7,14 +7,20 @@
 
 class UFigmaNode;
 
-UCLASS()
-class UWidgetBuilder : public UObject
+
+UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
+class FIGMA2UMG_API UWidgetBuilder : public UInterface
+{
+	GENERATED_BODY()
+};
+
+class FIGMA2UMG_API IWidgetBuilder
 {
 	GENERATED_BODY()
 public:
-	void SetNode(const TObjectPtr<UFigmaNode>& InNode);
+	UFUNCTION()
+	virtual void SetNode(const UFigmaNode* InNode);
 
 protected:
-	UPROPERTY()
-	TObjectPtr<UFigmaNode> Node = nullptr;
+	const UFigmaNode* Node = nullptr;
 };

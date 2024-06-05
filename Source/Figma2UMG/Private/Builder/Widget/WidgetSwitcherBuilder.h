@@ -9,7 +9,7 @@
 class UWidgetSwitcher;
 
 UCLASS()
-class UWidgetSwitcherBuilder : public UWidgetBuilder
+class UWidgetSwitcherBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

@@ -3,7 +3,7 @@
 
 #include "WidgetBuilder.h"
 
-void UWidgetBuilder::SetNode(const TObjectPtr<UFigmaNode>& InNode)
+void IWidgetBuilder::SetNode(const UFigmaNode* InNode)
 {
 	Node = InNode;
 }

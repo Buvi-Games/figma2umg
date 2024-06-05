@@ -9,7 +9,7 @@
 class UButton;
 
 UCLASS()
-class UButtonWidgetBuilder : public UWidgetBuilder
+class UButtonWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

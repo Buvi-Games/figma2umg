@@ -9,7 +9,7 @@
 class UBorder;
 
 UCLASS()
-class UBorderWidgetBuilder : public UWidgetBuilder
+class UBorderWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

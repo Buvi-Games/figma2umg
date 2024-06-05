@@ -9,7 +9,7 @@
 class UPanelWidget;
 
 UCLASS()
-class UPanelWidgetBuilder : public UWidgetBuilder
+class UPanelWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()
