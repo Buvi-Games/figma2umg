@@ -40,6 +40,9 @@ public:
 	virtual TArray<UFigmaNode*>& GetChildren() override;
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 
+	UPROPERTY()
+	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
+
 protected:
 	TObjectPtr<UWidget> PatchVariation(TObjectPtr<UWidget> WidgetToPatch);
 	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget);
@@ -47,9 +50,6 @@ protected:
 	void PatchInitFunction(const TPair< FString, FFigmaComponentPropertyDefinition>& PropertyDefinition) const;
 
 	TObjectPtr<UWidgetSwitcher> FindSwitcher(const FString& SwitcherName) const;
-
-	UPROPERTY()
-	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
 
 	TArray<FSwitcherBuilder> SwitchBuilders;
 	TArray<FButtonBuilder> ButtonBuilders;
