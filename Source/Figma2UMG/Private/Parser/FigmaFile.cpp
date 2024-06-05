@@ -243,7 +243,7 @@ void UFigmaFile::FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<
 	}
 }
 
-void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate)
+void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate, TArray<IAssetBuilder*>& AssetBuilders)
 {
 	CurrentProcessDelegate = ProcessDelegate;
 	if (!UseNewBuilders)
@@ -252,8 +252,9 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 		return;
 	}
 
-	AsyncTask(ENamedThreads::GameThread, [this]()
+	AsyncTask(ENamedThreads::GameThread, [&]()
 		{
+			FGCScopeGuard GCScopeGuard;
 			for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
 			{
 				if (!ComponentSetPair.Value.Remote)
@@ -266,7 +267,6 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 					if (AssetBuilder != nullptr)
 					{
 						AssetBuilders.Add(AssetBuilder);
-						AssetBuilder->LoadOrCreateAssets();
 					}
 					else
 					{
@@ -287,7 +287,6 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 					if (AssetBuilder != nullptr)
 					{
 						AssetBuilders.Add(AssetBuilder);
-						AssetBuilder->LoadOrCreateAssets();
 					}
 					else
 					{
@@ -298,9 +297,9 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 
 			if (Document)
 			{
-				Document->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([this](UFigmaNode& Node, const int Index)
+				Document->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([&](UFigmaNode& Node, const int Index)
 					{
-						CreateAssetBuilder(Node);
+						CreateAssetBuilder(Node, AssetBuilders);
 					}));
 
 				ExecuteDelegate(true);
@@ -315,68 +314,56 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate)
 {
 	CurrentProcessDelegate = ProcessDelegate;
+
+	if (UseNewBuilders)
+	{
+		ExecuteDelegate(true);
+		return;
+	}
+
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			if (UseNewBuilders)
+			for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
 			{
-				for (IAssetBuilder* AssetBuilder : AssetBuilders)
+				if (!ComponentSetPair.Value.Remote)
+					continue;
+
+				TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
+				if (ComponentSet)
 				{
-					AssetBuilder->LoadOrCreateAssets();
+					ComponentSet->LoadOrCreateAssets();
+				}
+			}
+
+			for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
+			{
+				if (!ComponentPair.Value.Remote)
+					continue;
+
+				TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
+				if (Component)
+				{
+					Component->LoadOrCreateAssets();
+				}
+			}
+
+			if (Document)
+			{
+				TArray<IFigmaFileHandle*> AllFiles;
+				AllFiles.Add(Document);
+				Document->GetAllChildrenByType(AllFiles);
+
+				FGCScopeGuard GCScopeGuard;
+				for (IFigmaFileHandle* FileNode : AllFiles)
+				{
+					FileNode->LoadOrCreateAssets();
 				}
 
-				if (Document)
-				{
-					ExecuteDelegate(true);
-				}
-				else
-				{
-					ExecuteDelegate(false);
-				}
+				ExecuteDelegate(true);
 			}
 			else
 			{
-				for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
-				{
-					if (!ComponentSetPair.Value.Remote)
-						continue;
-
-					TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
-					if (ComponentSet)
-					{
-						ComponentSet->LoadOrCreateAssets();
-					}
-				}
-
-				for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-				{
-					if (!ComponentPair.Value.Remote)
-						continue;
-
-					TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
-					if (Component)
-					{
-						Component->LoadOrCreateAssets();
-					}
-				}
-
-				if (Document)
-				{
-					TArray<IFigmaFileHandle*> AllFiles;
-					AllFiles.Add(Document);
-					Document->GetAllChildrenByType(AllFiles);
-
-					FGCScopeGuard GCScopeGuard;
-					for (IFigmaFileHandle* FileNode : AllFiles)
-					{
-						FileNode->LoadOrCreateAssets();
-					}
-
-					ExecuteDelegate(true);
-				}
-				else
-				{
-					ExecuteDelegate(false);
-				}
+				ExecuteDelegate(false);
 			}
 		});
 }
@@ -384,47 +371,37 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 void UFigmaFile::BuildImageDependency(FImageRequests& ImageRequests)
 {
 	if(UseNewBuilders)
+		return;
+
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
 	{
-		for (IAssetBuilder* AssetBuilder : AssetBuilders)
+		if (!ComponentPair.Value.Remote)
+			continue;
+
+		if (ComponentPair.Value.RemoteFileKey.IsEmpty())
+			continue;
+
+		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
 		{
-			if (UTexture2DBuilder* Texture2DBuilder = Cast<UTexture2DBuilder>(AssetBuilder))
+			TArray<IFigmaImageRequester*> ComponentImageRequests;
+			Component->GetAllChildrenByType(ComponentImageRequests);
+			for (IFigmaImageRequester* FileNode : ComponentImageRequests)
 			{
-				Texture2DBuilder->AddImageRequest(ImageRequests);
+				FileNode->AddImageRequest(ComponentPair.Value.RemoteFileKey, ImageRequests);
 			}
 		}
 	}
-	else
+
+	TArray<IFigmaImageRequester*> AllImageRequests;
+	if (Document)
 	{
-		for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-		{
-			if (!ComponentPair.Value.Remote)
-				continue;
+		Document->GetAllChildrenByType(AllImageRequests);
+	}
 
-			if (ComponentPair.Value.RemoteFileKey.IsEmpty())
-				continue;
-
-			if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
-			{
-				TArray<IFigmaImageRequester*> ComponentImageRequests;
-				Component->GetAllChildrenByType(ComponentImageRequests);
-				for (IFigmaImageRequester* FileNode : ComponentImageRequests)
-				{
-					FileNode->AddImageRequest(ComponentPair.Value.RemoteFileKey, ImageRequests);
-				}
-			}
-		}
-
-		TArray<IFigmaImageRequester*> AllImageRequests;
-		if (Document)
-		{
-			Document->GetAllChildrenByType(AllImageRequests);
-		}
-
-		FGCScopeGuard GCScopeGuard;
-		for (IFigmaImageRequester* FileNode : AllImageRequests)
-		{
-			FileNode->AddImageRequest(FileKey, ImageRequests);
-		}
+	FGCScopeGuard GCScopeGuard;
+	for (IFigmaImageRequester* FileNode : AllImageRequests)
+	{
+		FileNode->AddImageRequest(FileKey, ImageRequests);
 	}
 }
 
@@ -607,23 +584,19 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	}
 }
 
-void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node)
+void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node, TArray<IAssetBuilder*>& AssetBuilders)
 {
 	IAssetBuilder* AssetBuilder = Node.CreateAssetBuilder(FileKey);
 	if (AssetBuilder != nullptr)
 	{
 		AssetBuilders.Add(AssetBuilder);
-		if (!Cast<UTexture2DBuilder>(AssetBuilder))
-		{
-			AssetBuilder->LoadOrCreateAssets();
-		}
 	}
 
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(&Node))
 	{
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([this](UFigmaNode& Node, const int Index)
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([&](UFigmaNode& ChildNode, const int Index)
 			{
-				CreateAssetBuilder(Node);
+				CreateAssetBuilder(ChildNode, AssetBuilders);
 			}));
 	}
 }

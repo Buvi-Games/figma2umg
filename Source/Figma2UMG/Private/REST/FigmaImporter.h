@@ -53,6 +53,9 @@ protected:
 	void BuildImageDependency ();
 
 	UFUNCTION()
+	void LoadOrCreateAssets();
+
+	UFUNCTION()
 	void OnAssetsCreated(bool Succeeded);
 
 	void RequestImageURLs();
@@ -99,6 +102,9 @@ protected:
 
 	UPROPERTY()
 	TMap<FString, TObjectPtr<UFigmaFile>> LibraryFileKeys;
+
+	UPROPERTY()
+	TArray<IAssetBuilder*> AssetBuilders;
 
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;

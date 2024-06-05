@@ -9,6 +9,8 @@
 #include "JsonObjectConverter.h"
 #include "RequestParams.h"
 #include "Async/Async.h"
+#include "Builder/Asset/AssetBuilder.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 #include "Parser/FigmaFile.h"
 
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
@@ -396,7 +398,7 @@ void UFigmaImporter::FixReferences()
 			}
 
 			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_FixRefs", "Creating Builders."));
-			File->CreateAssetBuilders(OnBuildersCreatedDelegate);
+			File->CreateAssetBuilders(OnBuildersCreatedDelegate, AssetBuilders);
 		});
 }
 
@@ -419,10 +421,49 @@ void UFigmaImporter::BuildImageDependency()
 			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]"));
 			RequestedImages.Reset();
-			File->BuildImageDependency(RequestedImages);
+
+			if (AssetBuilders.IsEmpty())
+			{
+				File->BuildImageDependency(RequestedImages);
+			}
+			else
+			{
+				for (IAssetBuilder* AssetBuilder : AssetBuilders)
+				{
+					if (UTexture2DBuilder* Texture2DBuilder = Cast<UTexture2DBuilder>(AssetBuilder))
+					{
+						Texture2DBuilder->AddImageRequest(RequestedImages);
+					}
+				}
+			}
 
 			RequestImageURLs();
 		});
+}
+
+void UFigmaImporter::LoadOrCreateAssets()
+{
+	constexpr float WorkCount = 8.0f; //Load/Create, Patch(PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
+	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
+	Progress->MakeDialog();
+	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
+	if(AssetBuilders.IsEmpty())
+	{
+		File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
+	}
+	else
+	{
+		AsyncTask(ENamedThreads::GameThread, [this]()
+			{
+				FGCScopeGuard GCScopeGuard;
+				for (IAssetBuilder* AssetBuilder : AssetBuilders)
+				{
+					AssetBuilder->LoadOrCreateAssets();
+				}
+
+				OnAssetsCreated(true);
+			});
+	}
 }
 
 void UFigmaImporter::RequestImageURLs()
@@ -456,11 +497,7 @@ void UFigmaImporter::RequestImageURLs()
 			}
 			else
 			{
-				constexpr float WorkCount = 8.0f; //Load/Create, Patch(PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
-				Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
-				Progress->MakeDialog();
-				UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
-				File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
+				LoadOrCreateAssets();
 			}
 		});
 }
