@@ -2,3 +2,9 @@
 
 
 #include "BorderWidgetBuilder.h"
+
+
+void UBorderWidgetBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
+{
+	SubWidgetBuilder = WidgetBuilder;
+}

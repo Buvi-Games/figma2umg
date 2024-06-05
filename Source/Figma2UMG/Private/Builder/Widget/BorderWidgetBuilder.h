@@ -14,7 +14,12 @@ class UBorderWidgetBuilder : public UObject, public IWidgetBuilder
 public:
 	GENERATED_BODY()
 
+	void SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UBorder> Widget = nullptr;
+
+	UPROPERTY()
+	TScriptInterface<IWidgetBuilder> SubWidgetBuilder = nullptr;
 };

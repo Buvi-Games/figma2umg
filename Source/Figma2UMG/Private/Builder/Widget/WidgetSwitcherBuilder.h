@@ -14,7 +14,12 @@ class UWidgetSwitcherBuilder : public UObject, public IWidgetBuilder
 public:
 	GENERATED_BODY()
 
+	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> Widget = nullptr;
+
+	UPROPERTY()
+	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;
 };

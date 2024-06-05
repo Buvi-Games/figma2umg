@@ -2,3 +2,8 @@
 
 
 #include "PanelWidgetBuilder.h"
+
+void UPanelWidgetBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
+{
+	ChildWidgetBuilders.Add(WidgetBuilder);
+}

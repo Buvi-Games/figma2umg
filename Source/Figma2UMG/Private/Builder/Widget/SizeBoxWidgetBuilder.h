@@ -14,7 +14,12 @@ class USizeBoxWidgetBuilder : public UObject, public IWidgetBuilder
 public:
 	GENERATED_BODY()
 
+	void SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<USizeBox> Widget = nullptr;
+
+	UPROPERTY()
+	TScriptInterface<IWidgetBuilder> SubWidgetBuilder;
 };

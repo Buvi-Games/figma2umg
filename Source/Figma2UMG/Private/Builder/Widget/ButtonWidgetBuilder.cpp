@@ -2,3 +2,9 @@
 
 
 #include "ButtonWidgetBuilder.h"
+
+
+void UButtonWidgetBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
+{
+	SubWidgetBuilder = WidgetBuilder;
+}

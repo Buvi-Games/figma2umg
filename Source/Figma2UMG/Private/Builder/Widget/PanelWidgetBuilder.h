@@ -14,7 +14,12 @@ class UPanelWidgetBuilder : public UObject, public IWidgetBuilder
 public:
 	GENERATED_BODY()
 
+	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UPanelWidget> Widget = nullptr;
+
+	UPROPERTY()
+	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;
 };

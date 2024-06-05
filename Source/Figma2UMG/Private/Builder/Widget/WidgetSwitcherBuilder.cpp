@@ -2,3 +2,9 @@
 
 
 #include "WidgetSwitcherBuilder.h"
+
+
+void UWidgetSwitcherBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
+{
+	ChildWidgetBuilders.Add(WidgetBuilder);
+}
