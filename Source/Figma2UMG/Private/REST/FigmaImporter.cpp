@@ -453,16 +453,13 @@ void UFigmaImporter::LoadOrCreateAssets()
 	}
 	else
 	{
-		AsyncTask(ENamedThreads::GameThread, [this]()
-			{
-				FGCScopeGuard GCScopeGuard;
-				for (IAssetBuilder* AssetBuilder : AssetBuilders)
-				{
-					AssetBuilder->LoadOrCreateAssets();
-				}
+		FGCScopeGuard GCScopeGuard;
+		for (IAssetBuilder* AssetBuilder : AssetBuilders)
+		{
+			AssetBuilder->LoadOrCreateAssets();
+		}
 
-				OnAssetsCreated(true);
-			});
+		OnAssetsCreated(true);
 	}
 }
 
