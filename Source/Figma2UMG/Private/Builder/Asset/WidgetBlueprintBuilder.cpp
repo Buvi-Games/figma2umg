@@ -116,7 +116,8 @@ void UWidgetBlueprintBuilder::CreateWidgetBuilders()
 		UE_LOG_Figma2UMG(Error, TEXT("[CreateWidgetBuilders] Missing Blueprint for node %s."), *Node->GetNodeName());
 		return;
 	}
-	UE_LOG_Figma2UMG(Display, TEXT("[CreateWidgetBuilders] Generating Tree for %s."), *WidgetBP->GetName());
+	UE_LOG_Figma2UMG(Display, TEXT("[CreateWidgetBuilders] Generating Tree for %s."), *WidgetBP->GetName()); \
+	RootWidgetBuilder = Node->CreateWidgetBuilders();
 }
 
 void UWidgetBlueprintBuilder::PatchPreInsertWidget()

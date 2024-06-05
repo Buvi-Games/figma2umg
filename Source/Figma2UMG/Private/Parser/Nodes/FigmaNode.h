@@ -89,6 +89,8 @@ public:
 	//New Builder API
 	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) { return nullptr; }
 	virtual FString GetPackageName() const { return FString(); }
+
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders() const { return nullptr; }
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 

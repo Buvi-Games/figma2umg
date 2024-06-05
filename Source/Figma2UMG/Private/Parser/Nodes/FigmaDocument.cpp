@@ -9,6 +9,8 @@
 #include "WidgetBlueprint.h"
 #include "WidgetBlueprintFactory.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
+#include "Builder/Widget/PanelWidgetBuilder.h"
+#include "Builder/Widget/WidgetSwitcherBuilder.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/FigmaFile.h"
 
@@ -186,4 +188,41 @@ FString UFigmaDocument::GetPackageName() const
 FString UFigmaDocument::GetUAssetName() const
 {
 	return FigmaFile ? FigmaFile->GetFileName() : FString();
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaDocument::CreateWidgetBuilders() const
+{
+	if (Children.Num() > 1)
+	{
+		UWidgetSwitcherBuilder* Builder = NewObject<UWidgetSwitcherBuilder>();
+		Builder->SetNode(this);
+
+		for (UFigmaNode* Child : Children)
+		{
+			if(!Child)
+				continue;
+
+			TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders();
+			if (SubBuilder)
+			{
+				Builder->AddChild(SubBuilder);
+			}
+
+		}
+
+		return Builder;
+	}
+	else if (Children.Num() == 1)
+	{
+		UPanelWidgetBuilder* Builder = NewObject<UPanelWidgetBuilder>();
+		Builder->SetNode(this);
+		TScriptInterface<IWidgetBuilder> SubBuilder = Children[0] ? Children[0]->CreateWidgetBuilders() : nullptr;
+		if (SubBuilder)
+		{
+			Builder->AddChild(SubBuilder);
+		}
+		return Builder;
+	}
+
+	return nullptr;
 }
