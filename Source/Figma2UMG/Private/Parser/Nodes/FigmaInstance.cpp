@@ -43,8 +43,8 @@ IAssetBuilder* UFigmaInstance::CreateAssetBuilder(const FString& InFileKey)
 {
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
-	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
-	IsMissingComponent = ComponentAsset == nullptr;
+	TObjectPtr<UFigmaComponent> FigmaComponent = ComponentRef ? ComponentRef->GetComponent() : nullptr;
+	IsMissingComponent = FigmaComponent == nullptr;
 	if (IsMissingComponent)
 	{
 		//We don't have the Component Asset, import as a Texture as a PlaceHolder
@@ -199,8 +199,8 @@ void UFigmaInstance::AddImageRequest(FString FileKey, FImageRequests& ImageReque
 {
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
-	UWidgetBlueprint* ComponentAsset = ComponentRef ? ComponentRef->GetAsset() : nullptr;
-	IsMissingComponent = ComponentAsset == nullptr;
+	TObjectPtr<UFigmaComponent> FigmaComponent = ComponentRef ? ComponentRef->GetComponent() : nullptr;
+	IsMissingComponent = FigmaComponent == nullptr;
 	if (IsMissingComponent)
 	{
 		//We don't have the Component Asset, import as a Texture as a PlaceHolder
