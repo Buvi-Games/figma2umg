@@ -484,6 +484,8 @@ void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
 			{
 				RequestedImages.SetURL(Element.Key, Element.Value);
 			}
+
+			ImageDownloadCount = 0;
 			DownloadNextImage();
 		}
 		else
@@ -498,8 +500,17 @@ void UFigmaImporter::DownloadNextImage()
 	FImageRequest* ImageRequest = RequestedImages.GetNextToDownload();
 	if (ImageRequest)
 	{
-		UpdateProgress(80 / RequestedImages.GetCurrentRequestTotalCount(), NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDownloading", "Downloading Image."));
-		UE_LOG_Figma2UMG(Display, TEXT("Downloading image %s at %s."), *ImageRequest->ImageName, *ImageRequest->URL);
+		ImageDownloadCount++;
+		const float ImageCountTotal = RequestedImages.GetCurrentRequestTotalCount();
+
+		TArray<FStringFormatArg> args;
+		args.Add(ImageDownloadCount);
+		args.Add(static_cast<int>(ImageCountTotal));
+		FString msg = FString::Format(TEXT("Downloading Image {0} of {1}"), args);
+
+		UpdateProgress(80.f / ImageCountTotal, FText::FromString(msg));
+
+		UE_LOG_Figma2UMG(Display, TEXT("Downloading image (%i/%i) %s at %s."), ImageDownloadCount , static_cast<int>(ImageCountTotal), *ImageRequest->ImageName, *ImageRequest->URL);
 		ImageRequest->StartDownload(OnImageDownloadRequestCompleted);
 	}
 	else

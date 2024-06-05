@@ -107,4 +107,6 @@ protected:
 	FScopedSlowTask* Progress = nullptr;
 	float ProgressThisFrame = 0.0f;
 	FText ProgressMessage;
+
+	int ImageDownloadCount = 0;
 };
