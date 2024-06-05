@@ -8,3 +8,8 @@ void UButtonWidgetBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& Widg
 {
 	SubWidgetBuilder = WidgetBuilder;
 }
+
+TObjectPtr<UWidget> UButtonWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+{
+	return WidgetToPatch;
+}

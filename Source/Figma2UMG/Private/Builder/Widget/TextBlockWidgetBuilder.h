@@ -14,6 +14,8 @@ class UTextBlockWidgetBuilder : public UObject, public IWidgetBuilder
 public:
 	GENERATED_BODY()
 
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UTextBlock> Widget = nullptr;

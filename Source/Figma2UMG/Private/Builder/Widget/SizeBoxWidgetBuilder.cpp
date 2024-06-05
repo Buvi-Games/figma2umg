@@ -8,3 +8,8 @@ void USizeBoxWidgetBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& Wid
 {
 	SubWidgetBuilder = WidgetBuilder;
 }
+
+TObjectPtr<UWidget> USizeBoxWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+{
+	return WidgetToPatch;
+}

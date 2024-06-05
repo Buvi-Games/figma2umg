@@ -16,6 +16,9 @@ public:
 
 	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
 
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+
+
 protected:
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> Widget = nullptr;

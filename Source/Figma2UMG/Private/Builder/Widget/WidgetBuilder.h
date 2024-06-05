@@ -21,6 +21,8 @@ public:
 	UFUNCTION()
 	virtual void SetNode(const UFigmaNode* InNode);
 
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
+
 protected:
 	const UFigmaNode* Node = nullptr;
 };
