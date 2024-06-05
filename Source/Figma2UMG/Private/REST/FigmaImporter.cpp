@@ -441,28 +441,6 @@ void UFigmaImporter::BuildImageDependency()
 		});
 }
 
-void UFigmaImporter::LoadOrCreateAssets()
-{
-	constexpr float WorkCount = 8.0f; //Load/Create, Patch(PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
-	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
-	Progress->MakeDialog();
-	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
-	if(AssetBuilders.IsEmpty())
-	{
-		File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
-	}
-	else
-	{
-		FGCScopeGuard GCScopeGuard;
-		for (IAssetBuilder* AssetBuilder : AssetBuilders)
-		{
-			AssetBuilder->LoadOrCreateAssets();
-		}
-
-		OnAssetsCreated(true);
-	}
-}
-
 void UFigmaImporter::RequestImageURLs()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
@@ -562,6 +540,29 @@ void UFigmaImporter::HandleImageDownload(bool Succeeded)
 	else
 	{
 		UpdateStatus(eRequestStatus::Failed, TEXT("Fail to download Image."));
+	}
+}
+
+void UFigmaImporter::LoadOrCreateAssets()
+{
+	const float WorkCount = File->UseNewBuilders ? 9.0f//Load/Create, Patch(WidgetBuilders, PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
+												 : 8.0f; //Load/Create, Patch(PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
+	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
+	Progress->MakeDialog();
+	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
+	if (AssetBuilders.IsEmpty())
+	{
+		File->LoadOrCreateAssets(OnAssetsCreatedDelegate);
+	}
+	else
+	{
+		FGCScopeGuard GCScopeGuard;
+		for (IAssetBuilder* AssetBuilder : AssetBuilders)
+		{
+			AssetBuilder->LoadOrCreateAssets();
+		}
+
+		OnAssetsCreated(true);
 	}
 }
 

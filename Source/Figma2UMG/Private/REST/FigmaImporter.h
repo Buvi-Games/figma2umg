@@ -53,20 +53,28 @@ protected:
 	void BuildImageDependency ();
 
 	UFUNCTION()
+	void RequestImageURLs();
+
+	UFUNCTION()
+	void DownloadNextImage();
+
+	UFUNCTION()
+	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
+
+	UFUNCTION()
+	void HandleImageDownload(bool Succeeded);
+
+	UFUNCTION()
 	void LoadOrCreateAssets();
 
 	UFUNCTION()
 	void OnAssetsCreated(bool Succeeded);
 
-	void RequestImageURLs();
 
 	UFUNCTION()
-	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
 
-	void DownloadNextImage();
 
 	UFUNCTION()
-	void HandleImageDownload(bool Succeeded);
 
 	UFUNCTION()
 	void OnPatchUAssets(bool Succeeded);
