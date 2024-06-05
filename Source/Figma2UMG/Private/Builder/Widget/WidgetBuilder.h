@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/Widget.h"
 #include "WidgetBuilder.generated.h"
 
 class UFigmaNode;
@@ -20,6 +21,8 @@ class FIGMA2UMG_API IWidgetBuilder
 public:
 	UFUNCTION()
 	virtual void SetNode(const UFigmaNode* InNode);
+
+	TObjectPtr<UWidget> FindNodeWidgetInParent(const TObjectPtr<UPanelWidget>& ParentWidget) const;
 
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
 
