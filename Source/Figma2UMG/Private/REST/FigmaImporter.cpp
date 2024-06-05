@@ -11,6 +11,7 @@
 #include "Async/Async.h"
 #include "Builder/Asset/AssetBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
+#include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Parser/FigmaFile.h"
 
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
@@ -621,7 +622,10 @@ void UFigmaImporter::CreateWidgetBuilders()
 	FGCScopeGuard GCScopeGuard;
 	for (IAssetBuilder* AssetBuilder : AssetBuilders)
 	{
-		//AssetBuilder->CreateWidgetBuilders();
+		if(UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		{
+			BlueprintBuilder->CreateWidgetBuilders();
+		}
 	}
 }
 
@@ -630,7 +634,10 @@ void UFigmaImporter::PatchPreInsertWidget()
 	FGCScopeGuard GCScopeGuard;
 	for (IAssetBuilder* AssetBuilder : AssetBuilders)
 	{
-		//AssetBuilder->CreateWidgetBuilders();
+		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		{
+			BlueprintBuilder->PatchPreInsertWidget();
+		}
 	}
 }
 
@@ -641,7 +648,10 @@ bool UFigmaImporter::PatchPostInsertWidget()
 	FGCScopeGuard GCScopeGuard;
 	for (IAssetBuilder* AssetBuilder : AssetBuilders)
 	{
-		//AssetBuilder->CreateWidgetBuilders();
+		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		{
+			Success &= BlueprintBuilder->PatchPostInsertWidget();
+		}
 	}
 
 	return Success;
@@ -652,7 +662,10 @@ void UFigmaImporter::CompileBPs()
 	FGCScopeGuard GCScopeGuard;
 	for (IAssetBuilder* AssetBuilder : AssetBuilders)
 	{
-		//AssetBuilder->CreateWidgetBuilders();
+		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		{
+			BlueprintBuilder->CompileBP();
+		}
 	}
 }
 
@@ -661,7 +674,10 @@ void UFigmaImporter::ReloadBPAssets()
 	FGCScopeGuard GCScopeGuard;
 	for (IAssetBuilder* AssetBuilder : AssetBuilders)
 	{
-		//AssetBuilder->CreateWidgetBuilders();
+		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		{
+			BlueprintBuilder->LoadAssets();
+		}
 	}
 }
 
@@ -670,7 +686,10 @@ void UFigmaImporter::PatchWidgetBinds()
 	FGCScopeGuard GCScopeGuard;
 	for (IAssetBuilder* AssetBuilder : AssetBuilders)
 	{
-		//AssetBuilder->CreateWidgetBuilders();
+		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		{
+			BlueprintBuilder->PatchWidgetBinds();
+		}
 	}
 }
 
@@ -679,7 +698,10 @@ void UFigmaImporter::PatchWidgetProperties()
 	FGCScopeGuard GCScopeGuard;
 	for (IAssetBuilder* AssetBuilder : AssetBuilders)
 	{
-		//AssetBuilder->CreateWidgetBuilders();
+		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		{
+			BlueprintBuilder->PatchWidgetProperties();
+		}
 	}
 }
 

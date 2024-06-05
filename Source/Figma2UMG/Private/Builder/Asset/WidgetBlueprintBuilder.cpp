@@ -108,6 +108,62 @@ void UWidgetBlueprintBuilder::CompileBP()
 	LoadAssets();
 }
 
+void UWidgetBlueprintBuilder::CreateWidgetBuilders()
+{
+	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
+	if(!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[CreateWidgetBuilders] Missing Blueprint for node %s."), *Node->GetNodeName());
+		return;
+	}
+	UE_LOG_Figma2UMG(Display, TEXT("[CreateWidgetBuilders] Generating Tree for %s."), *WidgetBP->GetName());
+}
+
+void UWidgetBlueprintBuilder::PatchPreInsertWidget()
+{
+	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchPreInsertWidget] Missing Blueprint for node %s."), *Node->GetNodeName());
+		return;
+	}
+	UE_LOG_Figma2UMG(Display, TEXT("[PatchPreInsertWidget] Bluepring %s."), *WidgetBP->GetName());
+}
+
+bool UWidgetBlueprintBuilder::PatchPostInsertWidget()
+{
+	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchPostInsertWidget] Missing Blueprint for node %s."), *Node->GetNodeName());
+		return false;
+	}
+	UE_LOG_Figma2UMG(Display, TEXT("[PatchPostInsertWidget] Bluepring %s."), *WidgetBP->GetName());
+	return true;
+}
+
+void UWidgetBlueprintBuilder::PatchWidgetBinds()
+{
+	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetBinds] Missing Blueprint for node %s."), *Node->GetNodeName());
+		return;
+	}
+	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetBinds] Bluepring %s."), *WidgetBP->GetName());
+}
+
+void UWidgetBlueprintBuilder::PatchWidgetProperties()
+{
+	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
+	if (!WidgetBP)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetProperties] Missing Blueprint for node %s."), *Node->GetNodeName());
+		return;
+	}
+	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetProperties] Bluepring %s."), *WidgetBP->GetName());
+}
+
 void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
 {
 	MemberType.ContainerType = EPinContainerType::None;

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AssetBuilder.h"
+#include "Builder/Widget/WidgetBuilder.h"
 #include "WidgetBlueprintBuilder.generated.h"
 
 struct FFigmaComponentPropertyDefinition;
@@ -17,11 +18,21 @@ public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
 
-protected:
 	void CompileBP();
+
+	void CreateWidgetBuilders();
+	void PatchPreInsertWidget();
+	bool PatchPostInsertWidget();
+	void PatchWidgetBinds();
+	void PatchWidgetProperties();
+
+protected:
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 	bool PatchPropertyDefinitions(const TMap<FString, FFigmaComponentPropertyDefinition>& ComponentPropertyDefinitions) const;
 
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprint> Asset = nullptr;
+
+	UPROPERTY()
+	TScriptInterface<IWidgetBuilder> RootWidgetBuilder = nullptr;
 };
