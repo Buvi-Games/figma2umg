@@ -12,6 +12,9 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Blueprint/WidgetTree.h"
 #include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
+#include "Parser/Nodes/FigmaComponent.h"
+#include "Parser/Nodes/FigmaComponentSet.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 void UWidgetBlueprintBuilder::LoadOrCreateAssets()
@@ -49,6 +52,21 @@ void UWidgetBlueprintBuilder::LoadOrCreateAssets()
 	WidgetAsset->WidgetTree->Modify();
 
 	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetAsset);
+
+	if(const UFigmaComponent* ComponentNode = Cast<UFigmaComponent>(Node))
+	{
+		if (PatchPropertyDefinitions(ComponentNode->ComponentPropertyDefinitions))
+		{
+			CompileBP();
+		}
+	}
+	else if (const UFigmaComponentSet* ComponentSetNode = Cast<UFigmaComponentSet>(Node))
+	{
+		if (PatchPropertyDefinitions(ComponentSetNode->ComponentPropertyDefinitions))
+		{
+			CompileBP();
+		}
+	}
 }
 
 void UWidgetBlueprintBuilder::LoadAssets()
@@ -60,4 +78,107 @@ void UWidgetBlueprintBuilder::LoadAssets()
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
 	Asset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
+}
+
+void UWidgetBlueprintBuilder::CompileBP()
+{
+	if (!Asset)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("Trying to compile %s but there is no UAsset."), *Node->GetNodeName());
+		return;
+	}
+
+	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
+	if (!WidgetBP)
+	{
+		//Should be fine, this is not a BP
+		return;
+	}
+
+	Asset = nullptr;
+
+	FCompilerResultsLog LogResults;
+	LogResults.SetSourcePath(WidgetBP->GetPathName());
+	LogResults.BeginEvent(TEXT("Compile"));
+	LogResults.bLogDetailedResults = true;
+
+	UE_LOG_Figma2UMG(Display, TEXT("Compilint blueprint %s."), *WidgetBP->GetName());
+	FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::SkipGarbageCollection | EBlueprintCompileOptions::SaveIntermediateProducts, &LogResults);
+
+	LoadAssets();
+}
+
+void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
+{
+	MemberType.ContainerType = EPinContainerType::None;
+	switch (Def.Type)
+	{
+	case EFigmaComponentPropertyType::BOOLEAN:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_Boolean;
+		break;
+	case EFigmaComponentPropertyType::TEXT:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_String;
+
+		break;
+	case EFigmaComponentPropertyType::INSTANCE_SWAP:
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_Object;
+		// MemberType.PinSubCategory = ?
+		// MemberType.PinSubCategoryObject = ?
+		break;
+	case EFigmaComponentPropertyType::VARIANT:
+		//TODO:
+		break;
+	}
+}
+
+bool UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigmaComponentPropertyDefinition>& ComponentPropertyDefinitions) const
+{
+	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
+	if(!WidgetBP)
+		return false;
+	
+	bool AddedMemberVariable = false;
+	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
+	{
+		FEdGraphPinType MemberType;
+		FillType(Property.Value, MemberType);
+		FString PropertyName = Property.Key;//TODO: Remove '#id'
+
+		UE_LOG_Figma2UMG(Display, TEXT("Blueprint %s - Adding member %s type %s and defaultValue %s ."), *WidgetBP->GetName(), *PropertyName, *MemberType.PinCategory.ToString(), *Property.Value.DefaultValue);
+		if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
+		{
+			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
+			AddedMemberVariable = true;
+		}
+	
+		//TODO: This is to initialize the Switchers, would probably need to check if there are Switchers
+		if (Node->IsA<UFigmaComponentSet>())
+		{
+			TSet<FName> CurrentVars;
+			FBlueprintEditorUtils::GetClassVariableList(WidgetBP, CurrentVars);
+			if (AddedMemberVariable || CurrentVars.Contains(*PropertyName))
+			{
+				FString FunctionName = "Init" + PropertyName;
+				TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+					{
+						return Graph.GetName() == FunctionName;
+					});
+	
+				UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+				if (!FunctionGraph)
+				{
+					FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBP, FBlueprintEditorUtils::FindUniqueKismetName(WidgetBP, FunctionName), UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+	
+					FBlueprintEditorUtils::AddFunctionGraph<UClass>(WidgetBP, FunctionGraph, true, nullptr);
+					AddedMemberVariable = true;
+				}
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[UWidgetBlueprintBuilder::PatchPropertiesToWidget] Fail to add member variable %s of type %s."), *PropertyName, *MemberType.PinCategory.ToString());
+			}
+		}
+	}
+	
+	return AddedMemberVariable;
 }

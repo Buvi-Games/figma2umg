@@ -6,6 +6,7 @@
 #include "AssetBuilder.h"
 #include "WidgetBlueprintBuilder.generated.h"
 
+struct FFigmaComponentPropertyDefinition;
 class UWidgetBlueprint;
 
 UCLASS()
@@ -17,6 +18,10 @@ public:
 	virtual void LoadAssets() override;
 
 protected:
+	void CompileBP();
+	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
+	bool PatchPropertyDefinitions(const TMap<FString, FFigmaComponentPropertyDefinition>& ComponentPropertyDefinitions) const;
+
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprint> Asset = nullptr;
 };
