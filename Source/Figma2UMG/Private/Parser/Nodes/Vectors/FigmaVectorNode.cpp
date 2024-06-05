@@ -26,7 +26,7 @@ FVector2D UFigmaVectorNode::GetSize() const
 	return AbsoluteBoundingBox.GetSize();
 }
 
-IAssetBuilder* UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey)
+TScriptInterface<IAssetBuilder> UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey)
 {
 	UTexture2DBuilder* AssetBuilder = NewObject<UTexture2DBuilder>();
 	AssetBuilder->SetNode(InFileKey, this);

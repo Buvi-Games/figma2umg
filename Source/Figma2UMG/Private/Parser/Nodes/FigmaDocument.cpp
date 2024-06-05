@@ -171,7 +171,7 @@ void UFigmaDocument::SetWidget(TObjectPtr<UWidget> Widget)
 	}
 }
 
-IAssetBuilder* UFigmaDocument::CreateAssetBuilder(const FString& InFileKey)
+TScriptInterface<IAssetBuilder> UFigmaDocument::CreateAssetBuilder(const FString& InFileKey)
 {
 	UWidgetBlueprintBuilder* AssetBuilder = NewObject<UWidgetBlueprintBuilder>();
 	AssetBuilder->SetNode(InFileKey, this);

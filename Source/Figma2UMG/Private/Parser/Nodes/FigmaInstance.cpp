@@ -39,7 +39,7 @@ void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const 
 	SerializeArray(Children, JsonObj,"Children");
 }
 
-IAssetBuilder* UFigmaInstance::CreateAssetBuilder(const FString& InFileKey)
+TScriptInterface<IAssetBuilder> UFigmaInstance::CreateAssetBuilder(const FString& InFileKey)
 {
 	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);

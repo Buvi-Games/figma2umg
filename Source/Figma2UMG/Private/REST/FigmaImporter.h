@@ -130,7 +130,7 @@ protected:
 	TMap<FString, TObjectPtr<UFigmaFile>> LibraryFileKeys;
 
 	UPROPERTY()
-	TArray<IAssetBuilder*> AssetBuilders;
+	TArray<TScriptInterface<IAssetBuilder>> AssetBuilders;
 
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;

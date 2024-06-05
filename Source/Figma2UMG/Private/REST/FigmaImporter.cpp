@@ -429,9 +429,9 @@ void UFigmaImporter::BuildImageDependency()
 			}
 			else
 			{
-				for (IAssetBuilder* AssetBuilder : AssetBuilders)
+				for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 				{
-					if (UTexture2DBuilder* Texture2DBuilder = Cast<UTexture2DBuilder>(AssetBuilder))
+					if (UTexture2DBuilder* Texture2DBuilder = Cast<UTexture2DBuilder>(AssetBuilder.GetObject()))
 					{
 						Texture2DBuilder->AddImageRequest(RequestedImages);
 					}
@@ -558,7 +558,7 @@ void UFigmaImporter::LoadOrCreateAssets()
 	else
 	{
 		FGCScopeGuard GCScopeGuard;
-		for (IAssetBuilder* AssetBuilder : AssetBuilders)
+		for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 		{
 			AssetBuilder->LoadOrCreateAssets();
 		}
@@ -620,9 +620,9 @@ void UFigmaImporter::PatchAssets()
 void UFigmaImporter::CreateWidgetBuilders()
 {
 	FGCScopeGuard GCScopeGuard;
-	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		if(UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			BlueprintBuilder->CreateWidgetBuilders();
 		}
@@ -632,9 +632,9 @@ void UFigmaImporter::CreateWidgetBuilders()
 void UFigmaImporter::PatchPreInsertWidget()
 {
 	FGCScopeGuard GCScopeGuard;
-	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			BlueprintBuilder->PatchPreInsertWidget();
 		}
@@ -646,9 +646,9 @@ bool UFigmaImporter::PatchPostInsertWidget()
 	bool Success = true;
 
 	FGCScopeGuard GCScopeGuard;
-	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			Success &= BlueprintBuilder->PatchPostInsertWidget();
 		}
@@ -660,9 +660,9 @@ bool UFigmaImporter::PatchPostInsertWidget()
 void UFigmaImporter::CompileBPs()
 {
 	FGCScopeGuard GCScopeGuard;
-	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			BlueprintBuilder->CompileBP();
 		}
@@ -672,9 +672,9 @@ void UFigmaImporter::CompileBPs()
 void UFigmaImporter::ReloadBPAssets()
 {
 	FGCScopeGuard GCScopeGuard;
-	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			BlueprintBuilder->LoadAssets();
 		}
@@ -684,9 +684,9 @@ void UFigmaImporter::ReloadBPAssets()
 void UFigmaImporter::PatchWidgetBinds()
 {
 	FGCScopeGuard GCScopeGuard;
-	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			BlueprintBuilder->PatchWidgetBinds();
 		}
@@ -696,9 +696,9 @@ void UFigmaImporter::PatchWidgetBinds()
 void UFigmaImporter::PatchWidgetProperties()
 {
 	FGCScopeGuard GCScopeGuard;
-	for (IAssetBuilder* AssetBuilder : AssetBuilders)
+	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		if (UWidgetBlueprintBuilder* BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder))
+		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			BlueprintBuilder->PatchWidgetProperties();
 		}

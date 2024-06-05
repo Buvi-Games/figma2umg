@@ -21,7 +21,7 @@ public:
 	// UFigmaNode
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
-	virtual IAssetBuilder* CreateAssetBuilder(const FString& InFileKey) override;
+	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) override;
 	virtual FString GetPackageName() const override;
 
 	// IFigmaFileHandle

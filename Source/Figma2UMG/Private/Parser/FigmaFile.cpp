@@ -243,7 +243,7 @@ void UFigmaFile::FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<
 	}
 }
 
-void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate, TArray<IAssetBuilder*>& AssetBuilders)
+void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	CurrentProcessDelegate = ProcessDelegate;
 	if (!UseNewBuilders)
@@ -263,7 +263,7 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 				TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
 				if (ComponentSet)
 				{
-					IAssetBuilder* AssetBuilder = ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey);
+					TScriptInterface<IAssetBuilder> AssetBuilder = ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey);
 					if (AssetBuilder != nullptr)
 					{
 						AssetBuilders.Add(AssetBuilder);
@@ -283,7 +283,7 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 				TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
 				if (Component)
 				{
-					IAssetBuilder* AssetBuilder = Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey);
+					TScriptInterface<IAssetBuilder> AssetBuilder = Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey);
 					if (AssetBuilder != nullptr)
 					{
 						AssetBuilders.Add(AssetBuilder);
@@ -581,9 +581,9 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	}
 }
 
-void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node, TArray<IAssetBuilder*>& AssetBuilders)
+void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	IAssetBuilder* AssetBuilder = Node.CreateAssetBuilder(FileKey);
+	TScriptInterface<IAssetBuilder> AssetBuilder = Node.CreateAssetBuilder(FileKey);
 	if (AssetBuilder != nullptr)
 	{
 		AssetBuilders.Add(AssetBuilder);

@@ -104,7 +104,7 @@ void UFigmaFrame::SetWidget(TObjectPtr<UWidget> Widget)
 		}));
 }
 
-IAssetBuilder* UFigmaFrame::CreateAssetBuilder(const FString& InFileKey)
+TScriptInterface<IAssetBuilder> UFigmaFrame::CreateAssetBuilder(const FString& InFileKey)
 {
 	if (GenerateFile)
 	{
