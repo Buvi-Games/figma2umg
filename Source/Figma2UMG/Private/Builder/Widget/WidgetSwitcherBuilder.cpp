@@ -21,6 +21,10 @@ TObjectPtr<UWidget> UWidgetSwitcherBuilder::PatchPreInsertWidget(TObjectPtr<UWid
 	if (Widget == nullptr)
 	{
 		Widget = IWidgetOwner::NewWidget<UWidgetSwitcher>(WidgetTree, *Node->GetUniqueName());
+		if (WidgetToPatch)
+		{
+			Widget->AddChild(WidgetToPatch);
+		}
 	}
 	else
 	{
@@ -37,7 +41,6 @@ TObjectPtr<UWidget> UWidgetSwitcherBuilder::PatchPreInsertWidget(TObjectPtr<UWid
 		}
 		IWidgetOwner::TryRenameWidget(Node->GetUniqueName(), Widget);
 	}
-
 
 	TArray<UWidget*> AllChildren = Widget->GetAllChildren();
 	TArray<UWidget*> NewChildren;
