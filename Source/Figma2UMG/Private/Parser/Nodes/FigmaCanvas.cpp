@@ -4,6 +4,8 @@
 #include "Parser/Nodes/FigmaCanvas.h"
 
 #include "Figma2UMGModule.h"
+#include "Builder/Widget/CanvasBuilder.h"
+#include "Builder/Widget/PanelWidgetBuilder.h"
 #include "Components/CanvasPanel.h"
 
 void UFigmaCanvas::ForEach(const IWidgetOwner::FOnEachFunction& Function)
@@ -97,4 +99,11 @@ const float UFigmaCanvas::GetTransitionDuration() const
 const EFigmaEasingType UFigmaCanvas::GetTransitionEasing() const
 {
 	return EFigmaEasingType::LINEAR;
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaCanvas::CreateWidgetBuilders() const
+{
+	UCanvasBuilder* Builder = NewObject<UCanvasBuilder>();
+	Builder->SetNode(this);
+	return Builder;
 }
