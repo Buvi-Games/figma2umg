@@ -7,8 +7,3 @@ void UPanelWidgetBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& Widge
 {
 	ChildWidgetBuilders.Add(WidgetBuilder);
 }
-
-TObjectPtr<UWidget> UPanelWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
-{
-	return WidgetToPatch;
-}
