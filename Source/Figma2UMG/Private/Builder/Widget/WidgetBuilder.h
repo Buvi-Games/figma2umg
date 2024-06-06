@@ -29,3 +29,38 @@ public:
 protected:
 	const UFigmaNode* Node = nullptr;
 };
+
+UCLASS(Abstract)
+class USingleChildBuilder : public UObject, public IWidgetBuilder
+{
+public:
+	GENERATED_BODY()
+
+	void SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
+
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) PURE_VIRTUAL(USingleChildBuilder::PatchPreInsertWidget(), return nullptr;);
+
+protected:
+	virtual void PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
+
+	UPROPERTY()
+	TScriptInterface<IWidgetBuilder> ChildWidgetBuilder = nullptr;
+};
+
+
+UCLASS(Abstract)
+class UMultiChildBuilder : public UObject, public IWidgetBuilder
+{
+public:
+	GENERATED_BODY()
+
+	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
+
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) PURE_VIRTUAL(UMultiChildBuilder::PatchPreInsertWidget(), return nullptr;);
+
+protected:
+	virtual void PatchPreInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
+
+	UPROPERTY()
+	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;
+};

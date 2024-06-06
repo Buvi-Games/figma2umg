@@ -15,14 +15,12 @@
 class UPanelWidget;
 
 UCLASS(Abstract)
-class UPanelWidgetBuilder : public UObject, public IWidgetBuilder
+class UPanelWidgetBuilder : public UMultiChildBuilder
 {
 public:
 	GENERATED_BODY()
 
-	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
-
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return WidgetToPatch;);
+	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchPreInsertWidget(), return WidgetToPatch;);
 
 protected:
 	template<class WidgetType>
@@ -30,9 +28,6 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UPanelWidget> Widget = nullptr;
-
-	UPROPERTY()
-	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;
 };
 
 

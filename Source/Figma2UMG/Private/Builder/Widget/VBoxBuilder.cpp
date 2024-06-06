@@ -6,5 +6,8 @@
 TObjectPtr<UWidget> UVBoxBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
     Box = Patch<UVerticalBox>(WidgetTree, WidgetToPatch);
+
+    PatchPreInsertChildren(WidgetTree, Box);
+
     return Box;
 }

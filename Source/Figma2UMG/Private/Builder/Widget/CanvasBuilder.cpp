@@ -15,5 +15,8 @@ TObjectPtr<UWidget> UCanvasBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree>
     }
 
     CanvasPanel = Patch<UCanvasPanel>(WidgetTree, MyWidgetToPatch);
+
+    PatchPreInsertChildren(WidgetTree, CanvasPanel);
+
     return CanvasPanel;
 }

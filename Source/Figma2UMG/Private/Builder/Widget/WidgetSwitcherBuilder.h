@@ -9,20 +9,14 @@
 class UWidgetSwitcher;
 
 UCLASS()
-class UWidgetSwitcherBuilder : public UObject, public IWidgetBuilder
+class UWidgetSwitcherBuilder : public UMultiChildBuilder
 {
 public:
 	GENERATED_BODY()
 
-	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
-
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
-
 
 protected:
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> Widget = nullptr;
-
-	UPROPERTY()
-	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;
 };

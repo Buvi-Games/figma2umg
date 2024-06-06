@@ -9,19 +9,14 @@
 class USizeBox;
 
 UCLASS()
-class USizeBoxWidgetBuilder : public UObject, public IWidgetBuilder
+class USizeBoxWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()
-
-	void SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
 
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
 	UPROPERTY()
 	TObjectPtr<USizeBox> Widget = nullptr;
-
-	UPROPERTY()
-	TScriptInterface<IWidgetBuilder> SubWidgetBuilder;
 };

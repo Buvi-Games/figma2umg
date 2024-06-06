@@ -6,5 +6,8 @@
 TObjectPtr<UWidget> UWBoxBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
     Box = Patch<UWrapBox>(WidgetTree, WidgetToPatch);
+
+    PatchPreInsertChildren(WidgetTree, Box);
+
     return Box;
 }

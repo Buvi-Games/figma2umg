@@ -4,16 +4,10 @@
 #include "WidgetSwitcherBuilder.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Components/Widget.h"
 #include "Components/WidgetSwitcher.h"
 #include "Interfaces/WidgetOwner.h"
-#include "Parser/Nodes/FigmaDocument.h"
 #include "Parser/Nodes/FigmaNode.h"
-
-
-void UWidgetSwitcherBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
-{
-	ChildWidgetBuilders.Add(WidgetBuilder);
-}
 
 TObjectPtr<UWidget> UWidgetSwitcherBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
@@ -42,32 +36,7 @@ TObjectPtr<UWidget> UWidgetSwitcherBuilder::PatchPreInsertWidget(TObjectPtr<UWid
 		IWidgetOwner::TryRenameWidget(Node->GetUniqueName(), Widget);
 	}
 
-	TArray<UWidget*> AllChildren = Widget->GetAllChildren();
-	TArray<UWidget*> NewChildren;
-	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
-	{
-		if(!ChildBuilder)
-			continue;
-
-		if (TObjectPtr<UWidget> ChildWidget = ChildBuilder->FindNodeWidgetInParent(Widget))
-		{
-			TObjectPtr<UWidget> SubWidget = ChildBuilder->PatchPreInsertWidget(WidgetTree, ChildWidget);
-			if (SubWidget)
-			{
-				NewChildren.Add(SubWidget);
-				Widget->AddChild(SubWidget);
-			}
-		}
-	}
-
-	AllChildren = Widget->GetAllChildren();
-	for(int i = 0; i < AllChildren.Num() && AllChildren.Num() > NewChildren.Num(); i++)
-	{
-		if(NewChildren.Contains(AllChildren[i]))
-			continue;
-
-		AllChildren.RemoveAt(i);
-	}
+	PatchPreInsertChildren(WidgetTree, Widget);
 
 	return Widget;
 }

@@ -9,19 +9,13 @@
 class UButton;
 
 UCLASS()
-class UButtonWidgetBuilder : public UObject, public IWidgetBuilder
+class UButtonWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()
-
-	void SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
-
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
 	UPROPERTY()
 	TObjectPtr<UButton> Widget = nullptr;
-
-	UPROPERTY()
-	TScriptInterface<IWidgetBuilder> SubWidgetBuilder;
 };

@@ -9,19 +9,13 @@
 class UBorder;
 
 UCLASS()
-class UBorderWidgetBuilder : public UObject, public IWidgetBuilder
+class UBorderWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()
-
-	void SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
-
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
 	UPROPERTY()
 	TObjectPtr<UBorder> Widget = nullptr;
-
-	UPROPERTY()
-	TScriptInterface<IWidgetBuilder> SubWidgetBuilder = nullptr;
 };
