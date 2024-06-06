@@ -43,7 +43,6 @@ public:
 	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
 	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
-protected:
 	UPROPERTY()
 	bool SectionContentsHidden = false;
 
@@ -71,6 +70,7 @@ protected:
 	UPROPERTY()
 	FFigmaRectangle AbsoluteRenderBounds;
 
+protected:
 	UPROPERTY()
 	FBorderBuilder Builder;
 };
