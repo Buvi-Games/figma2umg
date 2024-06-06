@@ -214,14 +214,8 @@ TScriptInterface<IWidgetBuilder> UFigmaDocument::CreateWidgetBuilders() const
 	}
 	else if (Children.Num() == 1)
 	{
-		UPanelWidgetBuilder* Builder = NewObject<UPanelWidgetBuilder>();
-		Builder->SetNode(this);
 		TScriptInterface<IWidgetBuilder> SubBuilder = Children[0] ? Children[0]->CreateWidgetBuilders() : nullptr;
-		if (SubBuilder)
-		{
-			Builder->AddChild(SubBuilder);
-		}
-		return Builder;
+		return SubBuilder;
 	}
 
 	return nullptr;
