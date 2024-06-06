@@ -52,9 +52,6 @@ public:
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
-protected:
-	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const override;
-
 	UPROPERTY()
 	bool Locked = false;
 
@@ -165,6 +162,9 @@ protected:
 
 	UPROPERTY()
 	TArray<int> LineIndentations;
+
+protected:
+	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const override;
 
 	UPROPERTY()
 	FTextBoxBuilder Builder;

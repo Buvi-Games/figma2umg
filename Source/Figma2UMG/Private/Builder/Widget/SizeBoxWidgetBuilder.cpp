@@ -8,7 +8,9 @@
 #include "Components/SizeBox.h"
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaGroup.h"
+#include "Parser/Nodes/FigmaInstance.h"
 #include "Parser/Nodes/FigmaNode.h"
+#include "Parser/Nodes/Vectors/FigmaText.h"
 
 
 TObjectPtr<UWidget> USizeBoxWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
@@ -43,10 +45,10 @@ TObjectPtr<UWidget> USizeBoxWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidg
 	return Widget;
 }
 
-void USizeBoxWidgetBuilder::Setup()
+void USizeBoxWidgetBuilder::Setup() const
 {
-	EFigmaLayoutSizing LayoutSizingHorizontal;
-	EFigmaLayoutSizing LayoutSizingVertical;
+	EFigmaLayoutSizing LayoutSizingHorizontal = EFigmaLayoutSizing::FILL;
+	EFigmaLayoutSizing LayoutSizingVertical = EFigmaLayoutSizing::FILL;
 	float FixedWidth;
 	float FixedHeight;
 	GetValues(LayoutSizingHorizontal, LayoutSizingVertical, FixedWidth, FixedHeight);
@@ -64,11 +66,25 @@ void USizeBoxWidgetBuilder::Setup()
 
 void USizeBoxWidgetBuilder::GetValues(EFigmaLayoutSizing& LayoutSizingHorizontal, EFigmaLayoutSizing& LayoutSizingVertical, float& FixedWidth, float& FixedHeight) const
 {
-	if(const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+	if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
 	{
 		LayoutSizingHorizontal = FigmaGroup->LayoutSizingHorizontal;
 		LayoutSizingVertical = FigmaGroup->LayoutSizingVertical;
 		FixedWidth = FigmaGroup->AbsoluteBoundingBox.Width;
 		FixedHeight = FigmaGroup->AbsoluteBoundingBox.Height;
+	}
+	else if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
+	{
+		LayoutSizingHorizontal = FigmaInstance->LayoutSizingHorizontal;
+		LayoutSizingVertical = FigmaInstance->LayoutSizingVertical;
+		FixedWidth = FigmaInstance->AbsoluteBoundingBox.Width;
+		FixedHeight = FigmaInstance->AbsoluteBoundingBox.Height;
+	}
+	else if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
+	{
+		LayoutSizingHorizontal = FigmaText->LayoutSizingHorizontal;
+		LayoutSizingVertical = FigmaText->LayoutSizingVertical;
+		FixedWidth = FigmaText->AbsoluteBoundingBox.Width;
+		FixedHeight = FigmaText->AbsoluteBoundingBox.Height;
 	}
 }
