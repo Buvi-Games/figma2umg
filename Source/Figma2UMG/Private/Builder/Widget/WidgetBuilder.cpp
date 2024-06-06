@@ -5,7 +5,9 @@
 
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/ContentWidget.h"
 #include "Components/PanelWidget.h"
+#include "Components/Widget.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 void IWidgetBuilder::SetNode(const UFigmaNode* InNode)
@@ -38,9 +40,23 @@ void USingleChildBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& Widge
 	ChildWidgetBuilder = WidgetBuilder;
 }
 
-void USingleChildBuilder::PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget)
+void USingleChildBuilder::PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget)
 {
-	//TODO
+	if (!ParentWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[USingleChildBuilder::PatchPreInsertChildren] ParentWidget is null at Node %s."), *Node->GetNodeName());
+		return;
+	}
+
+	if(ChildWidgetBuilder)
+	{
+		TObjectPtr<UWidget> ChildWidget = ParentWidget->GetContent();
+		TObjectPtr<UWidget> SubWidget = ChildWidgetBuilder->PatchPreInsertWidget(WidgetTree, ChildWidget);
+		if (SubWidget)
+		{
+			ParentWidget->SetContent(SubWidget);
+		}
+	}
 }
 
 void UMultiChildBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
@@ -52,7 +68,7 @@ void UMultiChildBuilder::PatchPreInsertChildren(TObjectPtr<UWidgetTree> WidgetTr
 {
 	if (!ParentWidget)
 	{
-		UE_LOG_Figma2UMG(Display, TEXT("[UMultiChildBuilder::PatchPreInsertChildren] ParentWidget is null at Node %s."), *Node->GetNodeName());
+		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::PatchPreInsertChildren] ParentWidget is null at Node %s."), *Node->GetNodeName());
 		return;
 	}
 

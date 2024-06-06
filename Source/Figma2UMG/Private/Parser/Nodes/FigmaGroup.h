@@ -65,8 +65,6 @@ public:
 	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
-protected:
-	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
@@ -226,6 +224,9 @@ protected:
 
 	UPROPERTY()
 	TMap<EFigmaStyleType, FString> Styles;
+
+protected:
+	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
 
 	UPROPERTY()
 	FSizeBoxBuilder Builder;

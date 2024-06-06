@@ -3,9 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/Widget.h"
 #include "WidgetBuilder.generated.h"
 
+class UWidgetTree;
+class UWidget;
+class UContentWidget;
+class UPanelWidget;
 class UFigmaNode;
 
 
@@ -41,7 +44,7 @@ public:
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) PURE_VIRTUAL(USingleChildBuilder::PatchPreInsertWidget(), return nullptr;);
 
 protected:
-	virtual void PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
+	virtual void PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget);
 
 	UPROPERTY()
 	TScriptInterface<IWidgetBuilder> ChildWidgetBuilder = nullptr;

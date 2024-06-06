@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "WidgetBuilder.h"
+#include "Parser/Properties/FigmaEnums.h"
 #include "SizeBoxWidgetBuilder.generated.h"
 
 class USizeBox;
@@ -17,6 +18,9 @@ public:
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
+	void Setup();
+	void GetValues(EFigmaLayoutSizing& LayoutSizingHorizontal, EFigmaLayoutSizing& LayoutSizingVertical, float& FixedWidth, float& FixedHeight) const;
+
 	UPROPERTY()
 	TObjectPtr<USizeBox> Widget = nullptr;
 };
