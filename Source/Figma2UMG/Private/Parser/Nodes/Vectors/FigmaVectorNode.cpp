@@ -4,6 +4,7 @@
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 
 #include "Builder/Asset/Texture2DBuilder.h"
+#include "Builder/Widget/ImageWidgetBuilder.h"
 #include "Components/Image.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "REST/FigmaImporter.h"
@@ -36,6 +37,14 @@ TScriptInterface<IAssetBuilder> UFigmaVectorNode::CreateAssetBuilder(const FStri
 FString UFigmaVectorNode::GetPackageName() const
 {
 	return GetPackagePath();
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders() const
+{
+	UImageWidgetBuilder* BorderWidgetBuilder = NewObject<UImageWidgetBuilder>();
+	BorderWidgetBuilder->SetNode(this);
+
+	return BorderWidgetBuilder;
 }
 
 void UFigmaVectorNode::AddImageRequest(FString FileKey, FImageRequests& ImageRequests)

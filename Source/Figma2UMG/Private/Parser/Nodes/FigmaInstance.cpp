@@ -63,6 +63,12 @@ FString UFigmaInstance::GetPackageName() const
 	return GetPackagePath();
 }
 
+TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders() const
+{
+	//TODO: UserWidgetBuilder;
+	return nullptr;
+}
+
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)
 {
 	if (TObjectPtr<UWidget> Widget = Cast<UWidget>(InstanceAsset))

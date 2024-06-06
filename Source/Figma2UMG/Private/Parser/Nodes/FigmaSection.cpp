@@ -5,6 +5,8 @@
 
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/Widget/BorderWidgetBuilder.h"
+#include "Builder/Widget/CanvasBuilder.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -37,6 +39,43 @@ FString UFigmaSection::GetCurrentPackagePath() const
 {
 	FString CurrentPackagePath = Super::GetCurrentPackagePath() + +TEXT("/") + GetNodeName();
 	return CurrentPackagePath;
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaSection::CreateWidgetBuilders() const
+{
+	UCanvasBuilder* CanvasBuilder = NewObject<UCanvasBuilder>();
+	CanvasBuilder->SetNode(this);
+
+	for (const UFigmaNode* Child : Children)
+	{
+		if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+		{
+			CanvasBuilder->AddChild(SubBuilder);
+		}
+	}
+
+	bool RequireBorder = false;
+	for (int i = 0; i < Fills.Num() && !RequireBorder; i++)
+	{
+		if (Fills[i].Visible)
+			RequireBorder = true;
+	}
+	for (int i = 0; i < Strokes.Num() && !RequireBorder; i++)
+	{
+		if (Strokes[i].Visible)
+			RequireBorder = true;
+	}
+
+	if (RequireBorder)
+	{
+		UBorderWidgetBuilder* BorderWidgetBuilder = NewObject<UBorderWidgetBuilder>();
+		BorderWidgetBuilder->SetNode(this);
+		BorderWidgetBuilder->SetChild(CanvasBuilder);
+
+		return BorderWidgetBuilder;
+	}
+
+	return CanvasBuilder;
 }
 
 void UFigmaSection::ForEach(const IWidgetOwner::FOnEachFunction& Function)

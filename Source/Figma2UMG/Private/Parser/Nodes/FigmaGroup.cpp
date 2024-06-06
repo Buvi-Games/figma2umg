@@ -5,6 +5,13 @@
 
 #include "FigmaComponent.h"
 #include "Builder/ButtonBuilder.h"
+#include "Builder/Widget/BorderWidgetBuilder.h"
+#include "Builder/Widget/CanvasBuilder.h"
+#include "Builder/Widget/HBoxBuilder.h"
+#include "Builder/Widget/PanelWidgetBuilder.h"
+#include "Builder/Widget/SizeBoxWidgetBuilder.h"
+#include "Builder/Widget/VBoxBuilder.h"
+#include "Builder/Widget/WBoxBuilder.h"
 #include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/SizeBoxSlot.h"
@@ -18,6 +25,104 @@ void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSh
 
 	PostSerializeProperty(JsonObj, "fills", Fills);
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders() const
+{
+	USizeBoxWidgetBuilder* SizeBoxWidgetBuilder = nullptr;
+	UBorderWidgetBuilder* BorderWidgetBuilder = nullptr;
+	UPanelWidgetBuilder* PanelWidgetBuilder = nullptr;
+	if (LayoutSizingHorizontal == EFigmaLayoutSizing::FIXED || LayoutSizingVertical == EFigmaLayoutSizing::FIXED)
+	{
+		SizeBoxWidgetBuilder = NewObject<USizeBoxWidgetBuilder>();
+		SizeBoxWidgetBuilder->SetNode(this);
+	}
+
+	bool RequireBorder = false;
+	for (int i = 0; i < Fills.Num() && !RequireBorder; i++)
+	{
+		if (Fills[i].Visible)
+			RequireBorder = true;
+	}
+	for (int i = 0; i < Strokes.Num() && !RequireBorder; i++)
+	{
+		if (Strokes[i].Visible)
+			RequireBorder = true;
+	}
+
+	if (RequireBorder)
+	{
+		BorderWidgetBuilder = NewObject<UBorderWidgetBuilder>();
+		BorderWidgetBuilder->SetNode(this);
+		if (SizeBoxWidgetBuilder)
+		{
+			SizeBoxWidgetBuilder->SetChild(BorderWidgetBuilder);
+		}
+	}	
+
+	switch (LayoutMode)
+	{
+	case EFigmaLayoutMode::NONE:
+	{
+		PanelWidgetBuilder = NewObject<UCanvasBuilder>();
+	}
+	break;
+	case EFigmaLayoutMode::HORIZONTAL:
+	{
+		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
+		{
+			PanelWidgetBuilder = NewObject<UHBoxBuilder>();
+		}
+		else
+		{
+			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
+		}
+	}
+	break;
+	case EFigmaLayoutMode::VERTICAL:
+	{
+		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
+		{
+			PanelWidgetBuilder = NewObject<UVBoxBuilder>();
+		}
+		else
+		{
+			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
+		}
+	}
+	break;
+	}
+
+	PanelWidgetBuilder->SetNode(this);
+	for (const UFigmaNode* Child : Children)
+	{
+		if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+		{
+			PanelWidgetBuilder->AddChild(SubBuilder);
+		}
+	}
+
+
+	if (BorderWidgetBuilder)
+	{
+		BorderWidgetBuilder->SetChild(PanelWidgetBuilder);
+	}
+	else if(SizeBoxWidgetBuilder)
+	{
+		SizeBoxWidgetBuilder->SetChild(PanelWidgetBuilder);
+	}
+
+	if (SizeBoxWidgetBuilder)
+	{
+		return SizeBoxWidgetBuilder;
+	}
+
+	if(BorderWidgetBuilder)
+	{
+		return BorderWidgetBuilder;
+	}
+
+	return PanelWidgetBuilder;
 }
 
 FVector2D UFigmaGroup::GetAbsolutePosition() const

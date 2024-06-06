@@ -5,6 +5,7 @@
 
 #include "WidgetBlueprint.h"
 #include "Builder/WidgetBlueprintHelper.h"
+#include "Builder/Widget/TextBlockWidgetBuilder.h"
 #include "Components/TextBlock.h"
 
 void UFigmaText::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
@@ -30,6 +31,14 @@ FVector2D UFigmaText::GetAbsolutePosition() const
 FVector2D UFigmaText::GetSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaText::CreateWidgetBuilders() const
+{
+	UTextBlockWidgetBuilder* TextBlockWidgetBuilder = NewObject<UTextBlockWidgetBuilder>();
+	TextBlockWidgetBuilder->SetNode(this);
+
+	return TextBlockWidgetBuilder;
 }
 
 void UFigmaText::ForEach(const FOnEachFunction& Function)

@@ -105,5 +105,14 @@ TScriptInterface<IWidgetBuilder> UFigmaCanvas::CreateWidgetBuilders() const
 {
 	UCanvasBuilder* Builder = NewObject<UCanvasBuilder>();
 	Builder->SetNode(this);
+
+	for (const UFigmaNode* Child : Children)
+	{
+		if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+		{
+			Builder->AddChild(SubBuilder);
+		}
+	}
+
 	return Builder;
 }

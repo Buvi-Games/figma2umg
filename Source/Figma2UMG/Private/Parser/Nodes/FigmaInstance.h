@@ -25,6 +25,7 @@ public:
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) override;
 	virtual FString GetPackageName() const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders() const override;
 
 	// IWidgetOwner
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;

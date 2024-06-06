@@ -22,6 +22,7 @@ public:
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
 	virtual FString GetCurrentPackagePath() const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders() const override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };

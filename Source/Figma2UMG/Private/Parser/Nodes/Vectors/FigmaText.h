@@ -30,6 +30,7 @@ public:
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
 	FVector2D GetSize() const;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders() const override;
 
 	// IWidgetOwner
 	virtual void ForEach(const FOnEachFunction& Function) override;

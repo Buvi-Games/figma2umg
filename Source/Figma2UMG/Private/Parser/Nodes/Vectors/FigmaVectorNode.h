@@ -38,6 +38,7 @@ public:
 	FVector2D GetSize() const;
 	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) override;
 	virtual FString GetPackageName() const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders() const override;
 
 	// IFigmaImageRequester
 	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
