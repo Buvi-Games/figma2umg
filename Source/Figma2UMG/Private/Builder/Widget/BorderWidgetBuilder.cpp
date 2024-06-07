@@ -13,7 +13,15 @@
 
 TObjectPtr<UWidget> UBorderWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
-	Widget = Cast<UBorder>(WidgetToPatch);
+	if (const USizeBox* SizeBoxWrapper = Cast<USizeBox>(WidgetToPatch))
+	{
+		Widget = Cast<UBorder>(SizeBoxWrapper->GetContent());
+	}
+	else
+	{
+		Widget = Cast<UBorder>(WidgetToPatch);
+	}	
+
 	const FString WidgetName = Node->GetUniqueName();
 	if (Widget)
 	{
@@ -42,7 +50,7 @@ TObjectPtr<UWidget> UBorderWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidge
 		FSlateBrush Brush = Widget->Background;
 		if (Node->IsA<UFigmaSection>())
 		{
-			Brush.DrawAs = ESlateBrushDrawType::Box;
+			Brush.DrawAs = ESlateBrushDrawType::Image;
 		}
 		else
 		{

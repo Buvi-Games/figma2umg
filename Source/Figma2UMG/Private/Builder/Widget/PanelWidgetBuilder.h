@@ -37,7 +37,27 @@ TObjectPtr<WidgetType> UPanelWidgetBuilder::Patch(TObjectPtr<UWidgetTree> Widget
 	TObjectPtr<WidgetType> PatchedWidget = nullptr;
 	FString WidgetName = Node->GetUniqueName();
 
-	PatchedWidget = Cast<WidgetType>(WidgetToPatch);
+	if (const USizeBox* SizeBoxWrapper = Cast<USizeBox>(WidgetToPatch))
+	{
+		UWidget* SizeBoxContent = SizeBoxWrapper->GetContent();
+		if (const UBorder* BorderWrapper = Cast<UBorder>(SizeBoxContent))
+		{
+			PatchedWidget = Cast<WidgetType>(BorderWrapper->GetContent());
+		}
+		else
+		{
+			PatchedWidget = Cast<WidgetType>(SizeBoxWrapper->GetContent());
+		}
+	}
+	else if (const UBorder* BorderWrapper = Cast<UBorder>(WidgetToPatch))
+	{
+		PatchedWidget = Cast<WidgetType>(BorderWrapper->GetContent());
+	}
+	else
+	{
+		PatchedWidget = Cast<WidgetType>(WidgetToPatch);
+	}
+
 	if (!PatchedWidget)
 	{
 		if (const TObjectPtr<UBorder> BorderWrapperOld = Cast<UBorder>(WidgetToPatch))
