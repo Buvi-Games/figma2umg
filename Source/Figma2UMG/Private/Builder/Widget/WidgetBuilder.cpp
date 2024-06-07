@@ -15,6 +15,11 @@ void IWidgetBuilder::SetNode(const UFigmaNode* InNode)
 	Node = InNode;
 }
 
+void IWidgetBuilder::SetParent(TScriptInterface<IWidgetBuilder> InParent)
+{
+	Parent = InParent;
+}
+
 TObjectPtr<UWidget> IWidgetBuilder::FindNodeWidgetInParent(const TObjectPtr<UPanelWidget>& ParentWidget) const
 {
 	if (!ParentWidget)
@@ -37,7 +42,15 @@ TObjectPtr<UWidget> IWidgetBuilder::FindNodeWidgetInParent(const TObjectPtr<UPan
 
 void USingleChildBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
 {
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->SetParent(nullptr);
+	}
 	ChildWidgetBuilder = WidgetBuilder;
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->SetParent(this);
+	}
 }
 
 void USingleChildBuilder::PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget)
@@ -62,6 +75,10 @@ void USingleChildBuilder::PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree
 void UMultiChildBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
 {
 	ChildWidgetBuilders.Add(WidgetBuilder);
+	if (WidgetBuilder)
+	{
+		WidgetBuilder->SetParent(this);
+	}
 }
 
 void UMultiChildBuilder::PatchPreInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget)

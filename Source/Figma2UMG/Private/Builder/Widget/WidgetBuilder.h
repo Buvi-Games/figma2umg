@@ -25,11 +25,15 @@ public:
 	UFUNCTION()
 	virtual void SetNode(const UFigmaNode* InNode);
 
+	UFUNCTION()
+	virtual void SetParent(TScriptInterface<IWidgetBuilder> InParent);
+
 	TObjectPtr<UWidget> FindNodeWidgetInParent(const TObjectPtr<UPanelWidget>& ParentWidget) const;
 
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
 
 protected:
+	TScriptInterface<IWidgetBuilder> Parent = nullptr;
 	const UFigmaNode* Node = nullptr;
 };
 
