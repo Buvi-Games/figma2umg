@@ -23,7 +23,7 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 	}	
 
 	const FString NodeName = Node->GetNodeName();
-	const FString WidgetName = Node->GetUniqueName();
+	const FString WidgetName = "Border-" + Node->GetUniqueName();
 	if (Widget)
 	{
 		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
