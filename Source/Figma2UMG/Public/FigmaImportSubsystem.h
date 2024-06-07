@@ -26,6 +26,14 @@ public:
 	template <class Type>
 	UClass* GetOverrideClassForNode(const FString& NodeName);
 
+	static void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget);
+
+	template<class Type>
+	static Type* NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName);
+
+	template<class Type>
+	static Type* NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName, UClass* ClassOverride);
+
 private:
 	UPROPERTY()
 	TArray<UFigmaImporter*> Requests;
@@ -62,4 +70,32 @@ UClass* UFigmaImportSubsystem::GetOverrideClassForNode(const FString& NodeName)
 	FIND_OVERRIDE_FOR_TYPE(WrapBox)
 
 	return nullptr;
+}
+
+template <class Type>
+Type* UFigmaImportSubsystem::NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName)
+{
+	const FString UniqueName = MakeUniqueObjectName(TreeViewOuter, Type::StaticClass(), *WidgetName).ToString();
+	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<Type>(NodeName) : nullptr;
+	if (ClassOverride)
+	{
+		return NewObject<Type>(TreeViewOuter, ClassOverride, *UniqueName);
+	}
+	else
+	{
+		return NewObject<Type>(TreeViewOuter, *UniqueName);
+	}
+}
+
+template <class Type>
+Type* UFigmaImportSubsystem::NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName, UClass* ClassOverride)
+{
+	if (!ClassOverride)
+	{
+		return NewWidget<Type>(TreeViewOuter, NodeName, WidgetName);
+	}
+
+	const FString UniqueName = MakeUniqueObjectName(TreeViewOuter, ClassOverride, *WidgetName).ToString();
+	return NewObject<Type>(TreeViewOuter, ClassOverride, *UniqueName);
 }

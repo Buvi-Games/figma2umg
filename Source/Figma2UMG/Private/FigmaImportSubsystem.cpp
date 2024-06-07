@@ -19,3 +19,15 @@ void UFigmaImportSubsystem::RemoveRequest(UFigmaImporter* FigmaImporter)
 {
 	Requests.Remove(FigmaImporter);
 }
+
+void UFigmaImportSubsystem::TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget)
+{
+	if (!Widget)
+		return;
+
+	if (Widget->GetName().Contains(InName, ESearchCase::IgnoreCase))
+		return;
+
+	const FString UniqueName = MakeUniqueObjectName(Widget->GetOuter(), Widget->GetClass(), *InName).ToString();
+	Widget->Rename(*UniqueName);
+}

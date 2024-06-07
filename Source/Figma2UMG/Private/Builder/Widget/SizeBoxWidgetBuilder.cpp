@@ -16,22 +16,23 @@
 void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<USizeBox>(WidgetToPatch);
+	const FString NodeName = Node->GetNodeName();
 	const FString WidgetName = Node->GetUniqueName();
 	if (Widget)
 	{
 		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
-		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<USizeBox>(WidgetName) : nullptr;
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<USizeBox>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			USizeBox* NewSizeBox = IWidgetOwner::NewWidget<USizeBox>(WidgetTree, *WidgetName, ClassOverride);
+			USizeBox* NewSizeBox = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetTree, NodeName, WidgetName, ClassOverride);
 			NewSizeBox->SetContent(Widget->GetContent());
 			Widget = NewSizeBox;
 		}
-		IWidgetOwner::TryRenameWidget(WidgetName, Widget);
+		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 	}
 	else
 	{
-		Widget = IWidgetOwner::NewWidget<USizeBox>(WidgetTree, *WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetTree, NodeName, WidgetName);
 
 		if (WidgetToPatch)
 		{

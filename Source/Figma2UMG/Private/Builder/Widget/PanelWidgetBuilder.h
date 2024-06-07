@@ -38,6 +38,7 @@ template <class WidgetType>
 TObjectPtr<WidgetType> UPanelWidgetBuilder::Patch(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	TObjectPtr<WidgetType> PatchedWidget = nullptr;
+	const FString NodeName = Node->GetNodeName();
 	FString WidgetName = Node->GetUniqueName();
 
 	if (const USizeBox* SizeBoxWrapper = Cast<USizeBox>(WidgetToPatch))
@@ -74,20 +75,20 @@ TObjectPtr<WidgetType> UPanelWidgetBuilder::Patch(TObjectPtr<UWidgetTree> Widget
 
 		if (!PatchedWidget)
 		{
-			PatchedWidget = WidgetName.IsEmpty() ? NewObject<WidgetType>(WidgetTree) : IWidgetOwner::NewWidget<WidgetType>(WidgetTree, *WidgetName);
+			PatchedWidget = UFigmaImportSubsystem::NewWidget<WidgetType>(WidgetTree, NodeName, WidgetName);
 		}
 		else
 		{
-			IWidgetOwner::TryRenameWidget(WidgetName, PatchedWidget);
+			UFigmaImportSubsystem::TryRenameWidget(WidgetName, PatchedWidget);
 		}
 	}
 	else
 	{
 		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
-		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<WidgetType>(WidgetName) : nullptr;
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<WidgetType>(NodeName) : nullptr;
 		if (ClassOverride && PatchedWidget->GetClass() != ClassOverride)
 		{
-			WidgetType* NewWidget = IWidgetOwner::NewWidget<WidgetType>(WidgetTree, *WidgetName, ClassOverride);
+			WidgetType* NewWidget = UFigmaImportSubsystem::NewWidget<WidgetType>(WidgetTree, NodeName, WidgetName, ClassOverride);
 			while (PatchedWidget->GetChildrenCount() > 0)
 			{
 				NewWidget->AddChild(PatchedWidget->GetChildAt(0));

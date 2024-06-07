@@ -22,22 +22,23 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 		Widget = Cast<UBorder>(WidgetToPatch);
 	}	
 
+	const FString NodeName = Node->GetNodeName();
 	const FString WidgetName = Node->GetUniqueName();
 	if (Widget)
 	{
 		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
-		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(WidgetName) : nullptr;
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			UBorder* NewBorder = IWidgetOwner::NewWidget<UBorder>(WidgetTree, *WidgetName, ClassOverride);
+			UBorder* NewBorder = UFigmaImportSubsystem::NewWidget<UBorder>(WidgetTree, NodeName, WidgetName, ClassOverride);
 			NewBorder->SetContent(Widget->GetContent());
 			Widget = NewBorder;
 		}
-		IWidgetOwner::TryRenameWidget(WidgetName, Widget);
+		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 	}
 	else
 	{
-		Widget = IWidgetOwner::NewWidget<UBorder>(WidgetTree, *WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UBorder>(WidgetTree, NodeName, WidgetName);
 
 		if (WidgetToPatch)
 		{
