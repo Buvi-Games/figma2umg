@@ -30,11 +30,17 @@ public:
 
 	TObjectPtr<UWidget> FindNodeWidgetInParent(const TObjectPtr<UPanelWidget>& ParentWidget) const;
 
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
+	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) = 0;
 
+	virtual TObjectPtr<UWidget> GetWidget() = 0;
 protected:
-	TScriptInterface<IWidgetBuilder> Parent = nullptr;
+	bool Insert(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget);
+
 	const UFigmaNode* Node = nullptr;
+
+private:
+	TScriptInterface<IWidgetBuilder> Parent = nullptr;
 };
 
 UCLASS(Abstract)
@@ -45,10 +51,13 @@ public:
 
 	void SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
 
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) PURE_VIRTUAL(USingleChildBuilder::PatchPreInsertWidget(), return nullptr;);
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(USingleChildBuilder::PatchAndInsertWidget());
+	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
+	virtual TObjectPtr<UWidget> GetWidget() override;
 protected:
-	virtual void PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget);
+	virtual TObjectPtr<UContentWidget> GetContentWidget() PURE_VIRTUAL(USingleChildBuilder::PatchAndInsertWidget(), return nullptr;);
+	virtual void PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget);
 
 	UPROPERTY()
 	TScriptInterface<IWidgetBuilder> ChildWidgetBuilder = nullptr;
@@ -62,11 +71,13 @@ public:
 	GENERATED_BODY()
 
 	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UMultiChildBuilder::PatchAndInsertWidget());
+	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) PURE_VIRTUAL(UMultiChildBuilder::PatchPreInsertWidget(), return nullptr;);
-
+	virtual TObjectPtr<UWidget> GetWidget() override;
 protected:
-	virtual void PatchPreInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
+	virtual TObjectPtr<UPanelWidget> GetPanelWidget() PURE_VIRTUAL(UMultiChildBuilder::GetPanelWidget(), return nullptr;);
+	virtual void PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
 
 	UPROPERTY()
 	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;

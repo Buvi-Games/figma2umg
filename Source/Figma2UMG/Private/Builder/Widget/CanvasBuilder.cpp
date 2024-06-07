@@ -6,7 +6,7 @@
 #include "Components/CanvasPanel.h"
 #include "Parser/Nodes/FigmaDocument.h"
 
-TObjectPtr<UWidget> UCanvasBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UCanvasBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
     TObjectPtr<UWidget> MyWidgetToPatch = WidgetToPatch;
     if(MyWidgetToPatch && MyWidgetToPatch->IsA<UWidgetSwitcher>() && Node->GetParentNode() && Node->GetParentNode()->IsA<UFigmaDocument>())
@@ -16,7 +16,11 @@ TObjectPtr<UWidget> UCanvasBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree>
 
     CanvasPanel = Patch<UCanvasPanel>(WidgetTree, MyWidgetToPatch);
 
-    PatchPreInsertChildren(WidgetTree, CanvasPanel);
+    Insert(WidgetTree, WidgetToPatch, CanvasPanel);
+    PatchAndInsertChildren(WidgetTree, CanvasPanel);
+}
 
-    return CanvasPanel;
+void UCanvasBuilder::Setup() const
+{
+    //Nothing to do
 }

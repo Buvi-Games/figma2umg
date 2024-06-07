@@ -7,6 +7,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/ContentWidget.h"
 #include "Components/PanelWidget.h"
+#include "Components/Spacer.h"
 #include "Components/Widget.h"
 #include "Parser/Nodes/FigmaNode.h"
 
@@ -40,6 +41,21 @@ TObjectPtr<UWidget> IWidgetBuilder::FindNodeWidgetInParent(const TObjectPtr<UPan
 	return nullptr;
 }
 
+bool IWidgetBuilder::Insert(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
+{
+	if (Parent)
+	{
+		return Parent->TryInsertOrReplace(PrePatchWidget, PostPatchWidget);
+	}
+	else if (WidgetTree)
+	{
+		WidgetTree->RootWidget = PostPatchWidget;
+		return  true;
+	}
+
+	return  false;
+}
+
 void USingleChildBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder)
 {
 	if (ChildWidgetBuilder)
@@ -53,22 +69,48 @@ void USingleChildBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& Widge
 	}
 }
 
-void USingleChildBuilder::PatchPreInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget)
+bool USingleChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
+{
+	if (!PostPatchWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[USingleChildBuilder::TryInsertOrReplace] Trying to insert a <null> Widget at Node %s."), *Node->GetNodeName());
+		return false;
+	}
+	const TObjectPtr<UContentWidget> ContentWidget = GetContentWidget();
+	if (!ContentWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[USingleChildBuilder::TryInsertOrReplace] Node %s doesn't have ContentWidget."), *Node->GetNodeName());
+		return false;
+	}
+
+	if (ContentWidget->GetContent() == PostPatchWidget)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[USingleChildBuilder::TryInsertOrReplace] Node %s ContentWidget %s alreay have Widget %s."), *Node->GetNodeName(), *ContentWidget->GetName(), *PostPatchWidget->GetName());
+		return true;
+	}
+
+	UE_LOG_Figma2UMG(Display, TEXT("[USingleChildBuilder::TryInsertOrReplace] Node %s ContentWidget %s inserted Widget %s."), *Node->GetNodeName(), *ContentWidget->GetName(), *PostPatchWidget->GetName());
+	ContentWidget->SetContent(PostPatchWidget);
+	return true;
+}
+
+TObjectPtr<UWidget> USingleChildBuilder::GetWidget()
+{
+	return GetContentWidget();
+}
+
+void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget)
 {
 	if (!ParentWidget)
 	{
-		UE_LOG_Figma2UMG(Warning, TEXT("[USingleChildBuilder::PatchPreInsertChildren] ParentWidget is null at Node %s."), *Node->GetNodeName());
+		UE_LOG_Figma2UMG(Warning, TEXT("[USingleChildBuilder::PatchAndInsertChildren] ParentWidget is null at Node %s."), *Node->GetNodeName());
 		return;
 	}
 
 	if(ChildWidgetBuilder)
 	{
 		TObjectPtr<UWidget> ChildWidget = ParentWidget->GetContent();
-		TObjectPtr<UWidget> SubWidget = ChildWidgetBuilder->PatchPreInsertWidget(WidgetTree, ChildWidget);
-		if (SubWidget)
-		{
-			ParentWidget->SetContent(SubWidget);
-		}
+		ChildWidgetBuilder->PatchAndInsertWidget(WidgetTree, ChildWidget);
 	}
 }
 
@@ -81,11 +123,47 @@ void UMultiChildBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& Widget
 	}
 }
 
-void UMultiChildBuilder::PatchPreInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget)
+bool UMultiChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
+{
+	if (!PostPatchWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::TryInsertOrReplace] Trying to insert a <null> Widget at Node %s."), *Node->GetNodeName());
+		return false;
+	}
+	const TObjectPtr<UPanelWidget> PanelWidget = GetPanelWidget();
+	if (!PanelWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::TryInsertOrReplace] Node %s doesn't have ContentWidget."), *Node->GetNodeName());
+		return false;
+	}
+
+	if (PanelWidget->HasChild(PostPatchWidget))
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[USingleChildBuilder::TryInsertOrReplace] Node %s ContentWidget %s alreay have Widget %s."), *Node->GetNodeName(), *PanelWidget->GetName(), *PostPatchWidget->GetName());
+	}
+	else if(PrePatchWidget != nullptr && PanelWidget->HasChild(PrePatchWidget))
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[UMultiChildBuilder::TryInsertOrReplace] Node %s ContentWidget %s replace OldWidget %s with NewWidget %s."), *Node->GetNodeName(), *PanelWidget->GetName(), *PrePatchWidget->GetName(), *PostPatchWidget->GetName());
+		PanelWidget->ReplaceChild(PrePatchWidget, PostPatchWidget);
+	}
+	else
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[UMultiChildBuilder::TryInsertOrReplace] Node %s ContentWidget %s inserted Widget %s."), *Node->GetNodeName(), *PanelWidget->GetName(), *PostPatchWidget->GetName());
+		PanelWidget->AddChild(PostPatchWidget);
+	}
+	return true;
+}
+
+TObjectPtr<UWidget> UMultiChildBuilder::GetWidget()
+{
+	return GetPanelWidget();
+}
+
+void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget)
 {
 	if (!ParentWidget)
 	{
-		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::PatchPreInsertChildren] ParentWidget is null at Node %s."), *Node->GetNodeName());
+		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::PatchAndInsertChildren] ParentWidget is null at Node %s."), *Node->GetNodeName());
 		return;
 	}
 
@@ -97,20 +175,23 @@ void UMultiChildBuilder::PatchPreInsertChildren(TObjectPtr<UWidgetTree> WidgetTr
 			continue;
 
 		TObjectPtr<UWidget> ChildWidget = ChildBuilder->FindNodeWidgetInParent(ParentWidget);
-		TObjectPtr<UWidget> SubWidget = ChildBuilder->PatchPreInsertWidget(WidgetTree, ChildWidget);
-		if (SubWidget)
+		ChildBuilder->PatchAndInsertWidget(WidgetTree, ChildWidget);
+
+		if (TObjectPtr<UWidget> PatchedWidget = ChildBuilder->GetWidget())
 		{
-			NewChildren.Add(SubWidget);
-			ParentWidget->AddChild(SubWidget);
+			NewChildren.Add(PatchedWidget);
 		}
 	}
 
 	AllChildren = ParentWidget->GetAllChildren();
 	for (int i = 0; i < AllChildren.Num() && AllChildren.Num() > NewChildren.Num(); i++)
 	{
-		if (NewChildren.Contains(AllChildren[i]))
+		if(AllChildren[i] && AllChildren[i]->IsA<USpacer>())
 			continue;
 
+		if (NewChildren.Contains(AllChildren[i]))
+			continue;
+	
 		AllChildren.RemoveAt(i);
 	}
 }

@@ -9,7 +9,7 @@
 #include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 
-TObjectPtr<UWidget> UWidgetSwitcherBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UWidgetSwitcher>(WidgetToPatch);
 	if (Widget == nullptr)
@@ -36,7 +36,12 @@ TObjectPtr<UWidget> UWidgetSwitcherBuilder::PatchPreInsertWidget(TObjectPtr<UWid
 		IWidgetOwner::TryRenameWidget(Node->GetUniqueName(), Widget);
 	}
 
-	PatchPreInsertChildren(WidgetTree, Widget);
+	PatchAndInsertChildren(WidgetTree, Widget);
 
+	Insert(WidgetTree, WidgetToPatch, Widget);
+}
+
+TObjectPtr<UPanelWidget> UWidgetSwitcherBuilder::GetPanelWidget()
+{
 	return Widget;
 }

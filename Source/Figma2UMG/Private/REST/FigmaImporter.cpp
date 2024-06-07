@@ -636,7 +636,7 @@ void UFigmaImporter::PatchPreInsertWidget()
 	{
 		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
-			BlueprintBuilder->PatchPreInsertWidget();
+			BlueprintBuilder->PatchAndInsertWidgets();
 		}
 	}
 }

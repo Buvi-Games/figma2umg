@@ -49,7 +49,7 @@ void UFigmaDocument::PrePatchWidget()
 
 TObjectPtr<UWidget> UFigmaDocument::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
 {
-	UE_LOG_Figma2UMG(Display, TEXT("PatchPreInsertWidget [%s]"), *GetUniqueName());
+	UE_LOG_Figma2UMG(Display, TEXT("PatchAndInsertWidget [%s]"), *GetUniqueName());
 
 	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
 

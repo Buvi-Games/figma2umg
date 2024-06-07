@@ -15,8 +15,10 @@ class UImageWidgetBuilder : public UObject, public IWidgetBuilder
 public:
 	GENERATED_BODY()
 
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
+	virtual TObjectPtr<UWidget> GetWidget() override;
 protected:
 	UPROPERTY()
 	TObjectPtr<UImage> Widget = nullptr;

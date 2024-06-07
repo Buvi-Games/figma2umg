@@ -16,7 +16,8 @@ public:
 	GENERATED_BODY()
 
 protected:
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void Setup() const override;
 
 	UPROPERTY()
 	TObjectPtr<UCanvasPanel> CanvasPanel = nullptr;

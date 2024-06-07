@@ -3,8 +3,18 @@
 
 #include "ButtonWidgetBuilder.h"
 
+#include "Figma2UMGModule.h"
+#include "Components/Button.h"
+#include "Components/ContentWidget.h"
 
-TObjectPtr<UWidget> UButtonWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+
+void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
-	return WidgetToPatch;
+	UE_LOG_Figma2UMG(Warning, TEXT("[UButtonWidgetBuilder::PatchAndInsertWidget] TODO."));
+	Insert(WidgetTree, WidgetToPatch, WidgetToPatch);
+}
+
+TObjectPtr<UContentWidget> UButtonWidgetBuilder::GetContentWidget()
+{
+	return Widget;
 }

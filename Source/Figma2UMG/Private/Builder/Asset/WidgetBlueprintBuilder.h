@@ -21,7 +21,7 @@ public:
 	void CompileBP();
 
 	void CreateWidgetBuilders();
-	void PatchPreInsertWidget();
+	void PatchAndInsertWidgets();
 	bool PatchPostInsertWidget();
 	void PatchWidgetBinds();
 	void PatchWidgetProperties();

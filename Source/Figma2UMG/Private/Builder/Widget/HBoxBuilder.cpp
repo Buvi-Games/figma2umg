@@ -3,11 +3,18 @@
 
 #include "Builder/Widget/HBoxBuilder.h"
 
-TObjectPtr<UWidget> UHBoxBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+#include "Figma2UMGModule.h"
+
+void UHBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
     Box = Patch<UHorizontalBox>(WidgetTree, WidgetToPatch);
 
-    PatchPreInsertChildren(WidgetTree, Box);
+    Insert(WidgetTree, WidgetToPatch, Box);
+    Setup();
+    PatchAndInsertChildren(WidgetTree, Box);
+}
 
-    return Box;
+void UHBoxBuilder::Setup() const
+{
+    UE_LOG_Figma2UMG(Warning, TEXT("[UHBoxBuilder::Setup] TODO."));
 }

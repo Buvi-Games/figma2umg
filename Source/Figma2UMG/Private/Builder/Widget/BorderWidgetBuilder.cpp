@@ -11,7 +11,7 @@
 #include "Parser/Nodes/FigmaSection.h"
 
 
-TObjectPtr<UWidget> UBorderWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	if (const USizeBox* SizeBoxWrapper = Cast<USizeBox>(WidgetToPatch))
 	{
@@ -59,9 +59,15 @@ TObjectPtr<UWidget> UBorderWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidge
 		Widget->SetBrush(Brush);
 	}
 
-	Setup();
-	PatchPreInsertChild(WidgetTree, Widget);
+	Insert(WidgetTree, WidgetToPatch, Widget);
 
+	Setup();
+
+	PatchAndInsertChild(WidgetTree, Widget);
+}
+
+TObjectPtr<UContentWidget> UBorderWidgetBuilder::GetContentWidget()
+{
 	return Widget;
 }
 

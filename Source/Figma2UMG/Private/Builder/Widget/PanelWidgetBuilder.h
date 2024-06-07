@@ -20,11 +20,14 @@ class UPanelWidgetBuilder : public UMultiChildBuilder
 public:
 	GENERATED_BODY()
 
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchPreInsertWidget(), return WidgetToPatch;);
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchAndInsertWidget());
 
 protected:
+	virtual TObjectPtr<UPanelWidget> GetPanelWidget() override;
+
 	template<class WidgetType>
 	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch);
+	virtual void Setup() const PURE_VIRTUAL(UPanelWidgetBuilder::Setup());
 
 	UPROPERTY()
 	TObjectPtr<UPanelWidget> Widget = nullptr;

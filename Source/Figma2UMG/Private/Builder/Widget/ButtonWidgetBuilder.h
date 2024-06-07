@@ -13,9 +13,11 @@ class UButtonWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
+	virtual TObjectPtr<UContentWidget> GetContentWidget() override;
+
 	UPROPERTY()
 	TObjectPtr<UButton> Widget = nullptr;
 };

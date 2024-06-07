@@ -3,11 +3,18 @@
 
 #include "Builder/Widget/VBoxBuilder.h"
 
-TObjectPtr<UWidget> UVBoxBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+#include "Figma2UMGModule.h"
+
+void UVBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
     Box = Patch<UVerticalBox>(WidgetTree, WidgetToPatch);
 
-    PatchPreInsertChildren(WidgetTree, Box);
+    Insert(WidgetTree, WidgetToPatch, Box);
 
-    return Box;
+    PatchAndInsertChildren(WidgetTree, Box);
+}
+
+void UVBoxBuilder::Setup() const
+{
+    UE_LOG_Figma2UMG(Warning, TEXT("[UVBoxBuilder::Setup] TODO."));
 }

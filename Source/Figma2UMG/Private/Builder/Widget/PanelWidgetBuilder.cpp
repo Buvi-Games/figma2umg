@@ -2,3 +2,8 @@
 
 
 #include "PanelWidgetBuilder.h"
+
+TObjectPtr<UPanelWidget> UPanelWidgetBuilder::GetPanelWidget()
+{
+	return Widget;
+}

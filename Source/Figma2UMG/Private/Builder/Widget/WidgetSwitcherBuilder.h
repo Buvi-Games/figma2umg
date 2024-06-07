@@ -14,9 +14,11 @@ class UWidgetSwitcherBuilder : public UMultiChildBuilder
 public:
 	GENERATED_BODY()
 
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
+	virtual TObjectPtr<UPanelWidget> GetPanelWidget() override;
+
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> Widget = nullptr;
 };

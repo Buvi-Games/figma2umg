@@ -22,7 +22,7 @@ TObjectPtr<UWidget> UFigmaFrame::PatchPreInsertWidget(TObjectPtr<UWidget> Widget
 		return Super::PatchPreInsertWidget(WidgetToPatch);
 	}
 
-	UE_LOG_Figma2UMG(Display, TEXT("PatchPreInsertWidget [%s]"), *GetUniqueName());
+	UE_LOG_Figma2UMG(Display, TEXT("PatchAndInsertWidget [%s]"), *GetUniqueName());
 
 	UWidgetBlueprint* Widget = GetAsset<UWidgetBlueprint>();
 	WidgetToPatch = Widget->WidgetTree->RootWidget;

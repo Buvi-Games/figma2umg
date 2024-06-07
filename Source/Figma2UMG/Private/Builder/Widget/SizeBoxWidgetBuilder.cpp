@@ -13,7 +13,7 @@
 #include "Parser/Nodes/Vectors/FigmaText.h"
 
 
-TObjectPtr<UWidget> USizeBoxWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<USizeBox>(WidgetToPatch);
 	const FString WidgetName = Node->GetUniqueName();
@@ -39,9 +39,13 @@ TObjectPtr<UWidget> USizeBoxWidgetBuilder::PatchPreInsertWidget(TObjectPtr<UWidg
 		}
 	}
 
+	Insert(WidgetTree, WidgetToPatch, Widget);
 	Setup();
-	PatchPreInsertChild(WidgetTree, Widget);
+	PatchAndInsertChild(WidgetTree, Widget);
+}
 
+TObjectPtr<UContentWidget> USizeBoxWidgetBuilder::GetContentWidget()
+{
 	return Widget;
 }
 
