@@ -67,7 +67,7 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 	PatchAndInsertChild(WidgetTree, Widget);
 }
 
-TObjectPtr<UContentWidget> UBorderWidgetBuilder::GetContentWidget()
+TObjectPtr<UContentWidget> UBorderWidgetBuilder::GetContentWidget() const
 {
 	return Widget;
 }

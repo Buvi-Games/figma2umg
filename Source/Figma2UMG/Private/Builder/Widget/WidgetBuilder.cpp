@@ -41,7 +41,7 @@ TObjectPtr<UWidget> IWidgetBuilder::FindNodeWidgetInParent(const TObjectPtr<UPan
 	return nullptr;
 }
 
-bool IWidgetBuilder::Insert(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
+bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const
 {
 	if (Parent)
 	{
@@ -94,7 +94,7 @@ bool USingleChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatch
 	return true;
 }
 
-TObjectPtr<UWidget> USingleChildBuilder::GetWidget()
+TObjectPtr<UWidget> USingleChildBuilder::GetWidget() const
 {
 	return GetContentWidget();
 }
@@ -154,7 +154,7 @@ bool UMultiChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchW
 	return true;
 }
 
-TObjectPtr<UWidget> UMultiChildBuilder::GetWidget()
+TObjectPtr<UWidget> UMultiChildBuilder::GetWidget() const
 {
 	return GetPanelWidget();
 }

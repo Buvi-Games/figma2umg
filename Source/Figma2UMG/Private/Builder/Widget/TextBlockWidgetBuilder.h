@@ -17,7 +17,7 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
-	virtual TObjectPtr<UWidget> GetWidget() override;
+	virtual TObjectPtr<UWidget> GetWidget() const override;
 protected:
 	UPROPERTY()
 	TObjectPtr<UTextBlock> Widget = nullptr;

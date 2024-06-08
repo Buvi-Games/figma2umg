@@ -23,7 +23,7 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchAndInsertWidget());
 
 protected:
-	virtual TObjectPtr<UPanelWidget> GetPanelWidget() override;
+	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const override;
 
 	template<class WidgetType>
 	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch);

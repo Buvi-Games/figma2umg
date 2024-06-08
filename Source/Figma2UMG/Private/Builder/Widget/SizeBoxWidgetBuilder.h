@@ -18,7 +18,7 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
-	virtual TObjectPtr<UContentWidget> GetContentWidget() override;
+	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
 
 	void Setup() const;
 	void GetValues(EFigmaLayoutSizing& LayoutSizingHorizontal, EFigmaLayoutSizing& LayoutSizingVertical, float& FixedWidth, float& FixedHeight) const;

@@ -3,7 +3,7 @@
 
 #include "PanelWidgetBuilder.h"
 
-TObjectPtr<UPanelWidget> UPanelWidgetBuilder::GetPanelWidget()
+TObjectPtr<UPanelWidget> UPanelWidgetBuilder::GetPanelWidget() const
 {
 	return Widget;
 }

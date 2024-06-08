@@ -33,7 +33,7 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) = 0;
 
-	virtual TObjectPtr<UWidget> GetWidget() = 0;
+	virtual TObjectPtr<UWidget> GetWidget() const = 0;
 protected:
 	bool Insert(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget);
 
@@ -54,9 +54,9 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(USingleChildBuilder::PatchAndInsertWidget());
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
-	virtual TObjectPtr<UWidget> GetWidget() override;
+	virtual TObjectPtr<UWidget> GetWidget() const override;
 protected:
-	virtual TObjectPtr<UContentWidget> GetContentWidget() PURE_VIRTUAL(USingleChildBuilder::PatchAndInsertWidget(), return nullptr;);
+	virtual TObjectPtr<UContentWidget> GetContentWidget() const PURE_VIRTUAL(USingleChildBuilder::GetContentWidget(), return nullptr;);
 	virtual void PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget);
 
 	UPROPERTY()
@@ -74,9 +74,9 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UMultiChildBuilder::PatchAndInsertWidget());
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
-	virtual TObjectPtr<UWidget> GetWidget() override;
+	virtual TObjectPtr<UWidget> GetWidget() const override;
 protected:
-	virtual TObjectPtr<UPanelWidget> GetPanelWidget() PURE_VIRTUAL(UMultiChildBuilder::GetPanelWidget(), return nullptr;);
+	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const PURE_VIRTUAL(UMultiChildBuilder::GetPanelWidget(), return nullptr;);
 	virtual void PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
 
 	UPROPERTY()

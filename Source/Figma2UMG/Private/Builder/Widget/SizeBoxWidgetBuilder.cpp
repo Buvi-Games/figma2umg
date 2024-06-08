@@ -45,7 +45,7 @@ void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetT
 	PatchAndInsertChild(WidgetTree, Widget);
 }
 
-TObjectPtr<UContentWidget> USizeBoxWidgetBuilder::GetContentWidget()
+TObjectPtr<UContentWidget> USizeBoxWidgetBuilder::GetContentWidget() const
 {
 	return Widget;
 }

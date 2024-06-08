@@ -14,7 +14,7 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 	Insert(WidgetTree, WidgetToPatch, WidgetToPatch);
 }
 
-TObjectPtr<UContentWidget> UButtonWidgetBuilder::GetContentWidget()
+TObjectPtr<UContentWidget> UButtonWidgetBuilder::GetContentWidget() const
 {
 	return Widget;
 }

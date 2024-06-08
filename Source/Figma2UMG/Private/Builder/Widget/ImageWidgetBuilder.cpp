@@ -21,7 +21,7 @@ bool UImageWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatch
 	return false;
 }
 
-TObjectPtr<UWidget> UImageWidgetBuilder::GetWidget()
+TObjectPtr<UWidget> UImageWidgetBuilder::GetWidget() const
 {
 	return Widget;
 };

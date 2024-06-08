@@ -20,7 +20,7 @@ bool UTextBlockWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PreP
 	return false;
 }
 
-TObjectPtr<UWidget> UTextBlockWidgetBuilder::GetWidget()
+TObjectPtr<UWidget> UTextBlockWidgetBuilder::GetWidget() const
 {
 	return Widget;
 }

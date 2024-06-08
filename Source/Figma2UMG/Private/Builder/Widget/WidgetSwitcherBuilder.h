@@ -17,7 +17,7 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 protected:
-	virtual TObjectPtr<UPanelWidget> GetPanelWidget() override;
+	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const override;
 
 	UPROPERTY()
 	TObjectPtr<UWidgetSwitcher> Widget = nullptr;

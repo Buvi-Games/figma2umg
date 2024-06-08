@@ -43,7 +43,7 @@ void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widget
 	Insert(WidgetTree, WidgetToPatch, Widget);
 }
 
-TObjectPtr<UPanelWidget> UWidgetSwitcherBuilder::GetPanelWidget()
+TObjectPtr<UPanelWidget> UWidgetSwitcherBuilder::GetPanelWidget() const
 {
 	return Widget;
 }
