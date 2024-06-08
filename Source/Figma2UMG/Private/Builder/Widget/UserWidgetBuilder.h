@@ -23,6 +23,9 @@ public:
 
 	virtual TObjectPtr<UWidget> GetWidget() const override;
 protected:
+	virtual void GetPaddingValue(FMargin& Padding) const override;
+	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
+
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;
 

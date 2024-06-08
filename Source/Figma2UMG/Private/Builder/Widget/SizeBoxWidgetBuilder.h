@@ -19,6 +19,7 @@ public:
 
 protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
+	virtual void GetPaddingValue(FMargin& Padding) const override;
 
 	void Setup() const;
 	void GetValues(EFigmaLayoutSizing& LayoutSizingHorizontal, EFigmaLayoutSizing& LayoutSizingVertical, float& FixedWidth, float& FixedHeight) const;

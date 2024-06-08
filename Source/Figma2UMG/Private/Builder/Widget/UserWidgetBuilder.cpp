@@ -55,4 +55,19 @@ bool UUserWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchW
 TObjectPtr<UWidget> UUserWidgetBuilder::GetWidget() const
 {
 	return Widget;
+}
+
+void UUserWidgetBuilder::GetPaddingValue(FMargin& Padding) const
+{
+	Padding.Left = 0.0f;
+	Padding.Right = 0.0f;
+	Padding.Top = 0.0f;
+	Padding.Bottom = 0.0f;
+}
+
+bool UUserWidgetBuilder::GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const
+{
+	HorizontalAlignment = HAlign_Fill;
+	VerticalAlignment = VAlign_Fill;
+	return true;
 };

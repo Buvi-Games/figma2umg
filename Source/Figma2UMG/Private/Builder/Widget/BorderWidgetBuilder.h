@@ -19,6 +19,7 @@ public:
 protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
 	virtual void GetPaddingValue(FMargin& Padding) const override;
+	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
 
 	void Setup() const;
 

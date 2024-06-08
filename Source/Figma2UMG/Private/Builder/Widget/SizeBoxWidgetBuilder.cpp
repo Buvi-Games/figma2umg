@@ -50,6 +50,14 @@ TObjectPtr<UContentWidget> USizeBoxWidgetBuilder::GetContentWidget() const
 	return Widget;
 }
 
+void USizeBoxWidgetBuilder::GetPaddingValue(FMargin& Padding) const
+{
+	Padding.Left = 0.0f;
+	Padding.Right = 0.0f;
+	Padding.Top = 0.0f;
+	Padding.Bottom = 0.0f;
+}
+
 void USizeBoxWidgetBuilder::Setup() const
 {
 	EFigmaLayoutSizing LayoutSizingHorizontal = EFigmaLayoutSizing::FILL;

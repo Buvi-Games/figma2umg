@@ -65,6 +65,13 @@ void UBorderWidgetBuilder::GetPaddingValue(FMargin& Padding) const
 	Padding.Bottom = 0.0f;
 }
 
+bool UBorderWidgetBuilder::GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const
+{
+	HorizontalAlignment = HAlign_Fill;
+	VerticalAlignment = VAlign_Fill;
+	return true;
+}
+
 void UBorderWidgetBuilder::Setup() const
 {
 	FSlateBrush Brush = Widget->Background;
