@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WidgetBuilder.h"
+#include "MultiChildBuilder.h"
 #include "WidgetSwitcherBuilder.generated.h"
 
 class UWidgetSwitcher;

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WidgetBuilder.h"
+#include "SingleChildBuilder.h"
 #include "Parser/Properties/FigmaEnums.h"
 #include "SizeBoxWidgetBuilder.generated.h"
 

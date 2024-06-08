@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WidgetBuilder.h"
+#include "MultiChildBuilder.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/SizeBox.h"

@@ -6,7 +6,7 @@
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
-#include "Builder/Widget/CanvasBuilder.h"
+#include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"

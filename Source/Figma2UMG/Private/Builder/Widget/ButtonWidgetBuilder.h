@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WidgetBuilder.h"
+#include "SingleChildBuilder.h"
 #include "ButtonWidgetBuilder.generated.h"
 
 class UButton;

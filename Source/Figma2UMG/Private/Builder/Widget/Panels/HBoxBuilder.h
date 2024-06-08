@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PanelWidgetBuilder.h"
+#include "Builder/Widget/PanelWidgetBuilder.h"
 
 #include "HBoxBuilder.generated.h"
 

@@ -3,14 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PanelWidgetBuilder.h"
+#include "Builder/Widget/PanelWidgetBuilder.h"
 
-#include "CanvasBuilder.generated.h"
-
-class UCanvasPanel;
+#include "VBoxBuilder.generated.h"
 
 UCLASS()
-class UCanvasBuilder : public UPanelWidgetBuilder
+class UVBoxBuilder : public UPanelWidgetBuilder
 {
 public:
 	GENERATED_BODY()
@@ -20,5 +18,5 @@ protected:
 	virtual void Setup() const override;
 
 	UPROPERTY()
-	TObjectPtr<UCanvasPanel> CanvasPanel = nullptr;
+	TObjectPtr<UVerticalBox> Box = nullptr;
 };

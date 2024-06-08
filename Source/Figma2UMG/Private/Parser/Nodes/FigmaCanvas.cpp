@@ -4,7 +4,7 @@
 #include "Parser/Nodes/FigmaCanvas.h"
 
 #include "Figma2UMGModule.h"
-#include "Builder/Widget/CanvasBuilder.h"
+#include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Builder/Widget/PanelWidgetBuilder.h"
 #include "Components/CanvasPanel.h"
 

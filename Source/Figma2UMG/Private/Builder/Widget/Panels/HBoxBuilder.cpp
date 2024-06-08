@@ -1,7 +1,7 @@
 // Copyright 2024 Buvi Games. All Rights Reserved.
 
 
-#include "Builder/Widget/HBoxBuilder.h"
+#include "HBoxBuilder.h"
 
 #include "Figma2UMGModule.h"
 

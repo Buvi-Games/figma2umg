@@ -1,7 +1,7 @@
 // Copyright 2024 Buvi Games. All Rights Reserved.
 
 
-#include "Builder/Widget/WBoxBuilder.h"
+#include "WBoxBuilder.h"
 
 #include "Figma2UMGModule.h"
 

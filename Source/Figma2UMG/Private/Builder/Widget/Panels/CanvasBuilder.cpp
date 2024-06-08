@@ -1,9 +1,10 @@
 // Copyright 2024 Buvi Games. All Rights Reserved.
 
 
-#include "Builder/Widget/CanvasBuilder.h"
+#include "CanvasBuilder.h"
 
 #include "Components/CanvasPanel.h"
+#include "Components/WidgetSwitcher.h"
 #include "Parser/Nodes/FigmaDocument.h"
 
 void UCanvasBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)

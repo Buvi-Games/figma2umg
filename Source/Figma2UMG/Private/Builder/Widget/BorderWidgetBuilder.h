@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WidgetBuilder.h"
+#include "SingleChildBuilder.h"
 #include "BorderWidgetBuilder.generated.h"
 
 struct FFigmaPaint;
