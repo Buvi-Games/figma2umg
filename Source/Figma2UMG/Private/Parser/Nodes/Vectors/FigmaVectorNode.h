@@ -68,7 +68,7 @@ public:
 	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
-protected:
+
 	UPROPERTY()
 	bool Locked = false;
 
@@ -162,6 +162,7 @@ protected:
 	//UPROPERTY()
 	//FFigmaAnnotation annotation
 
+protected:
 	UPROPERTY()
 	FImageBuilder Builder;
 };
