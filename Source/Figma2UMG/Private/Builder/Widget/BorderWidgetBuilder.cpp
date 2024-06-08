@@ -45,20 +45,6 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 		}
 	}
 
-	if (Widget)
-	{
-		FSlateBrush Brush = Widget->Background;
-		if (Node->IsA<UFigmaSection>())
-		{
-			Brush.DrawAs = ESlateBrushDrawType::Image;
-		}
-		else
-		{
-			Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
-		}
-		Widget->SetBrush(Brush);
-	}
-
 	Insert(WidgetTree, WidgetToPatch, Widget);
 
 	Setup();
@@ -71,8 +57,27 @@ TObjectPtr<UContentWidget> UBorderWidgetBuilder::GetContentWidget() const
 	return Widget;
 }
 
+void UBorderWidgetBuilder::GetPaddingValue(FMargin& Padding) const
+{
+	Padding.Left = 0.0f;
+	Padding.Right = 0.0f;
+	Padding.Top = 0.0f;
+	Padding.Bottom = 0.0f;
+}
+
 void UBorderWidgetBuilder::Setup() const
 {
+	FSlateBrush Brush = Widget->Background;
+	if (Node->IsA<UFigmaSection>())
+	{
+		Brush.DrawAs = ESlateBrushDrawType::Image;
+	}
+	else
+	{
+		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
+	}
+	Widget->SetBrush(Brush);
+
 	if (const UFigmaSection* FigmaSection = Cast<UFigmaSection>(Node))
 	{
 		SetFill(FigmaSection->Fills);

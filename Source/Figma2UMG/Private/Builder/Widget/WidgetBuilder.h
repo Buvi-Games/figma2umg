@@ -39,14 +39,14 @@ protected:
 	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;
 	void OnInsert() const;
 
-	virtual void SetPosition() const;
-	virtual void SetSize() const;
-	virtual void SetPadding() const;
-	virtual void SetConstraintsAndAlign() const;
+	void SetPosition() const;
+	void SetSize() const;
+	void SetPadding() const;
+	void SetConstraintsAndAlign() const;
 
-	bool GetSizeValue(FVector2D& Size, bool& SizeToContent) const;
-	void GetPaddingValue(FMargin& Padding) const;
-	bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
+	virtual bool GetSizeValue(FVector2D& Size, bool& SizeToContent) const;
+	virtual void GetPaddingValue(FMargin& Padding) const;
+	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
 
 	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
 	EHorizontalAlignment Convert(EFigmaLayoutConstraintHorizontal LayoutConstraint) const;
