@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Parser/Properties/FigmaEnums.h"
 #include "WidgetBuilder.generated.h"
 
 class UWidgetTree;
@@ -35,7 +36,24 @@ public:
 
 	virtual TObjectPtr<UWidget> GetWidget() const = 0;
 protected:
-	bool Insert(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget);
+	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;
+	void OnInsert() const;
+
+	virtual void SetPosition() const;
+	virtual void SetSize() const;
+	virtual void SetPadding() const;
+	virtual void SetConstraintsAndAlign() const;
+
+	bool GetSizeValue(FVector2D& Size, bool& SizeToContent) const;
+	void GetPaddingValue(FMargin& Padding) const;
+	bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
+
+	EHorizontalAlignment Convert(EFigmaTextAlignHorizontal TextAlignHorizontal) const;
+	EHorizontalAlignment Convert(EFigmaLayoutConstraintHorizontal LayoutConstraint) const;
+	EHorizontalAlignment Convert(EFigmaPrimaryAxisAlignItems  LayoutConstraint) const;
+	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;
+	EVerticalAlignment Convert(EFigmaLayoutConstraintVertical LayoutConstraint) const;
+	EVerticalAlignment Convert(EFigmaCounterAxisAlignItems LayoutConstraint) const;
 
 	const UFigmaNode* Node = nullptr;
 
