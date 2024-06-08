@@ -256,7 +256,7 @@ bool IWidgetBuilder::GetSizeValue(FVector2D& Size, bool& SizeToContent) const
 	if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
 	{
 		Size = FigmaInstance->AbsoluteBoundingBox.GetSize();
-		SizeToContent = FigmaInstance->LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || FigmaInstance->LayoutSizingVertical == EFigmaLayoutSizing::FILL;
+		SizeToContent = true;
 		return true;
 	}
 	
