@@ -11,9 +11,9 @@
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
-void UFigmaFrame::SetGenerateFile()
+void UFigmaFrame::SetGenerateFile(bool Value /*= true*/)
 {
-	GenerateFile = true;
+	GenerateFile = Value;
 }
 
 TObjectPtr<UWidget> UFigmaFrame::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)

@@ -78,11 +78,11 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 	{
 		const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 		const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
-		const TObjectPtr<UFigmaComponent> FigmaComponent = ComponentRef ? ComponentRef->GetComponent() : nullptr;
+		TObjectPtr<UWidgetBlueprintBuilder> Builder = ComponentRef ? ComponentRef->GetAssetBuilder() : nullptr;
 		
 		UUserWidgetBuilder* UserWidgetBuilder = NewObject<UUserWidgetBuilder>();
 		UserWidgetBuilder->SetNode(this);
-		UserWidgetBuilder->SetWidgetBlueprintBuilder(FigmaComponent ? FigmaComponent->GetAssetBuilder() : nullptr);
+		UserWidgetBuilder->SetWidgetBlueprintBuilder(Builder);
 		return UserWidgetBuilder;
 	}
 }

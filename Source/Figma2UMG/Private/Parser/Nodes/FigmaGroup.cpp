@@ -4,6 +4,7 @@
 #include "Parser/Nodes/FigmaGroup.h"
 
 #include "FigmaComponent.h"
+#include "FigmaComponentSet.h"
 #include "Builder/ButtonBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
@@ -39,15 +40,18 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 	}
 
 	bool RequireBorder = false;
-	for (int i = 0; i < Fills.Num() && !RequireBorder; i++)
+	if(!ParentNode || !ParentNode->IsA<UFigmaComponentSet>())
 	{
-		if (Fills[i].Visible)
-			RequireBorder = true;
-	}
-	for (int i = 0; i < Strokes.Num() && !RequireBorder; i++)
-	{
-		if (Strokes[i].Visible)
-			RequireBorder = true;
+		for (int i = 0; i < Fills.Num() && !RequireBorder; i++)
+		{
+			if (Fills[i].Visible)
+				RequireBorder = true;
+		}
+		for (int i = 0; i < Strokes.Num() && !RequireBorder; i++)
+		{
+			if (Strokes[i].Visible)
+				RequireBorder = true;
+		}
 	}
 
 	if (RequireBorder)

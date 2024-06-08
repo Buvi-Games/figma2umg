@@ -16,6 +16,10 @@
 void UUserWidgetBuilder::SetWidgetBlueprintBuilder(const TObjectPtr<UWidgetBlueprintBuilder>& InWidgetBlueprintBuilder)
 {
 	WidgetBlueprintBuilder = InWidgetBlueprintBuilder;
+	if (!InWidgetBlueprintBuilder)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UUserWidgetBuilder::SetWidgetBlueprintBuilder] Node %s is receiving <null> WidgetBlueprintBuilder."), *Node->GetNodeName());
+	}
 }
 
 void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)

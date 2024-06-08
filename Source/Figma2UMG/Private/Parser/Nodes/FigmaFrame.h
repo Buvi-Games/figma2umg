@@ -18,7 +18,7 @@ class UFigmaFrame : public  UFigmaGroup, public IFigmaFileHandle, public IFigmaR
 public:
 	GENERATED_BODY()
 
-	void SetGenerateFile();
+	void SetGenerateFile(bool Value = true);
 
 	// UFigmaNode
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
