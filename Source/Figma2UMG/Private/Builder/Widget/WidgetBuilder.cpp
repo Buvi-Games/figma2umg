@@ -113,6 +113,12 @@ void IWidgetBuilder::SetSize() const
 	const TObjectPtr<UWidget> Widget = GetWidget();
 	if (Widget && Widget->Slot)
 	{
+		if (!SizeToContent && Widget->IsA<UUserWidget>())
+		{
+			//FigmaInstance are always SizeToContent, but this may be an in place component
+			SizeToContent = true;
+		}
+
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
 			CanvasSlot->SetSize(Size);
