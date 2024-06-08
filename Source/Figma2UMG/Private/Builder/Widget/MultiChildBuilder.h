@@ -16,14 +16,17 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UMultiChildBuilder::PatchAndInsertWidget());
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 	virtual void PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint) override;
+	virtual void PatchWidgetProperties() override;
 
+	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override PURE_VIRTUAL(UMultiChildBuilder::SetWidget;);
 	virtual TObjectPtr<UWidget> GetWidget() const override;
+	virtual void ResetWidget() override;
 protected:
 	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const PURE_VIRTUAL(UMultiChildBuilder::GetPanelWidget(), return nullptr;);
 	virtual void PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
+	void SetChildrenWidget(TObjectPtr<UPanelWidget> ParentWidget);
 
 	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
-
 	UPROPERTY()
 	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;
 };

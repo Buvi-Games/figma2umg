@@ -58,14 +58,14 @@ void UWidgetBlueprintBuilder::LoadOrCreateAssets()
 	{
 		if (PatchPropertyDefinitions(ComponentNode->ComponentPropertyDefinitions))
 		{
-			CompileBP();
+			CompileBP(EBlueprintCompileOptions::SkipGarbageCollection | EBlueprintCompileOptions::SaveIntermediateProducts);
 		}
 	}
 	else if (const UFigmaComponentSet* ComponentSetNode = Cast<UFigmaComponentSet>(Node))
 	{
 		if (PatchPropertyDefinitions(ComponentSetNode->ComponentPropertyDefinitions))
 		{
-			CompileBP();
+			CompileBP(EBlueprintCompileOptions::SkipGarbageCollection | EBlueprintCompileOptions::SaveIntermediateProducts);
 		}
 	}
 }
@@ -79,9 +79,18 @@ void UWidgetBlueprintBuilder::LoadAssets()
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
 	Asset = Cast<UWidgetBlueprint>(AssetData.FastGetAsset(true));
+
 }
 
-void UWidgetBlueprintBuilder::CompileBP()
+void UWidgetBlueprintBuilder::ResetWidgets()
+{
+	if (Asset)
+	{
+		RootWidgetBuilder->SetWidget(Asset->WidgetTree->RootWidget);
+	}
+}
+
+void UWidgetBlueprintBuilder::CompileBP(EBlueprintCompileOptions CompileFlags)
 {
 	if (!Asset)
 	{
@@ -97,6 +106,10 @@ void UWidgetBlueprintBuilder::CompileBP()
 	}
 
 	Asset = nullptr;
+	if (RootWidgetBuilder)
+	{
+		RootWidgetBuilder->ResetWidget();
+	}
 
 	FCompilerResultsLog LogResults;
 	LogResults.SetSourcePath(WidgetBP->GetPathName());
@@ -104,7 +117,7 @@ void UWidgetBlueprintBuilder::CompileBP()
 	LogResults.bLogDetailedResults = true;
 
 	UE_LOG_Figma2UMG(Display, TEXT("Compilint blueprint %s."), *WidgetBP->GetName());
-	FKismetEditorUtilities::CompileBlueprint(WidgetBP, EBlueprintCompileOptions::SkipGarbageCollection | EBlueprintCompileOptions::SaveIntermediateProducts, &LogResults);
+	FKismetEditorUtilities::CompileBlueprint(WidgetBP, CompileFlags, &LogResults);
 
 	LoadAssets();
 }
@@ -167,6 +180,7 @@ void UWidgetBlueprintBuilder::PatchWidgetProperties()
 		return;
 	}
 	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetProperties] Bluepring %s."), *WidgetBP->GetName());
+	RootWidgetBuilder->PatchWidgetProperties();
 }
 
 TObjectPtr<UWidgetBlueprint> UWidgetBlueprintBuilder::GetAsset() const

@@ -52,6 +52,18 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 	PatchAndInsertChild(WidgetTree, Widget);
 }
 
+void UBorderWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+	Widget = Cast<UBorder>(InWidget);
+	SetChildWidget(Widget);
+}
+
+void UBorderWidgetBuilder::ResetWidget()
+{
+	Super::ResetWidget();
+	Widget = nullptr;
+}
+
 TObjectPtr<UContentWidget> UBorderWidgetBuilder::GetContentWidget() const
 {
 	return Widget;

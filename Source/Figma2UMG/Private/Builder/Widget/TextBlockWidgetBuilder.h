@@ -18,7 +18,9 @@ public:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
+	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
 	virtual TObjectPtr<UWidget> GetWidget() const override;
+	virtual void ResetWidget() override;
 protected:
 	void Setup() const;
 	void SetStyle(const FFigmaTypeStyle& Style) const;

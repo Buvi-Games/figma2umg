@@ -67,9 +67,31 @@ void UMultiChildBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& Wi
 	}
 }
 
+void UMultiChildBuilder::PatchWidgetProperties()
+{
+	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
+	{
+		if (!ChildBuilder)
+			continue;
+
+		ChildBuilder->PatchWidgetProperties();
+	}
+}
+
 TObjectPtr<UWidget> UMultiChildBuilder::GetWidget() const
 {
 	return GetPanelWidget();
+}
+
+void UMultiChildBuilder::ResetWidget()
+{
+	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
+	{
+		if (!ChildBuilder)
+			continue;
+
+		ChildBuilder->ResetWidget();
+	}
 }
 
 void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget)
@@ -111,12 +133,29 @@ void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTr
 	FixSpacers(ParentWidget);
 }
 
+void UMultiChildBuilder::SetChildrenWidget(TObjectPtr<UPanelWidget> ParentWidget)
+{
+	if (!ParentWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::SetChildWidget] ParentWidget is null at Node %s."), *Node->GetNodeName());
+		return;
+	}
+
+	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
+	{
+		if (!ChildBuilder)
+			continue;
+
+		TObjectPtr<UWidget> ChildWidget = ChildBuilder->FindNodeWidgetInParent(ParentWidget);
+		ChildBuilder->SetWidget(ChildWidget);
+	}
+}
+
 
 void UMultiChildBuilder::FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const
 {
 	if (!PanelWidget)
 		return;
-
 
 	float ItemSpacing = 0.0f;
 	float CounterAxisSpacing = 0.0f;

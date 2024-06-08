@@ -57,9 +57,25 @@ void USingleChildBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& W
 	}
 }
 
+void USingleChildBuilder::PatchWidgetProperties()
+{
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->PatchWidgetProperties();
+	}
+}
+
 TObjectPtr<UWidget> USingleChildBuilder::GetWidget() const
 {
 	return GetContentWidget();
+}
+
+void USingleChildBuilder::ResetWidget()
+{
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->ResetWidget();
+	}
 }
 
 void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget)
@@ -70,9 +86,23 @@ void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree
 		return;
 	}
 
-	if(ChildWidgetBuilder)
+	if (ChildWidgetBuilder)
 	{
 		TObjectPtr<UWidget> ChildWidget = ParentWidget->GetContent();
 		ChildWidgetBuilder->PatchAndInsertWidget(WidgetTree, ChildWidget);
+	}
+}
+
+void USingleChildBuilder::SetChildWidget(TObjectPtr<UContentWidget> ParentWidget)
+{
+	if (!ParentWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[USingleChildBuilder::SetChildWidget] ParentWidget is null at Node %s."), *Node->GetNodeName());
+		return;
+	}
+
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->SetWidget(ParentWidget->GetContent());
 	}
 }

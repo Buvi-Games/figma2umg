@@ -16,10 +16,12 @@ public:
 	GENERATED_BODY()
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
+	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
+	virtual void ResetWidget() override;
 protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
 	virtual void GetPaddingValue(FMargin& Padding) const override;
-	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
+	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const override;
 
 	void Setup() const;
 

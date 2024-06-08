@@ -14,6 +14,18 @@ void UVBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, cons
     PatchAndInsertChildren(WidgetTree, Box);
 }
 
+void UVBoxBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+    Super::SetWidget(InWidget);
+    Box = Cast<UVerticalBox>(Widget);
+}
+
+void UVBoxBuilder::ResetWidget()
+{
+	Super::ResetWidget();
+    Box = nullptr;
+}
+
 void UVBoxBuilder::Setup() const
 {
     UE_LOG_Figma2UMG(Warning, TEXT("[UVBoxBuilder::Setup] TODO."));

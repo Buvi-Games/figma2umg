@@ -45,9 +45,19 @@ bool UTextBlockWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PreP
 	return false;
 }
 
+void UTextBlockWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+	Widget = Cast<UTextBlock>(InWidget);
+}
+
 TObjectPtr<UWidget> UTextBlockWidgetBuilder::GetWidget() const
 {
 	return Widget;
+}
+
+void UTextBlockWidgetBuilder::ResetWidget()
+{
+	Widget = nullptr;
 }
 
 void UTextBlockWidgetBuilder::Setup() const

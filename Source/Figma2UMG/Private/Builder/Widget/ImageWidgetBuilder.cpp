@@ -64,7 +64,17 @@ bool UImageWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatch
 	return false;
 }
 
+void UImageWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+	Widget = Cast<UImage>(InWidget);
+}
+
 TObjectPtr<UWidget> UImageWidgetBuilder::GetWidget() const
 {
 	return Widget;
+}
+
+void UImageWidgetBuilder::ResetWidget()
+{
+	Widget = nullptr;
 };

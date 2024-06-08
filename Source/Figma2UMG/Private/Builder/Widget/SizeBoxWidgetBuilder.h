@@ -17,6 +17,8 @@ public:
 
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
+	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
+	virtual void ResetWidget() override;
 protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
 	virtual void GetPaddingValue(FMargin& Padding) const override;

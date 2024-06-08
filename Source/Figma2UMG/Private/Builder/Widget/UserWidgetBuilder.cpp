@@ -7,8 +7,12 @@
 #include "FigmaImportSubsystem.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Components/Widget.h"
+#include "Parser/Nodes/FigmaComponent.h"
+#include "Parser/Nodes/FigmaComponentSet.h"
+#include "Parser/Nodes/FigmaInstance.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
@@ -56,9 +60,43 @@ bool UUserWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchW
 	return false;
 }
 
+void UUserWidgetBuilder::PatchWidgetProperties()
+{
+	const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node);
+	if (!FigmaInstance)
+	{
+		if (!Node->IsA<UFigmaComponent>() && !Node->IsA<UFigmaComponentSet>())
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[UUserWidgetBuilder::PatchWidgetProperties] Node %s is of type %s but UFigmaInstance was expected."), *Node->GetNodeName(), *Node->GetClass()->GetName());
+		}
+		return;
+	}
+
+	if (Widget == nullptr)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[UUserWidgetBuilder::PatchWidgetProperties] Missing Widget for node %s."), *Node->GetNodeName());
+		return;
+	}
+	
+	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : FigmaInstance->ComponentProperties)
+	{
+		WidgetBlueprintHelper::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
+	}
+}
+
+void UUserWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+	Widget = Cast<UUserWidget>(InWidget);
+}
+
 TObjectPtr<UWidget> UUserWidgetBuilder::GetWidget() const
 {
 	return Widget;
+}
+
+void UUserWidgetBuilder::ResetWidget()
+{
+	Widget = nullptr;
 }
 
 void UUserWidgetBuilder::GetPaddingValue(FMargin& Padding) const

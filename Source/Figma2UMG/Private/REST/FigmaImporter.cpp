@@ -599,7 +599,7 @@ void UFigmaImporter::PatchAssets()
 
 		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
 		CompileBPs();
-
+		
 		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
 		ReloadBPAssets();
 
@@ -644,7 +644,7 @@ void UFigmaImporter::CompileBPs()
 	{
 		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
-			BlueprintBuilder->CompileBP();
+			BlueprintBuilder->CompileBP(EBlueprintCompileOptions::None);
 		}
 	}
 }
@@ -657,6 +657,7 @@ void UFigmaImporter::ReloadBPAssets()
 		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
 		{
 			BlueprintBuilder->LoadAssets();
+			BlueprintBuilder->ResetWidgets();
 		}
 	}
 }

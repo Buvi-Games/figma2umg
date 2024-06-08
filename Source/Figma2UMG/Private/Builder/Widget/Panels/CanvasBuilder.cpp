@@ -21,6 +21,18 @@ void UCanvasBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, co
     PatchAndInsertChildren(WidgetTree, CanvasPanel);
 }
 
+void UCanvasBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+    Super::SetWidget(InWidget);
+    CanvasPanel = Cast<UCanvasPanel>(Widget);
+}
+
+void UCanvasBuilder::ResetWidget()
+{
+    CanvasPanel = nullptr;
+	Super::ResetWidget();
+}
+
 void UCanvasBuilder::Setup() const
 {
     //Nothing to do

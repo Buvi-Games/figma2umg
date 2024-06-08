@@ -20,8 +20,11 @@ public:
 
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
+	virtual void PatchWidgetProperties() override;
 
+	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
 	virtual TObjectPtr<UWidget> GetWidget() const override;
+	virtual void ResetWidget() override;
 protected:
 	virtual void GetPaddingValue(FMargin& Padding) const override;
 	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;

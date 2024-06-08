@@ -14,6 +14,18 @@ void UWBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, cons
     Insert(WidgetTree, WidgetToPatch, Box);
 }
 
+void UWBoxBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+    Super::SetWidget(InWidget);
+    Box = Cast<UWrapBox>(Widget);
+}
+
+void UWBoxBuilder::ResetWidget()
+{
+	Super::ResetWidget();
+    Box = nullptr;
+}
+
 void UWBoxBuilder::Setup() const
 {
     UE_LOG_Figma2UMG(Warning, TEXT("[UWBoxBuilder::Setup] TODO."));

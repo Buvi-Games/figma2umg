@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AssetBuilder.h"
+#include "Kismet2/KismetEditorUtilities.h"
 #include "WidgetBlueprintBuilder.generated.h"
 
 class IWidgetBuilder;
@@ -17,8 +18,9 @@ class UWidgetBlueprintBuilder : public UObject, public IAssetBuilder
 public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
+	virtual void ResetWidgets();
 
-	void CompileBP();
+	void CompileBP(EBlueprintCompileOptions CompileFlags);
 
 	void CreateWidgetBuilders();
 	void PatchAndInsertWidgets();

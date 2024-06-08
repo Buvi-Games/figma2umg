@@ -278,7 +278,8 @@ void WidgetBlueprintHelper::SetPropertyValue(TObjectPtr<UUserWidget> Widget, con
 				static FString True("True");
 				const FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property);
 				void* Value = BoolProperty->ContainerPtrToValuePtr<uint8>(Widget);
-				BoolProperty->SetPropertyValue(Value, ComponentProperty.Value.Compare(True, ESearchCase::IgnoreCase) == 0);
+				const bool DesiredValue = ComponentProperty.Value.Compare(True, ESearchCase::IgnoreCase) == 0;
+				BoolProperty->SetPropertyValue(Value, DesiredValue);
 			}
 		}
 		break;

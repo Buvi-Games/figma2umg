@@ -74,6 +74,18 @@ void UButtonWidgetBuilder::SetFocusedNode(const UFigmaGroup* InNode)
 	FocusedNode = InNode;
 }
 
+void UButtonWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+	Widget = Cast<UButton>(InWidget);
+	SetChildWidget(Widget);
+}
+
+void UButtonWidgetBuilder::ResetWidget()
+{
+	Widget = nullptr;
+	Super::ResetWidget();
+}
+
 TObjectPtr<UContentWidget> UButtonWidgetBuilder::GetContentWidget() const
 {
 	return Widget;

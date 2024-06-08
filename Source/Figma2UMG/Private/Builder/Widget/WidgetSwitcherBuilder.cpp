@@ -43,6 +43,18 @@ void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widget
 	Insert(WidgetTree, WidgetToPatch, Widget);
 }
 
+void UWidgetSwitcherBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+	Widget = Cast<UWidgetSwitcher>(InWidget);
+	SetChildrenWidget(Widget);
+}
+
+void UWidgetSwitcherBuilder::ResetWidget()
+{
+	Super::ResetWidget();
+	Widget = nullptr;
+}
+
 TObjectPtr<UPanelWidget> UWidgetSwitcherBuilder::GetPanelWidget() const
 {
 	return Widget;

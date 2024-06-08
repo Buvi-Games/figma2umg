@@ -22,6 +22,8 @@ public:
 
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchAndInsertWidget());
 
+	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
+	virtual void ResetWidget() override;
 protected:
 	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const override;
 

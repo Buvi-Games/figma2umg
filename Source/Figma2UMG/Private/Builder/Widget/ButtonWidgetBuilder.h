@@ -22,6 +22,8 @@ public:
 	void SetDisabledNode(const UFigmaGroup* InNode);
 	void SetFocusedNode(const UFigmaGroup* InNode);
 
+	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
+	virtual void ResetWidget() override;
 protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
 	virtual void GetPaddingValue(FMargin& Padding) const override;

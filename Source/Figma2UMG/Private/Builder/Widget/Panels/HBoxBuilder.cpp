@@ -14,6 +14,18 @@ void UHBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, cons
     PatchAndInsertChildren(WidgetTree, Box);
 }
 
+void UHBoxBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
+{
+    Super::SetWidget(InWidget);
+    Box = Cast<UHorizontalBox>(Widget);
+}
+
+void UHBoxBuilder::ResetWidget()
+{
+	Super::ResetWidget();
+	Box = nullptr;
+}
+
 void UHBoxBuilder::Setup() const
 {
     UE_LOG_Figma2UMG(Warning, TEXT("[UHBoxBuilder::Setup] TODO."));
