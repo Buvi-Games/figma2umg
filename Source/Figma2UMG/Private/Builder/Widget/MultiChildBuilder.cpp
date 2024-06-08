@@ -5,9 +5,12 @@
 
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Components/CanvasPanel.h"
 #include "Components/PanelWidget.h"
 #include "Components/Spacer.h"
 #include "Components/Widget.h"
+#include "Components/WrapBox.h"
+#include "Parser/Nodes/FigmaGroup.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 
@@ -91,5 +94,65 @@ void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTr
 	
 		AllChildren.RemoveAt(i);
 	}
+
+	FixSpacers(ParentWidget);
 }
 
+
+void UMultiChildBuilder::FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const
+{
+	if (!PanelWidget)
+		return;
+
+
+	float ItemSpacing = 0.0f;
+	float CounterAxisSpacing = 0.0f;
+	if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+	{
+		ItemSpacing = FigmaGroup->ItemSpacing;
+		CounterAxisSpacing = FigmaGroup->CounterAxisSpacing;
+	}
+
+	if ((ItemSpacing == 0.0f && CounterAxisSpacing == 0.0f) || PanelWidget->IsA<UCanvasPanel>() || PanelWidget->IsA<UWrapBox>())
+	{
+		for (int i = 0; i < PanelWidget->GetChildrenCount(); i++)
+		{
+			UWidget* Widget = PanelWidget->GetChildAt(i);
+			if (!Widget || Widget->IsA<USpacer>())
+			{
+				PanelWidget->RemoveChildAt(i);
+				i--;
+			}
+		}
+		if (UWrapBox* WrapBox = Cast<UWrapBox>(PanelWidget))
+		{
+			WrapBox->SetInnerSlotPadding(FVector2D(ItemSpacing, CounterAxisSpacing));
+		}
+	}
+	else
+	{
+		for (int i = 0; i < PanelWidget->GetChildrenCount(); i++)
+		{
+			UWidget* Widget = PanelWidget->GetChildAt(i);
+			const bool ShouldBeSpacer = (((i + 1) % 2) == 0);
+			const bool IsSpacer = Widget && Widget->IsA<USpacer>();
+			if (!Widget || (IsSpacer && !ShouldBeSpacer))
+			{
+				PanelWidget->RemoveChildAt(i);
+				i--;
+			}
+			else if (ShouldBeSpacer && !IsSpacer)
+			{
+				USpacer* Spacer = NewObject<USpacer>(PanelWidget->GetOuter());
+				Spacer->SetSize(FVector2D(ItemSpacing, ItemSpacing));
+				PanelWidget->InsertChildAt(i, Spacer);
+			}
+			else if (ShouldBeSpacer && IsSpacer)
+			{
+				USpacer* Spacer = Cast<USpacer>(Widget);
+				Spacer->SetSize(FVector2D(ItemSpacing, ItemSpacing));
+			}
+		}
+	}
+
+}

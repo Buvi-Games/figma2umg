@@ -21,6 +21,8 @@ protected:
 	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const PURE_VIRTUAL(UMultiChildBuilder::GetPanelWidget(), return nullptr;);
 	virtual void PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
 
+	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
+
 	UPROPERTY()
 	TArray<TScriptInterface<IWidgetBuilder>> ChildWidgetBuilders;
 };
