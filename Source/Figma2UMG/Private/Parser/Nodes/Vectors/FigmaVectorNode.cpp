@@ -39,7 +39,7 @@ FString UFigmaVectorNode::GetPackageName() const
 	return GetPackagePath();
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders() const
+TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders(bool IsRoot/*= false*/) const
 {
 	UImageWidgetBuilder* ImageWidgetBuilder = NewObject<UImageWidgetBuilder>();
 	ImageWidgetBuilder->SetNode(this);

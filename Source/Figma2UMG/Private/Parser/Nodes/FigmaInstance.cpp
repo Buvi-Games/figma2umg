@@ -8,6 +8,7 @@
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Widget/ImageWidgetBuilder.h"
+#include "Builder/Widget/UserWidgetBuilder.h"
 #include "Components/Image.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
@@ -65,6 +66,7 @@ FString UFigmaInstance::GetPackageName() const
 }
 
 TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders() const
+TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoot /*= false*/) const
 {
 	if (IsMissingComponent)
 	{
@@ -75,8 +77,14 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders() const
 	}
 	else
 	{
-		//TODO: UserWidgetBuilder;
-		return nullptr;
+		const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+		const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
+		const TObjectPtr<UFigmaComponent> FigmaComponent = ComponentRef ? ComponentRef->GetComponent() : nullptr;
+		
+		UUserWidgetBuilder* UserWidgetBuilder = NewObject<UUserWidgetBuilder>();
+		UserWidgetBuilder->SetNode(this);
+		UserWidgetBuilder->SetWidgetBlueprintBuilder(FigmaComponent ? FigmaComponent->GetAssetBuilder() : nullptr);
+		return UserWidgetBuilder;
 	}
 }
 

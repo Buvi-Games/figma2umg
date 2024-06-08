@@ -41,7 +41,7 @@ FString UFigmaSection::GetCurrentPackagePath() const
 	return CurrentPackagePath;
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaSection::CreateWidgetBuilders() const
+TScriptInterface<IWidgetBuilder> UFigmaSection::CreateWidgetBuilders(bool IsRoot/*= false*/) const
 {
 	UCanvasBuilder* CanvasBuilder = NewObject<UCanvasBuilder>();
 	CanvasBuilder->SetNode(this);

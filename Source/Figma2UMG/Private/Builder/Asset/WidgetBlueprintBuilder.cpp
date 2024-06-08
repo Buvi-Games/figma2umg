@@ -117,7 +117,7 @@ void UWidgetBlueprintBuilder::CreateWidgetBuilders()
 		return;
 	}
 	UE_LOG_Figma2UMG(Display, TEXT("[CreateWidgetBuilders] Generating Tree for %s."), *WidgetBP->GetName()); \
-	RootWidgetBuilder = Node->CreateWidgetBuilders();
+	RootWidgetBuilder = Node->CreateWidgetBuilders(true);
 }
 
 void UWidgetBlueprintBuilder::PatchAndInsertWidgets()
@@ -180,6 +180,11 @@ void UWidgetBlueprintBuilder::PatchWidgetProperties()
 		return;
 	}
 	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetProperties] Bluepring %s."), *WidgetBP->GetName());
+}
+
+TObjectPtr<UWidgetBlueprint> UWidgetBlueprintBuilder::GetAsset() const
+{
+	return Asset;
 }
 
 void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const

@@ -10,6 +10,8 @@
 
 #include "FigmaFrame.generated.h"
 
+class UWidgetBlueprintBuilder;
+
 UCLASS()
 class UFigmaFrame : public  UFigmaGroup, public IFigmaFileHandle, public IFigmaRefHandle
 {
@@ -20,6 +22,7 @@ public:
 
 	// UFigmaNode
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false) const override;
 	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
 	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) override;
 	virtual FString GetPackageName() const override;
@@ -38,10 +41,14 @@ public:
 
 	UWidget* CreateInstance(UObject* InAssetOuter) const;
 
+	const TObjectPtr<UWidgetBlueprintBuilder>& GetAssetBuilder() const;
 protected:
 
 	UPROPERTY()
 	TArray<FFigmaLayoutGrid> LayoutGrids;
+
+	UPROPERTY()
+	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;
 
 	bool GenerateFile = false;
 };

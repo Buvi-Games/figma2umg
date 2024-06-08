@@ -27,7 +27,7 @@ void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSh
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders() const
+TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*= false*/) const
 {
 	USizeBoxWidgetBuilder* SizeBoxWidgetBuilder = nullptr;
 	UBorderWidgetBuilder* BorderWidgetBuilder = nullptr;

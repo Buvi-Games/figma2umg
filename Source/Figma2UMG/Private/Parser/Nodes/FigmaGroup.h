@@ -33,7 +33,7 @@ public:
 
 	// UFigmaNode
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
-	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders() const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false) const override;
 	virtual FVector2D GetAbsolutePosition() const override;
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 

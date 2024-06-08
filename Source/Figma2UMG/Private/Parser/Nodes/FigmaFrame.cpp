@@ -7,6 +7,7 @@
 #include "WidgetBlueprintFactory.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
+#include "Builder/Widget/UserWidgetBuilder.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
@@ -75,6 +76,21 @@ TObjectPtr<UWidget> UFigmaFrame::PatchPreInsertWidget(TObjectPtr<UWidget> Widget
 	return WidgetInstance;
 }
 
+TScriptInterface<IWidgetBuilder> UFigmaFrame::CreateWidgetBuilders(bool IsRoot/*= false*/) const
+{
+	if (!GenerateFile || IsRoot)
+	{
+		return Super::CreateWidgetBuilders(IsRoot);
+	}
+	else
+	{
+		UUserWidgetBuilder* UserWidgetBuilder = NewObject<UUserWidgetBuilder>();
+		UserWidgetBuilder->SetNode(this);
+		UserWidgetBuilder->SetWidgetBlueprintBuilder(GetAssetBuilder());
+		return UserWidgetBuilder;
+	}
+}
+
 void UFigmaFrame::SetWidget(TObjectPtr<UWidget> Widget)
 {
 	if (!GenerateFile)
@@ -108,9 +124,9 @@ TScriptInterface<IAssetBuilder> UFigmaFrame::CreateAssetBuilder(const FString& I
 {
 	if (GenerateFile)
 	{
-		UWidgetBlueprintBuilder* AssetBuilder = NewObject<UWidgetBlueprintBuilder>();
-		AssetBuilder->SetNode(InFileKey, this);
-		return AssetBuilder;
+		WidgetBlueprintBuilder = NewObject<UWidgetBlueprintBuilder>();
+		WidgetBlueprintBuilder->SetNode(InFileKey, this);
+		return WidgetBlueprintBuilder;
 	}
 
 	return nullptr;
@@ -230,4 +246,9 @@ UWidget* UFigmaFrame::CreateInstance(UObject* InAssetOuter) const
 
 	TryRenameWidget(GetUniqueName(), NewWidget);
 	return NewWidget;
+}
+
+const TObjectPtr<UWidgetBlueprintBuilder>& UFigmaFrame::GetAssetBuilder() const
+{
+	return WidgetBlueprintBuilder;
 }
