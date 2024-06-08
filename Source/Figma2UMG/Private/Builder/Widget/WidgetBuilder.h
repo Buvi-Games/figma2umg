@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WidgetBlueprint.h"
 #include "Parser/Properties/FigmaEnums.h"
 #include "WidgetBuilder.generated.h"
 
@@ -33,8 +34,10 @@ public:
 
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) = 0;
+	virtual void PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
 
 	virtual TObjectPtr<UWidget> GetWidget() const = 0;
+
 protected:
 	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;
 	void OnInsert() const;
@@ -54,6 +57,8 @@ protected:
 	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;
 	EVerticalAlignment Convert(EFigmaLayoutConstraintVertical LayoutConstraint) const;
 	EVerticalAlignment Convert(EFigmaCounterAxisAlignItems LayoutConstraint) const;
+
+	void ProcessComponentPropertyReference(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const TObjectPtr<UWidget>& Widget, const TPair<FString, FString>& PropertyReference) const;
 
 	const UFigmaNode* Node = nullptr;
 

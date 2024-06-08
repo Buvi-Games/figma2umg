@@ -47,6 +47,16 @@ bool USingleChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatch
 	return true;
 }
 
+void USingleChildBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	IWidgetBuilder::PatchWidgetBinds(WidgetBlueprint);
+
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->PatchWidgetBinds(WidgetBlueprint);
+	}
+}
+
 TObjectPtr<UWidget> USingleChildBuilder::GetWidget() const
 {
 	return GetContentWidget();

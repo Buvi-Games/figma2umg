@@ -142,13 +142,13 @@ private:
 	UPROPERTY()
 	FString SharedPluginData;
 
-protected:
 	UPROPERTY()
 	TMap<FString, FString> ComponentPropertyReferences;
 
 	//boundVariablesMap - beta
 	//explicitVariableModesMap - beta
-
+	
+protected:
 	UPROPERTY()
 	FString ScrollBehaviour; //Not in doc
 };

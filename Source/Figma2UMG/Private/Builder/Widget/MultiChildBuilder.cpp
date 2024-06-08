@@ -54,6 +54,19 @@ bool UMultiChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchW
 	return true;
 }
 
+void UMultiChildBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	IWidgetBuilder::PatchWidgetBinds(WidgetBlueprint);
+
+	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
+	{
+		if (!ChildBuilder)
+			continue;
+
+		ChildBuilder->PatchWidgetBinds(WidgetBlueprint);
+	}
+}
+
 TObjectPtr<UWidget> UMultiChildBuilder::GetWidget() const
 {
 	return GetPanelWidget();

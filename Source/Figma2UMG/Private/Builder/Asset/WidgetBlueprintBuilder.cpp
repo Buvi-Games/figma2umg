@@ -11,6 +11,7 @@
 #include "WidgetBlueprintFactory.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/Widget/WidgetBuilder.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
 #include "Parser/Nodes/FigmaComponent.h"
@@ -110,13 +111,12 @@ void UWidgetBlueprintBuilder::CompileBP()
 
 void UWidgetBlueprintBuilder::CreateWidgetBuilders()
 {
-	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
-	if(!WidgetBP)
+	if(!Asset)
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[CreateWidgetBuilders] Missing Blueprint for node %s."), *Node->GetNodeName());
 		return;
 	}
-	UE_LOG_Figma2UMG(Display, TEXT("[CreateWidgetBuilders] Generating Tree for %s."), *WidgetBP->GetName()); \
+	UE_LOG_Figma2UMG(Display, TEXT("[CreateWidgetBuilders] Generating Tree for %s."), *Asset->GetName());
 	RootWidgetBuilder = Node->CreateWidgetBuilders(true);
 }
 
@@ -149,13 +149,13 @@ void UWidgetBlueprintBuilder::PatchAndInsertWidgets()
 
 void UWidgetBlueprintBuilder::PatchWidgetBinds()
 {
-	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
-	if (!WidgetBP)
+	if (!Asset)
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetBinds] Missing Blueprint for node %s."), *Node->GetNodeName());
 		return;
 	}
-	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetBinds] Bluepring %s."), *WidgetBP->GetName());
+	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetBinds] Bluepring %s."), *Asset->GetName());
+	RootWidgetBuilder->PatchWidgetBinds(Asset);
 }
 
 void UWidgetBlueprintBuilder::PatchWidgetProperties()

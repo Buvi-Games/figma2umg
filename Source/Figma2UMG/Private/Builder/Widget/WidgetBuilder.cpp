@@ -4,6 +4,7 @@
 #include "WidgetBuilder.h"
 
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintHelper.h"
 #include "Components/BorderSlot.h"
 #include "Components/ButtonSlot.h"
 #include "Components/CanvasPanelSlot.h"
@@ -47,6 +48,27 @@ TObjectPtr<UWidget> IWidgetBuilder::FindNodeWidgetInParent(const TObjectPtr<UPan
 	}
 
 	return nullptr;
+}
+
+void IWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	if (WidgetBlueprint == nullptr)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetBinds] Missing Blueprint for node %s."), *Node->GetNodeName());
+		return;
+	}
+
+	TObjectPtr<UWidget> Widget = GetWidget();
+	if (Widget == nullptr)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetBinds] Missing Widget for node %s."), *Node->GetNodeName());
+		return;
+	}
+
+	for (const TPair<FString, FString>& ComponentPropertyReference : Node->GetComponentPropertyReferences())
+	{
+		ProcessComponentPropertyReference(WidgetBlueprint, Widget, ComponentPropertyReference);
+	}
 }
 
 bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const
@@ -436,4 +458,62 @@ EVerticalAlignment IWidgetBuilder::Convert(EFigmaCounterAxisAlignItems LayoutCon
 	}
 
 	return VAlign_Center;
+}
+
+void IWidgetBuilder::ProcessComponentPropertyReference(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const TObjectPtr<UWidget>& Widget, const TPair<FString, FString>& PropertyReference) const
+{
+	static const FString VisibleStr("visible");
+	static const FString CharactersStr("characters");
+	const FBPVariableDescription* VariableDescription = WidgetBlueprint->NewVariables.FindByPredicate([PropertyReference](const FBPVariableDescription& VariableDescription)
+		{
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
+			return VariableDescription.VarName == PropertyReference.Value;
+#else
+			return VariableDescription.VarName.ToString() == PropertyReference.Value;
+#endif
+		});
+
+
+	if (VariableDescription != nullptr)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[ProcessComponentPropertyReference] Variable '%s' found in UWidgetBlueprint %s."), *PropertyReference.Value, *WidgetBlueprint->GetName());
+
+		if (PropertyReference.Key == VisibleStr)
+		{
+			WidgetBlueprintHelper::PatchVisibilityBind(WidgetBlueprint, Widget, *PropertyReference.Value);
+		}
+		else if (PropertyReference.Key == CharactersStr)
+		{
+			TObjectPtr<UTextBlock> TextBlock = Cast<UTextBlock>(Widget);
+			if (TextBlock == nullptr)
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[ProcessComponentPropertyReference] UWidgetBlueprint %s's Widget '%s' is not a UTextBlock. Fail to bind %s."), *WidgetBlueprint->GetName(), *Widget->GetName(), *PropertyReference.Value);
+				return;
+			}
+
+			WidgetBlueprintHelper::PatchTextBind(WidgetBlueprint, TextBlock, *PropertyReference.Value);
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[ProcessComponentPropertyReference] Unknown property '%s'."), *PropertyReference.Key);
+		}
+
+		return;
+	}
+	else
+	{
+		UClass* WidgetClass = Widget->GetClass();
+		FProperty* Property = WidgetClass ? FindFProperty<FProperty>(WidgetClass, *PropertyReference.Value) : nullptr;
+		if (Property)
+		{
+			static FString True("True");
+			const FBoolProperty* BoolProperty = CastField<FBoolProperty>(Property);
+			void* Value = BoolProperty->ContainerPtrToValuePtr<uint8>(Widget);
+			BoolProperty->SetPropertyValue(Value, PropertyReference.Value.Compare(True, ESearchCase::IgnoreCase) == 0);
+
+			UE_LOG_Figma2UMG(Display, TEXT("[ProcessComponentPropertyReference] Variable '%s' found in UWidget %s."), *PropertyReference.Key, *Widget->GetName());
+		}
+	}
+
+	UE_LOG_Figma2UMG(Error, TEXT("[ProcessComponentPropertyReference] Variable '%s' not found in UWidgetBlueprint %s or UWidget %s."), *PropertyReference.Value, *WidgetBlueprint->GetName(), *Widget->GetName());
 }
