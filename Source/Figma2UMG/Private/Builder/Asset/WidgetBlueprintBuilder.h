@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "AssetBuilder.h"
-#include "Builder/Widget/WidgetBuilder.h"
 #include "WidgetBlueprintBuilder.generated.h"
 
+class IWidgetBuilder;
 struct FFigmaComponentPropertyDefinition;
 class UWidgetBlueprint;
 
@@ -22,7 +22,6 @@ public:
 
 	void CreateWidgetBuilders();
 	void PatchAndInsertWidgets();
-	bool PatchPostInsertWidget();
 	void PatchWidgetBinds();
 	void PatchWidgetProperties();
 

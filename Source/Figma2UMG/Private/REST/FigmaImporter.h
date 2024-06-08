@@ -80,9 +80,6 @@ protected:
 	void PatchPreInsertWidget();
 
 	UFUNCTION()
-	bool PatchPostInsertWidget();
-
-	UFUNCTION()
 	void CompileBPs();
 
 	UFUNCTION()

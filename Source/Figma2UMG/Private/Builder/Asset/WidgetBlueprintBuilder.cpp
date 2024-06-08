@@ -122,8 +122,7 @@ void UWidgetBlueprintBuilder::CreateWidgetBuilders()
 
 void UWidgetBlueprintBuilder::PatchAndInsertWidgets()
 {
-	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
-	if (!WidgetBP)
+	if (!Asset)
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[PatchAndInsertWidget] Missing Blueprint for node %s."), *Node->GetNodeName());
 		return;
@@ -135,29 +134,17 @@ void UWidgetBlueprintBuilder::PatchAndInsertWidgets()
 		return;
 	}
 
-	UE_LOG_Figma2UMG(Display, TEXT("[PatchAndInsertWidget] Bluepring %s."), *WidgetBP->GetName());
-	RootWidgetBuilder->PatchAndInsertWidget(WidgetBP->WidgetTree, WidgetBP->WidgetTree->RootWidget);
-	if (WidgetBP->WidgetTree->RootWidget == nullptr)
+	UE_LOG_Figma2UMG(Display, TEXT("[PatchAndInsertWidget] Bluepring %s."), *Asset->GetName());
+	RootWidgetBuilder->PatchAndInsertWidget(Asset->WidgetTree, Asset->WidgetTree->RootWidget);
+	if (Asset->WidgetTree->RootWidget == nullptr)
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[PatchAndInsertWidget] Node %s failed to insert RootWidget."), *Node->GetNodeName());
 	}
 
-	WidgetBP->WidgetTree->SetFlags(RF_Transactional);
-	WidgetBP->WidgetTree->Modify();
+	Asset->WidgetTree->SetFlags(RF_Transactional);
+	Asset->WidgetTree->Modify();
 
-	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBP);
-}
-
-bool UWidgetBlueprintBuilder::PatchPostInsertWidget()
-{
-	UWidgetBlueprint* WidgetBP = Cast<UWidgetBlueprint>(Asset);
-	if (!WidgetBP)
-	{
-		UE_LOG_Figma2UMG(Error, TEXT("[PatchPostInsertWidget] Missing Blueprint for node %s."), *Node->GetNodeName());
-		return false;
-	}
-	UE_LOG_Figma2UMG(Display, TEXT("[PatchPostInsertWidget] Bluepring %s."), *WidgetBP->GetName());
-	return true;
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(Asset);
 }
 
 void UWidgetBlueprintBuilder::PatchWidgetBinds()

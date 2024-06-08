@@ -550,8 +550,8 @@ void UFigmaImporter::HandleImageDownload(bool Succeeded)
 
 void UFigmaImporter::LoadOrCreateAssets()
 {
-	const float WorkCount = File->UseNewBuilders ? 9.0f//Load/Create, Patch(WidgetBuilders, PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
-												 : 8.0f; //Load/Create, Patch(PreInsert+PostInsert+Compiling+Reloading+Binds+Properties), Post-patch
+	const float WorkCount = File->UseNewBuilders ? 8.0f//Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
+												 : 7.0f; //Load/Create, Patch(PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
 	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
 	Progress->MakeDialog();
 	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
@@ -597,27 +597,19 @@ void UFigmaImporter::PatchAssets()
 		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
 		PatchPreInsertWidget();
 
-		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PostInsert Widgets"));
-		if (PatchPostInsertWidget())
-		{
-			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
-			CompileBPs();
+		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
+		CompileBPs();
 
-			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
-			ReloadBPAssets();
+		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
+		ReloadBPAssets();
 
-			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
-			PatchWidgetBinds();
+		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
+		PatchWidgetBinds();
 
-			Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
-			PatchWidgetProperties();
+		Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
+		PatchWidgetProperties();
 
-			UFigmaImporter::OnPatchUAssets(true);
-		}
-		else
-		{
-			UFigmaImporter::OnPatchUAssets(false);
-		}
+		UFigmaImporter::OnPatchUAssets(true);
 	}
 }
 
@@ -643,22 +635,6 @@ void UFigmaImporter::PatchPreInsertWidget()
 			BlueprintBuilder->PatchAndInsertWidgets();
 		}
 	}
-}
-
-bool UFigmaImporter::PatchPostInsertWidget()
-{
-	bool Success = true;
-
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
-		{
-			Success &= BlueprintBuilder->PatchPostInsertWidget();
-		}
-	}
-
-	return Success;
 }
 
 void UFigmaImporter::CompileBPs()
