@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "WidgetBuilder.h"
+#include "Parser/Properties/FigmaTypeStyle.h"
 #include "TextBlockWidgetBuilder.generated.h"
 
 class UTextBlock;
@@ -19,6 +20,10 @@ public:
 
 	virtual TObjectPtr<UWidget> GetWidget() const override;
 protected:
+	void Setup() const;
+	void SetStyle(const FFigmaTypeStyle& Style) const;
+	float ConvertFontSizeFromDisplayToNative(float DisplayFontSize) const;
+
 	UPROPERTY()
 	TObjectPtr<UTextBlock> Widget = nullptr;
 };
