@@ -86,3 +86,8 @@ void UTexture2DBuilder::OnRawImageReceived(const TArray<uint8>& InRawData)
 {
 	RawData = InRawData;
 }
+
+const TObjectPtr<UTexture2D>& UTexture2DBuilder::GetAsset() const
+{
+	return Asset;
+}

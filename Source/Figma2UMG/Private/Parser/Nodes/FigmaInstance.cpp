@@ -7,6 +7,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/Texture2DBuilder.h"
+#include "Builder/Widget/ImageWidgetBuilder.h"
 #include "Components/Image.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
@@ -50,9 +51,9 @@ TScriptInterface<IAssetBuilder> UFigmaInstance::CreateAssetBuilder(const FString
 		//We don't have the Component Asset, import as a Texture as a PlaceHolder
 		UE_LOG_Figma2UMG(Warning, TEXT("[Instance] Can't find Component %s for instance %s, import as a Texture as a PlaceHolder"), *ComponentId, *GetNodeName());
 
-		UTexture2DBuilder* AssetBuilder = NewObject<UTexture2DBuilder>();
-		AssetBuilder->SetNode(InFileKey, this);
-		return AssetBuilder;
+		Texture2DBuilder = NewObject<UTexture2DBuilder>();
+		Texture2DBuilder->SetNode(InFileKey, this);
+		return Texture2DBuilder;
 	}
 
 	return nullptr;
@@ -65,8 +66,18 @@ FString UFigmaInstance::GetPackageName() const
 
 TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders() const
 {
-	//TODO: UserWidgetBuilder;
-	return nullptr;
+	if (IsMissingComponent)
+	{
+		UImageWidgetBuilder* ImageWidgetBuilder = NewObject<UImageWidgetBuilder>();
+		ImageWidgetBuilder->SetNode(this);
+		ImageWidgetBuilder->SetTexture2DBuilder(Texture2DBuilder);
+		return ImageWidgetBuilder;
+	}
+	else
+	{
+		//TODO: UserWidgetBuilder;
+		return nullptr;
+	}
 }
 
 void UFigmaInstance::ForEach(const IWidgetOwner::FOnEachFunction& Function)

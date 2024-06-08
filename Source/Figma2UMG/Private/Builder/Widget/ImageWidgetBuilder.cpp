@@ -4,15 +4,58 @@
 #include "ImageWidgetBuilder.h"
 
 #include "Figma2UMGModule.h"
+#include "FigmaImportSubsystem.h"
+#include "Blueprint/WidgetTree.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 #include "Components/Image.h"
 #include "Components/Widget.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 
+void UImageWidgetBuilder::SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder>& InTexture2DBuilder)
+{
+	Texture2DBuilder = InTexture2DBuilder;
+}
+
 void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
-	UE_LOG_Figma2UMG(Warning, TEXT("[UImageWidgetBuilder::PatchAndInsertWidget] TODO."));
-	Insert(WidgetTree, WidgetToPatch, WidgetToPatch);
+	Widget = Cast<UImage>(WidgetToPatch);
+
+	const FString NodeName = Node->GetNodeName();
+	const FString WidgetName = Node->GetUniqueName();
+	if (Widget)
+	{
+		UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UImage>(NodeName) : nullptr;
+		if (ClassOverride && Widget->GetClass() != ClassOverride)
+		{
+			Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetTree, NodeName, WidgetName, ClassOverride);
+		}
+		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
+	}
+	else
+	{
+		Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetTree, NodeName, WidgetName);
+	}
+
+	if (!Texture2DBuilder)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UImageWidgetBuilder::PatchAndInsertWidget] Node<%s> %s didn't set the Texture2DBuilder."), *Node->GetClass()->GetName(), *Node->GetNodeName());
+	}
+
+	if (const TObjectPtr<UTexture2D>& Texture = Texture2DBuilder ? Texture2DBuilder->GetAsset() : nullptr)
+	{
+		Widget->SetBrushFromTexture(Texture, true);
+	}
+	else
+	{
+		FSlateBrush Brush = Widget->GetBrush();
+		const FLinearColor Color(0.0f, 0.0f, 0.0f, 0.0f);
+		Brush.TintColor = Color;
+		Widget->SetBrush(Brush);
+	}
+
+	Insert(WidgetTree, WidgetToPatch, Widget);
 }
 
 bool UImageWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)

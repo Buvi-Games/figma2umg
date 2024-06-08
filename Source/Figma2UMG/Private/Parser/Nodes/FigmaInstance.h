@@ -13,6 +13,8 @@
 
 #include "FigmaInstance.generated.h"
 
+class UTexture2DBuilder;
+
 UCLASS()
 class UFigmaInstance : public UFigmaNode, public IWidgetOwner, public IFigmaRefHandle, public IFigmaImageRequester, public IFigmaFileHandle, public IFlowTransition
 {
@@ -243,6 +245,10 @@ protected:
 	FImageBuilder BuilderFallback;
 
 	bool IsMissingComponent = false;
+
+	UPROPERTY()
+	TObjectPtr<UTexture2DBuilder> Texture2DBuilder = nullptr;
+
 	UPROPERTY()
 	TObjectPtr<UTexture> MissingComponentTexture = nullptr;
 };

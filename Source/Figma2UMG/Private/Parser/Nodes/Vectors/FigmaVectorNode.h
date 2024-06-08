@@ -26,6 +26,8 @@
 
 #include "FigmaVectorNode.generated.h"
 
+class UTexture2DBuilder;
+
 UCLASS()
 class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle, public IWidgetOwner, public IFlowTransition
 {
@@ -163,6 +165,9 @@ public:
 	//FFigmaAnnotation annotation
 
 protected:
+	UPROPERTY()
+	TObjectPtr<UTexture2DBuilder> AssetBuilder = nullptr;
+
 	UPROPERTY()
 	FImageBuilder Builder;
 };

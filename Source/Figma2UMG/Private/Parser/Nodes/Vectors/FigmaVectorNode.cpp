@@ -29,7 +29,7 @@ FVector2D UFigmaVectorNode::GetSize() const
 
 TScriptInterface<IAssetBuilder> UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey)
 {
-	UTexture2DBuilder* AssetBuilder = NewObject<UTexture2DBuilder>();
+	AssetBuilder = NewObject<UTexture2DBuilder>();
 	AssetBuilder->SetNode(InFileKey, this);
 	return AssetBuilder;
 }
@@ -41,10 +41,11 @@ FString UFigmaVectorNode::GetPackageName() const
 
 TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders() const
 {
-	UImageWidgetBuilder* BorderWidgetBuilder = NewObject<UImageWidgetBuilder>();
-	BorderWidgetBuilder->SetNode(this);
+	UImageWidgetBuilder* ImageWidgetBuilder = NewObject<UImageWidgetBuilder>();
+	ImageWidgetBuilder->SetNode(this);
+	ImageWidgetBuilder->SetTexture2DBuilder(AssetBuilder);
 
-	return BorderWidgetBuilder;
+	return ImageWidgetBuilder;
 }
 
 void UFigmaVectorNode::AddImageRequest(FString FileKey, FImageRequests& ImageRequests)

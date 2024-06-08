@@ -20,6 +20,7 @@ public:
 	void AddImageRequest(FImageRequests& ImageRequests);
 	void OnRawImageReceived(const TArray<uint8>& InRawData);
 
+	const TObjectPtr<UTexture2D>& GetAsset() const;
 protected:
 	UPROPERTY()
 	TObjectPtr<UTexture2D> Asset = nullptr;

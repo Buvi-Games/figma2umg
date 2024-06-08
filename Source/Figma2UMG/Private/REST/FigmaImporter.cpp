@@ -128,7 +128,7 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 	int HeaderAddressOffset = 0;
 
 #if WITH_CURL
-#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4 && ENGINE_PATCH_VERSION == 1)
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4 && ENGINE_PATCH_VERSION >= 2)
 	HeaderAddressOffset = 664;
 #elif (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 3 && ENGINE_PATCH_VERSION == 2)
 	HeaderAddressOffset = 256;
@@ -144,6 +144,10 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 		void* HeaderAddress = reinterpret_cast<void*>(reinterpret_cast<int64>(HttpRequestPtr) + HeaderAddressOffset);
 		TMap<FString, FString>* HeadersPtr = static_cast<TMap<FString, FString>*>(HeaderAddress);
 		HeadersPtr->Remove(TEXT("Content-Length"));
+	}
+	else
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaImporter] Unreal %i.%i.%i is not supported yet. Need to verify the Figma Request format."), ENGINE_MAJOR_VERSION, ENGINE_MINOR_VERSION, ENGINE_PATCH_VERSION);
 	}
 
 	// End of Hack
