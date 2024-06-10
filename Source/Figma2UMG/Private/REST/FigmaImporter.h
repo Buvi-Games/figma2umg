@@ -97,6 +97,9 @@ protected:
 	UFUNCTION()
 	void OnPostPatchUAssets(bool Succeeded);
 
+	UFUNCTION()
+	void SaveAll();
+
 	FVaRestCallDelegate OnVaRestLibraryFileRequestDelegate;
 	FVaRestCallDelegate OnVaRestFileRequestDelegate;
 	FProcessFinishedDelegate OnBuildersCreatedDelegate;
@@ -119,6 +122,7 @@ protected:
 
 	bool UsePrototypeFlow = false;
 	bool TestNewParserProcess = false;
+	bool SaveAllAtEnd = false;
 
 	UPROPERTY()
 	TObjectPtr<UFigmaFile> File = nullptr;

@@ -38,5 +38,7 @@ public:
 
 	UPROPERTY(EditAnywhere, meta = (Category = "Proto", ToolTip = "Local folder where the UAssets will be created. eg '/Game/MyFolder'"))
 	bool TestNewParserProcess = true;
+	UPROPERTY(EditAnywhere, meta = (Category = "Unreal|Options", ToolTip = "Save all files at end'"))
+	bool SaveAllAtEnd = true;
 
 };

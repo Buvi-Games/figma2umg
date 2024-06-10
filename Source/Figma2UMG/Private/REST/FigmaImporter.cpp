@@ -52,6 +52,7 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 	UsePrototypeFlow = InProperties->UsePrototypeFlow;
 	TestNewParserProcess = InProperties->TestNewParserProcess;
+	SaveAllAtEnd = InProperties->SaveAllAtEnd;
 }
 
 
@@ -697,6 +698,38 @@ void UFigmaImporter::OnPatchUAssets(bool Succeeded)
 	UE_LOG_Figma2UMG(Display, TEXT("Post-patch UAssets."));
 	UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostPatch", "Post-patch UAssets"));
 	File->PostPatch(OnPostPatchUAssetsDelegate);
+
+	if(SaveAllAtEnd)
+	{
+		CompileBPs();
+		ReloadBPAssets();
+		SaveAll();
+	}
+	else
+	{
+		CompileBPs();
+	}
+
+	OnPostPatchUAssets(true);
+}
+
+void UFigmaImporter::SaveAll()
+{
+	TArray<UPackage*> Packages;
+	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+	{
+		UPackage* Package = AssetBuilder->GetPackage();
+		if (Package)
+		{
+			Packages.AddUnique(Package);
+		}
+	}
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
+	FEditorFileUtils::FPromptForCheckoutAndSaveParams Params;
+	FEditorFileUtils::PromptForCheckoutAndSave(Packages, Params);
+#else
+	FEditorFileUtils::PromptForCheckoutAndSave(Packages, true, false);
+#endif
 }
 
 void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)

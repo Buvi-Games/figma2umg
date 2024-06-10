@@ -24,6 +24,9 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
 	bool UsePrototypeFlow = true;
 
+	UPROPERTY(EditAnywhere, meta = (Category = "Figma2UMG"))
+	bool SaveAllAtEnd = true;
+
 	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
 	FClassOverrides WidgetOverrides;
 };

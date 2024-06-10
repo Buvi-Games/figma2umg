@@ -17,6 +17,7 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		LibraryFileKeys = Settings->LibraryFileKeys;
 		UsePrototypeFlow = Settings->UsePrototypeFlow;
 		WidgetOverrides = Settings->WidgetOverrides;
+		SaveAllAtEnd = Settings->SaveAllAtEnd;
 	}
 
 	ContentRootFolder = "/Game/Figma";

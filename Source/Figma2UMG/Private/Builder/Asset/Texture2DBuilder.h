@@ -21,6 +21,8 @@ public:
 	void OnRawImageReceived(const TArray<uint8>& InRawData);
 
 	const TObjectPtr<UTexture2D>& GetAsset() const;
+
+	virtual UPackage* GetPackage() const override;
 protected:
 	UPROPERTY()
 	TObjectPtr<UTexture2D> Asset = nullptr;

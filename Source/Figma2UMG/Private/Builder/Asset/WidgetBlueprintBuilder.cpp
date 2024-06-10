@@ -183,6 +183,11 @@ TObjectPtr<UWidgetBlueprint> UWidgetBlueprintBuilder::GetAsset() const
 	return Asset;
 }
 
+UPackage* UWidgetBlueprintBuilder::GetPackage() const
+{
+	return Asset ? Asset->GetPackage() : nullptr;
+}
+
 void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
 {
 	MemberType.ContainerType = EPinContainerType::None;
