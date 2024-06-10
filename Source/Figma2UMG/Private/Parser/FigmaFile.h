@@ -40,10 +40,6 @@ public:
 	void FixComponentSetRef();
 	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders);
-	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
-	void BuildImageDependency(FImageRequests& ImageRequests);
-	void Patch(const FProcessFinishedDelegate& ProcessDelegate, FScopedSlowTask* Progress);
-	void PostPatch(const FProcessFinishedDelegate& ProcessDelegate);
 
 	template<class NodeType>
 	TObjectPtr<NodeType> FindByID(FString ID)
@@ -56,7 +52,6 @@ public:
 		return nullptr;
 	}
 
-	bool UseNewBuilders = false;
 protected:
 	void FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
@@ -66,18 +61,6 @@ protected:
 	void ExecuteDelegate(const bool Succeeded);
 
 	void CreateAssetBuilder(UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders);
-
-	void PatchPreInsertWidget();
-	bool PatchPostInsertWidget();
-
-	void PatchWidgetProperties() const;
-	void PatchWidgetBinds();
-
-	void CompileBPs();
-	void ReloadBPAssets();
-	void ResetWidgets();
-	void LoadAssets();
-	void FindWidgets();
 
 	UPROPERTY()
 	int SchemaVersion = 0;

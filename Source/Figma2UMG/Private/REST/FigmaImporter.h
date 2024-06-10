@@ -121,7 +121,6 @@ protected:
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
 	bool UsePrototypeFlow = false;
-	bool TestNewParserProcess = false;
 	bool SaveAllAtEnd = false;
 
 	UPROPERTY()
