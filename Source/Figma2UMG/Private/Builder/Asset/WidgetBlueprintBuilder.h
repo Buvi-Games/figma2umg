@@ -29,7 +29,7 @@ public:
 
 	TObjectPtr<UWidgetBlueprint> GetAsset() const;
 protected:
-	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
+	bool FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 	bool PatchPropertyDefinitions(const TMap<FString, FFigmaComponentPropertyDefinition>& ComponentPropertyDefinitions) const;
 
 	UPROPERTY()

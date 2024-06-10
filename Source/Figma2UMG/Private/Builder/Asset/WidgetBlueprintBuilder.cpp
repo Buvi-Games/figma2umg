@@ -188,7 +188,7 @@ TObjectPtr<UWidgetBlueprint> UWidgetBlueprintBuilder::GetAsset() const
 	return Asset;
 }
 
-void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
+bool UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
 {
 	MemberType.ContainerType = EPinContainerType::None;
 	switch (Def.Type)
@@ -206,9 +206,10 @@ void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& 
 		// MemberType.PinSubCategoryObject = ?
 		break;
 	case EFigmaComponentPropertyType::VARIANT:
-		//TODO:
-		break;
+		return false;
 	}
+
+	return true;
 }
 
 bool UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigmaComponentPropertyDefinition>& ComponentPropertyDefinitions) const
@@ -221,7 +222,9 @@ bool UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigm
 	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
 	{
 		FEdGraphPinType MemberType;
-		FillType(Property.Value, MemberType);
+		if(!FillType(Property.Value, MemberType))
+			continue;
+
 		FString PropertyName = Property.Key;//TODO: Remove '#id'
 
 		UE_LOG_Figma2UMG(Display, TEXT("Blueprint %s - Adding member %s type %s and defaultValue %s ."), *WidgetBP->GetName(), *PropertyName, *MemberType.PinCategory.ToString(), *Property.Value.DefaultValue);
