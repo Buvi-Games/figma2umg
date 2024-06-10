@@ -37,6 +37,7 @@ void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree
 		if (Widget && Widget.GetClass()->ClassGeneratedBy == ComponentAsset)
 		{
 			UFigmaImportSubsystem::TryRenameWidget(WidgetName, WidgetToPatch);
+			Widget->bIsVariable = true;
 		}
 		else
 		{
@@ -47,6 +48,7 @@ void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree
 			{
 				UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 				Widget->CreatedFromPalette();
+				Widget->bIsVariable = true;
 			}
 		}
 	}
