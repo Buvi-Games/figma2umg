@@ -112,7 +112,7 @@ void FSwitcherBuilder::AddVariation(UWidgetBlueprint* WidgetBP)
 		IWidgetOwner::TryRenameWidget(PropertyName, WidgetSwitcher);
 	}
 
-	WidgetBlueprintHelper::CreateSwitchFunction(WidgetBP, PropertyName, PropertyDefinition.VariantOptions);
+	WidgetBlueprintHelper::CreateSwitchFunction(WidgetBP, nullptr,  PropertyName, PropertyDefinition.VariantOptions);
 }
 
 void FSwitcherBuilder::Reset()
