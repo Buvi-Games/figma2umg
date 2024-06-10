@@ -11,6 +11,7 @@
 #include "WidgetBlueprintFactory.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Widget/WidgetBuilder.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
@@ -188,7 +189,7 @@ TObjectPtr<UWidgetBlueprint> UWidgetBlueprintBuilder::GetAsset() const
 	return Asset;
 }
 
-bool UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
+void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const
 {
 	MemberType.ContainerType = EPinContainerType::None;
 	switch (Def.Type)
@@ -206,10 +207,49 @@ bool UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& 
 		// MemberType.PinSubCategoryObject = ?
 		break;
 	case EFigmaComponentPropertyType::VARIANT:
-		return false;
+		break;
 	}
 
-	return true;
+}
+
+bool UWidgetBlueprintBuilder::PatchMemberVariable(UWidgetBlueprint* WidgetBP, const TPair<FString, FFigmaComponentPropertyDefinition> Property) const
+{
+	bool AddedMemberVariable = false;
+	FString PropertyName = Property.Key;//TODO: Remove '#id'
+	FEdGraphPinType MemberType;
+	FillType(Property.Value, MemberType);
+
+	UE_LOG_Figma2UMG(Display, TEXT("Blueprint %s - Adding member %s type %s and defaultValue %s ."), *WidgetBP->GetName(), *PropertyName, *MemberType.PinCategory.ToString(), *Property.Value.DefaultValue);
+	if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
+	{
+		FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
+		AddedMemberVariable = true;
+	}
+	else
+	{
+		const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBP, *PropertyName);
+		if (VarIndex != INDEX_NONE && WidgetBP->NewVariables[VarIndex].VarType != MemberType)
+		{
+			FBlueprintEditorUtils::RemoveMemberVariable(WidgetBP, *PropertyName);
+			if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
+			{
+				FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
+				AddedMemberVariable = true;
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Warning, TEXT("Blueprint %s - Fail to add member %s type %s and defaultValue %s ."), *WidgetBP->GetName(), *PropertyName, *MemberType.PinCategory.ToString(), *Property.Value.DefaultValue);
+			}
+		}
+	}
+
+	const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBP, *PropertyName);
+	if (VarIndex != INDEX_NONE && WidgetBP->NewVariables[VarIndex].Category.EqualTo(UEdGraphSchema_K2::VR_DefaultCategory))
+	{
+		static const FText FigmaCategory(FText::FromString("Figma"));
+		WidgetBP->NewVariables[VarIndex].Category = FigmaCategory;
+	}
+	return AddedMemberVariable;
 }
 
 bool UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigmaComponentPropertyDefinition>& ComponentPropertyDefinitions) const
@@ -221,62 +261,24 @@ bool UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigm
 	bool AddedMemberVariable = false;
 	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
 	{
-		FEdGraphPinType MemberType;
-		if(!FillType(Property.Value, MemberType))
-			continue;
-
-		FString PropertyName = Property.Key;//TODO: Remove '#id'
-
-		UE_LOG_Figma2UMG(Display, TEXT("Blueprint %s - Adding member %s type %s and defaultValue %s ."), *WidgetBP->GetName(), *PropertyName, *MemberType.PinCategory.ToString(), *Property.Value.DefaultValue);
-		if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
+		if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
 		{
-			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
-			AddedMemberVariable = true;
+			FString PropertyName = Property.Key;//TODO: Remove '#id'
+			if (!Property.Value.IsButton())
+			{
+				WidgetBlueprintHelper::CreateSwitchFunction(WidgetBP, PropertyName, Property.Value.VariantOptions);
+			}
+
+			const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBP, *PropertyName);
+			if (VarIndex != INDEX_NONE)
+			{
+				FBlueprintEditorUtils::RemoveMemberVariable(WidgetBP, *PropertyName);
+			}
+			return true;
 		}
 		else
 		{
-			const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBP, *PropertyName);
-			if (VarIndex != INDEX_NONE && WidgetBP->NewVariables[VarIndex].VarType != MemberType)
-			{
-				FBlueprintEditorUtils::RemoveMemberVariable(WidgetBP, *PropertyName);
-				if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
-				{
-					FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
-					AddedMemberVariable = true;
-				}
-				else
-				{
-					UE_LOG_Figma2UMG(Warning, TEXT("Blueprint %s - Fail to add member %s type %s and defaultValue %s ."), *WidgetBP->GetName(), *PropertyName, *MemberType.PinCategory.ToString(), *Property.Value.DefaultValue);
-				}
-			}
-		}
-	
-		//TODO: This is to initialize the Switchers, would probably need to check if there are Switchers
-		if (Node->IsA<UFigmaComponentSet>())
-		{
-			TSet<FName> CurrentVars;
-			FBlueprintEditorUtils::GetClassVariableList(WidgetBP, CurrentVars);
-			if (AddedMemberVariable || CurrentVars.Contains(*PropertyName))
-			{
-				FString FunctionName = "Init" + PropertyName;
-				TObjectPtr<UEdGraph>* Graph = WidgetBP->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
-					{
-						return Graph.GetName() == FunctionName;
-					});
-	
-				UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
-				if (!FunctionGraph)
-				{
-					FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBP, FBlueprintEditorUtils::FindUniqueKismetName(WidgetBP, FunctionName), UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
-	
-					FBlueprintEditorUtils::AddFunctionGraph<UClass>(WidgetBP, FunctionGraph, true, nullptr);
-					AddedMemberVariable = true;
-				}
-			}
-			else
-			{
-				UE_LOG_Figma2UMG(Error, TEXT("[UWidgetBlueprintBuilder::PatchPropertiesToWidget] Fail to add member variable %s of type %s."), *PropertyName, *MemberType.PinCategory.ToString());
-			}
+			AddedMemberVariable = PatchMemberVariable(WidgetBP, Property);
 		}
 	}
 	
