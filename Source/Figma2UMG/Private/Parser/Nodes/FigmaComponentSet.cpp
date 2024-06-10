@@ -9,6 +9,7 @@
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"
 #include "Builder/Widget/WidgetSwitcherBuilder.h"
+#include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Components/WidgetSwitcher.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/FigmaFile.h"
@@ -355,60 +356,99 @@ UObject* UFigmaComponentSet::GetAssetOuter() const
 
 TScriptInterface<IWidgetBuilder> UFigmaComponentSet::CreateWidgetBuilders(bool IsRoot) const
 {
-	UWidgetSwitcherBuilder* WidgetSwitcherBuilder = nullptr;
-	UButtonWidgetBuilder* ButtonBuilder = nullptr;
-	for (const TPair<FString, FFigmaComponentPropertyDefinition>& Property : ComponentPropertyDefinitions)
+	if (IsRoot)
 	{
-		if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
+		UWidgetSwitcherBuilder* WidgetSwitcherBuilder = nullptr;
+		UButtonWidgetBuilder* ButtonBuilder = nullptr;
+		for (const TPair<FString, FFigmaComponentPropertyDefinition>& Property : ComponentPropertyDefinitions)
 		{
-			if (Property.Value.IsButton())
+			if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
 			{
-				ButtonBuilder = NewObject<UButtonWidgetBuilder>();
-				ButtonBuilder->SetNode(this);
-
-				FString DefaultName = Property.Key + TEXT("=Default");
-				FString HoveredName = Property.Key + TEXT("=Hovered");
-				FString PressedName = Property.Key + TEXT("=Pressed");
-				FString DisabledName = Property.Key + TEXT("=Disabled");
-				FString FocusedName = Property.Key + TEXT("=Focused");
-
-				const UFigmaNode* const* FoundDefaultNode = Children.FindByPredicate([DefaultName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(DefaultName, ESearchCase::IgnoreCase) == 0; });
-				const UFigmaNode* const* FoundHoveredNode = Children.FindByPredicate([HoveredName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(HoveredName, ESearchCase::IgnoreCase) == 0; });
-				const UFigmaNode* const* FoundPressedNode = Children.FindByPredicate([PressedName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(PressedName, ESearchCase::IgnoreCase) == 0; });
-				const UFigmaNode* const* FoundDisabledNode = Children.FindByPredicate([DisabledName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(DisabledName, ESearchCase::IgnoreCase) == 0; });
-				const UFigmaNode* const* FoundFocusedNode = Children.FindByPredicate([FocusedName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(FocusedName, ESearchCase::IgnoreCase) == 0; });
-
-				ButtonBuilder->SetDefaultNode(FoundDefaultNode ? Cast<UFigmaComponent>(*FoundDefaultNode) : nullptr);
-				ButtonBuilder->SetHoveredNode(FoundHoveredNode ? Cast<UFigmaComponent>(*FoundHoveredNode) : nullptr);
-				ButtonBuilder->SetPressedNode(FoundPressedNode ? Cast<UFigmaComponent>(*FoundPressedNode) : nullptr);
-				ButtonBuilder->SetDisabledNode(FoundDisabledNode ? Cast<UFigmaComponent>(*FoundDisabledNode) : nullptr);
-				ButtonBuilder->SetFocusedNode(FoundFocusedNode ? Cast<UFigmaComponent>(*FoundFocusedNode) : nullptr);
-			}
-			else
-			{
-				WidgetSwitcherBuilder = NewObject<UWidgetSwitcherBuilder>();
-				WidgetSwitcherBuilder->SetNode(this);
-				for (const UFigmaNode* Child : Children)
+				if (Property.Value.IsButton())
 				{
-					if (!Child)
-						continue;
+					ButtonBuilder = NewObject<UButtonWidgetBuilder>();
+					ButtonBuilder->SetNode(this);
 
-					if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+					FString DefaultName = Property.Key + TEXT("=Default");
+					FString HoveredName = Property.Key + TEXT("=Hovered");
+					FString PressedName = Property.Key + TEXT("=Pressed");
+					FString DisabledName = Property.Key + TEXT("=Disabled");
+					FString FocusedName = Property.Key + TEXT("=Focused");
+
+					const UFigmaNode* const* FoundDefaultNode = Children.FindByPredicate([DefaultName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(DefaultName, ESearchCase::IgnoreCase) == 0; });
+					const UFigmaNode* const* FoundHoveredNode = Children.FindByPredicate([HoveredName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(HoveredName, ESearchCase::IgnoreCase) == 0; });
+					const UFigmaNode* const* FoundPressedNode = Children.FindByPredicate([PressedName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(PressedName, ESearchCase::IgnoreCase) == 0; });
+					const UFigmaNode* const* FoundDisabledNode = Children.FindByPredicate([DisabledName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(DisabledName, ESearchCase::IgnoreCase) == 0; });
+					const UFigmaNode* const* FoundFocusedNode = Children.FindByPredicate([FocusedName](const UFigmaNode* Node) {return Node->GetNodeName().Compare(FocusedName, ESearchCase::IgnoreCase) == 0; });
+
+					ButtonBuilder->SetDefaultNode(FoundDefaultNode ? Cast<UFigmaComponent>(*FoundDefaultNode) : nullptr);
+					ButtonBuilder->SetHoveredNode(FoundHoveredNode ? Cast<UFigmaComponent>(*FoundHoveredNode) : nullptr);
+					ButtonBuilder->SetPressedNode(FoundPressedNode ? Cast<UFigmaComponent>(*FoundPressedNode) : nullptr);
+					ButtonBuilder->SetDisabledNode(FoundDisabledNode ? Cast<UFigmaComponent>(*FoundDisabledNode) : nullptr);
+					ButtonBuilder->SetFocusedNode(FoundFocusedNode ? Cast<UFigmaComponent>(*FoundFocusedNode) : nullptr);
+				}
+				else
+				{
+					WidgetSwitcherBuilder = NewObject<UWidgetSwitcherBuilder>();
+					WidgetSwitcherBuilder->SetNode(this);
+					for (const UFigmaNode* Child : Children)
 					{
-						WidgetSwitcherBuilder->AddChild(SubBuilder);
-					}
+						if (!Child)
+							continue;
 
+						if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+						{
+							WidgetSwitcherBuilder->AddChild(SubBuilder);
+						}
+
+					}
 				}
 			}
 		}
-	}
 
-	if(WidgetSwitcherBuilder)
+		if(WidgetSwitcherBuilder)
+		{
+			return WidgetSwitcherBuilder;
+		}
+
+		return ButtonBuilder;
+	}
+	else
 	{
-		return WidgetSwitcherBuilder;
-	}
+		bool IsButton = false;
+		for (const TPair<FString, FFigmaComponentPropertyDefinition>& Property : ComponentPropertyDefinitions)
+		{
+			if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT && Property.Value.IsButton())
+			{
+				IsButton = true;
+				break;
+			}
+		}
 
-	return ButtonBuilder;
+		if (IsButton)
+		{
+			return nullptr;
+		}
+		else
+		{
+			UCanvasBuilder* InPlaceCanvasBuilder = NewObject<UCanvasBuilder>();
+			InPlaceCanvasBuilder->SetNode(this);
+
+			for (const UFigmaNode* Child : Children)
+			{
+				if (!Child)
+					continue;
+
+				if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+				{
+					InPlaceCanvasBuilder->AddChild(SubBuilder);
+				}
+			}
+
+			return InPlaceCanvasBuilder;
+		}
+
+	}
 }
 
 void UFigmaComponentSet::Reset()
