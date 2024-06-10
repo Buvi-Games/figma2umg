@@ -233,6 +233,23 @@ bool UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigm
 			FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
 			AddedMemberVariable = true;
 		}
+		else
+		{
+			const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBP, *PropertyName);
+			if (VarIndex != INDEX_NONE && WidgetBP->NewVariables[VarIndex].VarType != MemberType)
+			{
+				FBlueprintEditorUtils::RemoveMemberVariable(WidgetBP, *PropertyName);
+				if (FBlueprintEditorUtils::AddMemberVariable(WidgetBP, *PropertyName, MemberType, Property.Value.DefaultValue))
+				{
+					FBlueprintEditorUtils::SetBlueprintOnlyEditableFlag(WidgetBP, *PropertyName, false);
+					AddedMemberVariable = true;
+				}
+				else
+				{
+					UE_LOG_Figma2UMG(Warning, TEXT("Blueprint %s - Fail to add member %s type %s and defaultValue %s ."), *WidgetBP->GetName(), *PropertyName, *MemberType.PinCategory.ToString(), *Property.Value.DefaultValue);
+				}
+			}
+		}
 	
 		//TODO: This is to initialize the Switchers, would probably need to check if there are Switchers
 		if (Node->IsA<UFigmaComponentSet>())
