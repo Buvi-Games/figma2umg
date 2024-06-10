@@ -150,7 +150,7 @@ void WidgetBlueprintHelper::PatchTextBind(TObjectPtr<UWidgetBlueprint> WidgetBP,
 	AddBindingProperty(WidgetBP, TextBlock, "Text", VariableName);
 }
 
-void WidgetBlueprintHelper::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, const FString& PropertyName, const TArray<FString>& PinNames)
+void WidgetBlueprintHelper::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidgetSwitcher> WidgetSwitcher, const FString& PropertyName, const TArray<FString>& PinNames)
 {
 	if (!WidgetBP)
 		return;
@@ -179,7 +179,11 @@ void WidgetBlueprintHelper::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> Wi
 	{
 		InputValue->MakeLinkTo(SwitchNode->GetSelectionPin());
 	}
-	
+
+	const FVector2D GetPosition = StartPos + FVector2D(0.0f, BaseSize.Y + Pan.Y);
+	UK2Node_VariableGet* TargetGetNode = WidgetSwitcher ? PatchVariableGetNode(WidgetBP, FunctionGraph, *WidgetSwitcher->GetName(), GetPosition) : nullptr;
+	UEdGraphPin* TargetOutPin = TargetGetNode ? TargetGetNode->GetValuePin() : nullptr;
+
 	for (int i = 0; i < PinNames.Num(); i++)
 	{
 		const FString& Value = PinNames[i];
@@ -191,7 +195,15 @@ void WidgetBlueprintHelper::CreateSwitchFunction(TObjectPtr<UWidgetBlueprint> Wi
 #endif
 
 		const FVector2D SetPosition = SwitchPosition + FVector2D(BaseSize.X + Pan.X, ((BaseSize.Y*0.75f) + Pan.Y) * index);
-		PatchVariableSetNode(FunctionGraph, ExecPin, nullptr, UWidgetSwitcher::StaticClass(), i, SetPosition);
+		UK2Node_VariableSet* SetNode = PatchVariableSetNode(FunctionGraph, ExecPin, nullptr, UWidgetSwitcher::StaticClass(), i, SetPosition);
+		if (TargetOutPin)
+		{
+			UEdGraphPin* TargetInPin = SetNode->FindPin(UEdGraphSchema_K2::PSC_Self, EGPD_Input);
+			if (TargetInPin && TargetInPin->PinType.PinCategory == UEdGraphSchema_K2::PC_Object && TargetInPin->PinType.PinSubCategoryObject == UWidgetSwitcher::StaticClass())
+			{
+				TargetOutPin->MakeLinkTo(TargetInPin);
+			}
+		}
 	}
 }
 
