@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaImportSubsystem.h"
 #include "ImageRequest.h"
 #include "VaRestSubsystem.h"
 #include "Parser/FigmaFile.h"
@@ -12,8 +13,6 @@
 
 class URequestParams;
 class UFigmaFile;
-
-DECLARE_DELEGATE_TwoParams(FOnFigmaImportUpdateStatusCB, eRequestStatus, FString);
 
 UCLASS()
 class UFigmaImporter : public UObject
@@ -46,17 +45,52 @@ protected:
 	void DownloadNextDependency();
 
 	UFUNCTION()
-	void OnAssetsCreated(bool Succeeded);
+	void FixReferences();
 
+	UFUNCTION()
+	void OnBuildersCreated(bool Succeeded);
+
+	UFUNCTION()
+	void BuildImageDependency ();
+
+	UFUNCTION()
 	void RequestImageURLs();
+
+	UFUNCTION()
+	void DownloadNextImage();
 
 	UFUNCTION()
 	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
 
-	void DownloadNextImage();
-
 	UFUNCTION()
 	void HandleImageDownload(bool Succeeded);
+
+	UFUNCTION()
+	void LoadOrCreateAssets();
+
+	UFUNCTION()
+	void OnAssetsCreated(bool Succeeded);
+
+	UFUNCTION()
+	void PatchAssets();
+
+	UFUNCTION()
+	void CreateWidgetBuilders();
+
+	UFUNCTION()
+	void PatchPreInsertWidget();
+
+	UFUNCTION()
+	void CompileBPs();
+
+	UFUNCTION()
+	void ReloadBPAssets();
+
+	UFUNCTION()
+	void PatchWidgetBinds();
+
+	UFUNCTION()
+	void PatchWidgetProperties();
 
 	UFUNCTION()
 	void OnPatchUAssets(bool Succeeded);
@@ -64,8 +98,12 @@ protected:
 	UFUNCTION()
 	void OnPostPatchUAssets(bool Succeeded);
 
+	UFUNCTION()
+	void SaveAll();
+
 	FVaRestCallDelegate OnVaRestLibraryFileRequestDelegate;
 	FVaRestCallDelegate OnVaRestFileRequestDelegate;
+	FProcessFinishedDelegate OnBuildersCreatedDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
 	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
@@ -84,6 +122,7 @@ protected:
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
 	bool UsePrototypeFlow = false;
+	bool SaveAllAtEnd = false;
 
 	UPROPERTY()
 	TObjectPtr<UFigmaFile> File = nullptr;
@@ -92,10 +131,15 @@ protected:
 	TMap<FString, TObjectPtr<UFigmaFile>> LibraryFileKeys;
 
 	UPROPERTY()
+	TArray<TScriptInterface<IAssetBuilder>> AssetBuilders;
+
+	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;
 	FImageRequests RequestedImages;
 
 	FScopedSlowTask* Progress = nullptr;
 	float ProgressThisFrame = 0.0f;
 	FText ProgressMessage;
+
+	int ImageDownloadCount = 0;
 };

@@ -5,6 +5,8 @@
 
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/Widget/BorderWidgetBuilder.h"
+#include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
@@ -39,63 +41,39 @@ FString UFigmaSection::GetCurrentPackagePath() const
 	return CurrentPackagePath;
 }
 
-void UFigmaSection::ForEach(const IWidgetOwner::FOnEachFunction& Function)
+TScriptInterface<IWidgetBuilder> UFigmaSection::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
-	Builder.ForEach(Function);
-}
+	UCanvasBuilder* CanvasBuilder = NewObject<UCanvasBuilder>();
+	CanvasBuilder->SetNode(this);
 
-TObjectPtr<UWidget> UFigmaSection::Patch(TObjectPtr<UWidget> WidgetToPatch)
-{
-	Builder.SetupBorder(Fills, Strokes, StrokeWeight, StrokeAlign, FVector4::Zero(), 0.0f);
-	return Builder.Patch(WidgetToPatch, GetAssetOuter(), GetUniqueName());
-}
-
-void UFigmaSection::SetupWidget(TObjectPtr<UWidget> Widget)
-{
-	if (Widget)
+	for (const UFigmaNode* Child : Children)
 	{
-		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaSection %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
+		if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+		{
+			CanvasBuilder->AddChild(SubBuilder);
+		}
 	}
 
-	Builder.SetupWidget(Widget);
-}
+	bool RequireBorder = false;
+	for (int i = 0; i < Fills.Num() && !RequireBorder; i++)
+	{
+		if (Fills[i].Visible)
+			RequireBorder = true;
+	}
+	for (int i = 0; i < Strokes.Num() && !RequireBorder; i++)
+	{
+		if (Strokes[i].Visible)
+			RequireBorder = true;
+	}
 
-void UFigmaSection::PostInsert() const
-{
-	TObjectPtr<UWidget> TopWidget = GetTopWidget();
-	if (!TopWidget)
-		return;
+	if (RequireBorder)
+	{
+		UBorderWidgetBuilder* BorderWidgetBuilder = NewObject<UBorderWidgetBuilder>();
+		BorderWidgetBuilder->SetNode(this);
+		BorderWidgetBuilder->SetChild(CanvasBuilder);
 
-	IWidgetOwner::PostInsert();
+		return BorderWidgetBuilder;
+	}
 
-	SetSize(TopWidget, AbsoluteBoundingBox.GetSize());
-}
-
-void UFigmaSection::Reset()
-{
-	Builder.Reset();
-}
-
-TObjectPtr<UWidget> UFigmaSection::GetTopWidget() const
-{
-	return Builder.GetTopWidget();
-}
-
-FVector2D UFigmaSection::GetTopWidgetPosition() const
-{
-	return GetPosition();
-}
-
-TObjectPtr<UPanelWidget> UFigmaSection::GetContainerWidget() const
-{
-	return Builder.GetContainerWidget();
-}
-
-void UFigmaSection::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
-{
-	if (WidgetBp == nullptr)
-		return;
-
-	TObjectPtr<UWidget> Widget = GetTopWidget();
-	ProcessComponentPropertyReferences(WidgetBp, Widget);
+	return CanvasBuilder;
 }

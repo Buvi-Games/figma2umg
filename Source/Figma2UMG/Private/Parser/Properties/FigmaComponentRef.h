@@ -26,17 +26,18 @@ public:
 	TObjectPtr<UFigmaComponent>  GetComponent() const { return FigmaComponent; }
 
 	void SetComponentSet(FFigmaComponentSetRef* Value) { FigmaComponentSetRef = Value; }
+	FFigmaComponentSetRef* GetComponentSet() const { return FigmaComponentSetRef; }
 
-	TObjectPtr<UWidgetBlueprint>  GetAsset() const
+	TObjectPtr<UWidgetBlueprintBuilder> GetAssetBuilder() const
 	{
 		if (FigmaComponentSetRef)
 		{
-			return FigmaComponentSetRef->GetAsset();
+			return FigmaComponentSetRef->GetAssetBuilder();
 		}
 
 		if (FigmaComponent)
 		{
-			return FigmaComponent->GetAsset<UWidgetBlueprint>();
+			return FigmaComponent->GetAssetBuilder();
 		}
 
 		return nullptr;
@@ -45,6 +46,6 @@ public:
 protected:
 	UPROPERTY()
 	TObjectPtr<UFigmaComponent> FigmaComponent = nullptr;
-
+	
 	FFigmaComponentSetRef* FigmaComponentSetRef = nullptr;
 };
