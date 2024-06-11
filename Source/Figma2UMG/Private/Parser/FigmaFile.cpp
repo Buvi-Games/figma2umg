@@ -5,9 +5,7 @@
 
 #include "Figma2UMGModule.h"
 #include "Async/Async.h"
-#include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
-#include "Interfaces/FigmaImageRequester.h"
 #include "Nodes/FigmaDocument.h"
 #include "Nodes/FigmaInstance.h"
 #include "Properties/FigmaComponentRef.h"
@@ -329,18 +327,18 @@ void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPai
 
 	for (UFigmaInstance* SubInstance : SubInstances)
 	{
-		if (PendingComponents.Contains(SubInstance->GetComponentId()))
+		if (PendingComponents.Contains(SubInstance->ComponentId))
 			continue;
 
-		if (LibraryFile.Value->Components.Contains(SubInstance->GetComponentId()))
+		if (LibraryFile.Value->Components.Contains(SubInstance->ComponentId))
 		{
-			UE_LOG_Figma2UMG(Display, TEXT("[Component] Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->GetComponentId());
-			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubInstance->GetComponentId()];
+			UE_LOG_Figma2UMG(Display, TEXT("[Component] Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->ComponentId);
+			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubInstance->ComponentId];
 			if (!RemoteCommponentRef.Remote)
 			{
 				RemoteCommponentRef.RemoteFileKey = LibraryFile.Key;
 			}
-			FFigmaComponentRef& SubComponentRef = PendingComponents.Add(SubInstance->GetComponentId(), RemoteCommponentRef);
+			FFigmaComponentRef& SubComponentRef = PendingComponents.Add(SubInstance->ComponentId, RemoteCommponentRef);
 		}
 	}
 }

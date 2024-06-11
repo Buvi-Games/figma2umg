@@ -4,8 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "FigmaFrame.h"
-#include "Interfaces/AssetFileHandler.h"
-#include "Interfaces/FigmaRefHandle.h"
 #include "Parser/Properties/FigmaComponentPropertyDefinition.h"
 
 #include "FigmaComponent.generated.h"
@@ -20,24 +18,10 @@ public:
 
 	// UFigmaNode
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
-	virtual void Reset() override;
 	virtual FString GetPackageName() const override;
-
-	// IFigmaFileHandle
-	virtual FString GetPackagePath() const override;
-	virtual void LoadOrCreateAssets() override;
-	virtual void LoadAssets() override;
-
-	// IWidgetOwner
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
-
-	bool PatchPropertiesToWidget(UWidgetBlueprint* Widget) const;
 
 	void TryAddComponentPropertyDefinition(FString PropertyId, FFigmaComponentPropertyDefinition Definition);
 
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;
-
-protected:
-	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 };

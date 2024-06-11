@@ -3,6 +3,7 @@
 
 #include "WidgetBuilder.h"
 
+#include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Components/BorderSlot.h"
@@ -13,6 +14,7 @@
 #include "Components/SizeBoxSlot.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/Widget.h"
+#include "Components/WrapBox.h"
 #include "Components/WrapBoxSlot.h"
 #include "Parser/Nodes/FigmaGroup.h"
 #include "Parser/Nodes/FigmaInstance.h"

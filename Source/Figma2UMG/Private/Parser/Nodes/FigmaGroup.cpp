@@ -3,9 +3,7 @@
 
 #include "Parser/Nodes/FigmaGroup.h"
 
-#include "FigmaComponent.h"
 #include "FigmaComponentSet.h"
-#include "Builder/ButtonBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
@@ -14,9 +12,7 @@
 #include "Builder/Widget/SizeBoxWidgetBuilder.h"
 #include "Builder/Widget/Panels/VBoxBuilder.h"
 #include "Builder/Widget/Panels/WBoxBuilder.h"
-#include "Components/Button.h"
 #include "Components/CanvasPanel.h"
-#include "Components/SizeBoxSlot.h"
 #include "Components/Spacer.h"
 #include "Components/WrapBox.h"
 
@@ -45,129 +41,6 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 FVector2D UFigmaGroup::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();
-}
-
-TObjectPtr<UWidget> UFigmaGroup::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
-{
-	TObjectPtr<UWidget> WidgetPatched = Super::PatchPreInsertWidget(WidgetToPatch);
-
-	UPanelWidget* ParentWidget = Cast<UPanelWidget>(WidgetPatched);
-	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
-	{
-		ParentWidget = WidgetOwner->GetContainerWidget();
-	}
-
-	if (ParentWidget)
-	{
-		FixSpacers(ParentWidget);
-	}
-
-	return WidgetPatched;
-}
-
-void UFigmaGroup::ForEach(const IWidgetOwner::FOnEachFunction& Function)
-{
-	Builder.ForEach(Function);
-}
-
-TObjectPtr<UWidget> UFigmaGroup::Patch(TObjectPtr<UWidget> WidgetToPatch)
-{
-	FVector4 Corners = RectangleCornerRadii.Num() == 4 ? FVector4(RectangleCornerRadii[0], RectangleCornerRadii[1], RectangleCornerRadii[2], RectangleCornerRadii[3]) : FVector4(CornerRadius, CornerRadius, CornerRadius, CornerRadius);
-	Builder.SetupBorder(Fills, Strokes, StrokeWeight, StrokeAlign, Corners, CornerSmoothing);
-	Builder.SetLayout(LayoutMode, LayoutWrap);
-	Builder.SetLayoutSize(LayoutSizingHorizontal, AbsoluteBoundingBox.Width, LayoutSizingVertical, AbsoluteBoundingBox.Height);
-	return Builder.Patch(WidgetToPatch, GetAssetOuter(), GetUniqueName());
-}
-
-void UFigmaGroup::SetupBrush(FSlateBrush& Brush) const
-{
-	FVector4 Corners = RectangleCornerRadii.Num() == 4 ? FVector4(RectangleCornerRadii[0], RectangleCornerRadii[1], RectangleCornerRadii[2], RectangleCornerRadii[3]) : FVector4(CornerRadius, CornerRadius, CornerRadius, CornerRadius);
-	Builder.SetupBrush(Brush, Fills, Strokes, StrokeWeight, StrokeAlign, Corners, CornerSmoothing);
-}
-
-void UFigmaGroup::SetupLayout(FContainerBuilder& ContainerBuilder)
-{
-	ContainerBuilder.SetLayout(LayoutMode, LayoutWrap);
-}
-
-void UFigmaGroup::SetupWidget(TObjectPtr<UWidget> Widget)
-{
-	if (Widget)
-	{
-		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaGroup %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
-	}
-
-	Builder.SetupWidget(Widget);
-
-	// SizeBoxSlot are not ready during PostInsertWidgets
-	TObjectPtr<UWidget> ContentWidget = GetTopWidget();
-	USizeBoxSlot* SizeBoxSlot = ContentWidget ? Cast<USizeBoxSlot>(ContentWidget->Slot) : nullptr;
-	if (SizeBoxSlot)
-	{
-		SetPadding(ContentWidget, PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
-		SetConstraints(ContentWidget, PrimaryAxisAlignItems, CounterAxisAlignItems);
-	}
-}
-
-void UFigmaGroup::PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UPanelWidget> ContentWidget) const
-{
-	IWidgetOwner::PostInsertWidgets(TopWidget, ContentWidget);
-	if (TopWidget)
-	{
-		const bool SizeToContent = LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || LayoutSizingVertical == EFigmaLayoutSizing::FILL;
-		SetSize(TopWidget, AbsoluteBoundingBox.GetSize(), SizeToContent);
-	}
-
-	if (ContentWidget)
-	{
-		if(TopWidget->IsA<UButton>())
-		{
-			SetPadding(ContentWidget, 0.0f, 0.0f, 0.0f, 0.0f);
-		}
-		else
-		{
-			SetPadding(ContentWidget, PaddingLeft, PaddingRight, PaddingTop, PaddingBottom);
-			SetConstraints(ContentWidget, PrimaryAxisAlignItems, CounterAxisAlignItems);
-		}
-	}
-}
-
-void UFigmaGroup::Reset()
-{
-	Builder.Reset();
-}
-
-TObjectPtr<UWidget> UFigmaGroup::GetTopWidget() const
-{
-	return Builder.GetTopWidget();
-}
-
-FVector2D UFigmaGroup::GetTopWidgetPosition() const
-{
-	return GetPosition();
-}
-
-TObjectPtr<UPanelWidget> UFigmaGroup::GetContainerWidget() const
-{
-	return Builder.GetContainerWidget();
-}
-
-void UFigmaGroup::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
-{
-	if (WidgetBp == nullptr)
-		return;
-
-	TObjectPtr<UWidget> Widget = GetTopWidget();
-	ProcessComponentPropertyReferences(WidgetBp, Widget);
-
-	for (UFigmaNode* Child : Children)
-	{
-		IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(Child);
-		if (WidgetOwner)
-		{
-			WidgetOwner->PatchBinds(WidgetBp);
-		}
-	}
 }
 
 FMargin UFigmaGroup::GetPadding() const

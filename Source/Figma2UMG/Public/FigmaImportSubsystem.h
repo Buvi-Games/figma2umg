@@ -47,7 +47,7 @@ private:
 #define FIND_OVERRIDE_FOR_TYPE(TypeName)																		\
 if (Type::StaticClass() == U##TypeName::StaticClass())															\
 {																												\
-	for (const F##TypeName##Override& ClassOverride : WidgetOverrides->TypeName##Rules)								\
+	for (const F##TypeName##Override& ClassOverride : WidgetOverrides->TypeName##Rules)							\
 	{																											\
 		if (ClassOverride.Match(NodeName) && ClassOverride.ClassOverride != nullptr)							\
 			return ClassOverride.ClassOverride;																	\

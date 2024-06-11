@@ -3,8 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/TextBoxBuilder.h"
-#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 #include "Parser/Properties/FigmaTypeStyle.h"
 
@@ -21,7 +19,7 @@ enum class EFigmaLineType
 };
 
 UCLASS()
-class UFigmaText : public UFigmaNode, public IWidgetOwner, public IFlowTransition
+class UFigmaText : public UFigmaNode
 {
 public:
 	GENERATED_BODY()
@@ -31,26 +29,6 @@ public:
 	virtual FVector2D GetAbsolutePosition() const override;
 	FVector2D GetSize() const;
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
-
-	// IWidgetOwner
-	virtual void ForEach(const FOnEachFunction& Function) override;
-
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsert() const override;
-	virtual void Reset() override;
-
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual FVector2D GetTopWidgetPosition() const override;
-
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
-
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
-
-	// FlowTransition
-	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
-	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
-	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
 	UPROPERTY()
 	bool Locked = false;
@@ -165,7 +143,4 @@ public:
 
 protected:
 	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const override;
-
-	UPROPERTY()
-	FTextBoxBuilder Builder;
 };

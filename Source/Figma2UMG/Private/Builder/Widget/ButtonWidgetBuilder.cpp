@@ -4,6 +4,8 @@
 #include "ButtonWidgetBuilder.h"
 
 #include "Figma2UMGModule.h"
+#include "FigmaImportSubsystem.h"
+#include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/ContentWidget.h"
 

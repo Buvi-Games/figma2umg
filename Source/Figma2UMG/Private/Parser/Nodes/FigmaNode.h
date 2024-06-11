@@ -53,12 +53,6 @@ public:
 	//virtual void PostInsert(UWidget* Widget) const;
 
 	virtual void PrepareForFlow();
-	virtual void PrePatchWidget();
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch);
-	virtual void SetWidget(TObjectPtr<UWidget> WidgetToPatch);
-	virtual void InsertSubWidgets();
-	virtual void PatchPostInsertWidget();
-	void PostPatchWidget();
 
 	FString GetId() const { return Id; }
 	FString GetIdForName() const;
@@ -77,7 +71,6 @@ public:
 
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const;
 
-	virtual UObject* GetAssetOuter() const;
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
 	TObjectPtr<UFigmaNode> FindTypeByID(const UClass* Class, const FString& ID);
 	TObjectPtr<UWidget> FindWidgetForNode(const TObjectPtr<UPanelWidget>& ParentWidget) const;

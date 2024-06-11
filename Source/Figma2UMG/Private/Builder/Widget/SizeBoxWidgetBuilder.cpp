@@ -6,7 +6,6 @@
 #include "FigmaImportSubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/SizeBox.h"
-#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaGroup.h"
 #include "Parser/Nodes/FigmaInstance.h"
 #include "Parser/Nodes/FigmaNode.h"

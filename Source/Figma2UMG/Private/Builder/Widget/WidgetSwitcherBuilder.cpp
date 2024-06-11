@@ -3,10 +3,10 @@
 
 #include "WidgetSwitcherBuilder.h"
 
+#include "FigmaImportSubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Widget.h"
 #include "Components/WidgetSwitcher.h"
-#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)

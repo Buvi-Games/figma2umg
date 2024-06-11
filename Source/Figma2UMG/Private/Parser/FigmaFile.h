@@ -23,8 +23,6 @@ public:
 
 	void PostSerialize(const FString& InFileKey, const FString& InPackagePath, const TSharedRef<FJsonObject> JsonObj);
 
-	void ConvertToAssets();
-
 	FString GetFileName() const { return Name; }
 	FString GetPackagePath() const { return PackagePath; }
 

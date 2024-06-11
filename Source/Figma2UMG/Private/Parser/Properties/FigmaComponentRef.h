@@ -28,21 +28,6 @@ public:
 	void SetComponentSet(FFigmaComponentSetRef* Value) { FigmaComponentSetRef = Value; }
 	FFigmaComponentSetRef* GetComponentSet() const { return FigmaComponentSetRef; }
 
-	TObjectPtr<UWidgetBlueprint>  GetAsset() const
-	{
-		if (FigmaComponentSetRef)
-		{
-			return FigmaComponentSetRef->GetAsset();
-		}
-
-		if (FigmaComponent)
-		{
-			return FigmaComponent->GetAsset<UWidgetBlueprint>();
-		}
-
-		return nullptr;
-	}
-
 	TObjectPtr<UWidgetBlueprintBuilder> GetAssetBuilder() const
 	{
 		if (FigmaComponentSetRef)

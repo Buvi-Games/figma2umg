@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaImportSubsystem.h"
 #include "MultiChildBuilder.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/SizeBox.h"
-#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 
 #include "PanelWidgetBuilder.generated.h"

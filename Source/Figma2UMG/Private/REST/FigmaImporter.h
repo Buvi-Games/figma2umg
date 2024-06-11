@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaImportSubsystem.h"
 #include "ImageRequest.h"
 #include "VaRestSubsystem.h"
 #include "Parser/FigmaFile.h"

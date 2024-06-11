@@ -3,11 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/ImageBuilder.h"
-#include "Interfaces/AssetFileHandler.h"
-#include "Interfaces/FigmaImageRequester.h"
 #include "Interfaces/FlowTransition.h"
-#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
 #include "Parser/Properties/FigmaEasingType.h"
@@ -29,7 +25,7 @@
 class UTexture2DBuilder;
 
 UCLASS()
-class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle, public IWidgetOwner, public IFlowTransition
+class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
@@ -41,30 +37,6 @@ public:
 	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) override;
 	virtual FString GetPackageName() const override;
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
-
-	// IFigmaImageRequester
-	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
-	virtual void OnRawImageReceived(const TArray<uint8>& RawData) override;
-
-	// IFigmaFileHandle
-	virtual FString GetPackagePath() const override;
-	virtual FString GetAssetName() const override;
-	virtual void LoadOrCreateAssets() override;
-	virtual void LoadAssets() override;
-
-	// IWidgetOwner
-	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
-
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsert() const override;
-	virtual void Reset() override;
-
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual FVector2D GetTopWidgetPosition() const override;
-
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
 
 	// FlowTransition
 	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
@@ -167,7 +139,4 @@ public:
 protected:
 	UPROPERTY()
 	TObjectPtr<UTexture2DBuilder> AssetBuilder = nullptr;
-
-	UPROPERTY()
-	FImageBuilder Builder;
 };

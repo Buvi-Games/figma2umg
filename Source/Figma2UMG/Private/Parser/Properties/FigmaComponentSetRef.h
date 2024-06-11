@@ -18,7 +18,6 @@ public:
 	void SetComponentSet(TObjectPtr<UFigmaComponentSet> Value) { FigmaComponentSet = Value; }
 	TObjectPtr<UFigmaComponentSet>  GetComponentSet() const { return FigmaComponentSet; }
 
-	TObjectPtr<UWidgetBlueprint>  GetAsset() const { return FigmaComponentSet ? FigmaComponentSet->GetAsset<UWidgetBlueprint>() : nullptr; }
 	TObjectPtr<UWidgetBlueprintBuilder> GetAssetBuilder() const { return FigmaComponentSet ? FigmaComponentSet->GetAssetBuilder() : nullptr; }
 
 protected:
