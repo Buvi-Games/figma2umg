@@ -9,7 +9,7 @@
 
 
 DECLARE_DELEGATE_OneParam(FOnImageRequestCompleteDelegate, bool);
-DECLARE_DELEGATE_OneParam(FOnRawImageReceiveDelegate, TArray<uint8>& );
+DECLARE_DELEGATE_OneParam(FOnRawImageReceiveDelegate, const TArray<uint8>& );
 
 USTRUCT()
 struct FImageRequest

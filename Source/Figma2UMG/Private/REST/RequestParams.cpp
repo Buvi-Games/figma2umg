@@ -4,7 +4,7 @@
 #include "REST/RequestParams.h"
 
 #include "Figma2UMGModule.h"
-#include "Figma2UMGSettings.h"
+#include "Settings/Figma2UMGSettings.h"
 
 URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 {
@@ -16,6 +16,9 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		FileKey = Settings->FileKey;
 		LibraryFileKeys = Settings->LibraryFileKeys;
 		UsePrototypeFlow = Settings->UsePrototypeFlow;
+		FrameToButton = Settings->FrameToButton;
+		WidgetOverrides = Settings->WidgetOverrides;
+		SaveAllAtEnd = Settings->SaveAllAtEnd;
 	}
 
 	ContentRootFolder = "/Game/Figma";

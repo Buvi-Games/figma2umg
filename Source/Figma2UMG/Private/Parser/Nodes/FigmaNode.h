@@ -6,6 +6,8 @@
 
 #include "FigmaNode.generated.h"
 
+class IWidgetBuilder;
+class IAssetBuilder;
 class UWidgetBlueprint;
 class UFigmaFile;
 class UWidgetTree;
@@ -51,18 +53,13 @@ public:
 	//virtual void PostInsert(UWidget* Widget) const;
 
 	virtual void PrepareForFlow();
-	virtual void PrePatchWidget();
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch);
-	virtual void SetWidget(TObjectPtr<UWidget> WidgetToPatch);
-	virtual void InsertSubWidgets();
-	virtual void PatchPostInsertWidget();
-	void PostPatchWidget();
 
 	FString GetId() const { return Id; }
 	FString GetIdForName() const;
 
 	FString GetNodeName() const;
 	FString GetUniqueName() const;
+	virtual FString GetUAssetName() const;
 	ESlateVisibility GetVisibility() const;
 
 	FVector2D GetPosition() const;
@@ -74,7 +71,6 @@ public:
 
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const;
 
-	virtual UObject* GetAssetOuter() const;
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
 	TObjectPtr<UFigmaNode> FindTypeByID(const UClass* Class, const FString& ID);
 	TObjectPtr<UWidget> FindWidgetForNode(const TObjectPtr<UPanelWidget>& ParentWidget) const;
@@ -83,6 +79,11 @@ public:
 
 	const TMap<FString, FString>& GetComponentPropertyReferences() const { return ComponentPropertyReferences; }
 
+	//New Builder API
+	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) { return nullptr; }
+	virtual FString GetPackageName() const { return FString(); }
+
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const { return nullptr; }
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 
@@ -134,13 +135,13 @@ private:
 	UPROPERTY()
 	FString SharedPluginData;
 
-protected:
 	UPROPERTY()
 	TMap<FString, FString> ComponentPropertyReferences;
 
 	//boundVariablesMap - beta
 	//explicitVariableModesMap - beta
-
+	
+protected:
 	UPROPERTY()
 	FString ScrollBehaviour; //Not in doc
 };
