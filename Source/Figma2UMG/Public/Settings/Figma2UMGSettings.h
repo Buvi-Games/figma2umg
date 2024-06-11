@@ -29,4 +29,7 @@ public:
 
 	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
 	FClassOverrides WidgetOverrides;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Figma2UMG")
+	FFrameToButtonOverride FrameToButton;
 };

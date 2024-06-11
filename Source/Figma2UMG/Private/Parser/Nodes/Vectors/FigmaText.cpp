@@ -33,7 +33,7 @@ FVector2D UFigmaText::GetSize() const
 	return AbsoluteBoundingBox.GetSize();
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaText::CreateWidgetBuilders(bool IsRoot/*= false*/) const
+TScriptInterface<IWidgetBuilder> UFigmaText::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	UTextBlockWidgetBuilder* TextBlockWidgetBuilder = NewObject<UTextBlockWidgetBuilder>();
 	TextBlockWidgetBuilder->SetNode(this);

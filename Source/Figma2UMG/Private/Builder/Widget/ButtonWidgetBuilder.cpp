@@ -46,7 +46,7 @@ void UButtonWidgetBuilder::SetDefaultNode(const UFigmaGroup* InNode)
 	DefaultNode = InNode;
 	if(DefaultNode)
 	{
-		TScriptInterface<IWidgetBuilder> Bulder =DefaultNode->CreateWidgetBuilders();
+		TScriptInterface<IWidgetBuilder> Bulder = DefaultNode->CreateWidgetBuilders(false, false);
 		if(Bulder)
 		{
 			SetChild(Bulder);

@@ -190,7 +190,7 @@ FString UFigmaDocument::GetUAssetName() const
 	return FigmaFile ? FigmaFile->GetFileName() : FString();
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaDocument::CreateWidgetBuilders(bool IsRoot /*= false*/) const
+TScriptInterface<IWidgetBuilder> UFigmaDocument::CreateWidgetBuilders(bool IsRoot /*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	if (Children.Num() > 1)
 	{

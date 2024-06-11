@@ -76,11 +76,11 @@ TObjectPtr<UWidget> UFigmaFrame::PatchPreInsertWidget(TObjectPtr<UWidget> Widget
 	return WidgetInstance;
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaFrame::CreateWidgetBuilders(bool IsRoot/*= false*/) const
+TScriptInterface<IWidgetBuilder> UFigmaFrame::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	if (!GenerateFile || IsRoot)
 	{
-		return Super::CreateWidgetBuilders(IsRoot);
+		return Super::CreateWidgetBuilders(IsRoot, AllowFrameButton);
 	}
 	else
 	{

@@ -354,7 +354,7 @@ UObject* UFigmaComponentSet::GetAssetOuter() const
 	}
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaComponentSet::CreateWidgetBuilders(bool IsRoot) const
+TScriptInterface<IWidgetBuilder> UFigmaComponentSet::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	if (IsRoot)
 	{

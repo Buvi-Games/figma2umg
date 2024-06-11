@@ -23,7 +23,7 @@ public:
 	GENERATED_BODY()
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override { return FVector2D::ZeroVector; }
-	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false) const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	// IWidgetOwner
 	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;

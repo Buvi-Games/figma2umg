@@ -65,7 +65,7 @@ FString UFigmaInstance::GetPackageName() const
 	return GetPackagePath();
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoot /*= false*/) const
+TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoot /*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	if (IsMissingComponent)
 	{

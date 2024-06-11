@@ -42,7 +42,6 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Figma2UMG", AdvancedDisplay, meta = (EditCondition = "HasCondition"))
 	FString NameComparison = FString("Figma node name");
-
 };
 
 USTRUCT()
@@ -153,6 +152,17 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Figma2UMG")
 	TSubclassOf<UWrapBox> ClassOverride = UWrapBox::StaticClass();
+};
+
+USTRUCT()
+struct FIGMA2UMG_API FFrameToButtonOverride
+{
+	GENERATED_BODY()
+public:
+	FFrameToButtonOverride() = default;
+
+	UPROPERTY(EditAnywhere, Category = "Figma2UMG")
+	TArray<FWidgetOverride> Rules;
 };
 
 USTRUCT()

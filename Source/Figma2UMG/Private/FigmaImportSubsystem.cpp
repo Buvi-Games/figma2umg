@@ -10,6 +10,7 @@ UFigmaImporter* UFigmaImportSubsystem::Request(const TObjectPtr<URequestParams> 
 {
 	UFigmaImporter* request = Requests.Emplace_GetRef(NewObject<UFigmaImporter>());
 	WidgetOverrides = &InProperties->WidgetOverrides;
+	FrameToButtonOverride = &InProperties->FrameToButton;
 	request->Init(InProperties, InRequesterCallback);;
 	request->Run();
 	return request;
@@ -17,7 +18,26 @@ UFigmaImporter* UFigmaImportSubsystem::Request(const TObjectPtr<URequestParams> 
 
 void UFigmaImportSubsystem::RemoveRequest(UFigmaImporter* FigmaImporter)
 {
+	WidgetOverrides = nullptr;
+	FrameToButtonOverride = nullptr;
 	Requests.Remove(FigmaImporter);
+}
+
+bool UFigmaImportSubsystem::ShouldGenerateButton(const FString& NodeName) const
+{
+	if (!FrameToButtonOverride)
+		return false;
+
+	if (NodeName.IsEmpty())
+		return false;
+
+	for (const FWidgetOverride& Override : FrameToButtonOverride->Rules)
+	{
+		if (Override.Match(NodeName))
+			return true;
+	}
+
+	return false;
 }
 
 void UFigmaImportSubsystem::TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget)

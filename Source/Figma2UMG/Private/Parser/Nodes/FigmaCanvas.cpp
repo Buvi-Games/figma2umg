@@ -101,7 +101,7 @@ const EFigmaEasingType UFigmaCanvas::GetTransitionEasing() const
 	return EFigmaEasingType::LINEAR;
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaCanvas::CreateWidgetBuilders(bool IsRoot /*= false*/) const
+TScriptInterface<IWidgetBuilder> UFigmaCanvas::CreateWidgetBuilders(bool IsRoot /*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	UCanvasBuilder* Builder = NewObject<UCanvasBuilder>();
 	Builder->SetNode(this);

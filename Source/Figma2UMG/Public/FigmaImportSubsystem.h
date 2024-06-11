@@ -26,6 +26,8 @@ public:
 	template <class Type>
 	UClass* GetOverrideClassForNode(const FString& NodeName);
 
+	bool ShouldGenerateButton(const FString& NodeName) const;
+
 	static void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget);
 
 	template<class Type>
@@ -38,6 +40,7 @@ private:
 	UPROPERTY()
 	TArray<UFigmaImporter*> Requests;
 
+	FFrameToButtonOverride* FrameToButtonOverride = nullptr;
 	FClassOverrides* WidgetOverrides = nullptr;
 };
 

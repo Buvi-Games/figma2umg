@@ -7,6 +7,7 @@
 #include "FigmaComponentSet.h"
 #include "Builder/ButtonBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
+#include "Builder/Widget/ButtonWidgetBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Builder/Widget/Panels/HBoxBuilder.h"
 #include "Builder/Widget/PanelWidgetBuilder.h"
@@ -28,105 +29,17 @@ void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSh
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*= false*/) const
+TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
-	USizeBoxWidgetBuilder* SizeBoxWidgetBuilder = nullptr;
-	UBorderWidgetBuilder* BorderWidgetBuilder = nullptr;
-	UPanelWidgetBuilder* PanelWidgetBuilder = nullptr;
-	if (LayoutSizingHorizontal == EFigmaLayoutSizing::FIXED || LayoutSizingVertical == EFigmaLayoutSizing::FIXED)
+	if (AllowFrameButton && IsButton())
 	{
-		SizeBoxWidgetBuilder = NewObject<USizeBoxWidgetBuilder>();
-		SizeBoxWidgetBuilder->SetNode(this);
+		return CreateButtonBuilder();
 	}
-
-	bool RequireBorder = false;
-	if(!ParentNode || !ParentNode->IsA<UFigmaComponentSet>())
+	else
 	{
-		for (int i = 0; i < Fills.Num() && !RequireBorder; i++)
-		{
-			if (Fills[i].Visible)
-				RequireBorder = true;
-		}
-		for (int i = 0; i < Strokes.Num() && !RequireBorder; i++)
-		{
-			if (Strokes[i].Visible)
-				RequireBorder = true;
-		}
+		return CreateContainersBuilder();
 	}
-
-	if (RequireBorder)
-	{
-		BorderWidgetBuilder = NewObject<UBorderWidgetBuilder>();
-		BorderWidgetBuilder->SetNode(this);
-		if (SizeBoxWidgetBuilder)
-		{
-			SizeBoxWidgetBuilder->SetChild(BorderWidgetBuilder);
-		}
-	}	
-
-	switch (LayoutMode)
-	{
-	case EFigmaLayoutMode::NONE:
-	{
-		PanelWidgetBuilder = NewObject<UCanvasBuilder>();
-	}
-	break;
-	case EFigmaLayoutMode::HORIZONTAL:
-	{
-		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
-		{
-			PanelWidgetBuilder = NewObject<UHBoxBuilder>();
-		}
-		else
-		{
-			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
-		}
-	}
-	break;
-	case EFigmaLayoutMode::VERTICAL:
-	{
-		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
-		{
-			PanelWidgetBuilder = NewObject<UVBoxBuilder>();
-		}
-		else
-		{
-			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
-		}
-	}
-	break;
-	}
-
-	PanelWidgetBuilder->SetNode(this);
-	for (const UFigmaNode* Child : Children)
-	{
-		if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
-		{
-			PanelWidgetBuilder->AddChild(SubBuilder);
-		}
-	}
-
-
-	if (BorderWidgetBuilder)
-	{
-		BorderWidgetBuilder->SetChild(PanelWidgetBuilder);
-	}
-	else if(SizeBoxWidgetBuilder)
-	{
-		SizeBoxWidgetBuilder->SetChild(PanelWidgetBuilder);
-	}
-
-	if (SizeBoxWidgetBuilder)
-	{
-		return SizeBoxWidgetBuilder;
-	}
-
-	if(BorderWidgetBuilder)
-	{
-		return BorderWidgetBuilder;
-	}
-
-	return PanelWidgetBuilder;
+	
 }
 
 FVector2D UFigmaGroup::GetAbsolutePosition() const
@@ -266,6 +179,135 @@ FMargin UFigmaGroup::GetPadding() const
 	Padding.Bottom = PaddingBottom;
 
 	return Padding;
+}
+
+bool UFigmaGroup::IsButton() const
+{
+	if (!TransitionNodeID.IsEmpty())
+	{
+		return true;
+	}
+	else
+	{
+		const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		return  Importer ? Importer->ShouldGenerateButton(GetNodeName()) : false;
+	}
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateButtonBuilder() const
+{
+	UButtonWidgetBuilder* ButtonBuilder = NewObject<UButtonWidgetBuilder>();
+	ButtonBuilder->SetNode(this);
+
+	ButtonBuilder->SetDefaultNode(this);
+	ButtonBuilder->SetHoveredNode(this);
+	ButtonBuilder->SetPressedNode(this);
+	ButtonBuilder->SetDisabledNode(this);
+	ButtonBuilder->SetFocusedNode(this);
+
+	return ButtonBuilder;
+}
+
+TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateContainersBuilder() const
+{
+	const bool IsGeneratingButton = IsButton();
+	USizeBoxWidgetBuilder* SizeBoxWidgetBuilder = nullptr;
+	UBorderWidgetBuilder* BorderWidgetBuilder = nullptr;
+	UPanelWidgetBuilder* PanelWidgetBuilder = nullptr;
+	if (!IsGeneratingButton && (LayoutSizingHorizontal == EFigmaLayoutSizing::FIXED || LayoutSizingVertical == EFigmaLayoutSizing::FIXED))
+	{
+		SizeBoxWidgetBuilder = NewObject<USizeBoxWidgetBuilder>();
+		SizeBoxWidgetBuilder->SetNode(this);
+	}
+
+	bool RequireBorder = false;
+	if (!IsGeneratingButton && (!ParentNode || !ParentNode->IsA<UFigmaComponentSet>()))
+	{
+		for (int i = 0; i < Fills.Num() && !RequireBorder; i++)
+		{
+			if (Fills[i].Visible)
+				RequireBorder = true;
+		}
+		for (int i = 0; i < Strokes.Num() && !RequireBorder; i++)
+		{
+			if (Strokes[i].Visible)
+				RequireBorder = true;
+		}
+	}
+
+	if (RequireBorder)
+	{
+		BorderWidgetBuilder = NewObject<UBorderWidgetBuilder>();
+		BorderWidgetBuilder->SetNode(this);
+		if (SizeBoxWidgetBuilder)
+		{
+			SizeBoxWidgetBuilder->SetChild(BorderWidgetBuilder);
+		}
+	}
+
+	switch (LayoutMode)
+	{
+	case EFigmaLayoutMode::NONE:
+	{
+		PanelWidgetBuilder = NewObject<UCanvasBuilder>();
+	}
+	break;
+	case EFigmaLayoutMode::HORIZONTAL:
+	{
+		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
+		{
+			PanelWidgetBuilder = NewObject<UHBoxBuilder>();
+		}
+		else
+		{
+			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
+		}
+	}
+	break;
+	case EFigmaLayoutMode::VERTICAL:
+	{
+		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
+		{
+			PanelWidgetBuilder = NewObject<UVBoxBuilder>();
+		}
+		else
+		{
+			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
+		}
+	}
+	break;
+	}
+
+	PanelWidgetBuilder->SetNode(this);
+	for (const UFigmaNode* Child : Children)
+	{
+		if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
+		{
+			PanelWidgetBuilder->AddChild(SubBuilder);
+		}
+	}
+
+
+	if (BorderWidgetBuilder)
+	{
+		BorderWidgetBuilder->SetChild(PanelWidgetBuilder);
+	}
+	else if (SizeBoxWidgetBuilder)
+	{
+		SizeBoxWidgetBuilder->SetChild(PanelWidgetBuilder);
+	}
+
+	if (SizeBoxWidgetBuilder)
+	{
+		return SizeBoxWidgetBuilder;
+	}
+
+	if (BorderWidgetBuilder)
+	{
+		return BorderWidgetBuilder;
+	}
+
+	return PanelWidgetBuilder;
 }
 
 void UFigmaGroup::FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const

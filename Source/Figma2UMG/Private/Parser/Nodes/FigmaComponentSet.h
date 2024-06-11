@@ -23,7 +23,7 @@ public:
 	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch) override;
 	virtual void SetWidget(TObjectPtr<UWidget> Widget) override;
 	virtual UObject* GetAssetOuter() const override;
-	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false) const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 	virtual void Reset() override;
 	virtual FString GetPackageName() const override;
 

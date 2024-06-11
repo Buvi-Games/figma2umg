@@ -90,7 +90,7 @@ public:
 	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) { return nullptr; }
 	virtual FString GetPackageName() const { return FString(); }
 
-	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false) const { return nullptr; }
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const { return nullptr; }
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 
