@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Widget/ImageWidgetBuilder.h"
 #include "Components/Image.h"
@@ -43,7 +44,13 @@ FString UFigmaVectorNode::GetPackageNameForBuilder(const TScriptInterface<IAsset
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/Textures");
+	FString Suffix = "Components";
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Material";
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
 }
 
 TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const

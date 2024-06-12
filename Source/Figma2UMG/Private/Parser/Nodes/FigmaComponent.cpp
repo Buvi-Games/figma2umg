@@ -6,6 +6,7 @@
 #include "FigmaInstance.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
+#include "Builder/Asset/MaterialBuilder.h"
 
 void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
@@ -25,7 +26,13 @@ FString UFigmaComponent::GetPackageNameForBuilder(const TScriptInterface<IAssetB
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
+	FString Suffix = "Components";
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Material";
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
 }
 
 void UFigmaComponent::TryAddComponentPropertyDefinition(FString PropertyId, FFigmaComponentPropertyDefinition Definition)
