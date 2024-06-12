@@ -29,7 +29,7 @@ public:
 
 	TObjectPtr<UWidgetBlueprint> GetAsset() const;
 
-	virtual UPackage* GetPackage() const override;
+	virtual UPackage* GetAssetPackage() const override;
 protected:
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 	void PatchMemberVariable(UWidgetBlueprint* WidgetBP, TPair<FString, FFigmaComponentPropertyDefinition> Property) const;

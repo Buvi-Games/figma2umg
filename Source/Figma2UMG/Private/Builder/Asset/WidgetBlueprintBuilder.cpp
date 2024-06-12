@@ -183,7 +183,7 @@ TObjectPtr<UWidgetBlueprint> UWidgetBlueprintBuilder::GetAsset() const
 	return Asset;
 }
 
-UPackage* UWidgetBlueprintBuilder::GetPackage() const
+UPackage* UWidgetBlueprintBuilder::GetAssetPackage() const
 {
 	return Asset ? Asset->GetPackage() : nullptr;
 }

@@ -92,7 +92,7 @@ const TObjectPtr<UTexture2D>& UTexture2DBuilder::GetAsset() const
 	return Asset;
 }
 
-UPackage* UTexture2DBuilder::GetPackage() const
+UPackage* UTexture2DBuilder::GetAssetPackage() const
 {
 	return Asset ? Asset->GetPackage() : nullptr;
 }
