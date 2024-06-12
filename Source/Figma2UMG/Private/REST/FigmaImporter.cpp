@@ -14,6 +14,7 @@
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Parser/FigmaFile.h"
+#include "Misc/ScopedSlowTask.h"
 
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
