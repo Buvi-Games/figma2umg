@@ -12,5 +12,9 @@ struct FIGMA2UMG_API FFigmaVector
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	double X;
+
+	UPROPERTY()
+	double Y;
 };

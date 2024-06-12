@@ -44,10 +44,10 @@ public:
 	EFigmaBlendMode BlendMode;
 
 	UPROPERTY()
-	FFigmaVector GradientHandlePositions;
+	TArray<FFigmaVector> GradientHandlePositions;
 
 	UPROPERTY()
-	FFigmaColorStop GradientStops;
+	TArray<FFigmaColorStop> GradientStops;
 
 	UPROPERTY()
 	EScaleMode ScaleMode;
