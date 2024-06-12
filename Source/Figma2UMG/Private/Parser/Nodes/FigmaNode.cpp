@@ -15,12 +15,11 @@
 #include "FigmaShapeWithText.h"
 #include "FigmaSlice.h"
 #include "FigmaSticky.h"
-#include "FileHelpers.h"
 #include "JsonObjectConverter.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
-#include "Kismet2/KismetEditorUtilities.h"
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Parser/FigmaFile.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
@@ -132,6 +131,38 @@ TObjectPtr<UWidget> UFigmaNode::FindWidgetForNode(const TObjectPtr<UPanelWidget>
 	}
 
 	return nullptr;
+}
+
+void UFigmaNode::CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, const TArray<FFigmaPaint>& InFills) const
+{
+	for (const FFigmaPaint& Paint : InFills)
+	{
+		switch (Paint.Type)
+		{
+		case EPaintTypes::SOLID:
+			break;
+		case EPaintTypes::GRADIENT_LINEAR:
+		case EPaintTypes::GRADIENT_RADIAL:
+		case EPaintTypes::GRADIENT_ANGULAR:
+		case EPaintTypes::GRADIENT_DIAMOND:
+		{
+			UMaterialBuilder* MaterialBuilder = NewObject<UMaterialBuilder>();
+			MaterialBuilder->SetNode(InFileKey, this);
+			MaterialBuilder->SetPaint(Paint);
+			AssetBuilders.Add(MaterialBuilder);
+		}
+			break;
+		case EPaintTypes::IMAGE:
+			UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type IMAGE is not supported."), *GetUniqueName());
+			break;
+		case EPaintTypes::EMOJI:
+			UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type EMOJI is not supported."), *GetUniqueName());
+			break;
+		case EPaintTypes::VIDEO:
+			UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type VIDEO is not supported."), *GetUniqueName());
+			break;
+		}
+	}
 }
 
 void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName)
