@@ -255,12 +255,8 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 				TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
 				if (ComponentSet)
 				{
-					TScriptInterface<IAssetBuilder> AssetBuilder = ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey);
-					if (AssetBuilder != nullptr)
-					{
-						AssetBuilders.Add(AssetBuilder);
-					}
-					else
+					;
+					if (!ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey, AssetBuilders))
 					{
 						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] ComponentSet %s Id %s failed to return a AssetBuilder"), *ComponentSet->GetNodeName(), *ComponentSet->GetIdForName());
 					}
@@ -275,12 +271,7 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 				TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
 				if (Component)
 				{
-					TScriptInterface<IAssetBuilder> AssetBuilder = Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey);
-					if (AssetBuilder != nullptr)
-					{
-						AssetBuilders.Add(AssetBuilder);
-					}
-					else
+					if (!Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey, AssetBuilders))
 					{
 						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] Component %s Id %s failed to return a AssetBuilder"), *Component->GetNodeName(), *Component->GetIdForName());
 					}
@@ -401,11 +392,7 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 
 void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	TScriptInterface<IAssetBuilder> AssetBuilder = Node.CreateAssetBuilder(FileKey);
-	if (AssetBuilder != nullptr)
-	{
-		AssetBuilders.Add(AssetBuilder);
-	}
+	Node.CreateAssetBuilder(FileKey, AssetBuilders);
 
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(&Node))
 	{

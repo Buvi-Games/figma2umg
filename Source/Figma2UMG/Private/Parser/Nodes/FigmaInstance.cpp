@@ -42,12 +42,12 @@ void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const 
 	SerializeArray(Children, JsonObj,"Children");
 }
 
-TScriptInterface<IAssetBuilder> UFigmaInstance::CreateAssetBuilder(const FString& InFileKey)
+bool UFigmaInstance::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
-	FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
-	TObjectPtr<UFigmaComponent> FigmaComponent = ComponentRef ? ComponentRef->GetComponent() : nullptr;
-	IsMissingComponent = FigmaComponent == nullptr;
+	const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
+	const TObjectPtr<UFigmaComponent> FigmaComponent = ComponentRef ? ComponentRef->GetComponent() : nullptr;
+	IsMissingComponent = (FigmaComponent == nullptr);
 	if (IsMissingComponent)
 	{
 		//We don't have the Component Asset, import as a Texture as a PlaceHolder
@@ -55,10 +55,10 @@ TScriptInterface<IAssetBuilder> UFigmaInstance::CreateAssetBuilder(const FString
 
 		Texture2DBuilder = NewObject<UTexture2DBuilder>();
 		Texture2DBuilder->SetNode(InFileKey, this);
-		return Texture2DBuilder;
+		AssetBuilders.Add(Texture2DBuilder);
 	}
 
-	return nullptr;
+	return Texture2DBuilder != nullptr;
 }
 
 FString UFigmaInstance::GetPackageName() const

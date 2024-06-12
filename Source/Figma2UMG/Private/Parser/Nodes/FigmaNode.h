@@ -80,7 +80,7 @@ public:
 	const TMap<FString, FString>& GetComponentPropertyReferences() const { return ComponentPropertyReferences; }
 
 	//New Builder API
-	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) { return nullptr; }
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) { return false; }
 	virtual FString GetPackageName() const { return FString(); }
 
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const { return nullptr; }

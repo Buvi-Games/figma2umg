@@ -20,7 +20,7 @@ public:
 
 	// UFigmaNode
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
-	virtual TScriptInterface<IAssetBuilder> CreateAssetBuilder(const FString& InFileKey) override;
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
 	virtual FString GetPackageName() const override;
 
 	const TObjectPtr<UWidgetBlueprintBuilder>& GetAssetBuilder() const;

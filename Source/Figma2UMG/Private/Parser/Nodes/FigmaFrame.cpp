@@ -32,16 +32,16 @@ TScriptInterface<IWidgetBuilder> UFigmaFrame::CreateWidgetBuilders(bool IsRoot/*
 	}
 }
 
-TScriptInterface<IAssetBuilder> UFigmaFrame::CreateAssetBuilder(const FString& InFileKey)
+bool UFigmaFrame::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	if (GenerateFile)
 	{
 		WidgetBlueprintBuilder = NewObject<UWidgetBlueprintBuilder>();
 		WidgetBlueprintBuilder->SetNode(InFileKey, this);
-		return WidgetBlueprintBuilder;
+		AssetBuilders.Add(WidgetBlueprintBuilder);
 	}
 
-	return nullptr;
+	return WidgetBlueprintBuilder != nullptr;
 }
 
 FString UFigmaFrame::GetPackageName() const
