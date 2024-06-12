@@ -35,7 +35,7 @@ bool UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey, TArray<TScri
 	return true;
 }
 
-FString UFigmaVectorNode::GetPackageName() const
+FString UFigmaVectorNode::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())

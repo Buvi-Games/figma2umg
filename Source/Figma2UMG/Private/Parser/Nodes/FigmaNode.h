@@ -6,6 +6,7 @@
 
 #include "FigmaNode.generated.h"
 
+struct FFigmaPaint;
 class IWidgetBuilder;
 class IAssetBuilder;
 class UWidgetBlueprint;
@@ -79,11 +80,11 @@ public:
 
 	const TMap<FString, FString>& GetComponentPropertyReferences() const { return ComponentPropertyReferences; }
 
-	//New Builder API
 	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) { return false; }
-	virtual FString GetPackageName() const { return FString(); }
+	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const { return FString(); }
 
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const { return nullptr; }
+
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 

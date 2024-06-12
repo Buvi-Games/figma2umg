@@ -44,7 +44,7 @@ bool UFigmaFrame::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInt
 	return WidgetBlueprintBuilder != nullptr;
 }
 
-FString UFigmaFrame::GetPackageName() const
+FString UFigmaFrame::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())

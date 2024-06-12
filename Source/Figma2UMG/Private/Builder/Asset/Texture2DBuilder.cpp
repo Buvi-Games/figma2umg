@@ -21,7 +21,7 @@ void UTexture2DBuilder::LoadOrCreateAssets()
 	UTexture2D* TextureAsset = Cast<UTexture2D>(Asset);
 	if (TextureAsset == nullptr)
 	{
-		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
+		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
 		const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 
@@ -67,7 +67,7 @@ void UTexture2DBuilder::LoadOrCreateAssets()
 
 void UTexture2DBuilder::LoadAssets()
 {
-	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
+	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
 	const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 

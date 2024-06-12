@@ -170,7 +170,6 @@ TScriptInterface<IWidgetBuilder> UFigmaComponentSet::CreateWidgetBuilders(bool I
 	}
 }
 
-FString UFigmaComponentSet::GetPackageName() const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())

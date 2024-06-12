@@ -61,7 +61,7 @@ bool UFigmaInstance::CreateAssetBuilder(const FString& InFileKey, TArray<TScript
 	return Texture2DBuilder != nullptr;
 }
 
-FString UFigmaInstance::GetPackageName() const
+FString UFigmaInstance::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())

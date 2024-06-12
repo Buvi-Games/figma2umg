@@ -24,7 +24,7 @@ void UWidgetBlueprintBuilder::LoadOrCreateAssets()
 	UWidgetBlueprint* WidgetAsset = Cast<UWidgetBlueprint>(Asset);
 	if (WidgetAsset == nullptr)
 	{
-		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
+		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
 		const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 
@@ -58,7 +58,7 @@ void UWidgetBlueprintBuilder::LoadOrCreateAssets()
 
 void UWidgetBlueprintBuilder::LoadAssets()
 {
-	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
+	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
 	const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 

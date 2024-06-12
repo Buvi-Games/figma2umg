@@ -17,7 +17,7 @@ void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const
 	ComponentRef->SetComponent(this);
 }
 
-FString UFigmaComponent::GetPackageName() const
+FString UFigmaComponent::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())
