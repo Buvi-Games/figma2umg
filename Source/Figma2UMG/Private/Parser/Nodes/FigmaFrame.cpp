@@ -3,14 +3,9 @@
 
 #include "Parser/Nodes/FigmaFrame.h"
 
-#include "Figma2UMGModule.h"
-#include "WidgetBlueprint.h"
-#include "WidgetBlueprintFactory.h"
-#include "Blueprint/WidgetTree.h"
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Builder/Widget/UserWidgetBuilder.h"
-#include "Kismet2/BlueprintEditorUtils.h"
-#include "Templates/WidgetTemplateBlueprintClass.h"
 
 void UFigmaFrame::SetGenerateFile(bool Value /*= true*/)
 {
@@ -41,6 +36,8 @@ bool UFigmaFrame::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInt
 		AssetBuilders.Add(WidgetBlueprintBuilder);
 	}
 
+	Super::CreateAssetBuilder(InFileKey, AssetBuilders);
+
 	return WidgetBlueprintBuilder != nullptr;
 }
 
@@ -52,7 +49,13 @@ FString UFigmaFrame::GetPackageNameForBuilder(const TScriptInterface<IAssetBuild
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Menu";
+	FString Suffix = "Menu";
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Material";
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
 }
 
 const TObjectPtr<UWidgetBlueprintBuilder>& UFigmaFrame::GetAssetBuilder() const
