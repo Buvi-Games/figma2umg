@@ -15,6 +15,9 @@
 #include "FigmaPaint.generated.h"
 
 
+class UFigmaNode;
+class IAssetBuilder;
+
 USTRUCT()
 struct FIGMA2UMG_API FFigmaPaint
 {
@@ -27,6 +30,10 @@ public:
 	{
 		return FLinearColor(Color.R, Color.G, Color.B, Opacity);
 	}
+
+	void CreateAssetBuilder(const FString& InFileKey, const UFigmaNode* OwnerNode, TArray<TScriptInterface<IAssetBuilder>> AssetBuilders);
+	TObjectPtr<UTexture2D> GetTexture() const;
+	TObjectPtr<UMaterial> GetMaterial() const;
 
 	UPROPERTY()
 	EPaintTypes Type;
@@ -71,4 +78,7 @@ public:
 
 	UPROPERTY()
 	TMap<FString, FFigmaVariableAlias> BoundVariables;
+
+protected:
+	TScriptInterface<IAssetBuilder> AssetBuilder = nullptr;
 };

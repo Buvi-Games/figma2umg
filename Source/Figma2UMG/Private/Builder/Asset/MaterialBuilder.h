@@ -18,11 +18,10 @@ public:
 
 	const TObjectPtr<UMaterial>& GetAsset() const;
 
-	void SetPaint(const FFigmaPaint& InPaint);
+	void SetPaint(const FFigmaPaint* InPaint);
 protected:
 	UPROPERTY()
 	TObjectPtr<UMaterial> Asset = nullptr;
 
-	UPROPERTY()
-	FFigmaPaint Paint;
+	const FFigmaPaint* Paint = nullptr;
 };

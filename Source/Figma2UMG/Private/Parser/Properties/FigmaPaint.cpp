@@ -2,6 +2,11 @@
 
 #include "FigmaPaint.h"
 
+#include "Figma2UMGModule.h"
+#include "Builder/Asset/MaterialBuilder.h"
+#include "Builder/Asset/Texture2DBuilder.h"
+#include "Parser/Nodes/FigmaNode.h"
+
 void FFigmaPaint::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
 	static FString ImageTransformStr("imageTransform");
@@ -25,4 +30,52 @@ void FFigmaPaint::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 			}
 		}
 	}
+}
+
+void FFigmaPaint::CreateAssetBuilder(const FString& InFileKey, const UFigmaNode* OwnerNode, TArray<TScriptInterface<IAssetBuilder>> AssetBuilders)
+{
+	switch (Type)
+	{
+	case EPaintTypes::SOLID:
+		break;
+	case EPaintTypes::GRADIENT_LINEAR:
+	case EPaintTypes::GRADIENT_RADIAL:
+	case EPaintTypes::GRADIENT_ANGULAR:
+	case EPaintTypes::GRADIENT_DIAMOND:
+	{
+		UMaterialBuilder* MaterialBuilder = NewObject<UMaterialBuilder>();
+		MaterialBuilder->SetNode(InFileKey, OwnerNode);
+		MaterialBuilder->SetPaint(this);
+		AssetBuilder = MaterialBuilder;
+		AssetBuilders.Add(MaterialBuilder);
+	}
+	break;
+	case EPaintTypes::IMAGE:
+		UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type IMAGE is not supported."), *OwnerNode->GetUniqueName());
+		break;
+	case EPaintTypes::EMOJI:
+		UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type EMOJI is not supported."), *OwnerNode->GetUniqueName());
+		break;
+	case EPaintTypes::VIDEO:
+		UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type VIDEO is not supported."), *OwnerNode->GetUniqueName());
+		break;
+	}
+}
+
+TObjectPtr<UTexture2D> FFigmaPaint::GetTexture() const
+{
+	if (const UTexture2DBuilder* Texture2DBuilder = AssetBuilder ? Cast<UTexture2DBuilder>(AssetBuilder.GetObject()) : nullptr)
+	{
+		return Texture2DBuilder->GetAsset();
+	}
+	return nullptr;
+}
+
+TObjectPtr<UMaterial> FFigmaPaint::GetMaterial() const
+{
+	if (const UMaterialBuilder* MaterialBuilder = AssetBuilder ? Cast<UMaterialBuilder>(AssetBuilder.GetObject()) : nullptr)
+	{
+		return MaterialBuilder->GetAsset();
+	}
+	return nullptr;
 }

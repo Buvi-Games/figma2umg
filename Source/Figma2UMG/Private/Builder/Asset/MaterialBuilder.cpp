@@ -74,7 +74,7 @@ const TObjectPtr<UMaterial>& UMaterialBuilder::GetAsset() const
 	return Asset;
 }
 
-void UMaterialBuilder::SetPaint(const FFigmaPaint& InPaint)
+void UMaterialBuilder::SetPaint(const FFigmaPaint* InPaint)
 {
 	Paint = InPaint;
 }
