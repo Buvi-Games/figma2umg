@@ -5,10 +5,16 @@
 
 #include "AssetToolsModule.h"
 #include "Figma2UMGModule.h"
+#include "MaterialDomain.h"
 #include "ObjectTools.h"
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Editor/MaterialEditor/Public/MaterialEditingLibrary.h"
 #include "Factories/MaterialFactoryNew.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "MaterialGraph/MaterialGraph.h"
+#include "MaterialGraph/MaterialGraphSchema.h"
+#include "Materials/MaterialExpressionCustom.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Nodes/FigmaNode.h"
 
@@ -53,6 +59,8 @@ void UMaterialBuilder::LoadOrCreateAssets()
 
 	if (MaterialAsset)
 	{
+		Setup();
+
 		MaterialAsset->SetFlags(RF_Transactional);
 		MaterialAsset->Modify();
 	}
@@ -77,6 +85,23 @@ const TObjectPtr<UMaterial>& UMaterialBuilder::GetAsset() const
 void UMaterialBuilder::SetPaint(const FFigmaPaint* InPaint)
 {
 	Paint = InPaint;
+}
+
+void UMaterialBuilder::Setup()
+{
+	Asset->MaterialDomain = MD_UI;
+	if (!Asset->MaterialGraph)
+	{
+		Asset->MaterialGraph = CastChecked<UMaterialGraph>(FBlueprintEditorUtils::CreateNewGraph(Asset, NAME_None, UMaterialGraph::StaticClass(), UMaterialGraphSchema::StaticClass()));
+	}
+	Asset->MaterialGraph->Material = Asset;
+	UMaterialGraph* ExpressionGraph = ToRawPtr(Asset->MaterialGraph);
+	if (ExpressionGraph)
+	{
+		UMaterialExpression* NewExpression = UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionCustom::StaticClass(), Asset, 0.0f, 0.0f);
+		ExpressionGraph->AddExpression(NewExpression, true);
+	}
+	Asset->MaterialGraph->RebuildGraph();
 }
 
 UPackage* UMaterialBuilder::GetAssetPackage() const

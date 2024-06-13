@@ -48,6 +48,7 @@ public class Figma2UMG : ModuleRules
                 "EditorStyle",
                 "UnrealEd",
                 "BlueprintGraph",
+                "MaterialEditor",
                 "ToolMenus",
                 "ContentBrowserData",
                 "VaRest",

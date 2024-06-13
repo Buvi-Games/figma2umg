@@ -20,6 +20,8 @@ public:
 
 	void SetPaint(const FFigmaPaint* InPaint);
 protected:
+	void Setup();
+
 	UPROPERTY()
 	TObjectPtr<UMaterial> Asset = nullptr;
 
