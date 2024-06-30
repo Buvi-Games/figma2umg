@@ -6,14 +6,12 @@
 #include "AssetToolsModule.h"
 #include "Figma2UMGModule.h"
 #include "MaterialDomain.h"
+#include "MaterialEditorUtilities.h"
 #include "ObjectTools.h"
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Editor/MaterialEditor/Public/MaterialEditingLibrary.h"
 #include "Factories/MaterialFactoryNew.h"
-#include "Kismet2/BlueprintEditorUtils.h"
-#include "MaterialGraph/MaterialGraph.h"
-#include "MaterialGraph/MaterialGraphSchema.h"
 #include "Materials/MaterialExpressionComponentMask.h"
 #include "Materials/MaterialExpressionCustom.h"
 #include "Materials/MaterialExpressionTextureCoordinate.h"
@@ -45,15 +43,7 @@ void UMaterialBuilder::LoadOrCreateAssets()
 		}
 		else
 		{
-
-			UPackage* Pkg = CreatePackage(*PackagePath);
-			const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
-			UE_LOG_Figma2UMG(Display, TEXT("Reimport UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());
-			MaterialAsset = Cast<UMaterial>(Factory->FactoryCreateNew(AssetClass, Pkg, *AssetName, Flags, nullptr, GWarn));
-			if (MaterialAsset)
-			{
-				FAssetRegistryModule::AssetCreated(MaterialAsset);
-			}
+			UE_LOG_Figma2UMG(Display, TEXT("Loading UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());
 		}
 
 		Asset = MaterialAsset;
@@ -97,42 +87,65 @@ void UMaterialBuilder::SetPaint(const FFigmaPaint* InPaint)
 void UMaterialBuilder::Setup() const
 {
 	Asset->MaterialDomain = MD_UI;
-	if (!Asset->MaterialGraph)
+	FMaterialEditorUtilities::InitExpressions(Asset);
+	
+	UMaterialExpression* PositionInput = SetupGradientInput();
+	if (UMaterialExpression* GradientExpression = SetupGradientNode(PositionInput))
 	{
-		Asset->MaterialGraph = CastChecked<UMaterialGraph>(FBlueprintEditorUtils::CreateNewGraph(Asset, NAME_None, UMaterialGraph::StaticClass(), UMaterialGraphSchema::StaticClass()));
+		Asset->GetEditorOnlyData()->EmissiveColor.Connect(0, GradientExpression);
 	}
-	Asset->MaterialGraph->Material = Asset;
-	UMaterialGraph* ExpressionGraph = ToRawPtr(Asset->MaterialGraph);
-	if (ExpressionGraph)
+	else
 	{
-		UMaterialExpression* PositionInput = SetupGradientInput(ExpressionGraph);
-		UMaterialExpression* GradientExpression = SetupGradientNode(PositionInput);
-		if (GradientExpression)
-		{
-			ExpressionGraph->AddExpression(GradientExpression, true);
-			Asset->GetEditorOnlyData()->EmissiveColor.Connect(0, GradientExpression);
-			Asset->MaterialGraph->RebuildGraph();
-		}
-		else
-		{
-			UE_LOG_Figma2UMG(Error, TEXT("[UMaterialBuilder::Setup] Node %s failed to create Gradient."), *Node->GetNodeName());
-		}
+		UE_LOG_Figma2UMG(Error, TEXT("[UMaterialBuilder::Setup] Node %s failed to create Gradient."), *Node->GetNodeName());
 	}
+
+	// TODO: Is the Editor is open, need to rebuild the graph to be up-to-date with the patch.
+	//if (Asset->MaterialGraph)
+	//{
+	//	Asset->MaterialGraph->RebuildGraph();
+	//}
 }
 
-UMaterialExpression* UMaterialBuilder::SetupGradientInput(UMaterialGraph* ExpressionGraph) const
+UMaterialExpression* UMaterialBuilder::SetupGradientInput() const
 {
-	UMaterialExpressionTextureCoordinate* TextureCoord = Cast<UMaterialExpressionTextureCoordinate>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionTextureCoordinate::StaticClass(), Asset, -1100.0f, 0.0f));
-	UMaterialExpressionComponentMask* MaskR = Cast<UMaterialExpressionComponentMask>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionComponentMask::StaticClass(), Asset, -900.0f, 0.0f));
+	UMaterialExpressionTextureCoordinate* TextureCoord = nullptr;
+	UMaterialExpressionComponentMask* MaskR = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		TextureCoord = Cast<UMaterialExpressionTextureCoordinate>(Expression);
+		if (TextureCoord)
+		{
+			for (UMaterialExpression* Expression2 : Asset->GetExpressions())
+			{
+				UMaterialExpressionComponentMask* PossibleMask = Cast<UMaterialExpressionComponentMask>(Expression2);
+				if (PossibleMask && PossibleMask->Input.Expression == TextureCoord)
+				{
+					MaskR = PossibleMask;
+				}
+			}
+			break;
+		}
+	}
+
+	if(!TextureCoord)
+	{
+		TextureCoord = Cast<UMaterialExpressionTextureCoordinate>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionTextureCoordinate::StaticClass(), Asset, -1100.0f, 0.0f));
+	}
+	if (!MaskR)
+	{
+		MaskR = Cast<UMaterialExpressionComponentMask>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionComponentMask::StaticClass(), Asset, -900.0f, 0.0f));
+	}
+
 	if (TextureCoord && MaskR)
 	{
 		MaskR->R = 1;
 		MaskR->G = 0;
 		MaskR->B = 0;
 		MaskR->A = 0;
-		MaskR->Input.Connect(0, TextureCoord);
-		ExpressionGraph->AddExpression(TextureCoord, true);
-		ExpressionGraph->AddExpression(MaskR, true);
+		if (MaskR->Input.Expression != TextureCoord)
+		{
+			MaskR->Input.Connect(0, TextureCoord);
+		}
 	}
 
 	return MaskR;
@@ -169,7 +182,20 @@ UMaterialExpression* UMaterialBuilder::SetupGradientNode(UMaterialExpression* Po
 
 UMaterialExpression* UMaterialBuilder::SetupGradientLinearNode(UMaterialExpression* PositionInput) const
 {
-	UMaterialExpressionCustom* GradientLinearExpression = Cast<UMaterialExpressionCustom>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionCustom::StaticClass(), Asset, -700.0f, 0.0f));
+	UMaterialExpressionCustom* GradientLinearExpression = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		GradientLinearExpression = Cast<UMaterialExpressionCustom>(Expression);
+		if (GradientLinearExpression)
+		{
+			break;
+		}
+	}
+	if (!GradientLinearExpression)
+	{
+		GradientLinearExpression = Cast<UMaterialExpressionCustom>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionCustom::StaticClass(), Asset, -700.0f, 0.0f));
+	}
+
 	if (GradientLinearExpression)
 	{
 		GradientLinearExpression->OutputType == CMOT_Float4;
@@ -178,11 +204,17 @@ UMaterialExpression* UMaterialBuilder::SetupGradientLinearNode(UMaterialExpressi
 			FCustomInput input;
 			input.InputName = "InputPosition";
 			GradientLinearExpression->Inputs.Add(input);
+			GradientLinearExpression->Inputs[0].Input.Connect(0, PositionInput);
 		}
 		else
 		{
 			GradientLinearExpression->Inputs[0].InputName = "InputPosition";
+			if (GradientLinearExpression->Inputs[0].Input.Expression != PositionInput)
+			{
+				GradientLinearExpression->Inputs[0].Input.Connect(0, PositionInput);
+			}
 		}
+
 
 		if(Paint->GradientStops.Num() == 2)
 		{
@@ -203,9 +235,9 @@ UMaterialExpression* UMaterialBuilder::SetupGradientLinearNode(UMaterialExpressi
 		}
 		else
 		{
-			for(int i = 1; i < Paint->GradientStops.Num(); i++)
+			for (int i = 1; i < Paint->GradientStops.Num(); i++)
 			{
-				if(i == 1)
+				if (i == 1)
 				{
 					GradientLinearExpression->Code = "float4 Color1;\nfloat4 Color2;\nfloat Position = InputPosition;\n";
 					GradientLinearExpression->Code += "if (InputPosition < " + FString::SanitizeFloat(Paint->GradientStops[i].Position) + ")\n{\n";
@@ -238,8 +270,6 @@ UMaterialExpression* UMaterialBuilder::SetupGradientLinearNode(UMaterialExpressi
 
 			GradientLinearExpression->Code += "float4 ColorResult = lerp(Color1, Color2, Position);\nreturn ColorResult;";
 		}
-
-		GradientLinearExpression->Inputs[0].Input.Connect(0, PositionInput);
 	}
 	return GradientLinearExpression;
 }

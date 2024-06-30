@@ -44,7 +44,6 @@ void UTexture2DBuilder::LoadOrCreateAssets()
 		}
 		else
 		{
-
 			UPackage* Pkg = CreatePackage(*PackagePath);
 			const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
 			UE_LOG_Figma2UMG(Display, TEXT("Reimport UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());

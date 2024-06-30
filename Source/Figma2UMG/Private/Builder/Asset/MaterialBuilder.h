@@ -21,7 +21,7 @@ public:
 	void SetPaint(const FFigmaPaint* InPaint);
 protected:
 	void Setup() const;
-	UMaterialExpression* SetupGradientInput(UMaterialGraph* ExpressionGraph) const;
+	UMaterialExpression* SetupGradientInput() const;
 	UMaterialExpression* SetupGradientNode(UMaterialExpression* PositionInput) const;
 	UMaterialExpression* SetupGradientLinearNode(UMaterialExpression* PositionInput) const;
 
