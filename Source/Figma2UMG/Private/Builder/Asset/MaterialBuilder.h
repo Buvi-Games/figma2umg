@@ -20,7 +20,10 @@ public:
 
 	void SetPaint(const FFigmaPaint* InPaint);
 protected:
-	void Setup();
+	void Setup() const;
+	UMaterialExpression* SetupGradientInput(UMaterialGraph* ExpressionGraph) const;
+	UMaterialExpression* SetupGradientNode(UMaterialExpression* PositionInput) const;
+	UMaterialExpression* SetupGradientLinearNode(UMaterialExpression* PositionInput) const;
 
 	UPROPERTY()
 	TObjectPtr<UMaterial> Asset = nullptr;
