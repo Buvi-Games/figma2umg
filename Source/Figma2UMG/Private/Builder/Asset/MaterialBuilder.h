@@ -21,9 +21,14 @@ public:
 	void SetPaint(const FFigmaPaint* InPaint);
 protected:
 	void Setup() const;
-	UMaterialExpression* SetupGradientInput() const;
-	UMaterialExpression* SetupGradientNode(UMaterialExpression* PositionInput) const;
-	UMaterialExpression* SetupGradientLinearNode(UMaterialExpression* PositionInput) const;
+	UMaterialExpression* SetupGradientInput(int& OutputIndex) const;
+	UMaterialExpressionMaterialFunctionCall* SetupLinearGradientInput(float NodePosX = -1200.0f) const;
+	UMaterialExpression* SetupLinearGradientCustomInput(UMaterialExpressionMaterialFunctionCall* LinearGradientExpression) const;
+
+	UMaterialExpression* SetupGradientNode(UMaterialExpression* PositionInput, const int OutputIndex) const;
+	UMaterialExpression* SetupGradientLinearNode(UMaterialExpression* PositionInput, const int OutputIndex) const;
+
+	UMaterialExpression* InvertOutput(UMaterialExpression* OutputExpression, const int OutputIndex) const;
 
 	UPROPERTY()
 	TObjectPtr<UMaterial> Asset = nullptr;
