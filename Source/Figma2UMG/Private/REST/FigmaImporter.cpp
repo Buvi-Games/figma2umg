@@ -711,6 +711,11 @@ void UFigmaImporter::SaveAll()
 
 void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
 {
+	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+	{
+		AssetBuilder->Reset();
+	}
+	AssetBuilders.Reset();
 	if (Succeeded)
 	{
 		UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + TEXT(" was successfully imported."));

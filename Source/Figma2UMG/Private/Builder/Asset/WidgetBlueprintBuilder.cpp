@@ -68,6 +68,15 @@ void UWidgetBlueprintBuilder::LoadAssets()
 
 }
 
+void UWidgetBlueprintBuilder::Reset()
+{
+	Asset = nullptr;
+	if (RootWidgetBuilder)
+	{
+		RootWidgetBuilder->ResetWidget();
+	}
+}
+
 void UWidgetBlueprintBuilder::ResetWidgets()
 {
 	if (Asset)

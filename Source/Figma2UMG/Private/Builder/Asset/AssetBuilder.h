@@ -30,6 +30,9 @@ public:
 	UFUNCTION()
 	virtual UPackage* GetPackage() const = 0;
 
+	UFUNCTION()
+	virtual void Reset() = 0;
+
 protected:
 	FString FileKey;
 	const UFigmaNode* Node = nullptr;
