@@ -66,6 +66,7 @@ public:
 	FVector2D GetPosition() const;
 
 	virtual FVector2D GetAbsolutePosition() const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D::ZeroVector;)
+	virtual FVector2D GetAbsoluteSize() const PURE_VIRTUAL(UFigmaNode::GetAbsoluteSize(), return FVector2D::ZeroVector;)
 
 	void SetCurrentPackagePath(const FString & InPackagePath);
 	virtual FString GetCurrentPackagePath() const;

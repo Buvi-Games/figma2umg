@@ -32,6 +32,11 @@ FVector2D UFigmaInstance::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
+FVector2D UFigmaInstance::GetAbsoluteSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
+}
+
 void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);

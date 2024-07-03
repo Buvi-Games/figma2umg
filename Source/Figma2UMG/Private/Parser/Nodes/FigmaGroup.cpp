@@ -66,6 +66,11 @@ FVector2D UFigmaGroup::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
+FVector2D UFigmaGroup::GetAbsoluteSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
+}
+
 FMargin UFigmaGroup::GetPadding() const
 {
 	FMargin Padding;

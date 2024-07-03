@@ -23,7 +23,7 @@ FVector2D UFigmaVectorNode::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
-FVector2D UFigmaVectorNode::GetSize() const
+FVector2D UFigmaVectorNode::GetAbsoluteSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
 }
@@ -47,7 +47,7 @@ FString UFigmaVectorNode::GetPackageNameForBuilder(const TScriptInterface<IAsset
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	FString Suffix = "Components";
+	FString Suffix = "Textures";
 	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
 	{
 		Suffix = "Material";

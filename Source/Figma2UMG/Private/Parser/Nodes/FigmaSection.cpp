@@ -36,6 +36,11 @@ FVector2D UFigmaSection::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
+FVector2D UFigmaSection::GetAbsoluteSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
+}
+
 FString UFigmaSection::GetCurrentPackagePath() const
 {
 	FString CurrentPackagePath = Super::GetCurrentPackagePath() + +TEXT("/") + GetNodeName();
