@@ -12,10 +12,8 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Editor/MaterialEditor/Public/MaterialEditingLibrary.h"
 #include "Factories/MaterialFactoryNew.h"
-#include "Materials/MaterialExpressionComponentMask.h"
 #include "Materials/MaterialExpressionCustom.h"
 #include "Materials/MaterialExpressionSubtract.h"
-#include "Materials/MaterialExpressionTextureCoordinate.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Nodes/FigmaNode.h"
 
@@ -95,6 +93,8 @@ void UMaterialBuilder::Setup() const
 	if (UMaterialExpression* GradientExpression = SetupGradientNode(PositionInput, OutputIndex))
 	{
 		Asset->GetEditorOnlyData()->EmissiveColor.Connect(0, GradientExpression);
+		Asset->PreEditChange(NULL);
+		Asset->PostEditChange();
 	}
 	else
 	{
