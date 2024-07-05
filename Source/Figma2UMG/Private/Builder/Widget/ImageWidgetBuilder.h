@@ -17,6 +17,7 @@ public:
 	GENERATED_BODY()
 	void SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder>& InTexture2DBuilder);
 	void SetMaterial(const TObjectPtr<UMaterial>& InMaterial);
+	void SetColor(const FLinearColor& InColor);
 
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
@@ -30,6 +31,9 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UMaterial> Material = nullptr;
+
+	bool HasSolidColor = false;
+	FLinearColor SolidColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
 	UPROPERTY()
 	TObjectPtr<UImage> Widget = nullptr;

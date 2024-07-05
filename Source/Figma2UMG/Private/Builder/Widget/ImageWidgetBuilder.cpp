@@ -22,6 +22,12 @@ void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterial>& InMaterial)
 	Material = InMaterial;
 }
 
+void UImageWidgetBuilder::SetColor(const FLinearColor& InColor)
+{
+	HasSolidColor = true;
+	SolidColor = InColor;
+}
+
 void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UImage>(WidgetToPatch);
@@ -62,8 +68,7 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTre
 	else
 	{
 		FSlateBrush Brush = Widget->GetBrush();
-		const FLinearColor Color(0.0f, 0.0f, 0.0f, 0.0f);
-		Brush.TintColor = Color;
+		Brush.TintColor = SolidColor;
 		Widget->SetBrush(Brush);
 	}
 
