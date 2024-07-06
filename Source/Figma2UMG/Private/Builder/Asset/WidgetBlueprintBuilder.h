@@ -18,6 +18,8 @@ class UWidgetBlueprintBuilder : public UObject, public IAssetBuilder
 public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
+	virtual void Reset() override;
+
 	virtual void ResetWidgets();
 
 	void CompileBP(EBlueprintCompileOptions CompileFlags);

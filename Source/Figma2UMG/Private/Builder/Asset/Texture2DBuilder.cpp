@@ -75,6 +75,15 @@ void UTexture2DBuilder::LoadAssets()
 	Asset = Cast<UTexture2D>(AssetData.FastGetAsset(true));
 }
 
+void UTexture2DBuilder::Reset()
+{
+	Asset = nullptr;
+	if (OnRawImageReceivedCB.IsBound())
+	{
+		OnRawImageReceivedCB.Unbind();
+	}
+}
+
 void UTexture2DBuilder::AddImageRequest(FImageRequests& ImageRequests)
 {
 	OnRawImageReceivedCB.BindUObject(this, &UTexture2DBuilder::OnRawImageReceived);

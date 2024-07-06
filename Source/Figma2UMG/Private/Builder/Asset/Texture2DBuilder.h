@@ -14,6 +14,7 @@ class UTexture2DBuilder : public UObject, public IAssetBuilder
 public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
+	virtual void Reset() override;
 
 	void AddImageRequest(FImageRequests& ImageRequests);
 	void OnRawImageReceived(const TArray<uint8>& InRawData);

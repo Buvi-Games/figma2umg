@@ -30,6 +30,9 @@ public:
 	UFUNCTION()
 	virtual UPackage* GetAssetPackage() const = 0;
 
+	UFUNCTION()
+	virtual void Reset() = 0;
+
 protected:
 	FString FileKey;
 	const UFigmaNode* Node = nullptr;
