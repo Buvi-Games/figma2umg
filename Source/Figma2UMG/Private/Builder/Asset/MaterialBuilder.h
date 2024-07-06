@@ -14,6 +14,7 @@ class UMaterialBuilder : public UObject, public IAssetBuilder
 public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
+	virtual void Reset() override;
 	virtual UPackage* GetAssetPackage() const override;
 
 	const TObjectPtr<UMaterial>& GetAsset() const;

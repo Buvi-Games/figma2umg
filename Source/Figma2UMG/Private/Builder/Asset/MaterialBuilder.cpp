@@ -68,6 +68,11 @@ void UMaterialBuilder::LoadAssets()
 	Asset = Cast<UMaterial>(AssetData.FastGetAsset(true));
 }
 
+void UMaterialBuilder::Reset()
+{
+	Asset = nullptr;
+}
+
 UPackage* UMaterialBuilder::GetAssetPackage() const
 {
 	return Asset ? Asset->GetPackage() : nullptr;
