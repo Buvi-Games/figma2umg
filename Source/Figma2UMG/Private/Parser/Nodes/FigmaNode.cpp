@@ -15,12 +15,11 @@
 #include "FigmaShapeWithText.h"
 #include "FigmaSlice.h"
 #include "FigmaSticky.h"
-#include "FileHelpers.h"
 #include "JsonObjectConverter.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
-#include "Kismet2/KismetEditorUtilities.h"
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Parser/FigmaFile.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
@@ -132,6 +131,14 @@ TObjectPtr<UWidget> UFigmaNode::FindWidgetForNode(const TObjectPtr<UPanelWidget>
 	}
 
 	return nullptr;
+}
+
+void UFigmaNode::CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, TArray<FFigmaPaint>& InFills) const
+{
+	for (FFigmaPaint& Paint : InFills)
+	{
+		Paint.CreateAssetBuilder(InFileKey, this, AssetBuilders);		
+	}
 }
 
 void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName)

@@ -5,6 +5,7 @@
 
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Components/Border.h"
@@ -35,10 +36,36 @@ FVector2D UFigmaSection::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
+FVector2D UFigmaSection::GetAbsoluteSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
+}
+
 FString UFigmaSection::GetCurrentPackagePath() const
 {
 	FString CurrentPackagePath = Super::GetCurrentPackagePath() + +TEXT("/") + GetNodeName();
 	return CurrentPackagePath;
+}
+
+bool UFigmaSection::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
+{
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+	return Super::CreateAssetBuilder(InFileKey, AssetBuilders);
+}
+
+FString UFigmaSection::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
+{
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+		while (TopParentNode && TopParentNode->GetParentNode())
+		{
+			TopParentNode = TopParentNode->GetParentNode();
+		}
+		return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Material";
+	}
+
+	return Super::GetPackageNameForBuilder(InAssetBuilder);
 }
 
 TScriptInterface<IWidgetBuilder> UFigmaSection::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const

@@ -32,6 +32,11 @@ FVector2D UFigmaInstance::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
+FVector2D UFigmaInstance::GetAbsoluteSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
+}
+
 void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	Super::PostSerialize(InParent, JsonObj);
@@ -61,7 +66,7 @@ bool UFigmaInstance::CreateAssetBuilder(const FString& InFileKey, TArray<TScript
 	return Texture2DBuilder != nullptr;
 }
 
-FString UFigmaInstance::GetPackageName() const
+FString UFigmaInstance::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())

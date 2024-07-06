@@ -17,6 +17,17 @@ void UImageWidgetBuilder::SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder
 	Texture2DBuilder = InTexture2DBuilder;
 }
 
+void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterial>& InMaterial)
+{
+	Material = InMaterial;
+}
+
+void UImageWidgetBuilder::SetColor(const FLinearColor& InColor)
+{
+	HasSolidColor = true;
+	SolidColor = InColor;
+}
+
 void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UImage>(WidgetToPatch);
@@ -38,20 +49,26 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTre
 		Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetTree, NodeName, WidgetName);
 	}
 
-	if (!Texture2DBuilder)
+	if (!Texture2DBuilder && !Material)
 	{
-		UE_LOG_Figma2UMG(Warning, TEXT("[UImageWidgetBuilder::PatchAndInsertWidget] Node<%s> %s didn't set the Texture2DBuilder."), *Node->GetClass()->GetName(), *Node->GetNodeName());
+		UE_LOG_Figma2UMG(Warning, TEXT("[UImageWidgetBuilder::PatchAndInsertWidget] Node<%s> %s didn't set the Texture2DBuilder or UMaterial."), *Node->GetClass()->GetName(), *Node->GetNodeName());
 	}
 
 	if (const TObjectPtr<UTexture2D>& Texture = Texture2DBuilder ? Texture2DBuilder->GetAsset() : nullptr)
 	{
 		Widget->SetBrushFromTexture(Texture, true);
 	}
+	else if (Material)
+	{
+		Widget->SetBrushFromMaterial(Material);
+		FSlateBrush Brush = Widget->GetBrush();
+		Brush.SetImageSize(Node->GetAbsoluteSize());
+		Widget->SetBrush(Brush);
+	}
 	else
 	{
 		FSlateBrush Brush = Widget->GetBrush();
-		const FLinearColor Color(0.0f, 0.0f, 0.0f, 0.0f);
-		Brush.TintColor = Color;
+		Brush.TintColor = SolidColor;
 		Widget->SetBrush(Brush);
 	}
 

@@ -4,6 +4,7 @@
 #include "Parser/Nodes/FigmaComponentSet.h"
 
 #include "Builder/WidgetBlueprintHelper.h"
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"
 #include "Builder/Widget/WidgetSwitcherBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
@@ -170,7 +171,7 @@ TScriptInterface<IWidgetBuilder> UFigmaComponentSet::CreateWidgetBuilders(bool I
 	}
 }
 
-FString UFigmaComponentSet::GetPackageName() const
+FString UFigmaComponentSet::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())
@@ -178,5 +179,11 @@ FString UFigmaComponentSet::GetPackageName() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Components";
+	FString Suffix = "Components";
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Material";
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
 }

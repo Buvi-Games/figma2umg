@@ -23,7 +23,7 @@ bool UFigmaDocument::CreateAssetBuilder(const FString& InFileKey, TArray<TScript
 	return true;
 }
 
-FString UFigmaDocument::GetPackageName() const
+FString UFigmaDocument::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	return PackagePath;
 }

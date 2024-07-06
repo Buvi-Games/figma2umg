@@ -117,7 +117,20 @@ void UBorderWidgetBuilder::SetFill(const TArray<FFigmaPaint>& Fills) const
 {
 	if (Fills.Num() > 0 && Fills[0].Visible)
 	{
-		Widget->SetBrushColor(Fills[0].GetLinearColor());
+		if (const TObjectPtr<UMaterial> Material = Fills[0].GetMaterial())
+		{
+			Widget->SetBrushColor(FLinearColor::White);
+			Widget->SetBrushFromMaterial(Material);
+		}
+		else if (const TObjectPtr<UTexture2D> Texture = Fills[0].GetTexture())
+		{
+			Widget->SetBrushColor(FLinearColor::White);
+			Widget->SetBrushFromTexture(Texture);			
+		}
+		else 
+		{
+			Widget->SetBrushColor(Fills[0].GetLinearColor());
+		}
 	}
 	else
 	{

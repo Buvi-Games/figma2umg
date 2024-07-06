@@ -4,6 +4,7 @@
 #include "Parser/Nodes/FigmaGroup.h"
 
 #include "FigmaComponentSet.h"
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
@@ -25,6 +26,28 @@ void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSh
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
+bool UFigmaGroup::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
+{
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+
+	return Super::CreateAssetBuilder(InFileKey, AssetBuilders);
+}
+
+FString UFigmaGroup::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
+{
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+		while (TopParentNode && TopParentNode->GetParentNode())
+		{
+			TopParentNode = TopParentNode->GetParentNode();
+		}
+		return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Material";
+	}
+
+	return Super::GetPackageNameForBuilder(InAssetBuilder);
+}
+
 TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	if (AllowFrameButton && IsButton())
@@ -41,6 +64,11 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 FVector2D UFigmaGroup::GetAbsolutePosition() const
 {
 	return AbsoluteBoundingBox.GetPosition();
+}
+
+FVector2D UFigmaGroup::GetAbsoluteSize() const
+{
+	return AbsoluteBoundingBox.GetSize();
 }
 
 FMargin UFigmaGroup::GetPadding() const
