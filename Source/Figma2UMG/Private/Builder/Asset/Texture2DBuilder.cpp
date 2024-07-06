@@ -21,7 +21,7 @@ void UTexture2DBuilder::LoadOrCreateAssets()
 	UTexture2D* TextureAsset = Cast<UTexture2D>(Asset);
 	if (TextureAsset == nullptr)
 	{
-		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
+		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
 		const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 
@@ -44,7 +44,6 @@ void UTexture2DBuilder::LoadOrCreateAssets()
 		}
 		else
 		{
-
 			UPackage* Pkg = CreatePackage(*PackagePath);
 			const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
 			UE_LOG_Figma2UMG(Display, TEXT("Reimport UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());
@@ -67,13 +66,22 @@ void UTexture2DBuilder::LoadOrCreateAssets()
 
 void UTexture2DBuilder::LoadAssets()
 {
-	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageName());
+	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
 	const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
 
 	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
 	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
 	Asset = Cast<UTexture2D>(AssetData.FastGetAsset(true));
+}
+
+void UTexture2DBuilder::Reset()
+{
+	Asset = nullptr;
+	if (OnRawImageReceivedCB.IsBound())
+	{
+		OnRawImageReceivedCB.Unbind();
+	}
 }
 
 void UTexture2DBuilder::AddImageRequest(FImageRequests& ImageRequests)
@@ -92,7 +100,7 @@ const TObjectPtr<UTexture2D>& UTexture2DBuilder::GetAsset() const
 	return Asset;
 }
 
-UPackage* UTexture2DBuilder::GetPackage() const
+UPackage* UTexture2DBuilder::GetAssetPackage() const
 {
 	return Asset ? Asset->GetPackage() : nullptr;
 }

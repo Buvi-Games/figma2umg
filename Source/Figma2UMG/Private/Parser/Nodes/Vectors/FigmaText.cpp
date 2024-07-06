@@ -29,7 +29,7 @@ FVector2D UFigmaText::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
-FVector2D UFigmaText::GetSize() const
+FVector2D UFigmaText::GetAbsoluteSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
 }

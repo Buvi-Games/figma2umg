@@ -696,7 +696,7 @@ void UFigmaImporter::SaveAll()
 	TArray<UPackage*> Packages;
 	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		UPackage* Package = AssetBuilder->GetPackage();
+		UPackage* Package = AssetBuilder->GetAssetPackage();
 		if (Package)
 		{
 			Packages.AddUnique(Package);
@@ -712,6 +712,11 @@ void UFigmaImporter::SaveAll()
 
 void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
 {
+	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+	{
+		AssetBuilder->Reset();
+	}
+	AssetBuilders.Reset();
 	if (Succeeded)
 	{
 		UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + TEXT(" was successfully imported."));
@@ -720,4 +725,4 @@ void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
 	{
 		UpdateStatus(eRequestStatus::Failed, TEXT("Failed at Post-patch of UAssets."));
 	}
-	}
+}

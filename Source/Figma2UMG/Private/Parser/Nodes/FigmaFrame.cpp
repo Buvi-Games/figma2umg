@@ -3,14 +3,9 @@
 
 #include "Parser/Nodes/FigmaFrame.h"
 
-#include "Figma2UMGModule.h"
-#include "WidgetBlueprint.h"
-#include "WidgetBlueprintFactory.h"
-#include "Blueprint/WidgetTree.h"
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Builder/Widget/UserWidgetBuilder.h"
-#include "Kismet2/BlueprintEditorUtils.h"
-#include "Templates/WidgetTemplateBlueprintClass.h"
 
 void UFigmaFrame::SetGenerateFile(bool Value /*= true*/)
 {
@@ -32,19 +27,21 @@ TScriptInterface<IWidgetBuilder> UFigmaFrame::CreateWidgetBuilders(bool IsRoot/*
 	}
 }
 
-TScriptInterface<IAssetBuilder> UFigmaFrame::CreateAssetBuilder(const FString& InFileKey)
+bool UFigmaFrame::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	if (GenerateFile)
 	{
 		WidgetBlueprintBuilder = NewObject<UWidgetBlueprintBuilder>();
 		WidgetBlueprintBuilder->SetNode(InFileKey, this);
-		return WidgetBlueprintBuilder;
+		AssetBuilders.Add(WidgetBlueprintBuilder);
 	}
 
-	return nullptr;
+	Super::CreateAssetBuilder(InFileKey, AssetBuilders);
+
+	return WidgetBlueprintBuilder != nullptr;
 }
 
-FString UFigmaFrame::GetPackageName() const
+FString UFigmaFrame::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())
@@ -52,7 +49,13 @@ FString UFigmaFrame::GetPackageName() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + "Menu";
+	FString Suffix = "Menu";
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Material";
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
 }
 
 const TObjectPtr<UWidgetBlueprintBuilder>& UFigmaFrame::GetAssetBuilder() const

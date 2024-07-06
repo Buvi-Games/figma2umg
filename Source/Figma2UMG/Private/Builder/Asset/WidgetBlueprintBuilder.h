@@ -18,6 +18,8 @@ class UWidgetBlueprintBuilder : public UObject, public IAssetBuilder
 public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
+	virtual void Reset() override;
+
 	virtual void ResetWidgets();
 
 	void CompileBP(EBlueprintCompileOptions CompileFlags);
@@ -29,7 +31,7 @@ public:
 
 	TObjectPtr<UWidgetBlueprint> GetAsset() const;
 
-	virtual UPackage* GetPackage() const override;
+	virtual UPackage* GetAssetPackage() const override;
 protected:
 	void FillType(const FFigmaComponentPropertyDefinition& Def, FEdGraphPinType& MemberType) const;
 	void PatchMemberVariable(UWidgetBlueprint* WidgetBP, TPair<FString, FFigmaComponentPropertyDefinition> Property) const;

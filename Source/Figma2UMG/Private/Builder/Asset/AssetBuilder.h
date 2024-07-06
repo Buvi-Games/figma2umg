@@ -28,7 +28,10 @@ public:
 	virtual void LoadAssets() = 0;
 
 	UFUNCTION()
-	virtual UPackage* GetPackage() const = 0;
+	virtual UPackage* GetAssetPackage() const = 0;
+
+	UFUNCTION()
+	virtual void Reset() = 0;
 
 protected:
 	FString FileKey;

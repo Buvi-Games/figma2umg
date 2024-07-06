@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 
+#include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Widget/ImageWidgetBuilder.h"
 #include "Components/Image.h"
@@ -22,19 +23,23 @@ FVector2D UFigmaVectorNode::GetAbsolutePosition() const
 	return AbsoluteBoundingBox.GetPosition();
 }
 
-FVector2D UFigmaVectorNode::GetSize() const
+FVector2D UFigmaVectorNode::GetAbsoluteSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
 }
 
-TScriptInterface<IAssetBuilder> UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey)
+bool UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	AssetBuilder = NewObject<UTexture2DBuilder>();
 	AssetBuilder->SetNode(InFileKey, this);
-	return AssetBuilder;
+	AssetBuilders.Add(AssetBuilder);
+
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+
+	return true;
 }
 
-FString UFigmaVectorNode::GetPackageName() const
+FString UFigmaVectorNode::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
 	while (TopParentNode && TopParentNode->GetParentNode())
@@ -42,7 +47,13 @@ FString UFigmaVectorNode::GetPackageName() const
 		TopParentNode = TopParentNode->GetParentNode();
 	}
 
-	return TopParentNode->GetCurrentPackagePath() + TEXT("/Textures");
+	FString Suffix = "Textures";
+	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Material";
+	}
+
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
 }
 
 TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const

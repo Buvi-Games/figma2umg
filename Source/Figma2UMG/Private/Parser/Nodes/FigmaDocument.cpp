@@ -14,14 +14,16 @@ void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 	SetCurrentPackagePath(FigmaFile->GetPackagePath());
 }
 
-TScriptInterface<IAssetBuilder> UFigmaDocument::CreateAssetBuilder(const FString& InFileKey)
+bool UFigmaDocument::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	UWidgetBlueprintBuilder* AssetBuilder = NewObject<UWidgetBlueprintBuilder>();
 	AssetBuilder->SetNode(InFileKey, this);
-	return AssetBuilder;
+	AssetBuilders.Add(AssetBuilder);
+
+	return true;
 }
 
-FString UFigmaDocument::GetPackageName() const
+FString UFigmaDocument::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
 {
 	return PackagePath;
 }

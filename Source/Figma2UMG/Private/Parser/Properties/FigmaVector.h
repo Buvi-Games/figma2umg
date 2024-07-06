@@ -12,5 +12,15 @@ struct FIGMA2UMG_API FFigmaVector
 public:
 	GENERATED_BODY()
 
-protected:
+	FVector2D ToVector2D() const
+	{
+		return FVector2D(X, Y);
+	}
+
+	UPROPERTY()
+	double X;
+
+	UPROPERTY()
+	double Y;
 };
+

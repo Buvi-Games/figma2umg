@@ -7,8 +7,6 @@
 #include "REST/ImageRequest.h"
 #include "Texture2DBuilder.generated.h"
 
-class UBorder;
-
 UCLASS()
 class UTexture2DBuilder : public UObject, public IAssetBuilder
 {
@@ -16,13 +14,14 @@ class UTexture2DBuilder : public UObject, public IAssetBuilder
 public:
 	virtual void LoadOrCreateAssets() override;
 	virtual void LoadAssets() override;
+	virtual void Reset() override;
 
 	void AddImageRequest(FImageRequests& ImageRequests);
 	void OnRawImageReceived(const TArray<uint8>& InRawData);
 
 	const TObjectPtr<UTexture2D>& GetAsset() const;
 
-	virtual UPackage* GetPackage() const override;
+	virtual UPackage* GetAssetPackage() const override;
 protected:
 	UPROPERTY()
 	TObjectPtr<UTexture2D> Asset = nullptr;
