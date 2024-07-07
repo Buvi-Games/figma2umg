@@ -12,8 +12,10 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Editor/MaterialEditor/Public/MaterialEditingLibrary.h"
 #include "Factories/MaterialFactoryNew.h"
+#include "Materials/MaterialExpressionComponentMask.h"
 #include "Materials/MaterialExpressionCustom.h"
 #include "Materials/MaterialExpressionSubtract.h"
+#include "Materials/MaterialExpressionTextureCoordinate.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Nodes/FigmaNode.h"
 
@@ -95,7 +97,7 @@ void UMaterialBuilder::Setup() const
 	
 	int OutputIndex = 0;
 	UMaterialExpression* PositionInput = SetupGradientInput(OutputIndex);
-	if (UMaterialExpression* GradientExpression = SetupGradientNode(PositionInput, OutputIndex))
+	if (UMaterialExpression* GradientExpression = SetupColorExpression(PositionInput, OutputIndex))
 	{
 		Asset->GetEditorOnlyData()->EmissiveColor.Connect(0, GradientExpression);
 		Asset->PreEditChange(NULL);
@@ -118,16 +120,47 @@ UMaterialExpression* UMaterialBuilder::SetupGradientInput(int& OutputIndex) cons
 	if (!Paint)
 		return nullptr;
 
+	UMaterialExpression* InputExpression = nullptr;
+	switch (Paint->Type)
+	{
+	case EPaintTypes::SOLID:
+		return nullptr;
+	case EPaintTypes::GRADIENT_LINEAR:
+		InputExpression = SetupLinearGradientInput(OutputIndex);
+		break;
+	case EPaintTypes::GRADIENT_RADIAL:
+		InputExpression = SetupRadialGradientInput(OutputIndex);
+		break;
+	case EPaintTypes::GRADIENT_ANGULAR:
+		break;
+	case EPaintTypes::GRADIENT_DIAMOND:
+		break;
+	case EPaintTypes::IMAGE:
+		return nullptr;
+	case EPaintTypes::EMOJI:
+		return nullptr;
+	case EPaintTypes::VIDEO:
+		return nullptr;
+	}
+	return InputExpression;
+}
+
+UMaterialExpression* UMaterialBuilder::SetupLinearGradientInput(int& OutputIndex) const
+{
+	if (!Paint)
+		return nullptr;
+
 	if (Paint->GradientHandlePositions.Num() < 2)
 		return nullptr;
 
+	const FString LinearGradientFunctionPath(TEXT("/Engine/Functions/Engine_MaterialFunctions01/Gradient/LinearGradient.LinearGradient"));
 	const FVector2D GradientStart = Paint->GradientHandlePositions[0].ToVector2D();
 	const FVector2D GradientEnd = Paint->GradientHandlePositions[1].ToVector2D();
 	const FVector2D GradientDir = (GradientEnd - GradientStart).GetSafeNormal();
 	if (FMath::Abs(GradientDir.X) >= 0.999f)
 	{
 		OutputIndex = 0;
-		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupLinearGradientInput();
+		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath);
 		if (GradientDir.X < 0.0f)
 		{
 			return InvertOutput(LinearGradient, 0);
@@ -136,7 +169,7 @@ UMaterialExpression* UMaterialBuilder::SetupGradientInput(int& OutputIndex) cons
 	}
 	else if (FMath::Abs(GradientDir.Y) >= 0.999f)
 	{
-		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupLinearGradientInput();
+		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath);
 		if (GradientDir.Y < 0.0f)
 		{
 			OutputIndex = 0;
@@ -148,41 +181,9 @@ UMaterialExpression* UMaterialBuilder::SetupGradientInput(int& OutputIndex) cons
 	else
 	{
 		OutputIndex = 0;
-		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupLinearGradientInput(-1700.0f);
+		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath , -1700.0f);
 		return SetupLinearGradientCustomInput(LinearGradient);
 	}
-}
-
-UMaterialExpressionMaterialFunctionCall* UMaterialBuilder::SetupLinearGradientInput(float NodePosX /*= -1200.0f*/) const
-{
-	const FString FunctionPath(TEXT("/Engine/Functions/Engine_MaterialFunctions01/Gradient/LinearGradient.LinearGradient"));
-	UMaterialFunction* MaterialFunction = LoadObject<UMaterialFunction>(NULL, *FunctionPath, NULL, 0, NULL);
-
-	UMaterialExpressionMaterialFunctionCall* LinearGradientFunction = nullptr;
-	for (UMaterialExpression* Expression : Asset->GetExpressions())
-	{
-		UMaterialExpressionMaterialFunctionCall* FunctionCall = Cast<UMaterialExpressionMaterialFunctionCall>(Expression);
-		if (FunctionCall && FunctionCall->MaterialFunction && FunctionCall->MaterialFunction == MaterialFunction)
-		{
-			LinearGradientFunction = FunctionCall;
-			break;
-		}
-	}
-
-	if (!LinearGradientFunction)
-	{
-		LinearGradientFunction = Cast<UMaterialExpressionMaterialFunctionCall>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionMaterialFunctionCall::StaticClass(), Asset, NodePosX, 0.0f));
-	}
-
-	if (!LinearGradientFunction->MaterialFunction)
-	{
-		if (LinearGradientFunction->SetMaterialFunction(MaterialFunction))
-		{
-			LinearGradientFunction->PostEditChange();
-		}
-	}
-
-	return LinearGradientFunction;
 }
 
 UMaterialExpression* UMaterialBuilder::SetupLinearGradientCustomInput(UMaterialExpressionMaterialFunctionCall* LinearGradientExpression) const
@@ -258,7 +259,64 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientCustomInput(UMaterialE
 	return UVTransformExpression;
 }
 
-UMaterialExpression* UMaterialBuilder::SetupGradientNode(UMaterialExpression* PositionInput, const int OutputIndex) const
+UMaterialExpression* UMaterialBuilder::SetupRadialGradientInput(int& OutputIndex) const
+{
+	UMaterialExpression* UVExpression = SetupUVInputExpression();
+
+	const FString UVTransform("UVTransform");
+	UMaterialExpressionCustom* UVTransformExpression = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		UMaterialExpressionCustom* ExpressionCustom = Cast<UMaterialExpressionCustom>(Expression);
+		if (ExpressionCustom && ExpressionCustom->Description == UVTransform)
+		{
+			UVTransformExpression = ExpressionCustom;
+			break;
+		}
+	}
+	if (!UVTransformExpression)
+	{
+		UVTransformExpression = Cast<UMaterialExpressionCustom>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionCustom::StaticClass(), Asset, -1300.0f, 0.0f));
+		UVTransformExpression->Description = UVTransform;
+	}
+
+	if (UVTransformExpression)
+	{
+		const FName UVGradient("UVGradient");
+		UVTransformExpression->OutputType = CMOT_Float1;
+		if (UVTransformExpression->Inputs.Num() == 0)
+		{
+			FCustomInput InputU;
+			InputU.InputName = UVGradient;
+			UVTransformExpression->Inputs.Add(InputU);
+			UVTransformExpression->Inputs[0].Input.Connect(0, UVExpression);
+		}
+		else
+		{
+			UVTransformExpression->Inputs[0].InputName = UVGradient;
+			UVTransformExpression->Inputs[0].Input.Connect(0, UVExpression);
+		}
+
+
+		const FVector2D Center = Paint->GradientHandlePositions[0].ToVector2D();
+		const FVector2D Width = Paint->GradientHandlePositions[1].ToVector2D() - Center;
+		const FVector2D Height = Paint->GradientHandlePositions[2].ToVector2D() - Center;
+		const float Radius1 = Width.Size();
+		const float Radius2 = Height.Size();
+		if (FMath::Abs(Radius1 - Radius2) < 0.01f)
+		{
+			UVTransformExpression->Code = "float2 Center = float2(" + FString::SanitizeFloat(Center.X / 2) + ", " + FString::SanitizeFloat(Center.Y / 2) + ");\n";
+			UVTransformExpression->Code += "float Radius = " + FString::SanitizeFloat(Radius1) + ";\n";
+			UVTransformExpression->Code += "float result = distance(Center,UVGradient)/Radius;\n";
+			UVTransformExpression->Code += "result = clamp(result, 0.0f, 1.0f);\n";
+			UVTransformExpression->Code += "return result;";
+		}
+	}
+
+	return UVTransformExpression;
+}
+
+UMaterialExpression* UMaterialBuilder::SetupColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const
 {
 	if (!Paint)
 		return nullptr;
@@ -269,13 +327,10 @@ UMaterialExpression* UMaterialBuilder::SetupGradientNode(UMaterialExpression* Po
 	case EPaintTypes::SOLID:
 		return nullptr;
 	case EPaintTypes::GRADIENT_LINEAR:
-		GradientExpression = SetupGradientLinearNode(PositionInput, OutputIndex);
-		break;
 	case EPaintTypes::GRADIENT_RADIAL:
-		break;
 	case EPaintTypes::GRADIENT_ANGULAR:
-		break;
 	case EPaintTypes::GRADIENT_DIAMOND:
+		GradientExpression = SetupGradientColorExpression(PositionInput, OutputIndex);
 		break;
 	case EPaintTypes::IMAGE:
 		return nullptr;
@@ -287,7 +342,7 @@ UMaterialExpression* UMaterialBuilder::SetupGradientNode(UMaterialExpression* Po
 	return GradientExpression;
 }
 
-UMaterialExpression* UMaterialBuilder::SetupGradientLinearNode(UMaterialExpression* PositionInput, const int OutputIndex) const
+UMaterialExpression* UMaterialBuilder::SetupGradientColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const
 {
 	const FString Gradient("Gradient");
 	UMaterialExpressionCustom* GradientLinearExpression = nullptr;
@@ -382,6 +437,80 @@ UMaterialExpression* UMaterialBuilder::SetupGradientLinearNode(UMaterialExpressi
 		}
 	}
 	return GradientLinearExpression;
+}
+
+UMaterialExpression* UMaterialBuilder::SetupUVInputExpression(float NodePosX /*= -1800.0f*/) const
+{
+	UMaterialExpressionTextureCoordinate* TextureCoord = nullptr;
+	UMaterialExpressionComponentMask* MaskR = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		TextureCoord = Cast<UMaterialExpressionTextureCoordinate>(Expression);
+		if (TextureCoord)
+		{
+			for (UMaterialExpression* Expression2 : Asset->GetExpressions())
+			{
+				UMaterialExpressionComponentMask* PossibleMask = Cast<UMaterialExpressionComponentMask>(Expression2);
+				if (PossibleMask && PossibleMask->Input.Expression == TextureCoord)
+				{
+					MaskR = PossibleMask;
+				}
+			}
+			break;
+		}
+	}
+
+	if (!TextureCoord)
+	{
+		TextureCoord = Cast<UMaterialExpressionTextureCoordinate>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionTextureCoordinate::StaticClass(), Asset, NodePosX, 0.0f));
+	}
+	if (!MaskR)
+	{
+		MaskR = Cast<UMaterialExpressionComponentMask>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionComponentMask::StaticClass(), Asset, NodePosX + 200.0f, 0.0f));
+	}
+
+
+	if (TextureCoord && MaskR)
+	{
+		MaskR->R = 1;
+		MaskR->G = 1;
+		MaskR->B = 0;
+		MaskR->A = 0;
+		MaskR->Input.Connect(0, TextureCoord);
+	}
+
+	return MaskR;
+}
+
+UMaterialExpressionMaterialFunctionCall* UMaterialBuilder::SetupMaterialFunction(const FString& FunctionPath, float NodePosX /*= -1200.0f*/) const
+{
+	UMaterialFunction* MaterialFunction = LoadObject<UMaterialFunction>(NULL, *FunctionPath, NULL, 0, NULL);
+
+	UMaterialExpressionMaterialFunctionCall* LinearGradientFunction = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		UMaterialExpressionMaterialFunctionCall* FunctionCall = Cast<UMaterialExpressionMaterialFunctionCall>(Expression);
+		if (FunctionCall && FunctionCall->MaterialFunction && FunctionCall->MaterialFunction == MaterialFunction)
+		{
+			LinearGradientFunction = FunctionCall;
+			break;
+		}
+	}
+
+	if (!LinearGradientFunction)
+	{
+		LinearGradientFunction = Cast<UMaterialExpressionMaterialFunctionCall>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionMaterialFunctionCall::StaticClass(), Asset, NodePosX, 0.0f));
+	}
+
+	if (!LinearGradientFunction->MaterialFunction)
+	{
+		if (LinearGradientFunction->SetMaterialFunction(MaterialFunction))
+		{
+			LinearGradientFunction->PostEditChange();
+		}
+	}
+
+	return LinearGradientFunction;
 }
 
 UMaterialExpression* UMaterialBuilder::InvertOutput(UMaterialExpression* OutputExpression, const int OutputIndex) const
