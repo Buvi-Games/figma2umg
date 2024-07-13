@@ -23,12 +23,15 @@ public:
 protected:
 	void Setup() const;
 	UMaterialExpression* SetupGradientInput(int& OutputIndex) const;
-	UMaterialExpressionMaterialFunctionCall* SetupLinearGradientInput(float NodePosX = -1200.0f) const;
+	UMaterialExpression* SetupLinearGradientInput(int& OutputIndex) const;
 	UMaterialExpression* SetupLinearGradientCustomInput(UMaterialExpressionMaterialFunctionCall* LinearGradientExpression) const;
+	UMaterialExpression* SetupRadialGradientInput(int& OutputIndex) const;
 
-	UMaterialExpression* SetupGradientNode(UMaterialExpression* PositionInput, const int OutputIndex) const;
-	UMaterialExpression* SetupGradientLinearNode(UMaterialExpression* PositionInput, const int OutputIndex) const;
+	UMaterialExpression* SetupColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const;
+	UMaterialExpression* SetupGradientColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const;
 
+	UMaterialExpression* SetupUVInputExpression(float NodePosX = -1800.0f) const;
+	UMaterialExpressionMaterialFunctionCall* SetupMaterialFunction(const FString& FunctionPath, float NodePosX = -1200.0f) const;
 	UMaterialExpression* InvertOutput(UMaterialExpression* OutputExpression, const int OutputIndex) const;
 
 	UPROPERTY()
