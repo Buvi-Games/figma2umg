@@ -157,7 +157,9 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientInput(int& OutputIndex
 	const FVector2D GradientStart = Paint->GradientHandlePositions[0].ToVector2D();
 	const FVector2D GradientEnd = Paint->GradientHandlePositions[1].ToVector2D();
 	const FVector2D GradientDir = (GradientEnd - GradientStart).GetSafeNormal();
-	if (FMath::Abs(GradientDir.X) >= 0.999f)
+	if (FMath::Abs(GradientDir.X) >= 0.999f 
+		&& ((FMath::Abs(GradientStart.X) <= 0.001f && FMath::Abs(1.0f-GradientEnd.X) <= 0.001f)
+			|| (FMath::Abs(1.0f - GradientStart.X) <= 0.001f && FMath::Abs(GradientEnd.X) <= 0.001f)))
 	{
 		OutputIndex = 0;
 		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath);
@@ -167,7 +169,9 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientInput(int& OutputIndex
 		}
 		return LinearGradient;
 	}
-	else if (FMath::Abs(GradientDir.Y) >= 0.999f)
+	else if (FMath::Abs(GradientDir.Y) >= 0.999f
+			&& ((FMath::Abs(GradientStart.Y) <= 0.001f && FMath::Abs(1.0f - GradientEnd.Y) <= 0.001f)
+				|| (FMath::Abs(1.0f - GradientStart.Y) <= 0.001f && FMath::Abs(GradientEnd.Y) <= 0.001f)))
 	{
 		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath);
 		if (GradientDir.Y < 0.0f)
@@ -305,11 +309,26 @@ UMaterialExpression* UMaterialBuilder::SetupRadialGradientInput(int& OutputIndex
 		const float Radius2 = Height.Size();
 		if (FMath::Abs(Radius1 - Radius2) < 0.01f)
 		{
-			UVTransformExpression->Code = "float2 Center = float2(" + FString::SanitizeFloat(Center.X / 2) + ", " + FString::SanitizeFloat(Center.Y / 2) + ");\n";
+			UVTransformExpression->Code = "float2 Center = float2(" + FString::SanitizeFloat(Center.X) + ", " + FString::SanitizeFloat(Center.Y) + ");\n";
 			UVTransformExpression->Code += "float Radius = " + FString::SanitizeFloat(Radius1) + ";\n";
-			UVTransformExpression->Code += "float result = distance(Center,UVGradient)/Radius;\n";
-			UVTransformExpression->Code += "result = clamp(result, 0.0f, 1.0f);\n";
-			UVTransformExpression->Code += "return result;";
+			UVTransformExpression->Code += "float Result = distance(Center,UVGradient)/Radius;\n";
+			UVTransformExpression->Code += "Result = clamp(Result, 0.0f, 1.0f);\n";
+			UVTransformExpression->Code += "return Result;";
+		}
+		else
+		{
+
+			UVTransformExpression->Code = "float2 Center = float2(" + FString::SanitizeFloat(Center.X) + ", " + FString::SanitizeFloat(Center.Y) + ");\n";
+			UVTransformExpression->Code += "float2 AxisX = float2(" + FString::SanitizeFloat(Width.X / Radius1) + ", " + FString::SanitizeFloat(Width.Y / Radius1) + ");\n";
+			UVTransformExpression->Code += "float2 AxisY = float2(" + FString::SanitizeFloat(Width.Y / Radius1) + ", " + FString::SanitizeFloat(-Width.X / Radius1) + ");\n";
+			UVTransformExpression->Code += "float2 Radii = float2(" + FString::SanitizeFloat(Radius1) + ", " + FString::SanitizeFloat(Radius2) + ");\n";
+
+			UVTransformExpression->Code += "float2 Gradient = UVGradient-Center;\n";
+			UVTransformExpression->Code += "float2 LocalGradient = float2(dot(Gradient, AxisX) * (1.0 / Radii.x), dot(Gradient, AxisY) * (1.0 / Radii.y));\n\n";
+
+			UVTransformExpression->Code += "float Result = length(LocalGradient);\n";
+			UVTransformExpression->Code += "Result = clamp(Result, 0.0f, 1.0f);\n";
+			UVTransformExpression->Code += "return Result;";
 		}
 	}
 
