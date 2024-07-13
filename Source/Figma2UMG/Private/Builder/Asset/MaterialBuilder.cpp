@@ -192,8 +192,8 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientInput(int& OutputIndex
 	const FVector2D GradientStart = Paint->GradientHandlePositions[0].ToVector2D();
 	const FVector2D GradientEnd = Paint->GradientHandlePositions[1].ToVector2D();
 	const FVector2D GradientDir = (GradientEnd - GradientStart).GetSafeNormal();
-	if (FMath::Abs(GradientDir.X) >= 0.999f 
-		&& ((FMath::Abs(GradientStart.X) <= 0.001f && FMath::Abs(1.0f-GradientEnd.X) <= 0.001f)
+	if (FMath::Abs(GradientDir.X) >= 0.999f
+		&& ((FMath::Abs(GradientStart.X) <= 0.001f && FMath::Abs(1.0f - GradientEnd.X) <= 0.001f)
 			|| (FMath::Abs(1.0f - GradientStart.X) <= 0.001f && FMath::Abs(GradientEnd.X) <= 0.001f)))
 	{
 		OutputIndex = 0;
@@ -205,8 +205,8 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientInput(int& OutputIndex
 		return LinearGradient;
 	}
 	else if (FMath::Abs(GradientDir.Y) >= 0.999f
-			&& ((FMath::Abs(GradientStart.Y) <= 0.001f && FMath::Abs(1.0f - GradientEnd.Y) <= 0.001f)
-				|| (FMath::Abs(1.0f - GradientStart.Y) <= 0.001f && FMath::Abs(GradientEnd.Y) <= 0.001f)))
+		&& ((FMath::Abs(GradientStart.Y) <= 0.001f && FMath::Abs(1.0f - GradientEnd.Y) <= 0.001f)
+			|| (FMath::Abs(1.0f - GradientStart.Y) <= 0.001f && FMath::Abs(GradientEnd.Y) <= 0.001f)))
 	{
 		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath);
 		if (GradientDir.Y < 0.0f)
@@ -223,6 +223,7 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientInput(int& OutputIndex
 		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath, -1700.0f);
 		return SetupLinearGradientCustomInput(LinearGradient);
 	}
+
 }
 
 UMaterialExpression* UMaterialBuilder::SetupLinearGradientCustomInput(UMaterialExpressionMaterialFunctionCall* LinearGradientExpression) const
