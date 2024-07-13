@@ -220,7 +220,7 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientInput(int& OutputIndex
 	else
 	{
 		OutputIndex = 0;
-		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath , -1700.0f);
+		UMaterialExpressionMaterialFunctionCall* LinearGradient = SetupMaterialFunction(LinearGradientFunctionPath, -1700.0f);
 		return SetupLinearGradientCustomInput(LinearGradient);
 	}
 }
@@ -291,7 +291,7 @@ UMaterialExpression* UMaterialBuilder::SetupLinearGradientCustomInput(UMaterialE
 		UVTransformExpression->Code += "float2 UV = float2(UGradient, VGradient);\n";
 		UVTransformExpression->Code += "float2 UVDir = UV - Start;\n";
 		UVTransformExpression->Code += "float result = dot(UVDir,DirNorm)/DirMag;\n";
-		UVTransformExpression->Code += "result = clamp(result, 0.0f, 1.0f);\n";
+		UVTransformExpression->Code += "result = smoothstep(0, 1, clamp(result, 0.0f, 1.0f));\n";
 		UVTransformExpression->Code += "return result;";
 	}
 
@@ -347,7 +347,7 @@ UMaterialExpression* UMaterialBuilder::SetupRadialGradientInput(int& OutputIndex
 			UVTransformExpression->Code = "float2 Center = float2(" + FString::SanitizeFloat(Center.X) + ", " + FString::SanitizeFloat(Center.Y) + ");\n";
 			UVTransformExpression->Code += "float Radius = " + FString::SanitizeFloat(Radius1) + ";\n";
 			UVTransformExpression->Code += "float Result = distance(Center,UVGradient)/Radius;\n";
-			UVTransformExpression->Code += "Result = clamp(Result, 0.0f, 1.0f);\n";
+			UVTransformExpression->Code += "Result = smoothstep(0, 1, clamp(Result, 0.0f, 1.0f));\n";
 			UVTransformExpression->Code += "return Result;";
 		}
 		else
@@ -518,6 +518,7 @@ UMaterialExpression* UMaterialBuilder::SetupColorExpression(UMaterialExpression*
 	return GradientExpression;
 }
 
+
 UMaterialExpression* UMaterialBuilder::SetupGradientColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const
 {
 	const FString Gradient("Gradient");
@@ -572,7 +573,8 @@ UMaterialExpression* UMaterialBuilder::SetupGradientColorExpression(UMaterialExp
 			GradientLinearExpression->Code += "if (InputPosition <= " + FString::SanitizeFloat(Paint->GradientStops[0].Position) + ")\n{\n  return Color1;\n}\n";
 			GradientLinearExpression->Code += "else if (InputPosition >= " + FString::SanitizeFloat(Paint->GradientStops[1].Position) + ")\n{\n  return Color2;\n}\n";
 			GradientLinearExpression->Code += "else \n{\n";
-			GradientLinearExpression->Code += "  float4 ColorResult = lerp(Color1, Color2, InputPosition);\n  return ColorResult;\n}";
+			GradientLinearExpression->Code += "  float Position = (InputPosition - " + FString::SanitizeFloat(Paint->GradientStops[0].Position) + ") / (" + FString::SanitizeFloat(Paint->GradientStops[1].Position - Paint->GradientStops[0].Position) + ");\n";
+			GradientLinearExpression->Code += "  float4 ColorResult = lerp(Color1, Color2, Position);\n  return ColorResult;\n}";
 		}
 		else
 		{
@@ -612,6 +614,7 @@ UMaterialExpression* UMaterialBuilder::SetupGradientColorExpression(UMaterialExp
 			GradientLinearExpression->Code += "float4 ColorResult = lerp(Color1, Color2, Position);\nreturn ColorResult;";
 		}
 	}
+
 	return GradientLinearExpression;
 }
 
