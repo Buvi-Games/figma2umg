@@ -165,6 +165,7 @@ UMaterialExpression* UMaterialBuilder::SetupGradientInput(int& OutputIndex) cons
 		InputExpression = SetupRadialGradientInput(OutputIndex);
 		break;
 	case EPaintTypes::GRADIENT_ANGULAR:
+		InputExpression = SetupAngularGradientInput(OutputIndex);
 		break;
 	case EPaintTypes::GRADIENT_DIAMOND:
 		break;
@@ -368,6 +369,66 @@ UMaterialExpression* UMaterialBuilder::SetupRadialGradientInput(int& OutputIndex
 	return UVTransformExpression;
 }
 
+UMaterialExpression* UMaterialBuilder::SetupAngularGradientInput(int& OutputIndex) const
+{
+	UMaterialExpression* UVExpression = SetupUVInputExpression();
+
+	const FString UVTransform("UVTransform");
+	UMaterialExpressionCustom* UVTransformExpression = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		UMaterialExpressionCustom* ExpressionCustom = Cast<UMaterialExpressionCustom>(Expression);
+		if (ExpressionCustom && ExpressionCustom->Description == UVTransform)
+		{
+			UVTransformExpression = ExpressionCustom;
+			break;
+		}
+	}
+	if (!UVTransformExpression)
+	{
+		UVTransformExpression = Cast<UMaterialExpressionCustom>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionCustom::StaticClass(), Asset, -1300.0f, 0.0f));
+		UVTransformExpression->Description = UVTransform;
+	}
+
+	if (UVTransformExpression)
+	{
+		const FName UVGradient("UVGradient");
+		UVTransformExpression->OutputType = CMOT_Float1;
+		if (UVTransformExpression->Inputs.Num() == 0)
+		{
+			FCustomInput InputU;
+			InputU.InputName = UVGradient;
+			UVTransformExpression->Inputs.Add(InputU);
+			UVTransformExpression->Inputs[0].Input.Connect(0, UVExpression);
+		}
+		else
+		{
+			UVTransformExpression->Inputs[0].InputName = UVGradient;
+			UVTransformExpression->Inputs[0].Input.Connect(0, UVExpression);
+		}
+
+
+		const FVector2D Center = Paint->GradientHandlePositions[0].ToVector2D();
+		const FVector2D Width = Paint->GradientHandlePositions[1].ToVector2D() - Center;
+		const FVector2D Height = Paint->GradientHandlePositions[2].ToVector2D() - Center;
+		const float Radius1 = Width.Size();
+		const float Radius2 = Height.Size();
+
+		UVTransformExpression->Code = "float2 Center = float2(" + FString::SanitizeFloat(Center.X) + ", " + FString::SanitizeFloat(Center.Y) + ");\n";
+		UVTransformExpression->Code += "float2 AxisX = float2(" + FString::SanitizeFloat(Width.X / Radius1) + ", " + FString::SanitizeFloat(Width.Y / Radius1) + ");\n";
+		UVTransformExpression->Code += "float2 AxisY = float2(" + FString::SanitizeFloat(Width.Y / Radius1) + ", " + FString::SanitizeFloat(-Width.X / Radius1) + ");\n";
+		UVTransformExpression->Code += "float2 Radii = float2(" + FString::SanitizeFloat(Radius1) + ", " + FString::SanitizeFloat(Radius2) + ");\n";
+
+		UVTransformExpression->Code += "float2 Gradient = UVGradient-Center;\n";
+		UVTransformExpression->Code += "float2 LocalGradient = float2(dot(Gradient, AxisX) * (1.0 / Radii.x), dot(Gradient, AxisY) * (1.0 / Radii.y));\n\n";
+
+		UVTransformExpression->Code += "float Result = atan2(LocalGradient.y, -LocalGradient.x) / (2.0 * 3.14159265358979323846) + 0.5;\n";
+		UVTransformExpression->Code += "Result = smoothstep(0, 1, clamp(Result, 0.0f, 1.0f));\n";
+		UVTransformExpression->Code += "return Result;";
+	}
+
+	return UVTransformExpression;
+}
 UMaterialExpression* UMaterialBuilder::SetupColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const
 {
 	if (!Paint)

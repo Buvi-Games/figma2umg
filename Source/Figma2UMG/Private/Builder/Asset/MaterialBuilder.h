@@ -28,6 +28,7 @@ protected:
 	UMaterialExpression* SetupLinearGradientInput(int& OutputIndex) const;
 	UMaterialExpression* SetupLinearGradientCustomInput(UMaterialExpressionMaterialFunctionCall* LinearGradientExpression) const;
 	UMaterialExpression* SetupRadialGradientInput(int& OutputIndex) const;
+	UMaterialExpression* SetupAngularGradientInput(int& OutputIndex) const;
 
 	UMaterialExpression* SetupColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const;
 	UMaterialExpression* SetupGradientColorExpression(UMaterialExpression* PositionInput, const int OutputIndex) const;
