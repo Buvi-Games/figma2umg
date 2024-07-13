@@ -327,7 +327,7 @@ UMaterialExpression* UMaterialBuilder::SetupRadialGradientInput(int& OutputIndex
 			UVTransformExpression->Code += "float2 LocalGradient = float2(dot(Gradient, AxisX) * (1.0 / Radii.x), dot(Gradient, AxisY) * (1.0 / Radii.y));\n\n";
 
 			UVTransformExpression->Code += "float Result = length(LocalGradient);\n";
-			UVTransformExpression->Code += "Result = clamp(Result, 0.0f, 1.0f);\n";
+			UVTransformExpression->Code += "Result = smoothstep(0, 1, clamp(Result, 0.0f, 1.0f));\n";
 			UVTransformExpression->Code += "return Result;";
 		}
 	}
