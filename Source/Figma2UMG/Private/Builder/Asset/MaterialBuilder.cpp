@@ -93,6 +93,15 @@ void UMaterialBuilder::SetPaint(const FFigmaPaint* InPaint)
 void UMaterialBuilder::Setup() const
 {
 	Asset->MaterialDomain = MD_UI;
+	if (HasAlpha())
+	{
+		Asset->BlendMode = BLEND_Translucent;
+	}
+	else
+	{
+		Asset->BlendMode = BLEND_Opaque;
+	}
+
 	FMaterialEditorUtilities::InitExpressions(Asset);
 	
 	int OutputIndex = 0;
@@ -100,6 +109,16 @@ void UMaterialBuilder::Setup() const
 	if (UMaterialExpression* GradientExpression = SetupColorExpression(PositionInput, OutputIndex))
 	{
 		Asset->GetEditorOnlyData()->EmissiveColor.Connect(0, GradientExpression);
+
+		if (Asset->BlendMode == BLEND_Translucent)
+		{
+			UMaterialExpression* MaskA = SetupMaskExpression(GradientExpression, 0, 0, 0, 1, -300, 200);
+			if (MaskA)
+			{
+				Asset->GetEditorOnlyData()->Opacity.Connect(0, MaskA);
+			}
+		}
+
 		Asset->PreEditChange(NULL);
 		Asset->PostEditChange();
 	}
@@ -113,6 +132,20 @@ void UMaterialBuilder::Setup() const
 	//{
 	//	Asset->MaterialGraph->RebuildGraph();
 	//}
+}
+
+bool UMaterialBuilder::HasAlpha() const
+{
+	if (!Paint)
+		return false;
+
+	for (const FFigmaColorStop& ColorStop : Paint->GradientStops)
+	{
+		if (ColorStop.Color.A < 1.0f)
+			return true;
+	}
+
+	return false;
 }
 
 UMaterialExpression* UMaterialBuilder::SetupGradientInput(int& OutputIndex) const
@@ -499,6 +532,40 @@ UMaterialExpression* UMaterialBuilder::SetupUVInputExpression(float NodePosX /*=
 	}
 
 	return MaskR;
+}
+
+UMaterialExpression* UMaterialBuilder::SetupMaskExpression(UMaterialExpression* InputExpression, uint32 R, uint32 G, uint32 B, uint32 A, float NodePosX, float NodePosY) const
+{
+	if (!InputExpression)
+		return nullptr;
+
+	UMaterialExpressionComponentMask* Mask = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		UMaterialExpressionComponentMask* PossibleMask = Cast<UMaterialExpressionComponentMask>(Expression);
+		if (PossibleMask && PossibleMask->Input.Expression == InputExpression)
+		{
+			Mask = PossibleMask;
+			break;
+		}
+	}
+
+	if (!Mask)
+	{
+		Mask = Cast<UMaterialExpressionComponentMask>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionComponentMask::StaticClass(), Asset, NodePosX, NodePosY));
+	}
+
+
+	if (InputExpression && Mask)
+	{
+		Mask->R = R;
+		Mask->G = G;
+		Mask->B = B;
+		Mask->A = A;
+		Mask->Input.Connect(0, InputExpression);
+	}
+
+	return Mask;
 }
 
 UMaterialExpressionMaterialFunctionCall* UMaterialBuilder::SetupMaterialFunction(const FString& FunctionPath, float NodePosX /*= -1200.0f*/) const
