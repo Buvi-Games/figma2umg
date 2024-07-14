@@ -11,6 +11,8 @@
 #include "Engine/UserInterfaceSettings.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Nodes/Vectors/FigmaText.h"
+#include "Engine/Font.h"
+#include "Engine/ObjectLibrary.h"
 
 void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
@@ -35,6 +37,13 @@ void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widge
 	}
 
 	Insert(WidgetTree, WidgetToPatch, Widget);
+
+	if (FontObjectLibrary == nullptr)
+	{
+		FontObjectLibrary = UObjectLibrary::CreateLibrary(UFont::StaticClass(), false, GIsEditor);
+		FontObjectLibrary->LoadAssetDataFromPath(TEXT("/Game")); // You can specify the path where your assets are located
+		FontObjectLibrary->LoadAssetDataFromPath(TEXT("/Script/Engine.Font"));
+	}
 
 	Setup();
 }
@@ -106,10 +115,33 @@ void UTextBlockWidgetBuilder::SetStyle(const FFigmaTypeStyle& Style) const
 #endif
 	}
 
-	FSlateFontInfo Font = Widget->GetFont();
-	Font.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
-	Font.LetterSpacing = Style.LetterSpacing;
-	Widget->SetFont(Font);
+	FSlateFontInfo FontInfo = Widget->GetFont();
+	TArray<FAssetData> AssetDatas;
+	FontObjectLibrary->GetAssetDataList(AssetDatas);
+
+	const FString FontFamily = Style.FontFamily.Replace(TEXT(" "), TEXT(""));	
+	for (const FAssetData& AssetData : AssetDatas)
+	{
+		UObject* Asset = AssetData.GetAsset();
+		UFont* Font = Cast<UFont>(Asset);
+		if (Font && Font->GetName().Equals(FontFamily, ESearchCase::IgnoreCase))
+		{
+			FontInfo.FontObject = Font;
+		}
+	}
+
+	//if (Style.FontPostScriptName.IsEmpty())
+	//{
+	//	FontInfo.TypefaceFontName = "Default";
+	//}
+	//else
+	//{
+	//	FontInfo.TypefaceFontName = Style.FontPostScriptName;
+	//}
+
+	FontInfo.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
+	FontInfo.LetterSpacing = Style.LetterSpacing;
+	Widget->SetFont(FontInfo);
 }
 
 float UTextBlockWidgetBuilder::ConvertFontSizeFromDisplayToNative(float DisplayFontSize) const
