@@ -6,6 +6,9 @@
 
 #include "FigmaNode.generated.h"
 
+struct FFigmaPaint;
+class IWidgetBuilder;
+class IAssetBuilder;
 class UWidgetBlueprint;
 class UFigmaFile;
 class UWidgetTree;
@@ -50,38 +53,60 @@ public:
 
 	//virtual void PostInsert(UWidget* Widget) const;
 
-	virtual void PrePatchWidget();
-	virtual TObjectPtr<UWidget> PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch);
-	virtual void SetWidget(TObjectPtr<UWidget> WidgetToPatch);
-	virtual void InsertSubWidgets();
-	virtual void PatchPostInsertWidget();
-	void PostPatchWidget();
+	virtual void PrepareForFlow();
 
 	FString GetId() const { return Id; }
 	FString GetIdForName() const;
 
 	FString GetNodeName() const;
 	FString GetUniqueName() const;
+	virtual FString GetUAssetName() const;
 	ESlateVisibility GetVisibility() const;
 
 	FVector2D GetPosition() const;
 
 	virtual FVector2D GetAbsolutePosition() const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D::ZeroVector;)
+	virtual FVector2D GetAbsoluteSize() const PURE_VIRTUAL(UFigmaNode::GetAbsoluteSize(), return FVector2D::ZeroVector;)
 
 	void SetCurrentPackagePath(const FString & InPackagePath);
 	virtual FString GetCurrentPackagePath() const;
 
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const;
 
-	virtual UObject* GetAssetOuter() const;
 	TObjectPtr<UFigmaNode> GetParentNode() const { return ParentNode; }
 	TObjectPtr<UFigmaNode> FindTypeByID(const UClass* Class, const FString& ID);
+	TObjectPtr<UWidget> FindWidgetForNode(const TObjectPtr<UPanelWidget>& ParentWidget) const;
 
 	void ProcessComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget) const;
 
 	const TMap<FString, FString>& GetComponentPropertyReferences() const { return ComponentPropertyReferences; }
+
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) { return false; }
+	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const { return FString(); }
+	void CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, TArray<FFigmaPaint>& InFills) const;
+
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const { return nullptr; }
+
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
+
+	template<class PropertyT>
+	void PostSerializeProperty(const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName, TArray<PropertyT>& PropertyArray) const
+	{
+		if (JsonObj->HasTypedField<EJson::Array>(ArrayName))
+		{
+			const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField(ArrayName);
+			for (int i = 0; i < ArrayJson.Num() && PropertyArray.Num(); i++)
+			{
+				const TSharedPtr<FJsonValue>& Item = ArrayJson[i];
+				if (Item.IsValid() && Item->Type == EJson::Object)
+				{
+					const TSharedPtr<FJsonObject>& ItemObject = Item->AsObject();
+					PropertyArray[i].PostSerialize(ItemObject);
+				}
+			}
+		}
+	}
 
 	UFigmaNode* CreateNode(const TSharedPtr<FJsonObject>& JsonObj);
 
@@ -113,13 +138,13 @@ private:
 	UPROPERTY()
 	FString SharedPluginData;
 
-protected:
 	UPROPERTY()
 	TMap<FString, FString> ComponentPropertyReferences;
 
 	//boundVariablesMap - beta
 	//explicitVariableModesMap - beta
-
+	
+protected:
 	UPROPERTY()
 	FString ScrollBehaviour; //Not in doc
 };

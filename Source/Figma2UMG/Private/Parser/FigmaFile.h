@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -9,6 +9,7 @@
 
 #include "FigmaFile.generated.h"
 
+class IAssetBuilder;
 struct FImageRequests;
 class UFigmaDocument;
 
@@ -20,9 +21,7 @@ class UFigmaFile : public UObject
 public:
 	GENERATED_BODY()
 
-	void PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> JsonObj);
-
-	void ConvertToAssets();
+	void PostSerialize(const FString& InFileKey, const FString& InPackagePath, const TSharedRef<FJsonObject> JsonObj);
 
 	FString GetFileName() const { return Name; }
 	FString GetPackagePath() const { return PackagePath; }
@@ -35,12 +34,10 @@ public:
 	FFigmaComponentSetRef* FindComponentSetRef(const FString& ComponentSetId);
 	TObjectPtr<UFigmaComponentSet> FindComponentSetByKey(const FString& Key);
 
+	void PrepareForFlow();
 	void FixComponentSetRef();
 	void FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
-	void LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate);
-	void BuildImageDependency(FString FileKey, FImageRequests& ImageRequests);
-	void Patch(const FProcessFinishedDelegate& ProcessDelegate);
-	void PostPatch(const FProcessFinishedDelegate& ProcessDelegate);
+	void CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders);
 
 	template<class NodeType>
 	TObjectPtr<NodeType> FindByID(FString ID)
@@ -61,17 +58,7 @@ protected:
 	void AddRemoteComponentSet(FFigmaComponentSetRef& ComponentSetRef, const TPair<FString, TObjectPtr<UFigmaFile>>& LibraryFile, TObjectPtr<UFigmaComponentSet> ComponentSet, TMap<FString, FFigmaComponentRef>& PendingComponents, TMap<FString, FFigmaComponentSetRef>& PendingComponentSets);
 	void ExecuteDelegate(const bool Succeeded);
 
-	void PatchPreInsertWidget();
-	bool PatchPostInsertWidget();
-
-	void PatchWidgetProperties() const;
-	void PatchWidgetBinds();
-
-	void CompileBPs();
-	void ReloadBPAssets();
-	void ResetWidgets();
-	void LoadAssets();
-	void FindWidgets();
+	void CreateAssetBuilder(UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders);
 
 	UPROPERTY()
 	int SchemaVersion = 0;
@@ -109,6 +96,7 @@ protected:
 	UPROPERTY()
 	TMap<FString, FFigmaStyleRef> Styles;//Not sure if this is correct, probably not
 
+	FString FileKey;
 	FString PackagePath;
 
 	FProcessFinishedDelegate CurrentProcessDelegate;

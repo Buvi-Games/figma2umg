@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -22,6 +22,9 @@ public:
 	DECLARE_DELEGATE_TwoParams(FOnEachFunction, UFigmaNode&, const int)
 	void ForEach(const FOnEachFunction& Function);
 
+	DECLARE_DELEGATE_TwoParams(FOnConstEachFunction, const UFigmaNode&, const int)
+	void ForEach(const FOnConstEachFunction& Function) const;
+
 	template<class NodeType>
 	void GetAllChildrenByType(TArray<NodeType*>& AllFiles);
 
@@ -30,6 +33,9 @@ public:
 
 	UFUNCTION()
 	virtual TArray<UFigmaNode*>& GetChildren() = 0;
+
+	UFUNCTION()
+	virtual const TArray<UFigmaNode*>& GetChildrenConst() const = 0;
 };
 
 template <class NodeType>

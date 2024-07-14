@@ -1,9 +1,12 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "REST/FigmaImporter.h"
+
+class IDetailsView;
+class SGridPanel;
 
 class SImporterWidget : public SCompoundWidget, public FNotifyHook
 {

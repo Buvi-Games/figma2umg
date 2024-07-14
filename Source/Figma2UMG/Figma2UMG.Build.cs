@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 using UnrealBuildTool;
 
@@ -7,8 +7,9 @@ public class Figma2UMG : ModuleRules
 	public Figma2UMG(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
-		
-		PublicIncludePaths.AddRange(
+        //bUsePrecompiled = true;
+
+        PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
 			}
@@ -47,6 +48,7 @@ public class Figma2UMG : ModuleRules
                 "EditorStyle",
                 "UnrealEd",
                 "BlueprintGraph",
+                "MaterialEditor",
                 "ToolMenus",
                 "ContentBrowserData",
                 "VaRest",
@@ -78,7 +80,7 @@ public class Figma2UMG : ModuleRules
     {
         get
         {
-            return (Target.Platform.IsInGroup(UnrealPlatformGroup.Windows) && !Target.WindowsPlatform.bUseXCurl) ||
+            return (Target.Platform.IsInGroup(UnrealPlatformGroup.Windows) /*&& !Target.WindowsPlatform.bUseXCurl For 5.2. Remove this when 5.2 is not supported anymore*/) ||
                    Target.IsInPlatformGroup(UnrealPlatformGroup.Unix) ||
                    Target.IsInPlatformGroup(UnrealPlatformGroup.Android);
         }

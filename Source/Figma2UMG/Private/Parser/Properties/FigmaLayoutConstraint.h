@@ -1,8 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaEnums.h"
 
 #include "FigmaLayoutConstraint.generated.h"
 
@@ -12,5 +13,9 @@ struct FIGMA2UMG_API FFigmaLayoutConstraint
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	EFigmaLayoutConstraintVertical Vertical;
+
+	UPROPERTY()
+	EFigmaLayoutConstraintHorizontal Horizontal;
 };

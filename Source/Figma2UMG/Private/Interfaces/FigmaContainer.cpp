@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "Interfaces/FigmaContainer.h"
@@ -10,6 +10,19 @@ void IFigmaContainer::ForEach(const FOnEachFunction& Function)
 	{
 		UFigmaNode* Child = Children[i];
 		if(!Child)
+			continue;
+
+		Function.Execute(*Child, i);
+	}
+}
+
+void IFigmaContainer::ForEach(const FOnConstEachFunction& Function) const
+{
+	const TArray<UFigmaNode*>& Children = GetChildrenConst();
+	for (int i = 0; i < Children.Num(); i++)
+	{
+		const UFigmaNode* Child = Children[i];
+		if (!Child)
 			continue;
 
 		Function.Execute(*Child, i);

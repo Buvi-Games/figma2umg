@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -15,11 +15,25 @@
 #include "FigmaPaint.generated.h"
 
 
+class UFigmaNode;
+class IAssetBuilder;
+
 USTRUCT()
 struct FIGMA2UMG_API FFigmaPaint
 {
 public:
 	GENERATED_BODY()
+
+	void PostSerialize(const TSharedPtr<FJsonObject> JsonObj);
+
+	FLinearColor GetLinearColor() const
+	{
+		return FLinearColor(Color.R, Color.G, Color.B, Opacity);
+	}
+
+	void CreateAssetBuilder(const FString& InFileKey, const UFigmaNode* OwnerNode, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders);
+	TObjectPtr<UTexture2D> GetTexture() const;
+	TObjectPtr<UMaterial> GetMaterial() const;
 
 	UPROPERTY()
 	EPaintTypes Type;
@@ -28,24 +42,23 @@ public:
 	bool Visible = true;
 
 	UPROPERTY()
-	float Opacity;
+	float Opacity = 1.0f;
 
 	UPROPERTY()
 	FFigmaColor Color;
 
 	UPROPERTY()
-	EFigmaBlendMode blendMode;
+	EFigmaBlendMode BlendMode;
 
 	UPROPERTY()
-	FFigmaVector GradientHandlePositions;
+	TArray<FFigmaVector> GradientHandlePositions;
 
 	UPROPERTY()
-	FFigmaColorStop GradientStops;
+	TArray<FFigmaColorStop> GradientStops;
 
 	UPROPERTY()
 	EScaleMode ScaleMode;
 
-	UPROPERTY()
 	FFigmaTransform ImageTransform;
 
 	UPROPERTY()
@@ -65,4 +78,7 @@ public:
 
 	UPROPERTY()
 	TMap<FString, FFigmaVariableAlias> BoundVariables;
+
+protected:
+	TScriptInterface<IAssetBuilder> AssetBuilder = nullptr;
 };

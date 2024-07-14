@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -8,13 +8,29 @@
 
 #include "FigmaFrame.generated.h"
 
+class UWidgetBlueprintBuilder;
+
 UCLASS()
 class UFigmaFrame : public  UFigmaGroup
 {
 public:
 	GENERATED_BODY()
 
+	void SetGenerateFile(bool Value = true);
+
+	// UFigmaNode
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
+	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const override;
+
+	const TObjectPtr<UWidgetBlueprintBuilder>& GetAssetBuilder() const;
 protected:
+
 	UPROPERTY()
 	TArray<FFigmaLayoutGrid> LayoutGrids;
+
+	UPROPERTY()
+	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;
+
+	bool GenerateFile = false;
 };

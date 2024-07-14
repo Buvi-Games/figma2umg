@@ -1,12 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "UI/SImporterWidget.h"
 
 #include "FigmaImportSubsystem.h"
-#include "TimerManager.h"
 #include "REST/RequestParams.h"
-#include <Figma2UMGModule.h>
+#include "TimerManager.h"
+#include "Figma2UMGModule.h"
+
+#include "Widgets/Layout/SGridPanel.h"
 
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 

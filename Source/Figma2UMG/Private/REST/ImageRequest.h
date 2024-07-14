@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -9,7 +9,7 @@
 
 
 DECLARE_DELEGATE_OneParam(FOnImageRequestCompleteDelegate, bool);
-DECLARE_DELEGATE_OneParam(FOnRawImageReceiveDelegate, TArray<uint8>& );
+DECLARE_DELEGATE_OneParam(FOnRawImageReceiveDelegate, const TArray<uint8>& );
 
 USTRUCT()
 struct FImageRequest
@@ -62,6 +62,7 @@ public:
 	void SetURL(const FString& Id, const FString& URL);
 
 	FImageRequest* GetNextToDownload();
+	int GetCurrentRequestTotalCount() const;	
 
 private:
 	UPROPERTY()

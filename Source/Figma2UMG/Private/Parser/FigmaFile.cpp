@@ -1,22 +1,25 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "Parser/FigmaFile.h"
 
 #include "Figma2UMGModule.h"
-#include "Interfaces/FigmaImageRequester.h"
+#include "Async/Async.h"
+#include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Nodes/FigmaDocument.h"
 #include "Nodes/FigmaInstance.h"
 #include "Properties/FigmaComponentRef.h"
 
 
-void UFigmaFile::PostSerialize(const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)
+void UFigmaFile::PostSerialize(const FString& InFileKey, const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)
 {
+	static FString DocumentStr("Document");
+	FileKey = InFileKey;
 	PackagePath = InPackagePath;
 	if(Document)
 	{
 		Document->SetFigmaFile(this);
-		Document->PostSerialize(nullptr, fileJsonObject->GetObjectField("Document").ToSharedRef());
+		Document->PostSerialize(nullptr, fileJsonObject->GetObjectField(DocumentStr).ToSharedRef());
 	}
 }
 
@@ -96,6 +99,14 @@ TObjectPtr<UFigmaComponentSet> UFigmaFile::FindComponentSetByKey(const FString& 
 	return nullptr;
 }
 
+void UFigmaFile::PrepareForFlow()
+{
+	if (!Document)
+		return;
+
+	Document->PrepareForFlow();
+}
+
 void UFigmaFile::FixComponentSetRef()
 {
 	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
@@ -118,6 +129,38 @@ void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>
 {
 	FixRemoteComponentSetReferences(LibraryFiles);
 	FixRemoteComponentReferences(LibraryFiles);
+
+	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	{
+		if (!ComponentSetPair.Value.Remote)
+			continue;
+
+		TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
+		if (ComponentSet)
+		{
+			TObjectPtr<UFigmaFile> OriginalFile = ComponentSet->GetFigmaFile();
+			if (OriginalFile && OriginalFile->Components.Contains(ComponentSetPair.Key))
+			{
+				OriginalFile->ComponentSets[ComponentSetPair.Key].SetComponentSet(ComponentSet);
+			}
+		}
+	}
+
+	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
+	{
+		if (!ComponentPair.Value.Remote)
+			continue;
+
+		TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
+		if (Component)
+		{
+			TObjectPtr<UFigmaFile> OriginalFile = Component->GetFigmaFile();
+			if (OriginalFile && OriginalFile->Components.Contains(ComponentPair.Key))
+			{
+				OriginalFile->Components[ComponentPair.Key].SetComponent(Component);
+			}
+		}
+	}
 }
 
 void UFigmaFile::FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
@@ -198,12 +241,12 @@ void UFigmaFile::FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<
 	}
 }
 
-void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDelegate)
+void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDelegate, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	CurrentProcessDelegate = ProcessDelegate;
-
-	AsyncTask(ENamedThreads::GameThread, [this]()
+	AsyncTask(ENamedThreads::GameThread, [&]()
 		{
+			FGCScopeGuard GCScopeGuard;
 			for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
 			{
 				if (!ComponentSetPair.Value.Remote)
@@ -212,12 +255,10 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 				TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
 				if (ComponentSet)
 				{
-					ComponentSet->LoadOrCreateAssets(this);
-					UWidgetBlueprint* Asset = ComponentSet->GetAsset<UWidgetBlueprint>();
-					TObjectPtr<UFigmaFile> OriginalFile = ComponentSet->GetFigmaFile();
-					if (OriginalFile && OriginalFile->Components.Contains(ComponentSetPair.Key))
+					;
+					if (!ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey, AssetBuilders))
 					{
-						OriginalFile->ComponentSets[ComponentSetPair.Key].SetComponentSet(ComponentSet);
+						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] ComponentSet %s Id %s failed to return a AssetBuilder"), *ComponentSet->GetNodeName(), *ComponentSet->GetIdForName());
 					}
 				}
 			}
@@ -230,125 +271,16 @@ void UFigmaFile::LoadOrCreateAssets(const FProcessFinishedDelegate& ProcessDeleg
 				TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
 				if (Component)
 				{
-					Component->LoadOrCreateAssets(this);
-					UWidgetBlueprint* Asset = Component->GetAsset<UWidgetBlueprint>();
-					TObjectPtr<UFigmaFile> OriginalFile = Component->GetFigmaFile();
-					if (OriginalFile && OriginalFile->Components.Contains(ComponentPair.Key))
+					if (!Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey, AssetBuilders))
 					{
-						OriginalFile->Components[ComponentPair.Key].SetComponent(Component);
+						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] Component %s Id %s failed to return a AssetBuilder"), *Component->GetNodeName(), *Component->GetIdForName());
 					}
 				}
 			}
 
 			if (Document)
 			{
-						TArray<IFigmaFileHandle*> AllFiles;
-						AllFiles.Add(Document);
-						Document->GetAllChildrenByType(AllFiles);
-
-						FGCScopeGuard GCScopeGuard;
-						for (IFigmaFileHandle* FileNode : AllFiles)
-						{
-							FileNode->LoadOrCreateAssets(this);
-						}
-
-						ExecuteDelegate(true);
-			}
-			else
-			{
-				ExecuteDelegate(false);
-			}
-		});
-}
-
-void UFigmaFile::BuildImageDependency(FString FileKey, FImageRequests& ImageRequests)
-{
-	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-	{
-		if (!ComponentPair.Value.Remote)
-			continue;
-
-		if (ComponentPair.Value.RemoteFileKey.IsEmpty())
-			continue;
-
-		if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
-		{
-			TArray<IFigmaImageRequester*> ComponentImageRequests;
-			Component->GetAllChildrenByType(ComponentImageRequests);
-			for (IFigmaImageRequester* FileNode : ComponentImageRequests)
-			{
-				FileNode->AddImageRequest(ComponentPair.Value.RemoteFileKey, ImageRequests);
-			}
-		}
-	}
-
-	TArray<IFigmaImageRequester*> AllImageRequests;
-	if (Document)
-	{
-		Document->GetAllChildrenByType(AllImageRequests);
-	}
-
-	FGCScopeGuard GCScopeGuard;
-	for (IFigmaImageRequester* FileNode : AllImageRequests)
-	{
-		FileNode->AddImageRequest(FileKey, ImageRequests);
-	}
-}
-
-void UFigmaFile::Patch(const FProcessFinishedDelegate& ProcessDelegate)
-{
-	CurrentProcessDelegate = ProcessDelegate;
-	AsyncTask(ENamedThreads::GameThread, [this]()
-		{
-			FGCScopeGuard GCScopeGuard;
-
-			PatchPreInsertWidget();
-			if (PatchPostInsertWidget())
-			{
-				CompileBPs();
-				ReloadBPAssets();
-				PatchWidgetBinds();
-				PatchWidgetProperties();
-
-				ExecuteDelegate(true);
-			}
-			else
-			{
-				ExecuteDelegate(false);
-			}
-		});
-}
-
-void UFigmaFile::PostPatch(const FProcessFinishedDelegate& ProcessDelegate)
-{
-	CurrentProcessDelegate = ProcessDelegate;
-	AsyncTask(ENamedThreads::GameThread, [this]()
-		{
-			for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
-			{
-				if (!ComponentSetPair.Value.Remote)
-					continue;
-
-				if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
-				{
-					ComponentSet->PostPatchWidget();
-				}
-			}
-
-			for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-			{
-				if (!ComponentPair.Value.Remote)
-					continue;
-
-				if (TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
-				{
-					Component->PostPatchWidget();
-				}
-			}
-
-			if (Document)
-			{
-				Document->PostPatchWidget();
+				CreateAssetBuilder(*Document, AssetBuilders);
 
 				ExecuteDelegate(true);
 			}
@@ -386,18 +318,18 @@ void UFigmaFile::AddRemoteComponent(FFigmaComponentRef& ComponentRef, const TPai
 
 	for (UFigmaInstance* SubInstance : SubInstances)
 	{
-		if (PendingComponents.Contains(SubInstance->GetComponentId()))
+		if (PendingComponents.Contains(SubInstance->ComponentId))
 			continue;
 
-		if (LibraryFile.Value->Components.Contains(SubInstance->GetComponentId()))
+		if (LibraryFile.Value->Components.Contains(SubInstance->ComponentId))
 		{
-			UE_LOG_Figma2UMG(Display, TEXT("[Component] Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->GetComponentId());
-			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubInstance->GetComponentId()];
+			UE_LOG_Figma2UMG(Display, TEXT("[Component] Adding dependency to Component %s id %s"), *SubInstance->GetNodeName(), *SubInstance->ComponentId);
+			FFigmaComponentRef& RemoteCommponentRef = LibraryFile.Value->Components[SubInstance->ComponentId];
 			if (!RemoteCommponentRef.Remote)
 			{
 				RemoteCommponentRef.RemoteFileKey = LibraryFile.Key;
 			}
-			FFigmaComponentRef& SubComponentRef = PendingComponents.Add(SubInstance->GetComponentId(), RemoteCommponentRef);
+			FFigmaComponentRef& SubComponentRef = PendingComponents.Add(SubInstance->ComponentId, RemoteCommponentRef);
 		}
 	}
 }
@@ -458,260 +390,16 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	}
 }
 
-void UFigmaFile::PatchPreInsertWidget()
+void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
+	Node.CreateAssetBuilder(FileKey, AssetBuilders);
+
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(&Node))
 	{
-		if (!ComponentSetPair.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
-		{
-			ComponentSet->PatchPreInsertWidget(nullptr);
-		}
-	}
-
-	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-	{
-		if (!ComponentPair.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
-		{
-			Component->PatchPreInsertWidget(nullptr);
-		}
-	}
-
-	if (Document)
-	{
-		Document->PatchPreInsertWidget(nullptr);
+		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([&](UFigmaNode& ChildNode, const int Index)
+			{
+				CreateAssetBuilder(ChildNode, AssetBuilders);
+			}));
 	}
 }
 
-bool UFigmaFile::PatchPostInsertWidget()
-{
-	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
-	{
-		if (!ComponentSetPair.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
-		{
-			ComponentSet->PatchPostInsertWidget();
-		}
-	}
-
-	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-	{
-		if (!ComponentPair.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
-		{
-			Component->PatchPostInsertWidget();
-		}
-	}
-
-	if (Document)
-	{
-		Document->PatchPostInsertWidget();
-		return true;
-	}
-	return false;
-}
-
-void UFigmaFile::PatchWidgetBinds()
-{
-	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
-	{
-		TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
-		TObjectPtr<UWidgetBlueprint> WidgetBP = ComponentSetPair.Value.GetAsset();
-		if (!ComponentSet || !WidgetBP)
-			continue;
-
-		ComponentSet->PatchBinds();
-	}
-
-	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-	{
-		TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
-		TObjectPtr<UWidgetBlueprint> WidgetBP = ComponentPair.Value.GetAsset();
-		if (!Component || !WidgetBP)
-			continue;
-
-		Component->PatchBinds();
-	}
-}
-
-void UFigmaFile::PatchWidgetProperties() const
-{
-	TArray<UFigmaInstance*> AllInstances;
-	for (const TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
-	{
-		TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
-		if (!ComponentSet || !ComponentSetPair.Value.Remote)
-			continue;
-
-		ComponentSet->GetAllChildrenByType(AllInstances);
-	}
-
-	for (const TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-	{
-		TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
-		if (!Component || !ComponentPair.Value.Remote)
-			continue;
-
-		Component->GetAllChildrenByType(AllInstances);
-	}
-
-	if (Document)
-	{
-		Document->GetAllChildrenByType(AllInstances);
-	}
-
-	for (UFigmaInstance* FigmaInstance : AllInstances)
-	{
-		FigmaInstance->PatchComponentProperty();
-	}
-}
-
-void UFigmaFile::CompileBPs()
-{
-	for (TPair<FString, FFigmaComponentRef>& ComponentRef : Components)
-	{
-		if (!ComponentRef.Value.Remote)
-			continue;
-
-		if (TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
-		{
-			Component->CompileBP(Component->GetNodeName());
-		}
-	}
-
-	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetRef : ComponentSets)
-	{
-		if (!ComponentSetRef.Value.Remote)
-			continue;
-
-		if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
-		{
-			ComponentSet->CompileBP(ComponentSet->GetNodeName());
-		}
-	}
-
-	TArray<IFigmaFileHandle*> AllUAssets;
-	if (Document)
-	{
-		AllUAssets.Add(Document);
-		Document->GetAllChildrenByType(AllUAssets);
-	}
-
-	for (IFigmaFileHandle* FigmaInstance : AllUAssets)
-	{
-		FigmaInstance->CompileBP(Cast<UFigmaNode>(FigmaInstance)->GetNodeName());
-	}
-}
-
-void UFigmaFile::ReloadBPAssets()
-{
-	ResetWidgets();
-	LoadAssets();
-	FindWidgets();
-}
-
-void UFigmaFile::ResetWidgets()
-{
-	TArray<IWidgetOwner*> AllWidgets;
-	if (Document)
-	{
-		Document->GetAllChildrenByType(AllWidgets);
-	}
-
-	for (IWidgetOwner* FigmaInstance : AllWidgets)
-	{
-		FigmaInstance->Reset();
-	}
-
-	for (TPair<FString, FFigmaComponentRef>& ComponentRef : Components)
-	{
-		if (TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
-		{
-			Component->Reset();
-		}
-	}
-
-	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetRef : ComponentSets)
-	{
-		if (TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
-		{
-			ComponentSet->Reset();
-		}
-	}
-}
-
-void UFigmaFile::LoadAssets()
-{
-	TArray<IFigmaFileHandle*> AllUAssets;
-	if (Document)
-	{
-		AllUAssets.Add(Document);
-		Document->GetAllChildrenByType(AllUAssets);
-	}
-
-	for (IFigmaFileHandle* FigmaInstance : AllUAssets)
-	{
-		FigmaInstance->LoadAssets();
-	}
-
-	for (TPair<FString, FFigmaComponentRef>& ComponentRef : Components)
-	{
-		if (!ComponentRef.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponent> Component = ComponentRef.Value.GetComponent())
-		{
-			Component->LoadAssets();
-		}
-	}
-
-	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetRef : ComponentSets)
-	{
-		if (!ComponentSetRef.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetRef.Value.GetComponentSet())
-		{
-			ComponentSet->LoadAssets();
-		}
-	}
-}
-
-void UFigmaFile::FindWidgets()
-{
-	for (TPair<FString, FFigmaComponentSetRef>& ComponentSetPair : ComponentSets)
-	{
-		if (!ComponentSetPair.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet())
-		{
-			ComponentSet->SetWidget(nullptr);
-		}
-	}
-
-	for (TPair<FString, FFigmaComponentRef>& ComponentPair : Components)
-	{
-		if (!ComponentPair.Value.Remote)
-			continue;
-
-		if (const TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent())
-		{
-			Component->SetWidget(nullptr);
-		}
-	}
-
-	if (Document)
-	{
-		Document->SetWidget(nullptr);
-	}
-}

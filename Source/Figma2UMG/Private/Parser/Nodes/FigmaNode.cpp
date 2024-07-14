@@ -1,8 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "Parser/Nodes/FigmaNode.h"
 
+#include "Figma2UMGModule.h"
 #include "FigmaCanvas.h"
 #include "FigmaComponent.h"
 #include "FigmaComponentSet.h"
@@ -14,13 +15,12 @@
 #include "FigmaShapeWithText.h"
 #include "FigmaSlice.h"
 #include "FigmaSticky.h"
-#include "FileHelpers.h"
 #include "JsonObjectConverter.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
-#include "Builder/WidgetBlueprintBuilder.h"
-#include "Interfaces/WidgetOwner.h"
-#include "Kismet2/KismetEditorUtilities.h"
+#include "Builder/WidgetBlueprintHelper.h"
+#include "Builder/Asset/MaterialBuilder.h"
+#include "Parser/FigmaFile.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
 #include "Vectors/FigmaBooleanOp.h"
@@ -47,6 +47,11 @@ FString UFigmaNode::GetNodeName() const
 FString UFigmaNode::GetUniqueName() const
 {
 	return Name + "--" + GetIdForName();
+}
+
+FString UFigmaNode::GetUAssetName() const
+{
+	return GetUniqueName();
 }
 
 ESlateVisibility UFigmaNode::GetVisibility() const
@@ -89,25 +94,6 @@ TObjectPtr<UFigmaFile> UFigmaNode::GetFigmaFile() const
 	return nullptr;
 }
 
-UObject* UFigmaNode::GetAssetOuter() const
-{
-	if (const IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
-	{
-		UObject* Outer = FileHandle->GetOuter();
-		if(Outer == nullptr && ParentNode && ParentNode->IsA<UFigmaComponentSet>())
-		{
-			return ParentNode->GetAssetOuter();
-		}
-		return Outer;
-	}
-	else if (ParentNode)
-	{
-		return ParentNode->GetAssetOuter();
-	}
-
-	return nullptr;
-}
-
 TObjectPtr<UFigmaNode> UFigmaNode::FindTypeByID(const UClass* Class, const FString& ID)
 {
 	if (this->IsA(Class) && Id == ID)
@@ -125,6 +111,34 @@ TObjectPtr<UFigmaNode> UFigmaNode::FindTypeByID(const UClass* Class, const FStri
 	}
 
 	return nullptr;
+}
+
+TObjectPtr<UWidget> UFigmaNode::FindWidgetForNode(const TObjectPtr<UPanelWidget>& ParentWidget) const
+{
+	if (!ParentWidget)
+		return nullptr;
+
+	TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
+	for (TObjectPtr<UWidget> Widget : AllChildren)
+	{
+		if (Widget == nullptr)
+			continue;
+
+		if (Widget->GetName().Contains(GetIdForName(), ESearchCase::IgnoreCase))
+		{
+			return Widget;
+		}
+	}
+
+	return nullptr;
+}
+
+void UFigmaNode::CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, TArray<FFigmaPaint>& InFills) const
+{
+	for (FFigmaPaint& Paint : InFills)
+	{
+		Paint.CreateAssetBuilder(InFileKey, this, AssetBuilders);		
+	}
 }
 
 void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName)
@@ -158,183 +172,52 @@ void UFigmaNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSha
 	}
 }
 
-void UFigmaNode::PrePatchWidget()
+void UFigmaNode::PrepareForFlow()
 {
-	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	if(!FigmaFile)
 	{
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
-			{
-				Node.PrePatchWidget();
-			}));
-	}
-	
-}
-
-TObjectPtr<UWidget> UFigmaNode::PatchPreInsertWidget(TObjectPtr<UWidget> WidgetToPatch)
-{
-	UE_LOG_Figma2UMG(Display, TEXT("PatchPreInsertWidget [%s]"), *GetUniqueName());
-
-	UPanelWidget* ParentWidget = Cast<UPanelWidget>(WidgetToPatch);
-	if(IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
-	{
-		WidgetToPatch = WidgetOwner->Patch(WidgetToPatch);
-		ParentWidget = WidgetOwner->GetContainerWidget();
+		UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] Node %s don't have a File."), *Name);
+		return;
 	}
 
-	IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this);
-	if (FigmaContainer && ParentWidget)
+	if (IFlowTransition* FlowTransition = Cast<IFlowTransition>(this))
 	{
-		FString NodeName = GetNodeName();
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, ParentWidget](UFigmaNode& ChildNode, const int Index)
-			{
-				TObjectPtr<UWidget> OldWidget = ParentWidget->GetChildAt(Index);
-				if (OldWidget == nullptr)
-				{
-					TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
-					for (TObjectPtr<UWidget> Widget : AllChildren)
-					{
-						if (Widget == nullptr)
-							continue;
-
-						if (Widget->GetName().Contains(ChildNode.GetIdForName(), ESearchCase::IgnoreCase))
-						{
-							OldWidget = Widget;
-							break;
-						}
-					}
-				}
-				TObjectPtr<UWidget> NewWidget = ChildNode.PatchPreInsertWidget(OldWidget);
-				if (NewWidget)
-				{
-					if (NewWidget != OldWidget)
-					{
-						ParentWidget->SetFlags(RF_Transactional);
-						ParentWidget->Modify();
-
-						UE_LOG_Figma2UMG(Display, TEXT("[Widget Insert] Parent [%s] Child [%s]."), *NodeName, *ChildNode.GetNodeName());
-						if (Index < ParentWidget->GetChildrenCount())
-						{
-							ParentWidget->ReplaceChildAt(Index, NewWidget);
-						}
-						else
-						{
-							ParentWidget->AddChild(NewWidget);
-						}
-					}
-				}
-			}));
-	}
-
-	return WidgetToPatch;
-}
-
-void UFigmaNode::SetWidget(TObjectPtr<UWidget> Widget)
-{
-	if (Widget)
-	{
-		UE_LOG_Figma2UMG(Display, TEXT("[SetWidget] UFigmaNode %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
-	}
-	UPanelWidget* ParentWidget = Cast<UPanelWidget>(Widget);
-	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
-	{
-		WidgetOwner->SetupWidget(Widget);
-		ParentWidget = WidgetOwner->GetContainerWidget();
-	}
-
-	IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this);
-	if (FigmaContainer && ParentWidget)
-	{
-		FString NodeName = GetNodeName();
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([NodeName, ParentWidget](UFigmaNode& ChildNode, const int Index)
-			{
-				TObjectPtr<UWidget> ChildWidget = ParentWidget->GetChildAt(Index);
-				ChildNode.SetWidget(ChildWidget);
-			}));
-	}
-}
-
-void UFigmaNode::InsertSubWidgets()
-{
-}
-
-void UFigmaNode::PatchPostInsertWidget()
-{
-	UE_LOG_Figma2UMG(Display, TEXT("PatchPostInsertWidget [%s]"), *GetUniqueName());
-
-	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
-	{
-		if (TObjectPtr<UWidget> Widget = WidgetOwner->GetTopWidget())
+		if (FlowTransition->HasTransition())
 		{
-			Widget->SetVisibility(GetVisibility());
+			const FString& NodeID = FlowTransition->GetTransitionNodeID();
+			TObjectPtr<UFigmaFrame> Frame = FigmaFile->FindByID<UFigmaFrame>(NodeID);
+			if (Frame)
+			{
+				Frame->SetGenerateFile();
+			}
+			else if (TObjectPtr<UFigmaNode> Node = FigmaFile->FindByID<UFigmaNode>(NodeID))
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's contain Node with ID %s and type %s. Expecting a UFigmaFrame type"), *Name, *NodeID, *Node->GetClass()->GetName());
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's doesn't contain Node with ID %s."), *Name, *NodeID);
+			}
 		}
-
-		WidgetOwner->PostInsert();
 	}
 
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
 	{
 		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
 			{
-				Node.PatchPostInsertWidget();
-			}));
-	}
-}
-
-void UFigmaNode::PostPatchWidget()
-{
-	if (IFigmaFileHandle* FileHandle = Cast<IFigmaFileHandle>(this))
-	{
-		UObject* Asset = FileHandle->GetAsset();
-		UObject* AssetOuter = FileHandle->GetAsset();
-		if (Asset)
-		{
-			Asset->Modify();
-		}
-		if (AssetOuter && AssetOuter != Asset)
-		{
-			AssetOuter->Modify();
-		}
-
-		if (UBlueprint * BlueprintObj = Cast<UBlueprint>(Asset))
-		{
-			FCompilerResultsLog LogResults;
-			LogResults.SetSourcePath(BlueprintObj->GetPathName());
-			LogResults.BeginEvent(TEXT("Compile"));
-			LogResults.bLogDetailedResults = true;
-
-			FKismetEditorUtilities::CompileBlueprint(BlueprintObj, EBlueprintCompileOptions::None, &LogResults);
-
-			LogResults.EndEvent();
-		}
-		else if (UTexture2D* Texture = Cast<UTexture2D>(Asset))
-		{
-			FEditorFileUtils::FPromptForCheckoutAndSaveParams Params;
-			FEditorFileUtils::PromptForCheckoutAndSave({ Texture->GetPackage() }, Params);
-		}
-
-		FileHandle->ResetAsset();
-	}
-
-	if (IWidgetOwner* WidgetOwner = Cast<IWidgetOwner>(this))
-	{
-		WidgetOwner->Reset();
-	}
-
-	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
-	{
-		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([](UFigmaNode& Node, const int Index)
-			{
-				Node.PostPatchWidget();
+				Node.PrepareForFlow();
 			}));
 	}
 }
 
 UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 {
-	if (!JsonObj->HasTypedField<EJson::String>("type"))
+	static FString TypeStr("type");
+	if (!JsonObj->HasTypedField<EJson::String>(TypeStr))
 		return nullptr;
 
-	const FString NodeTypeStr = JsonObj->GetStringField("type");
+	const FString NodeTypeStr = JsonObj->GetStringField(TypeStr);
 	
 	static const FString EnumPath = "/Script/Figma2UMG.ENodeTypes";
 	static UEnum* EnumDef = FindObject<UEnum>(nullptr, *EnumPath, true);
@@ -439,7 +322,11 @@ void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 	static const FString VisibleStr("visible");
 	const FBPVariableDescription* VariableDescription = WidgetBP->NewVariables.FindByPredicate([PropertyReference](const FBPVariableDescription& VariableDescription)
 		{
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
 			return VariableDescription.VarName == PropertyReference.Value;
+#else
+			return VariableDescription.VarName.ToString() == PropertyReference.Value;
+#endif
 		});
 
 
@@ -449,7 +336,7 @@ void UFigmaNode::ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> 
 
 		if (PropertyReference.Key == VisibleStr)
 		{
-			WidgetBlueprintBuilder::PatchVisibilityBind(WidgetBP, Widget, *PropertyReference.Value);
+			WidgetBlueprintHelper::PatchVisibilityBind(WidgetBP, Widget, *PropertyReference.Value);
 		}
 		else
 		{

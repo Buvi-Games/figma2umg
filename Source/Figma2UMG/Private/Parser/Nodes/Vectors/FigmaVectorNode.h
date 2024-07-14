@@ -1,12 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/ImageBuilder.h"
-#include "Interfaces/AssetFileHandler.h"
-#include "Interfaces/FigmaImageRequester.h"
-#include "Interfaces/WidgetOwner.h"
+#include "Interfaces/FlowTransition.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
 #include "Parser/Properties/FigmaEasingType.h"
@@ -25,40 +22,27 @@
 
 #include "FigmaVectorNode.generated.h"
 
+class UTexture2DBuilder;
+
 UCLASS()
-class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFigmaImageRequester, public IFigmaFileHandle, public IWidgetOwner
+class FIGMA2UMG_API UFigmaVectorNode : public UFigmaNode, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
-	FVector2D GetSize() const;
+	virtual FVector2D GetAbsoluteSize() const override;
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
+	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
-	// IFigmaImageRequester
-	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
-	virtual void OnRawImageReceived(TArray<uint8>& RawData) override;
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
-	// IFigmaFileHandle
-	virtual FString GetPackagePath() const override;
-	virtual FString GetAssetName() const override;
-	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
-	virtual void LoadAssets() override;
-
-	// IWidgetOwner
-	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
-
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsert() const override;
-	virtual void Reset() override;
-
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual FVector2D GetTopWidgetPosition() const override;
-
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
-protected:
 	UPROPERTY()
 	bool Locked = false;
 
@@ -152,6 +136,7 @@ protected:
 	//UPROPERTY()
 	//FFigmaAnnotation annotation
 
+protected:
 	UPROPERTY()
-	FImageBuilder Builder;
+	TObjectPtr<UTexture2DBuilder> AssetBuilder = nullptr;
 };

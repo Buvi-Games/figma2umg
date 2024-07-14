@@ -1,10 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Interfaces/FigmaContainer.h"
-#include "Interfaces/WidgetOwner.h"
+#include "Interfaces/FlowTransition.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaColor.h"
 #include "Parser/Properties/FigmaExportSetting.h"
@@ -16,28 +16,23 @@
 class UCanvasPanel;
 
 UCLASS()
-class UFigmaCanvas : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
+class UFigmaCanvas : public UFigmaNode, public IFigmaContainer, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition() const override { return FVector2D::ZeroVector; }
-
-	// IWidgetOwner
-	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void Reset() override;
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual FVector2D GetTopWidgetPosition() const override;
-
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
-
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
+	virtual const TArray<UFigmaNode*>& GetChildrenConst() const override { return Children; }
+
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override;
+	virtual const float GetTransitionDuration() const override;
+	virtual const EFigmaEasingType GetTransitionEasing() const override;
 protected:
 
 	UPROPERTY()
@@ -45,6 +40,9 @@ protected:
 
 	UPROPERTY()
 	FFigmaColor BackgroundColor;
+
+	UPROPERTY()
+	FString PrototypeStartNodeID;
 
 	UPROPERTY()
 	TArray<FFigmaFlowStartingPoint> FlowStartingPoints;

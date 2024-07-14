@@ -1,10 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/TextBoxBuilder.h"
-#include "Interfaces/WidgetOwner.h"
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 #include "Parser/Properties/FigmaTypeStyle.h"
 
@@ -21,32 +19,16 @@ enum class EFigmaLineType
 };
 
 UCLASS()
-class UFigmaText : public UFigmaNode, public IWidgetOwner
+class UFigmaText : public UFigmaNode
 {
 public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual FVector2D GetAbsolutePosition() const override;
-	FVector2D GetSize() const;
-
-	// IWidgetOwner
-	virtual void ForEach(const FOnEachFunction& Function) override;
-
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsert() const override;
-	virtual void Reset() override;
-
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual FVector2D GetTopWidgetPosition() const override;
-
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
-
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
-
-protected:
-	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const override;
+	virtual FVector2D GetAbsoluteSize() const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	UPROPERTY()
 	bool Locked = false;
@@ -98,6 +80,12 @@ protected:
 
 	UPROPERTY()
 	bool IsMask = false;
+
+	UPROPERTY()
+	EFigmaLayoutSizing LayoutSizingHorizontal;
+
+	UPROPERTY()
+	EFigmaLayoutSizing LayoutSizingVertical;
 
 	UPROPERTY()
 	TArray<FFigmaPaint> Fills;
@@ -153,6 +141,6 @@ protected:
 	UPROPERTY()
 	TArray<int> LineIndentations;
 
-	UPROPERTY()
-	FTextBoxBuilder Builder;
+protected:
+	virtual void ProcessComponentPropertyReference(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const TPair<FString, FString>& PropertyReference) const override;
 };

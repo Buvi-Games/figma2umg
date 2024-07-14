@@ -1,56 +1,44 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
+#include <Interfaces/FlowTransition.h>
+
 #include "CoreMinimal.h"
-#include "FigmaFrame.h"
-#include "Builder/ImageBuilder.h"
-#include "Interfaces/AssetFileHandler.h"
-#include "Interfaces/FigmaImageRequester.h"
-#include "Interfaces/FigmaRefHandle.h"
+#include "FigmaNode.h"
 #include "Parser/Properties/FigmaComponentProperty.h"
+#include "Parser/Properties/FigmaLayoutConstraint.h"
 #include "Parser/Properties/FigmaOverrides.h"
+#include "Parser/Properties/FigmaPaint.h"
+#include "Parser/Properties/FigmaRectangle.h"
 
 #include "FigmaInstance.generated.h"
 
+struct FFigmaLayoutGrid;
+enum class EFigmaStyleType;
+struct FFigmaEffect;
+struct FFigmaExportSetting;
+class UTexture2DBuilder;
+
 UCLASS()
-class UFigmaInstance : public UFigmaNode, public IWidgetOwner, public IFigmaRefHandle, public IFigmaImageRequester, public IFigmaFileHandle
+class UFigmaInstance : public UFigmaNode, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PrepareForFlow() override;
 	virtual FVector2D GetAbsolutePosition() const override;
+	virtual FVector2D GetAbsoluteSize() const override;
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
+	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
-	// IWidgetOwner
-	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
-
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsert() const override;
-	virtual void Reset() override;
-
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual FVector2D GetTopWidgetPosition() const override;
-
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
-
-	// IFigmaImageRequester
-	virtual void AddImageRequest(FString FileKey, FImageRequests& ImageRequests) override;
-	virtual void OnRawImageReceived(TArray<uint8>& RawData) override;
-
-	// IFigmaFileHandle
-	virtual FString GetPackagePath() const override;
-	virtual FString GetAssetName() const override;
-	virtual void LoadOrCreateAssets(UFigmaFile* FigmaFile) override;
-	virtual void LoadAssets() override;
-
-	void PatchComponentProperty() const;
-	FString GetComponentId() const { return ComponentId; }
-protected:
-	void ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const;
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
@@ -140,10 +128,10 @@ protected:
 	FString LayoutMode = FString("NONE");
 
 	UPROPERTY()
-	FString LayoutSizingHorizontal;
+	EFigmaLayoutSizing LayoutSizingHorizontal;
 
 	UPROPERTY()
-	FString LayoutSizingVertical;
+	EFigmaLayoutSizing LayoutSizingVertical;
 
 	UPROPERTY()
 	FString LayoutWrap = FString("NO_WRAP");
@@ -229,10 +217,14 @@ protected:
 	UPROPERTY()
 	TArray<FFigmaOverrides> Overrides;
 
-	UPROPERTY()
-	FImageBuilder BuilderFallback;
+protected:
+	void ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const;
 
 	bool IsMissingComponent = false;
+
+	UPROPERTY()
+	TObjectPtr<UTexture2DBuilder> Texture2DBuilder = nullptr;
+
 	UPROPERTY()
 	TObjectPtr<UTexture> MissingComponentTexture = nullptr;
 };

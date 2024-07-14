@@ -1,3 +1,5 @@
+// Copyright 2024 Buvi Games. All Rights Reserved.
+
 #pragma once
 
 #define FIGMA_HOST "api.figma.com"

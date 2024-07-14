@@ -1,75 +1,38 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "Parser/Nodes/FigmaCanvas.h"
 
-#include "Figma2UMGModule.h"
-#include "Components/CanvasPanel.h"
+#include "Builder/Widget/Panels/CanvasBuilder.h"
+#include "Builder/Widget/PanelWidgetBuilder.h"
 
-void UFigmaCanvas::ForEach(const IWidgetOwner::FOnEachFunction& Function)
+const FString& UFigmaCanvas::GetTransitionNodeID() const
 {
-	Function.ExecuteIfBound(*Canvas);
+	return PrototypeStartNodeID;
 }
 
-TObjectPtr<UWidget> UFigmaCanvas::Patch(TObjectPtr<UWidget> WidgetToPatch)
+const float UFigmaCanvas::GetTransitionDuration() const
 {
-	Canvas = nullptr;
-	if (WidgetToPatch && WidgetToPatch->GetClass() == UCanvasPanel::StaticClass())
-	{
-		IWidgetOwner::TryRenameWidget(GetUniqueName(), WidgetToPatch);
-		UE_LOG_Figma2UMG(Display, TEXT("%s Patching Canvas "), *GetUniqueName());
-		Canvas = Cast<UCanvasPanel>(WidgetToPatch);
-	}
-	else
-	{
-		UE_LOG_Figma2UMG(Display, TEXT("%s New Canvas"), *GetUniqueName());
-		Canvas = IWidgetOwner::NewWidget<UCanvasPanel>(GetAssetOuter(), *GetUniqueName());
-	}
-
-	return Canvas;
+	return 0.0f;
 }
 
-void UFigmaCanvas::SetupWidget(TObjectPtr<UWidget> Widget)
+const EFigmaEasingType UFigmaCanvas::GetTransitionEasing() const
 {
-	if (Widget)
-	{
-		UE_LOG_Figma2UMG(Display, TEXT("[SetupWidget] UFigmaCanvas %s received a UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
-	}
+	return EFigmaEasingType::LINEAR;
+}
 
-	Canvas = Cast<UCanvasPanel>(Widget);
-	if(!Canvas)
+TScriptInterface<IWidgetBuilder> UFigmaCanvas::CreateWidgetBuilders(bool IsRoot /*= false*/, bool AllowFrameButton/*= true*/) const
+{
+	UCanvasBuilder* Builder = NewObject<UCanvasBuilder>();
+	Builder->SetNode(this);
+
+	for (const UFigmaNode* Child : Children)
 	{
-		if (Widget)
+		if (TScriptInterface<IWidgetBuilder> SubBuilder = Child->CreateWidgetBuilders())
 		{
-			UE_LOG_Figma2UMG(Error, TEXT("[SetupWidget] UFigmaCanvas %s fail to setup UWidget %s of type %s."), *GetNodeName(), *Widget->GetName(), *Widget->GetClass()->GetDisplayNameText().ToString());
-		}
-		else
-		{
-			UE_LOG_Figma2UMG(Warning, TEXT("[SetupWidget] UFigmaCanvas %s received a null UWidget."), *GetNodeName());
+			Builder->AddChild(SubBuilder);
 		}
 	}
-}
 
-void UFigmaCanvas::Reset()
-{
-	Canvas = nullptr;
-}
-
-TObjectPtr<UWidget> UFigmaCanvas::GetTopWidget() const
-{
-	return Canvas;
-}
-
-FVector2D UFigmaCanvas::GetTopWidgetPosition() const
-{
-	return FVector2D::Zero();
-}
-
-TObjectPtr<UPanelWidget> UFigmaCanvas::GetContainerWidget() const
-{
-	return Canvas;
-}
-
-void UFigmaCanvas::PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const
-{
+	return Builder;
 }

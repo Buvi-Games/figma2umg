@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -11,6 +11,7 @@ UENUM()
 enum class EFigmaStyleType
 {
 	FILL,
+	FILLS,
 	TEXT,
 	EFFECT,
 	GRID

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "Factory/RawTexture2DFactory.h"
@@ -6,6 +6,7 @@
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
 #include "ImageUtils.h"
+#include "Misc/FileHelper.h"
 
 URawTexture2DFactory::URawTexture2DFactory(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -85,6 +85,26 @@ enum class EFigmaLayoutAlign
 	MIN,
 	CENTER,
 	MAX,
+};
+
+UENUM()
+enum class EFigmaLayoutConstraintVertical
+{
+	TOP,
+	BOTTOM,
+	CENTER,
+	TOP_BOTTOM,
+	SCALE,
+};
+
+UENUM()
+enum class EFigmaLayoutConstraintHorizontal
+{
+	LEFT,
+	RIGHT,
+	CENTER,
+	LEFT_RIGHT,
+	SCALE,
 };
 
 UENUM()

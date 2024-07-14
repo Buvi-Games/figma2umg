@@ -1,10 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "REST/RequestParams.h"
 
 #include "Figma2UMGModule.h"
-#include "Figma2UMGSettings.h"
+#include "Settings/Figma2UMGSettings.h"
 
 URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 {
@@ -16,13 +16,17 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		FileKey = Settings->FileKey;
 		LibraryFileKeys = Settings->LibraryFileKeys;
 		DownloadFontsFromGoogle = Settings->DownloadFontsFromGoogle;
+		UsePrototypeFlow = Settings->UsePrototypeFlow;
+		FrameToButton = Settings->FrameToButton;
+		WidgetOverrides = Settings->WidgetOverrides;
+		SaveAllAtEnd = Settings->SaveAllAtEnd;
 	}
 
 	ContentRootFolder = "/Game/Figma";
 
 	//#if !UE_BUILD_SHIPPING
 	//Ids.Add("212:1394"); // Impost Sections
-	Ids.Add("146:1357"); // SectionProperty
+	//Ids.Add("146:1357"); // SectionProperty
 	//Ids.Add("212:1393"); // SectionVariationButton
 	//Ids.Add("294:1393"); // SectionVariation
 	//Ids.Add("212:1395"); // SectionRemoteLib

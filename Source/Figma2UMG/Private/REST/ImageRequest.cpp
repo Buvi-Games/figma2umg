@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 
 #include "REST/ImageRequest.h"
@@ -176,4 +176,20 @@ FImageRequest* FImageRequests::GetNextToDownload()
 		RequestsPerFile.RemoveAt(0);
 	}
 	return ImageRequest;
+}
+
+int FImageRequests::GetCurrentRequestTotalCount() const
+{
+	if (RequestsPerFile.Num() == 0)
+		return 0;
+
+	int Count = 0;
+	const FImagePerFileRequests& CurrentFile = RequestsPerFile[0];
+	for(const FImageRequest& Request : CurrentFile.Requests)
+	{
+		if (!Request.URL.IsEmpty())
+			Count++;
+	}
+
+	return Count;
 }

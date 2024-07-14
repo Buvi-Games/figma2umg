@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
@@ -18,7 +18,7 @@ public:
 	void SetComponentSet(TObjectPtr<UFigmaComponentSet> Value) { FigmaComponentSet = Value; }
 	TObjectPtr<UFigmaComponentSet>  GetComponentSet() const { return FigmaComponentSet; }
 
-	TObjectPtr<UWidgetBlueprint>  GetAsset() const { return FigmaComponentSet ? FigmaComponentSet->GetAsset<UWidgetBlueprint>() : nullptr; }
+	TObjectPtr<UWidgetBlueprintBuilder> GetAssetBuilder() const { return FigmaComponentSet ? FigmaComponentSet->GetAssetBuilder() : nullptr; }
 
 protected:
 	UPROPERTY()

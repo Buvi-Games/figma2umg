@@ -1,11 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+// Copyright 2024 Buvi Games. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Builder/BorderBuilder.h"
 #include "Interfaces/FigmaContainer.h"
-#include "Interfaces/WidgetOwner.h"
+#include "Interfaces/FlowTransition.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
 #include "Parser/Properties/FigmaColor.h"
@@ -22,40 +21,31 @@
 
 #include "FigmaGroup.generated.h"
 
-struct FButtonBuilder;
-
 UCLASS()
-class UFigmaGroup : public UFigmaNode, public IWidgetOwner, public IFigmaContainer
+class UFigmaGroup : public UFigmaNode, public IFigmaContainer, public IFlowTransition
 {
 public:
 	GENERATED_BODY()
 
 	// UFigmaNode
+	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
+	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 	virtual FVector2D GetAbsolutePosition() const override;
+	virtual FVector2D GetAbsoluteSize() const override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
 	virtual TArray<UFigmaNode*>& GetChildren() override { return Children; }
-
-	// IWidgetOwner
-	virtual void ForEach(const IWidgetOwner::FOnEachFunction& Function) override;
-
-	virtual TObjectPtr<UWidget> Patch(TObjectPtr<UWidget> WidgetToPatch) override;
-	virtual void SetupWidget(TObjectPtr<UWidget> Widget) override;
-	virtual void PostInsertWidgets(TObjectPtr<UWidget> TopWidget, TObjectPtr<UPanelWidget> ContentWidget) const override;
-	virtual void Reset() override;
-
-	virtual TObjectPtr<UWidget> GetTopWidget() const override;
-	virtual FVector2D GetTopWidgetPosition() const override;
-
-	virtual TObjectPtr<UPanelWidget> GetContainerWidget() const override;
-	virtual void PatchBinds(TObjectPtr<UWidgetBlueprint> WidgetBp) const override;
-
-	void SetupBrush(FSlateBrush& Brush) const;
-	void SetupLayout(FContainerBuilder& ContainerBuilder);
+	virtual const TArray<UFigmaNode*>& GetChildrenConst() const override { return Children; }
 
 	FMargin GetPadding() const;
-protected:
+
+	// FlowTransition
+	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
@@ -216,6 +206,10 @@ protected:
 	UPROPERTY()
 	TMap<EFigmaStyleType, FString> Styles;
 
-	UPROPERTY()
-	FBorderBuilder Builder;
+protected:
+	bool IsButton() const;
+	TScriptInterface<IWidgetBuilder> CreateButtonBuilder() const;
+	TScriptInterface<IWidgetBuilder> CreateContainersBuilder() const;
+
+	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
 };
