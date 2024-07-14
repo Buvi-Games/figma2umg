@@ -130,14 +130,14 @@ void UTextBlockWidgetBuilder::SetStyle(const FFigmaTypeStyle& Style) const
 		}
 	}
 
-	//if (Style.FontPostScriptName.IsEmpty())
-	//{
-	//	FontInfo.TypefaceFontName = "Default";
-	//}
-	//else
-	//{
-	//	FontInfo.TypefaceFontName = Style.FontPostScriptName;
-	//}
+	if (Style.FontPostScriptName.IsEmpty())
+	{
+		FontInfo.TypefaceFontName = "Default";
+	}
+	else
+	{
+		FontInfo.TypefaceFontName = *Style.FontPostScriptName;
+	}
 
 	FontInfo.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
 	FontInfo.LetterSpacing = Style.LetterSpacing;
