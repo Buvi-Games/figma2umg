@@ -470,6 +470,10 @@ void UFigmaImporter::RequestImageURLs()
 					UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
 				}
 			}
+			else if (DownloadFontsFromGoogle)
+			{
+				FetchGoogleFontsList();
+			}
 			else
 			{
 				LoadOrCreateAssets();
@@ -543,6 +547,68 @@ void UFigmaImporter::HandleImageDownload(bool Succeeded)
 	}
 }
 
+void UFigmaImporter::FetchGoogleFontsList()
+{
+	const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	if (Importer && !Importer->HasGoogleFontsInfo())
+	{
+		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+		HttpRequest->OnProcessRequestComplete().BindUObject(this, &UFigmaImporter::OnFetchGoogleFontsResponse);
+		FString URL = "https://www.googleapis.com/webfonts/v1/webfonts?key=" + GFontsAPIKey;
+		HttpRequest->SetURL(URL);
+		HttpRequest->SetVerb(TEXT("GET"));
+		HttpRequest->ProcessRequest();
+	}
+	else
+	{
+		LoadOrCreateAssets();
+	}
+}
+
+void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bWasSuccessful)
+{
+	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	if (Importer && bWasSuccessful && HttpResponse.IsValid() && HttpResponse->GetResponseCode() == EHttpResponseCodes::Ok)
+	{
+		TSharedPtr<FJsonObject> JsonObject;
+		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
+
+		TArray<FGFontFamilyInfo>& GoogleFontsInfo = Importer->GetGoogleFontsInfo();
+		if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+		{
+			const TArray<TSharedPtr<FJsonValue>>* Items;
+			if (JsonObject->TryGetArrayField(TEXT("items"), Items))
+			{
+				for (const TSharedPtr<FJsonValue>& Item : *Items)
+				{
+					const TSharedPtr<FJsonObject> FontObject = Item->AsObject();
+					FGFontFamilyInfo& FontFamilyInfo = GoogleFontsInfo.Emplace_GetRef();
+					FontFamilyInfo.Family = FontObject->GetStringField(TEXT("family"));
+					FontFamilyInfo.URL = FString::Printf(TEXT("https://fonts.google.com/download?family=%s"), *FontFamilyInfo.Family.Replace(TEXT(" "), TEXT("+")));
+
+					const TArray<TSharedPtr<FJsonValue>>* Variants;
+					if (JsonObject->TryGetArrayField(TEXT("variants"), Variants))
+					{
+						for (const TSharedPtr<FJsonValue>& Variant : *Variants)
+						{
+							FontFamilyInfo.Variants.Add(Variant->AsString());
+						}
+					}
+				}
+			}
+		}
+
+			LoadOrCreateAssets();
+	}
+	else
+	{
+		const TArray<uint8>& Content = HttpResponse.Get()->GetContent();
+		FString ErrorContent = BytesToString(Content.GetData(), Content.Num());
+		UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaImporter] Failed to Fetch Google Fonts's list. Response %s"), *ErrorContent);
+
+		LoadOrCreateAssets();
+	}
+}
 void UFigmaImporter::LoadOrCreateAssets()
 {
 	const float WorkCount = 8.0f;//Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch

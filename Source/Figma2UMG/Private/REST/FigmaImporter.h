@@ -8,6 +8,7 @@
 #include "VaRestSubsystem.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/ImagesRequestResult.h"
+#include "Interfaces/IHttpRequest.h"
 
 #include "FigmaImporter.generated.h"
 
@@ -64,6 +65,11 @@ protected:
 
 	UFUNCTION()
 	void HandleImageDownload(bool Succeeded);
+
+	UFUNCTION()
+	void FetchGoogleFontsList();
+
+	void OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
 	UFUNCTION()
 	void LoadOrCreateAssets();
