@@ -34,6 +34,29 @@ FVector2D UFigmaText::GetAbsoluteSize() const
 	return AbsoluteBoundingBox.GetSize();
 }
 
+bool UFigmaText::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
+{
+	//TODO: Look if font is already imported.
+	UFontBuilder* AssetBuilder = NewObject<UFontBuilder>();
+	AssetBuilder->SetNode(InFileKey, this);
+	AssetBuilders.Add(AssetBuilder);
+
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+
+	return true;
+}
+
+FString UFigmaText::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
+{
+	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+	while (TopParentNode && TopParentNode->GetParentNode())
+	{
+		TopParentNode = TopParentNode->GetParentNode();
+	}
+	const FString Suffix = "Fonts";
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
+}
+
 TScriptInterface<IWidgetBuilder> UFigmaText::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
 	UTextBlockWidgetBuilder* TextBlockWidgetBuilder = NewObject<UTextBlockWidgetBuilder>();
