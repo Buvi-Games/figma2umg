@@ -38,13 +38,6 @@ void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widge
 
 	Insert(WidgetTree, WidgetToPatch, Widget);
 
-	if (FontObjectLibrary == nullptr)
-	{
-		FontObjectLibrary = UObjectLibrary::CreateLibrary(UFont::StaticClass(), false, GIsEditor);
-		FontObjectLibrary->LoadAssetDataFromPath(TEXT("/Game")); // You can specify the path where your assets are located
-		FontObjectLibrary->LoadAssetDataFromPath(TEXT("/Script/Engine.Font"));
-	}
-
 	Setup();
 }
 
@@ -116,18 +109,12 @@ void UTextBlockWidgetBuilder::SetStyle(const FFigmaTypeStyle& Style) const
 	}
 
 	FSlateFontInfo FontInfo = Widget->GetFont();
-	TArray<FAssetData> AssetDatas;
-	FontObjectLibrary->GetAssetDataList(AssetDatas);
 
-	const FString FontFamily = Style.FontFamily.Replace(TEXT(" "), TEXT(""));	
-	for (const FAssetData& AssetData : AssetDatas)
+	const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	const UFont* FoundFont = Importer ? Importer->FindFontAssetFromFamily(Style.FontFamily) : nullptr;
+	if (FoundFont)
 	{
-		UObject* Asset = AssetData.GetAsset();
-		UFont* Font = Cast<UFont>(Asset);
-		if (Font && Font->GetName().Equals(FontFamily, ESearchCase::IgnoreCase))
-		{
-			FontInfo.FontObject = Font;
-		}
+		FontInfo.FontObject = FoundFont;
 	}
 
 	if (Style.FontPostScriptName.IsEmpty())

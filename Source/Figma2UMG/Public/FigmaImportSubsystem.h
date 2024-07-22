@@ -10,6 +10,7 @@
 
 #include "FigmaImportSubsystem.generated.h"
 
+class UObjectLibrary;
 struct FClassOverrides;
 class UFigmaImporter;
 class URequestParams;
@@ -29,6 +30,10 @@ public:
 
 	bool ShouldGenerateButton(const FString& NodeName) const;
 
+	void RefreshFontAssets();
+
+	UFont* FindFontAssetFromFamily(const FString& FamilyName) const;
+
 	bool HasGoogleFontsInfo() const{ return !GoogleFontsInfo.IsEmpty(); }
 	TArray<FGFontFamilyInfo>& GetGoogleFontsInfo() { return GoogleFontsInfo; }
 
@@ -43,6 +48,9 @@ public:
 private:
 	UPROPERTY()
 	TArray<UFigmaImporter*> Requests;
+
+	UPROPERTY()
+	UObjectLibrary* FontObjectLibrary = nullptr;
 
 	UPROPERTY()
 	TArray<FGFontFamilyInfo> GoogleFontsInfo;

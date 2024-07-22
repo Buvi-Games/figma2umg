@@ -29,6 +29,4 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> Widget = nullptr;
-
-	UObjectLibrary* FontObjectLibrary = nullptr;
 };
