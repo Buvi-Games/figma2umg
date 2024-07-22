@@ -51,6 +51,9 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 	ContentRootFolder = InProperties->ContentRootFolder;
 	RequesterCallback = InRequesterCallback;
 
+	DownloadFontsFromGoogle = InProperties->DownloadFontsFromGoogle;
+	GFontsAPIKey = InProperties->GFontsAPIKey;
+
 	UsePrototypeFlow = InProperties->UsePrototypeFlow;
 	SaveAllAtEnd = InProperties->SaveAllAtEnd;
 }

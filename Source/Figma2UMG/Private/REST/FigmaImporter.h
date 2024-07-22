@@ -121,6 +121,9 @@ protected:
 
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
+	bool DownloadFontsFromGoogle = false;
+	FString GFontsAPIKey;
+
 	bool UsePrototypeFlow = false;
 	bool SaveAllAtEnd = false;
 

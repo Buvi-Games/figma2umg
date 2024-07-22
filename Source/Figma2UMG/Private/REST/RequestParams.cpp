@@ -16,6 +16,7 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		FileKey = Settings->FileKey;
 		LibraryFileKeys = Settings->LibraryFileKeys;
 		DownloadFontsFromGoogle = Settings->DownloadFontsFromGoogle;
+		GFontsAPIKey = Settings->GFontsAPIKey;
 		UsePrototypeFlow = Settings->UsePrototypeFlow;
 		FrameToButton = Settings->FrameToButton;
 		WidgetOverrides = Settings->WidgetOverrides;
