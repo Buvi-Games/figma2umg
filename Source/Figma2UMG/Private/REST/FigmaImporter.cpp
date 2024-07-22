@@ -11,6 +11,7 @@
 #include "RequestParams.h"
 #include "Async/Async.h"
 #include "Builder/Asset/AssetBuilder.h"
+#include "Builder/Asset/FontBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Parser/FigmaFile.h"
@@ -24,6 +25,7 @@ UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
 	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
 	OnImageDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleImageDownload);
+	OnFontDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleFontDownload);
 	OnPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPatchUAssets);
 	OnPostPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPostPatchUAssets);
 }
@@ -552,12 +554,26 @@ void UFigmaImporter::FetchGoogleFontsList()
 	const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
 	if (Importer && !Importer->HasGoogleFontsInfo())
 	{
-		TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
-		HttpRequest->OnProcessRequestComplete().BindUObject(this, &UFigmaImporter::OnFetchGoogleFontsResponse);
-		FString URL = "https://www.googleapis.com/webfonts/v1/webfonts?key=" + GFontsAPIKey;
-		HttpRequest->SetURL(URL);
-		HttpRequest->SetVerb(TEXT("GET"));
-		HttpRequest->ProcessRequest();
+		AsyncTask(ENamedThreads::GameThread, [this]()
+			{
+				if (Progress)
+				{
+					delete Progress;
+					Progress = nullptr;
+					ProgressThisFrame = 0.0f;
+				}
+
+				Progress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
+				Progress->MakeDialog();
+				UpdateProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
+
+				TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+				HttpRequest->OnProcessRequestComplete().BindUObject(this, &UFigmaImporter::OnFetchGoogleFontsResponse);
+				FString URL = "https://www.googleapis.com/webfonts/v1/webfonts?key=" + GFontsAPIKey;
+				HttpRequest->SetURL(URL);
+				HttpRequest->SetVerb(TEXT("GET"));
+				HttpRequest->ProcessRequest();
+			});
 	}
 	else
 	{
@@ -598,7 +614,14 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 			}
 		}
 
+		if (!GoogleFontsInfo.IsEmpty())
+		{
+			BuildFontDependency();
+		}
+		else
+		{
 			LoadOrCreateAssets();
+		}
 	}
 	else
 	{
@@ -609,6 +632,65 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 		LoadOrCreateAssets();
 	}
 }
+
+void UFigmaImporter::BuildFontDependency()
+{
+	AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
+		{
+			//UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
+			UE_LOG_Figma2UMG(Display, TEXT("[Figma GFonts Request]"));
+			RequestedFonts.Reset();
+
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (UFontBuilder* FontBuilder = Cast<UFontBuilder>(AssetBuilder.GetObject()))
+				{
+					FontBuilder->AddFontRequest(RequestedFonts);
+				}
+			}
+
+			FontDownloadCount = 0;
+			DownloadNextFont();
+		});
+}
+
+void UFigmaImporter::DownloadNextFont()
+{
+	FGFontRequest* FontRequest = RequestedFonts.GetNextToDownload();
+	if (FontRequest)
+	{
+		FontDownloadCount++;
+		const float FontCountTotal = RequestedFonts.GetRequestTotalCount();
+
+		TArray<FStringFormatArg> args;
+		args.Add(FontDownloadCount);
+		args.Add(static_cast<int>(FontCountTotal));
+		FString msg = FString::Format(TEXT("Downloading font {0} of {1}"), args);
+
+		UpdateProgress(80.f / FontCountTotal, FText::FromString(msg));
+
+		UE_LOG_Figma2UMG(Display, TEXT("Downloading font (%i/%i) %s at %s."), ImageDownloadCount, static_cast<int>(FontCountTotal), *FontRequest->FamilyInfo->Family, *FontRequest->FamilyInfo->URL);
+		FontRequest->StartDownload(OnFontDownloadRequestCompleted);
+	}
+	else
+	{
+		LoadOrCreateAssets();
+	}
+}
+
+void UFigmaImporter::HandleFontDownload(bool Succeeded)
+{
+	if (Succeeded)
+	{
+		DownloadNextFont();
+	}
+	else
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("Failed to download font."));
+		LoadOrCreateAssets();
+	}
+}
+
 void UFigmaImporter::LoadOrCreateAssets()
 {
 	const float WorkCount = 8.0f;//Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch

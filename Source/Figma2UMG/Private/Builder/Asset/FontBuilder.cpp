@@ -5,6 +5,7 @@
 
 #include "AssetToolsModule.h"
 #include "Figma2UMGModule.h"
+#include "FigmaImportSubsystem.h"
 #include "ObjectTools.h"
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
@@ -14,10 +15,11 @@
 
 void UFontBuilder::LoadOrCreateAssets()
 {
-	UFontFactory* Factory = NewObject<UFontFactory>(UFontFactory::StaticClass());
-	UFont* FontAsset = Cast<UFont>(Asset);
-	if (FontAsset == nullptr)
+	LoadAssets();
+	if (Asset == nullptr)
 	{
+		UFontFactory* Factory = NewObject<UFontFactory>(UFontFactory::StaticClass());
+		UFont* FontAsset = nullptr;
 		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
 		const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
 		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
@@ -48,30 +50,28 @@ void UFontBuilder::LoadOrCreateAssets()
 		}
 
 		Asset = FontAsset;
-	}
-
-	if (FontAsset)
-	{
-		FontAsset->SetFlags(RF_Transactional);
-		FontAsset->Modify();
+		if (FontAsset)
+		{
+			FontAsset->SetFlags(RF_Transactional);
+			FontAsset->Modify();
+		}
 	}
 }
 
 void UFontBuilder::LoadAssets()
 {
-	const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
-	const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
-	const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
-
-	const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-	const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
-	Asset = Cast<UFont>(AssetData.FastGetAsset(true));
+	const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	Asset = Importer ? Importer->FindFontAssetFromFamily(FontFamily) : nullptr;
 }
 
 void UFontBuilder::Reset()
 {
 	Asset = nullptr;
 	Faces.Reset();
+	if (OnRawFontReceivedCB.IsBound())
+	{
+		OnRawFontReceivedCB.Unbind();
+	}
 }
 
 const TObjectPtr<UFont>& UFontBuilder::GetAsset() const
@@ -82,4 +82,24 @@ const TObjectPtr<UFont>& UFontBuilder::GetAsset() const
 UPackage* UFontBuilder::GetAssetPackage() const
 {
 	return Asset ? Asset->GetPackage() : nullptr;
+}
+
+void UFontBuilder::SetFontFamily(const FString& InFontFamily)
+{
+	FontFamily = InFontFamily;
+}
+
+void UFontBuilder::AddFontRequest(FFontRequests& FontRequests)
+{
+	LoadAssets();
+	if(Asset == nullptr)
+	{
+		OnRawFontReceivedCB.BindUObject(this, &UFontBuilder::OnRawFontFileReceived);
+		FontRequests.AddRequest(FontFamily, OnRawFontReceivedCB);
+	}
+}
+
+void UFontBuilder::OnRawFontFileReceived(const TArray<uint8>& InRawData)
+{
+	RawData = InRawData;
 }

@@ -78,6 +78,16 @@ UFont* UFigmaImportSubsystem::FindFontAssetFromFamily(const FString& FamilyName)
 	return nullptr;
 }
 
+FGFontFamilyInfo* UFigmaImportSubsystem::FindGoogleFontsInfo(const FString& FamilyName)
+{
+	FGFontFamilyInfo* GFontFamilyInfo = GoogleFontsInfo.FindByPredicate([FamilyName](const FGFontFamilyInfo& GFontFamilyInfo)
+		{
+			return GFontFamilyInfo.Family.Equals(FamilyName, ESearchCase::IgnoreCase);
+		});
+
+	return GFontFamilyInfo;
+}
+
 void UFigmaImportSubsystem::TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget)
 {
 	if (!Widget)

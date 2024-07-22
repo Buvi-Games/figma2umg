@@ -40,6 +40,7 @@ bool UFigmaText::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInte
 	//TODO: Look if font is already imported.
 	UFontBuilder* AssetBuilder = NewObject<UFontBuilder>();
 	AssetBuilder->SetNode(InFileKey, this);
+	AssetBuilder->SetFontFamily(Style.FontFamily);
 	AssetBuilders.Add(AssetBuilder);
 
 	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);

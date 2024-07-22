@@ -6,7 +6,7 @@
 #include "EditorSubsystem.h"
 #include "Rest/Enums.h"
 #include "Settings/ClassOverrides.h"
-#include "REST/Gfonts/GFontFamilyInfo.h"
+#include "REST/Gfonts/GFontRequest.h"
 
 #include "FigmaImportSubsystem.generated.h"
 
@@ -36,6 +36,7 @@ public:
 
 	bool HasGoogleFontsInfo() const{ return !GoogleFontsInfo.IsEmpty(); }
 	TArray<FGFontFamilyInfo>& GetGoogleFontsInfo() { return GoogleFontsInfo; }
+	FGFontFamilyInfo* FindGoogleFontsInfo(const FString& FamilyName);
 
 	static void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget);
 
