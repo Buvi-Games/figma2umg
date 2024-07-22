@@ -6,6 +6,7 @@
 #include "Figma2UMGModule.h"
 #include "WidgetBlueprint.h"
 #include "Builder/WidgetBlueprintHelper.h"
+#include "Builder/Asset/FontBuilder.h"
 #include "Builder/Widget/TextBlockWidgetBuilder.h"
 #include "Components/TextBlock.h"
 
