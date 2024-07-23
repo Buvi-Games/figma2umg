@@ -9,7 +9,7 @@
 #include "GFontRequest.generated.h"
 
 DECLARE_DELEGATE_OneParam(FOnFontRequestCompleteDelegate, bool);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnRawFontFileReceive, const TArray<uint8>&);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRawFontFileReceive, const FString&, const TArray<uint8>&);
 
 USTRUCT()
 struct FGFontFamilyInfo
@@ -20,10 +20,26 @@ public:
 	FString Family;
 
 	UPROPERTY()
-	FString URL;
+	TArray<FString> Variants;
 
 	UPROPERTY()
-	TArray<FString> Variants;
+	TArray<FString> Subsets;
+
+	UPROPERTY()
+	FString Version;
+
+	UPROPERTY()
+	TMap<FString, FString> Files;
+
+	UPROPERTY()
+	FString Category;
+
+	UPROPERTY()
+	FString Kind;
+
+	UPROPERTY()
+	FString Menu;
+
 };
 
 USTRUCT()
@@ -32,11 +48,13 @@ struct FGFontRequest
 	GENERATED_BODY()
 public:
 	FGFontFamilyInfo* FamilyInfo;
+	FString Variant;
 
 	FOnRawFontFileReceive OnFontRawReceive;
 
 	void StartDownload(const FOnFontRequestCompleteDelegate& Delegate);
 
+	FString GetURL() const;
 	eRequestStatus GetStatus() const { return Status; }
 private:
 	void HandleFontDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);

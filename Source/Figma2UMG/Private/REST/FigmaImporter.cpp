@@ -586,6 +586,9 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
 	if (Importer && bWasSuccessful && HttpResponse.IsValid() && HttpResponse->GetResponseCode() == EHttpResponseCodes::Ok)
 	{
+		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/Fonts/GFontList.json");
+		FFileHelper::SaveArrayToFile(HttpResponse->GetContent(), *FullFilename);
+
 		TSharedPtr<FJsonObject> JsonObject;
 		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
 
@@ -599,16 +602,16 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 				{
 					const TSharedPtr<FJsonObject> FontObject = Item->AsObject();
 					FGFontFamilyInfo& FontFamilyInfo = GoogleFontsInfo.Emplace_GetRef();
-					FontFamilyInfo.Family = FontObject->GetStringField(TEXT("family"));
-					FontFamilyInfo.URL = FString::Printf(TEXT("https://fonts.google.com/download?family=%s"), *FontFamilyInfo.Family.Replace(TEXT(" "), TEXT("+")));
 
-					const TArray<TSharedPtr<FJsonValue>>* Variants;
-					if (JsonObject->TryGetArrayField(TEXT("variants"), Variants))
+
+					constexpr int64 CheckFlags = 0;
+					constexpr int64 SkipFlags = 0;
+					constexpr bool StrictMode = false;
+					FText OutFailReason;
+					if (!FJsonObjectConverter::JsonObjectToUStruct(FontObject.ToSharedRef(), &FontFamilyInfo, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 					{
-						for (const TSharedPtr<FJsonValue>& Variant : *Variants)
-						{
-							FontFamilyInfo.Variants.Add(Variant->AsString());
-						}
+						FString Family = FontObject->GetStringField(TEXT("family"));
+						UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaImporter] Failed to parse Google Font Family %s"), *Family);
 					}
 				}
 			}
@@ -669,7 +672,7 @@ void UFigmaImporter::DownloadNextFont()
 
 		UpdateProgress(80.f / FontCountTotal, FText::FromString(msg));
 
-		UE_LOG_Figma2UMG(Display, TEXT("Downloading font (%i/%i) %s at %s."), ImageDownloadCount, static_cast<int>(FontCountTotal), *FontRequest->FamilyInfo->Family, *FontRequest->FamilyInfo->URL);
+		UE_LOG_Figma2UMG(Display, TEXT("Downloading font (%i/%i) %s(%s) at %s."), FontDownloadCount, static_cast<int>(FontCountTotal), *FontRequest->FamilyInfo->Family, *FontRequest->Variant, *FontRequest->GetURL());
 		FontRequest->StartDownload(OnFontDownloadRequestCompleted);
 	}
 	else
@@ -693,6 +696,13 @@ void UFigmaImporter::HandleFontDownload(bool Succeeded)
 
 void UFigmaImporter::LoadOrCreateAssets()
 {
+	if (Progress)
+	{
+		delete Progress;
+		Progress = nullptr;
+		ProgressThisFrame = 0.0f;
+	}
+
 	const float WorkCount = 8.0f;//Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
 	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
 	Progress->MakeDialog();

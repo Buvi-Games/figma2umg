@@ -27,7 +27,7 @@ public:
 	void SetFontFamily(const FString& InFontFamily);
 
 	void AddFontRequest(FFontRequests& FontRequests);
-	void OnRawFontFileReceived(const TArray<uint8>& InRawData);
+	void OnRawFontFileReceived(const FString& Variant, const TArray<uint8>& InRawData);
 
 protected:
 	UPROPERTY()
@@ -39,6 +39,6 @@ protected:
 	UPROPERTY()
 	TArray<UFontFace*> Faces;
 
-	TArray<uint8> RawData;
+	TMap<FString, TArray<uint8>> FacesRawData;
 	FOnRawFontFileReceive::FDelegate OnRawFontReceivedCB;
 };

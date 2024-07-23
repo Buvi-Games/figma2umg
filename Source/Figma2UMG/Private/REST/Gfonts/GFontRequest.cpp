@@ -23,10 +23,15 @@ void FGFontRequest::StartDownload(const FOnFontRequestCompleteDelegate& Delegate
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
 
 	HttpRequest->OnProcessRequestComplete().BindRaw(this, &FGFontRequest::HandleFontDownload);
-	HttpRequest->SetURL(FamilyInfo->URL);
+	HttpRequest->SetURL(GetURL());
 	HttpRequest->SetVerb(TEXT("GET"));
 	HttpRequest->ProcessRequest();
 
+}
+
+FString FGFontRequest::GetURL() const
+{
+	return FamilyInfo->Files[Variant];
 }
 
 void FGFontRequest::HandleFontDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
@@ -42,7 +47,7 @@ void FGFontRequest::HandleFontDownload(FHttpRequestPtr HttpRequest, FHttpRespons
 
 		if (OnFontRawReceive.IsBound())
 		{
-			OnFontRawReceive.Broadcast(RawData);
+			OnFontRawReceive.Broadcast(Variant, RawData);
 		}
 
 		Status = eRequestStatus::Succeeded;
@@ -52,7 +57,7 @@ void FGFontRequest::HandleFontDownload(FHttpRequestPtr HttpRequest, FHttpRespons
 	{
 		Status = eRequestStatus::Failed;
 
-		UE_LOG_Figma2UMG(Warning, TEXT("Failed to download image at %s."), *FamilyInfo->URL);
+		UE_LOG_Figma2UMG(Warning, TEXT("Failed to download image at %s."), *GetURL());
 		OnFontRequestCompleteDelegate.ExecuteIfBound(false);
 	}
 }
@@ -62,20 +67,27 @@ void FFontRequests::AddRequest(const FString& FamilyName, const FOnRawFontFileRe
 	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
 	if (FGFontFamilyInfo* FontFamilyInfo = Importer ? Importer->FindGoogleFontsInfo(FamilyName) : nullptr)
 	{
-		FGFontRequest* Request = RequestedFamilies.FindByPredicate([FontFamilyInfo](const FGFontRequest& GFontRequest)
+		TArray<FGFontRequest> Requests = RequestedFamilies.FilterByPredicate([FontFamilyInfo](const FGFontRequest& GFontRequest)
 			{
 				return GFontRequest.FamilyInfo == FontFamilyInfo;
 			});
 
-		if(Request)
+		if(Requests.IsEmpty())
 		{
-			Request->OnFontRawReceive.Add(OnFontRawReceive);
+			for (TPair<FString, FString>& VariantFile : FontFamilyInfo->Files)
+			{
+				FGFontRequest& NewRequest = RequestedFamilies.Emplace_GetRef();
+				NewRequest.FamilyInfo = FontFamilyInfo;
+				NewRequest.Variant = VariantFile.Key;
+				NewRequest.OnFontRawReceive.Add(OnFontRawReceive);
+			}
 		}
 		else
 		{
-			FGFontRequest& NewRequest = RequestedFamilies.Emplace_GetRef();
-			NewRequest.FamilyInfo = FontFamilyInfo;
-			NewRequest.OnFontRawReceive.Add(OnFontRawReceive);
+			for (FGFontRequest& Request : Requests)
+			{
+				Request.OnFontRawReceive.Add(OnFontRawReceive);
+			}
 		}
 		
 	}

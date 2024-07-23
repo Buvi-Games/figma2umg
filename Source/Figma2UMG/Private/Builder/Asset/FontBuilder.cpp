@@ -99,7 +99,10 @@ void UFontBuilder::AddFontRequest(FFontRequests& FontRequests)
 	}
 }
 
-void UFontBuilder::OnRawFontFileReceived(const TArray<uint8>& InRawData)
+void UFontBuilder::OnRawFontFileReceived(const FString& Variant, const TArray<uint8>& InRawData)
 {
-	RawData = InRawData;
+	const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/Fonts/") + FontFamily + TEXT("/") + Variant + TEXT(".ttf");
+	FFileHelper::SaveArrayToFile(InRawData, *FullFilename);
+
+	FacesRawData.Add(Variant, InRawData);
 }
