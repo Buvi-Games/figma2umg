@@ -23,6 +23,7 @@ public:
 	const TObjectPtr<UFont>& GetAsset() const;
 
 	virtual UPackage* GetAssetPackage() const override;
+	virtual void AddPackages(TArray<UPackage*>& Packages) const override;
 
 	void SetFontFamily(const FString& InFontFamily);
 

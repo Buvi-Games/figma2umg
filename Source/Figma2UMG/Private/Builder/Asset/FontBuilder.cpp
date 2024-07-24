@@ -84,6 +84,18 @@ UPackage* UFontBuilder::GetAssetPackage() const
 	return Asset ? Asset->GetPackage() : nullptr;
 }
 
+void UFontBuilder::AddPackages(TArray<UPackage*>& Packages) const
+{
+	IAssetBuilder::AddPackages(Packages);
+	for(UFontFace* FontFace : Faces)
+	{
+		if (FontFace)
+		{
+			Packages.AddUnique(FontFace->GetPackage());
+		}
+	}
+}
+
 void UFontBuilder::SetFontFamily(const FString& InFontFamily)
 {
 	FontFamily = InFontFamily;

@@ -856,11 +856,7 @@ void UFigmaImporter::SaveAll()
 	TArray<UPackage*> Packages;
 	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		UPackage* Package = AssetBuilder->GetAssetPackage();
-		if (Package)
-		{
-			Packages.AddUnique(Package);
-		}
+		AssetBuilder->AddPackages(Packages);
 	}
 #if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
 	FEditorFileUtils::FPromptForCheckoutAndSaveParams Params;
