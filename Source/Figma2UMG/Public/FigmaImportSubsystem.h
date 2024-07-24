@@ -6,9 +6,11 @@
 #include "EditorSubsystem.h"
 #include "Rest/Enums.h"
 #include "Settings/ClassOverrides.h"
+#include "REST/Gfonts/GFontRequest.h"
 
 #include "FigmaImportSubsystem.generated.h"
 
+class UObjectLibrary;
 struct FClassOverrides;
 class UFigmaImporter;
 class URequestParams;
@@ -28,6 +30,15 @@ public:
 
 	bool ShouldGenerateButton(const FString& NodeName) const;
 
+	void RefreshFontAssets();
+
+	void AddNewFont(UFont* NewFont);
+	UFont* FindFontAssetFromFamily(const FString& FamilyName) const;
+
+	bool HasGoogleFontsInfo() const{ return !GoogleFontsInfo.IsEmpty(); }
+	TArray<FGFontFamilyInfo>& GetGoogleFontsInfo() { return GoogleFontsInfo; }
+	FGFontFamilyInfo* FindGoogleFontsInfo(const FString& FamilyName);
+
 	static void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget);
 
 	template<class Type>
@@ -39,6 +50,15 @@ public:
 private:
 	UPROPERTY()
 	TArray<UFigmaImporter*> Requests;
+
+	UPROPERTY()
+	UObjectLibrary* FontObjectLibrary = nullptr;
+
+	UPROPERTY()
+	TArray<UFont*> NewFonts;
+
+	UPROPERTY()
+	TArray<FGFontFamilyInfo> GoogleFontsInfo;
 
 	FFrameToButtonOverride* FrameToButtonOverride = nullptr;
 	FClassOverrides* WidgetOverrides = nullptr;

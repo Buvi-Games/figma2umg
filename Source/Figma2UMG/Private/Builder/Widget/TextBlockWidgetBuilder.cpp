@@ -11,6 +11,8 @@
 #include "Engine/UserInterfaceSettings.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Nodes/Vectors/FigmaText.h"
+#include "Engine/Font.h"
+#include "Engine/ObjectLibrary.h"
 
 void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
 {
@@ -106,10 +108,20 @@ void UTextBlockWidgetBuilder::SetStyle(const FFigmaTypeStyle& Style) const
 #endif
 	}
 
-	FSlateFontInfo Font = Widget->GetFont();
-	Font.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
-	Font.LetterSpacing = Style.LetterSpacing;
-	Widget->SetFont(Font);
+	FSlateFontInfo FontInfo = Widget->GetFont();
+
+	const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	const UFont* FoundFont = Importer ? Importer->FindFontAssetFromFamily(Style.FontFamily) : nullptr;
+	if (FoundFont)
+	{
+		FontInfo.FontObject = FoundFont;
+	}
+
+	FontInfo.TypefaceFontName = *Style.GetFaceName();
+
+	FontInfo.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
+	FontInfo.LetterSpacing = (Style.LetterSpacing*100.0f);
+	Widget->SetFont(FontInfo);
 }
 
 float UTextBlockWidgetBuilder::ConvertFontSizeFromDisplayToNative(float DisplayFontSize) const

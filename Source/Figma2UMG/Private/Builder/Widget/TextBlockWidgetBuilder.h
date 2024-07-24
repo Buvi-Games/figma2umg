@@ -7,6 +7,7 @@
 #include "Parser/Properties/FigmaTypeStyle.h"
 #include "TextBlockWidgetBuilder.generated.h"
 
+class UObjectLibrary;
 class UTextBlock;
 
 UCLASS()

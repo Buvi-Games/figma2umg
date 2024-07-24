@@ -27,6 +27,12 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma", ToolTip = "List of Library files to get Components from."))
 	TArray<FString> LibraryFileKeys;
 
+	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Fonts", ToolTip = "Try to download missing fonts from Google."))
+	bool DownloadFontsFromGoogle;
+
+	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Fonts", AdvancedDisplay, EditCondition = "DownloadFontsFromGoogle", ToolTip = "Your application needs to identify itself every time it sends a request to the Google Fonts Developer API. See https://developers.google.com/fonts/docs/developer_api."))
+	FString GFontsAPIKey;
+
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Implement the prototype flow."))
 	bool UsePrototypeFlow = true;
 

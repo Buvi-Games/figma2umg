@@ -33,6 +33,9 @@ public:
 	UFUNCTION()
 	virtual void Reset() = 0;
 
+	UFUNCTION()
+	virtual void AddPackages(TArray<UPackage*>& Packages) const;
+
 protected:
 	FString FileKey;
 	const UFigmaNode* Node = nullptr;
