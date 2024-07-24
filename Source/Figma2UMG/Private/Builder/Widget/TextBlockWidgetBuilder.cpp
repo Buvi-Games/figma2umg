@@ -120,7 +120,7 @@ void UTextBlockWidgetBuilder::SetStyle(const FFigmaTypeStyle& Style) const
 	FontInfo.TypefaceFontName = *Style.GetFaceName();
 
 	FontInfo.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
-	FontInfo.LetterSpacing = Style.LetterSpacing;
+	FontInfo.LetterSpacing = (Style.LetterSpacing*100.0f);
 	Widget->SetFont(FontInfo);
 }
 

@@ -64,7 +64,7 @@ public:
 	EFigmaTextAlignVertical TextAlignVertical = EFigmaTextAlignVertical::TOP;
 
 	UPROPERTY()
-	int32 LetterSpacing = 0;
+	float LetterSpacing = 0;
 
 	UPROPERTY()
 	TArray<FFigmaPaint> Fills;
