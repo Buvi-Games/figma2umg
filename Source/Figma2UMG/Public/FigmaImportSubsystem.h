@@ -32,6 +32,7 @@ public:
 
 	void RefreshFontAssets();
 
+	void AddNewFont(UFont* NewFont);
 	UFont* FindFontAssetFromFamily(const FString& FamilyName) const;
 
 	bool HasGoogleFontsInfo() const{ return !GoogleFontsInfo.IsEmpty(); }
@@ -52,6 +53,9 @@ private:
 
 	UPROPERTY()
 	UObjectLibrary* FontObjectLibrary = nullptr;
+
+	UPROPERTY()
+	TArray<UFont*> NewFonts;
 
 	UPROPERTY()
 	TArray<FGFontFamilyInfo> GoogleFontsInfo;

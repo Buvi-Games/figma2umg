@@ -54,6 +54,11 @@ void UFontBuilder::LoadOrCreateAssets()
 		{
 			FontAsset->SetFlags(RF_Transactional);
 			FontAsset->Modify();
+			UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+			if (Importer)
+			{
+				Importer->AddNewFont(Asset);
+			}
 		}
 	}
 }

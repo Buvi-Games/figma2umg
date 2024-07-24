@@ -2,6 +2,7 @@
 
 #include "FigmaImportSubsystem.h"
 
+#include "PackageTools.h"
 #include "Engine/Font.h"
 #include "Engine/ObjectLibrary.h"
 #include "REST/FigmaImporter.h"
@@ -46,6 +47,7 @@ bool UFigmaImportSubsystem::ShouldGenerateButton(const FString& NodeName) const
 
 void UFigmaImportSubsystem::RefreshFontAssets()
 {
+	NewFonts.Reset();
 	if(FontObjectLibrary)
 	{
 		FontObjectLibrary->ClearLoaded();
@@ -55,8 +57,15 @@ void UFigmaImportSubsystem::RefreshFontAssets()
 		FontObjectLibrary = UObjectLibrary::CreateLibrary(UFont::StaticClass(), false, GIsEditor);
 	}
 
-	FontObjectLibrary->LoadAssetDataFromPath(TEXT("/Game"));
-	FontObjectLibrary->LoadAssetDataFromPath(TEXT("/Script/Engine.Font"));
+	TArray<FString> Paths;
+	Paths.Add(TEXT("/Game"));
+	Paths.Add(TEXT("/Engine/EngineFonts"));
+	FontObjectLibrary->LoadAssetDataFromPaths(Paths);
+}
+
+void UFigmaImportSubsystem::AddNewFont(UFont* NewFont)
+{
+	NewFonts.AddUnique(NewFont);
 }
 
 UFont* UFigmaImportSubsystem::FindFontAssetFromFamily(const FString& FamilyName) const
@@ -64,11 +73,22 @@ UFont* UFigmaImportSubsystem::FindFontAssetFromFamily(const FString& FamilyName)
 	TArray<FAssetData> AssetDatas;
 	FontObjectLibrary->GetAssetDataList(AssetDatas);
 
-	const FString FontFamily = FamilyName.Replace(TEXT(" "), TEXT(""));
+	const FString FontFamily = UPackageTools::SanitizePackageName(FamilyName.Replace(TEXT(" "), TEXT("")));
 	for (const FAssetData& AssetData : AssetDatas)
 	{
+		if (!FontFamily.Equals(AssetData.AssetName.ToString(), ESearchCase::IgnoreCase))
+			continue;
+
 		UObject* Asset = AssetData.GetAsset();
 		UFont* Font = Cast<UFont>(Asset);
+		if (Font && Font->GetName().Equals(FontFamily, ESearchCase::IgnoreCase))
+		{
+			return Font;
+		}
+	}
+
+	for (UFont* Font : NewFonts)
+	{
 		if (Font && Font->GetName().Equals(FontFamily, ESearchCase::IgnoreCase))
 		{
 			return Font;
