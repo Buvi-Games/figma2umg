@@ -3,11 +3,14 @@
 
 #include "REST/FigmaImporter.h"
 
+#include <stack>
+
 #include "Defines.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
 #include "FileHelpers.h"
 #include "JsonObjectConverter.h"
+#include "MaterialPropertyHelpers.h"
 #include "RequestParams.h"
 #include "Async/Async.h"
 #include "Builder/Asset/AssetBuilder.h"
@@ -222,15 +225,26 @@ void UFigmaImporter::UpdateSubProgressGameThread()
 void UFigmaImporter::ResetProgressBar()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
+	{
+		const FSlowTaskStack& Stack = GWarn->GetScopeStack();
+		if(Stack.Last() == Progress)
 		{
-			delete Progress;
-			Progress = nullptr;
-			ProgressThisFrame = 0.0f;
+		   delete Progress;
+		   Progress = nullptr;
+		   ProgressThisFrame = 0.0f;
 
-			delete SubProgress;
-			SubProgress = nullptr;
-			SubProgressThisFrame = 0.0f;
-		});
+		   delete SubProgress;
+		   SubProgress = nullptr;
+		   SubProgressThisFrame = 0.0f;
+		}
+		else
+		{
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
+				{
+					ResetProgressBar();
+				});		
+		}
+	});
 }
 
 void UFigmaImporter::OnCurrentRequestComplete(UVaRestRequestJSON* Request)
@@ -760,22 +774,22 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 void UFigmaImporter::PatchAssets()
 {
 	UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
-	Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_CreateWidgetBuilders", "Creating UWidget Builders"));
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_CreateWidgetBuilders", "Creating UWidget Builders"));
 	CreateWidgetBuilders();
 
-	Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
 	PatchPreInsertWidget();
 
-	Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
 	CompileBPs();
 	
-	Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
 	ReloadBPAssets();
 
-	Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
 	PatchWidgetBinds();
 
-	Progress->EnterProgressFrame(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
 	PatchWidgetProperties();
 
 	UFigmaImporter::OnPatchUAssets(true);	
@@ -864,7 +878,7 @@ void UFigmaImporter::OnPatchUAssets(bool Succeeded)
 
 	
 	UE_LOG_Figma2UMG(Display, TEXT("Post-patch UAssets."));
-	UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostPatch", "Post-patch UAssets"));
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostPatch", "Post-patch UAssets"));
 
 	if(SaveAllAtEnd)
 	{
