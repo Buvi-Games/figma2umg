@@ -577,7 +577,7 @@ void UFigmaImporter::FetchGoogleFontsList()
 	}
 	else
 	{
-		LoadOrCreateAssets();
+		BuildFontDependency();
 	}
 }
 
