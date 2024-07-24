@@ -103,7 +103,7 @@ void UFontBuilder::AddPackages(TArray<UPackage*>& Packages) const
 
 void UFontBuilder::SetFontFamily(const FString& InFontFamily)
 {
-	FontFamily = InFontFamily;
+	FontFamily = UPackageTools::SanitizePackageName(InFontFamily.Replace(TEXT(" "), TEXT("")));
 }
 
 void UFontBuilder::AddFontRequest(FFontRequests& FontRequests)

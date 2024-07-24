@@ -608,7 +608,11 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 					constexpr int64 SkipFlags = 0;
 					constexpr bool StrictMode = false;
 					FText OutFailReason;
-					if (!FJsonObjectConverter::JsonObjectToUStruct(FontObject.ToSharedRef(), &FontFamilyInfo, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+					if (FJsonObjectConverter::JsonObjectToUStruct(FontObject.ToSharedRef(), &FontFamilyInfo, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+					{
+						FontFamilyInfo.Family = UPackageTools::SanitizePackageName(FontFamilyInfo.Family.Replace(TEXT(" "), TEXT("")));
+					}
+					else
 					{
 						FString Family = FontObject->GetStringField(TEXT("family"));
 						UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaImporter] Failed to parse Google Font Family %s"), *Family);
