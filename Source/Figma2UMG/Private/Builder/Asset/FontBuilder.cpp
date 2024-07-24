@@ -10,6 +10,7 @@
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Engine/Font.h"
+#include "Engine/FontFace.h"
 #include "Factories/FontFactory.h"
 #include "Parser/Nodes/FigmaNode.h"
 
@@ -19,41 +20,47 @@ void UFontBuilder::LoadOrCreateAssets()
 	if (Asset == nullptr)
 	{
 		UFontFactory* Factory = NewObject<UFontFactory>(UFontFactory::StaticClass());
-		UFont* FontAsset = nullptr;
-		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this));
-		const FString AssetName = ObjectTools::SanitizeInvalidChars(Node->GetUAssetName(), INVALID_OBJECTNAME_CHARACTERS);
-		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + AssetName);
+		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this) + TEXT("/") + FontFamily);
+		const FString FontAssetName = ObjectTools::SanitizeInvalidChars(FontFamily, INVALID_OBJECTNAME_CHARACTERS);
+		const FString PackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + FontAssetName);
 
 		UClass* AssetClass = UFont::StaticClass();
 
-		const FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>("AssetRegistry");
-		const FAssetData AssetData = AssetRegistryModule.Get().GetAssetByObjectPath(FSoftObjectPath(*PackageName, *AssetName, FString()));
-		FontAsset = Cast<UFont>(AssetData.FastGetAsset(true));
+		static const FName NAME_AssetTools = "AssetTools";
+		IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
+		UE_LOG_Figma2UMG(Display, TEXT("Create UAsset %s/%s of type %s"), *PackagePath, *FontAssetName, *AssetClass->GetDisplayNameText().ToString());
+		Asset = Cast<UFont>(AssetTools->CreateAsset(FontAssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
 
-		if (FontAsset == nullptr)
+		if (Asset)
 		{
-			static const FName NAME_AssetTools = "AssetTools";
-			IAssetTools* AssetTools = &FModuleManager::GetModuleChecked<FAssetToolsModule>(NAME_AssetTools).Get();
-			UE_LOG_Figma2UMG(Display, TEXT("Create UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());
-			FontAsset = Cast<UFont>(AssetTools->CreateAsset(AssetName, PackagePath, AssetClass, Factory, FName("Figma2UMG")));
-		}
-		else
-		{
-			UPackage* Pkg = CreatePackage(*PackagePath);
-			const EObjectFlags Flags = RF_Public | RF_Standalone | RF_Transactional;
-			UE_LOG_Figma2UMG(Display, TEXT("Reimport UAsset %s/%s of type %s"), *PackagePath, *AssetName, *AssetClass->GetDisplayNameText().ToString());
-			FontAsset = Cast<UFont>(Factory->FactoryCreateNew(AssetClass, Pkg, *AssetName, Flags, nullptr, GWarn));
-			if (FontAsset)
+			for (TPair<FString, TArray<uint8>> FaceRawData: FacesRawData)
 			{
-				FAssetRegistryModule::AssetCreated(FontAsset);
-			}
-		}
+				const FString FontFaceAssetName = ObjectTools::SanitizeInvalidChars(FaceRawData.Key, INVALID_OBJECTNAME_CHARACTERS);
+				const FString FontFacePackageName = UPackageTools::SanitizePackageName(PackagePath + TEXT("/") + FontFaceAssetName);
 
-		Asset = FontAsset;
-		if (FontAsset)
-		{
-			FontAsset->SetFlags(RF_Transactional);
-			FontAsset->Modify();
+				UPackage* FontFacePkg = CreatePackage(*FontFacePackageName);
+				UFontFace* FontFace = NewObject<UFontFace>(FontFacePkg, UFontFace::StaticClass(), *FontFaceAssetName, RF_Public | RF_Standalone | RF_Transactional);
+				if (FontFace)
+				{
+					FontFace->FontFaceData->SetData(MoveTemp(FaceRawData.Value));
+					FontFace->CacheSubFaces();
+
+					FTypefaceEntry& DefaultTypefaceEntry = Asset->CompositeFont.DefaultTypeface.Fonts.Emplace_GetRef();
+					DefaultTypefaceEntry.Name = *FaceRawData.Key;
+					DefaultTypefaceEntry.Font = FFontData(FontFace);
+
+					FontFace->MarkPackageDirty();
+					FontFace->PostEditChange();
+					FAssetRegistryModule::AssetCreated(FontFace);
+
+					Faces.Add(FontFace);
+				}
+			}
+
+			Asset->SetFlags(RF_Transactional);
+			Asset->Modify();
+			FAssetRegistryModule::AssetCreated(Asset);
+
 			UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
 			if (Importer)
 			{
