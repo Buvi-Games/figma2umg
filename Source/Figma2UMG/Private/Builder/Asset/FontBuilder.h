@@ -31,6 +31,8 @@ public:
 	void OnRawFontFileReceived(const FString& Variant, const TArray<uint8>& InRawData);
 
 protected:
+	FString GetVariantName(const FString& VariantId);
+
 	UPROPERTY()
 	FString FontFamily;
 

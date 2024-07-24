@@ -118,8 +118,96 @@ void UFontBuilder::AddFontRequest(FFontRequests& FontRequests)
 
 void UFontBuilder::OnRawFontFileReceived(const FString& Variant, const TArray<uint8>& InRawData)
 {
-	const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/Fonts/") + FontFamily + TEXT("/") + Variant + TEXT(".ttf");
+	const FString VariantName = GetVariantName(Variant);
+	const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/Fonts/") + FontFamily + TEXT("/") + VariantName + TEXT(".ttf");
 	FFileHelper::SaveArrayToFile(InRawData, *FullFilename);
 
-	FacesRawData.Add(Variant, InRawData);
+	FacesRawData.Add(VariantName, InRawData);
+}
+
+FString UFontBuilder::GetVariantName(const FString& VariantId)
+{
+	static const FString Regular = FString("Regular");
+	static const FString Italic = FString("Italic");
+	static const FString V_100 = FString("100");
+	static const FString V_200 = FString("200");
+	static const FString V_300 = FString("300");
+	static const FString V_400 = FString("400");
+	static const FString V_500 = FString("500");
+	static const FString V_600 = FString("600");
+	static const FString V_700 = FString("700");
+	static const FString V_800 = FString("800");
+	static const FString V_900 = FString("900");
+	static const FString Thin = FString("Thin");
+	static const FString ExtraLight = FString("ExtraLight");
+	static const FString Light = FString("Light");
+	static const FString Medium = FString("Medium");
+	static const FString SemiBold = FString("SemiBold");
+	static const FString Bold = FString("Bold");
+	static const FString ExtraBold = FString("ExtraBold");
+	static const FString Black = FString("Black");
+
+	bool Matches = false;
+	FString BoldName = VariantId;
+	if (VariantId.Contains(V_100))
+	{
+		BoldName =  Thin;
+		Matches = VariantId.Equals(V_100);
+	}
+	else if (VariantId.Contains(V_200))
+	{
+		BoldName =  ExtraLight;
+		Matches = VariantId.Equals(V_200);
+	}
+	else if (VariantId.Contains(V_300))
+	{
+		BoldName =  Light;
+		Matches = VariantId.Equals(V_300);
+	}
+	else if (VariantId.Contains(Regular, ESearchCase::IgnoreCase) || VariantId.Contains(V_400))
+	{
+		BoldName =  Regular;
+		Matches = VariantId.Equals(Regular, ESearchCase::IgnoreCase) || VariantId.Equals(V_400);
+	}
+	else if (VariantId.Contains(V_500))
+	{
+		BoldName =  Medium;
+		Matches = VariantId.Equals(V_500);
+	}
+	else if (VariantId.Contains(V_600))
+	{
+		BoldName =  SemiBold;
+		Matches = VariantId.Equals(V_600);
+	}
+	else if (VariantId.Contains(V_700))
+	{
+		BoldName =  Bold;
+		Matches = VariantId.Equals(V_700);
+	}
+	else if (VariantId.Contains(V_800))
+	{
+		BoldName =  ExtraBold;
+		Matches = VariantId.Equals(V_800);
+	}
+	else if (VariantId.Contains(V_900))
+	{
+		BoldName =  Black;
+		Matches = VariantId.Equals(V_900);
+	}
+	else if (VariantId.Equals(Italic, ESearchCase::IgnoreCase))
+	{
+		return Italic;
+	}
+	else
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[GetVariantName] Unknown name for Variant %s"), *VariantId);
+	}
+
+	const bool IsItalic = VariantId.Contains(Italic, ESearchCase::IgnoreCase);
+	if(!IsItalic && !Matches)
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[GetVariantName] Mismatching name for Variant %s and %s"), *VariantId, *BoldName);
+	}
+
+	return IsItalic ? BoldName+Italic : BoldName;
 }
