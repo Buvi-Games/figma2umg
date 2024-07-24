@@ -36,18 +36,11 @@ FString FGFontRequest::GetURL() const
 
 void FGFontRequest::HandleFontDownload(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
 {
-	if (bSucceeded && HttpResponse.IsValid() && HttpResponse->GetContentLength() > 0)
+	if (bSucceeded && HttpResponse.IsValid() && !HttpResponse->GetContent().IsEmpty())
 	{
-		const int dataSize = HttpResponse->GetContentLength();
-
-		TArray<uint8> RawData;
-		RawData.Empty(dataSize);
-		RawData.AddUninitialized(dataSize);
-		FMemory::Memcpy(RawData.GetData(), HttpResponse->GetContent().GetData(), dataSize);
-
 		if (OnFontRawReceive.IsBound())
 		{
-			OnFontRawReceive.Broadcast(Variant, RawData);
+			OnFontRawReceive.Broadcast(Variant, HttpResponse->GetContent());
 		}
 
 		Status = eRequestStatus::Succeeded;
