@@ -117,14 +117,7 @@ void UTextBlockWidgetBuilder::SetStyle(const FFigmaTypeStyle& Style) const
 		FontInfo.FontObject = FoundFont;
 	}
 
-	if (Style.FontPostScriptName.IsEmpty())
-	{
-		FontInfo.TypefaceFontName = "Default";
-	}
-	else
-	{
-		FontInfo.TypefaceFontName = *Style.FontPostScriptName;
-	}
+	FontInfo.TypefaceFontName = *Style.GetFaceName();
 
 	FontInfo.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
 	FontInfo.LetterSpacing = Style.LetterSpacing;

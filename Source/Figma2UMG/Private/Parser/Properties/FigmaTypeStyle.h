@@ -16,6 +16,7 @@ public:
 	GENERATED_BODY()
 
 	void PostSerialize(const TSharedPtr<FJsonObject> JsonObj);
+	FString GetFaceName() const;
 
 	UPROPERTY()
 	FString FontFamily;
