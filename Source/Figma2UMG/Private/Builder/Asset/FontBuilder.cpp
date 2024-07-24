@@ -19,6 +19,12 @@ void UFontBuilder::LoadOrCreateAssets()
 	LoadAssets();
 	if (Asset == nullptr)
 	{
+		if(FacesRawData.IsEmpty())
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("Failed to import Font %s"), *FontFamily);
+			return;
+		}
+
 		UFontFactory* Factory = NewObject<UFontFactory>(UFontFactory::StaticClass());
 		const FString PackagePath = UPackageTools::SanitizePackageName(Node->GetPackageNameForBuilder(this) + TEXT("/") + FontFamily);
 		const FString FontAssetName = ObjectTools::SanitizeInvalidChars(FontFamily, INVALID_OBJECTNAME_CHARACTERS);
