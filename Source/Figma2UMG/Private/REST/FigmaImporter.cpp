@@ -642,7 +642,7 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 
 void UFigmaImporter::BuildFontDependency()
 {
-	AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
+	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
 			//UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma GFonts Request]"));
