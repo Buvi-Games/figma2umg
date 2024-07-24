@@ -11,6 +11,7 @@
 #include "RequestParams.h"
 #include "Async/Async.h"
 #include "Builder/Asset/AssetBuilder.h"
+#include "Builder/Asset/FontBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Parser/FigmaFile.h"
@@ -24,6 +25,7 @@ UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	OnAssetsCreatedDelegate.BindUObject(this, &UFigmaImporter::OnAssetsCreated);
 	OnVaRestImagesRequestDelegate.BindUFunction(this, FName("OnFigmaImagesRequestReceived"));
 	OnImageDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleImageDownload);
+	OnFontDownloadRequestCompleted.BindUObject(this, &UFigmaImporter::HandleFontDownload);
 	OnPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPatchUAssets);
 	OnPostPatchUAssetsDelegate.BindUObject(this, &UFigmaImporter::OnPostPatchUAssets);
 }
@@ -50,6 +52,9 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 	ContentRootFolder = InProperties->ContentRootFolder;
 	RequesterCallback = InRequesterCallback;
+
+	DownloadFontsFromGoogle = InProperties->DownloadFontsFromGoogle;
+	GFontsAPIKey = InProperties->GFontsAPIKey;
 
 	UsePrototypeFlow = InProperties->UsePrototypeFlow;
 	SaveAllAtEnd = InProperties->SaveAllAtEnd;
@@ -129,7 +134,7 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 	int HeaderAddressOffset = 0;
 
 #if WITH_CURL
-#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4 && ENGINE_PATCH_VERSION <= 2)
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4 && ENGINE_PATCH_VERSION <= 3)
 	HeaderAddressOffset = 664;
 #elif (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 3 && ENGINE_PATCH_VERSION == 2)
 	HeaderAddressOffset = 256;
@@ -467,6 +472,10 @@ void UFigmaImporter::RequestImageURLs()
 					UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
 				}
 			}
+			else if (DownloadFontsFromGoogle)
+			{
+				FetchGoogleFontsList();
+			}
 			else
 			{
 				LoadOrCreateAssets();
@@ -540,8 +549,164 @@ void UFigmaImporter::HandleImageDownload(bool Succeeded)
 	}
 }
 
+void UFigmaImporter::FetchGoogleFontsList()
+{
+	const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	if (Importer && !Importer->HasGoogleFontsInfo())
+	{
+		AsyncTask(ENamedThreads::GameThread, [this]()
+			{
+				if (Progress)
+				{
+					delete Progress;
+					Progress = nullptr;
+					ProgressThisFrame = 0.0f;
+				}
+
+				Progress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
+				Progress->MakeDialog();
+				UpdateProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
+
+				TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
+				HttpRequest->OnProcessRequestComplete().BindUObject(this, &UFigmaImporter::OnFetchGoogleFontsResponse);
+				FString URL = "https://www.googleapis.com/webfonts/v1/webfonts?key=" + GFontsAPIKey;
+				HttpRequest->SetURL(URL);
+				HttpRequest->SetVerb(TEXT("GET"));
+				HttpRequest->ProcessRequest();
+			});
+	}
+	else
+	{
+		BuildFontDependency();
+	}
+}
+
+void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bWasSuccessful)
+{
+	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+	if (Importer && bWasSuccessful && HttpResponse.IsValid() && HttpResponse->GetResponseCode() == EHttpResponseCodes::Ok)
+	{
+		const FString FullFilename = FPaths::ProjectContentDir() + TEXT("../Downloads/Fonts/GFontList.json");
+		FFileHelper::SaveArrayToFile(HttpResponse->GetContent(), *FullFilename);
+
+		TSharedPtr<FJsonObject> JsonObject;
+		TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
+
+		TArray<FGFontFamilyInfo>& GoogleFontsInfo = Importer->GetGoogleFontsInfo();
+		if (FJsonSerializer::Deserialize(Reader, JsonObject) && JsonObject.IsValid())
+		{
+			const TArray<TSharedPtr<FJsonValue>>* Items;
+			if (JsonObject->TryGetArrayField(TEXT("items"), Items))
+			{
+				for (const TSharedPtr<FJsonValue>& Item : *Items)
+				{
+					const TSharedPtr<FJsonObject> FontObject = Item->AsObject();
+					FGFontFamilyInfo& FontFamilyInfo = GoogleFontsInfo.Emplace_GetRef();
+
+
+					constexpr int64 CheckFlags = 0;
+					constexpr int64 SkipFlags = 0;
+					constexpr bool StrictMode = false;
+					FText OutFailReason;
+					if (FJsonObjectConverter::JsonObjectToUStruct(FontObject.ToSharedRef(), &FontFamilyInfo, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
+					{
+						FontFamilyInfo.Family = UPackageTools::SanitizePackageName(FontFamilyInfo.Family.Replace(TEXT(" "), TEXT("")));
+					}
+					else
+					{
+						FString Family = FontObject->GetStringField(TEXT("family"));
+						UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaImporter] Failed to parse Google Font Family %s"), *Family);
+					}
+				}
+			}
+		}
+
+		if (!GoogleFontsInfo.IsEmpty())
+		{
+			BuildFontDependency();
+		}
+		else
+		{
+			LoadOrCreateAssets();
+		}
+	}
+	else
+	{
+		const TArray<uint8>& Content = HttpResponse.Get()->GetContent();
+		FString ErrorContent = BytesToString(Content.GetData(), Content.Num());
+		UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaImporter] Failed to Fetch Google Fonts's list. Response %s"), *ErrorContent);
+
+		LoadOrCreateAssets();
+	}
+}
+
+void UFigmaImporter::BuildFontDependency()
+{
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			//UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
+			UE_LOG_Figma2UMG(Display, TEXT("[Figma GFonts Request]"));
+			RequestedFonts.Reset();
+
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (UFontBuilder* FontBuilder = Cast<UFontBuilder>(AssetBuilder.GetObject()))
+				{
+					FontBuilder->AddFontRequest(RequestedFonts);
+				}
+			}
+
+			FontDownloadCount = 0;
+			DownloadNextFont();
+		});
+}
+
+void UFigmaImporter::DownloadNextFont()
+{
+	FGFontRequest* FontRequest = RequestedFonts.GetNextToDownload();
+	if (FontRequest)
+	{
+		FontDownloadCount++;
+		const float FontCountTotal = RequestedFonts.GetRequestTotalCount();
+
+		TArray<FStringFormatArg> args;
+		args.Add(FontDownloadCount);
+		args.Add(static_cast<int>(FontCountTotal));
+		FString msg = FString::Format(TEXT("Downloading font {0} of {1}"), args);
+
+		UpdateProgress(80.f / FontCountTotal, FText::FromString(msg));
+
+		UE_LOG_Figma2UMG(Display, TEXT("Downloading font (%i/%i) %s(%s) at %s."), FontDownloadCount, static_cast<int>(FontCountTotal), *FontRequest->FamilyInfo->Family, *FontRequest->Variant, *FontRequest->GetURL());
+		FontRequest->StartDownload(OnFontDownloadRequestCompleted);
+	}
+	else
+	{
+		LoadOrCreateAssets();
+	}
+}
+
+void UFigmaImporter::HandleFontDownload(bool Succeeded)
+{
+	if (Succeeded)
+	{
+		DownloadNextFont();
+	}
+	else
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("Failed to download font."));
+		LoadOrCreateAssets();
+	}
+}
+
 void UFigmaImporter::LoadOrCreateAssets()
 {
+	if (Progress)
+	{
+		delete Progress;
+		Progress = nullptr;
+		ProgressThisFrame = 0.0f;
+	}
+
 	const float WorkCount = 8.0f;//Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
 	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
 	Progress->MakeDialog();
@@ -695,11 +860,7 @@ void UFigmaImporter::SaveAll()
 	TArray<UPackage*> Packages;
 	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 	{
-		UPackage* Package = AssetBuilder->GetAssetPackage();
-		if (Package)
-		{
-			Packages.AddUnique(Package);
-		}
+		AssetBuilder->AddPackages(Packages);
 	}
 #if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION >= 3)
 	FEditorFileUtils::FPromptForCheckoutAndSaveParams Params;

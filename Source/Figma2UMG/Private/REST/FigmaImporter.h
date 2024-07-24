@@ -8,6 +8,7 @@
 #include "VaRestSubsystem.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/ImagesRequestResult.h"
+#include "Interfaces/IHttpRequest.h"
 
 #include "FigmaImporter.generated.h"
 
@@ -66,6 +67,20 @@ protected:
 	void HandleImageDownload(bool Succeeded);
 
 	UFUNCTION()
+	void FetchGoogleFontsList();
+
+	void OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
+
+	UFUNCTION()
+	void BuildFontDependency();
+
+	UFUNCTION()
+	void DownloadNextFont();
+
+	UFUNCTION()
+	void HandleFontDownload(bool Succeeded);
+
+	UFUNCTION()
 	void LoadOrCreateAssets();
 
 	UFUNCTION()
@@ -107,6 +122,7 @@ protected:
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
 	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
+	FOnFontRequestCompleteDelegate OnFontDownloadRequestCompleted;
 	FProcessFinishedDelegate OnPatchUAssetsDelegate;
 	FProcessFinishedDelegate OnPostPatchUAssetsDelegate;
 
@@ -120,6 +136,9 @@ protected:
 	FString ContentRootFolder;
 
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
+
+	bool DownloadFontsFromGoogle = false;
+	FString GFontsAPIKey;
 
 	bool UsePrototypeFlow = false;
 	bool SaveAllAtEnd = false;
@@ -136,10 +155,13 @@ protected:
 	UPROPERTY()
 	FImagesRequestResult ImagesRequestResult;
 	FImageRequests RequestedImages;
+	int ImageDownloadCount = 0;
+
+	FFontRequests RequestedFonts;
+	int FontDownloadCount = 0;
 
 	FScopedSlowTask* Progress = nullptr;
 	float ProgressThisFrame = 0.0f;
 	FText ProgressMessage;
 
-	int ImageDownloadCount = 0;
 };

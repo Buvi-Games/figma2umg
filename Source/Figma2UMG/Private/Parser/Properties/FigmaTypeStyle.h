@@ -16,6 +16,7 @@ public:
 	GENERATED_BODY()
 
 	void PostSerialize(const TSharedPtr<FJsonObject> JsonObj);
+	FString GetFaceName() const;
 
 	UPROPERTY()
 	FString FontFamily;
@@ -63,7 +64,7 @@ public:
 	EFigmaTextAlignVertical TextAlignVertical = EFigmaTextAlignVertical::TOP;
 
 	UPROPERTY()
-	int32 LetterSpacing = 0;
+	float LetterSpacing = 0;
 
 	UPROPERTY()
 	TArray<FFigmaPaint> Fills;

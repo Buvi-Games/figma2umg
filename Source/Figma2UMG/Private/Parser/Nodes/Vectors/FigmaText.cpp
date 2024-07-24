@@ -6,6 +6,7 @@
 #include "Figma2UMGModule.h"
 #include "WidgetBlueprint.h"
 #include "Builder/WidgetBlueprintHelper.h"
+#include "Builder/Asset/FontBuilder.h"
 #include "Builder/Widget/TextBlockWidgetBuilder.h"
 #include "Components/TextBlock.h"
 
@@ -32,6 +33,30 @@ FVector2D UFigmaText::GetAbsolutePosition() const
 FVector2D UFigmaText::GetAbsoluteSize() const
 {
 	return AbsoluteBoundingBox.GetSize();
+}
+
+bool UFigmaText::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
+{
+	//TODO: Look if font is already imported.
+	UFontBuilder* AssetBuilder = NewObject<UFontBuilder>();
+	AssetBuilder->SetNode(InFileKey, this);
+	AssetBuilder->SetFontFamily(Style.FontFamily);
+	AssetBuilders.Add(AssetBuilder);
+
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+
+	return true;
+}
+
+FString UFigmaText::GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const
+{
+	TObjectPtr<UFigmaNode> TopParentNode = ParentNode;
+	while (TopParentNode && TopParentNode->GetParentNode())
+	{
+		TopParentNode = TopParentNode->GetParentNode();
+	}
+	const FString Suffix = "Fonts";
+	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
 }
 
 TScriptInterface<IWidgetBuilder> UFigmaText::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
