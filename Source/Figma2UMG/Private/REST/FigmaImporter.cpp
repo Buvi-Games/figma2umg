@@ -63,7 +63,7 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 void UFigmaImporter::Run()
 {
-	int WorkCount = (LibraryFileKeys.Num() * 3/*Request, Parse, PostSerialization*/) + 3/*Request, Parse, PostSerialization*/ + 3;//Fix, Builders, ImageDependency
+	int WorkCount = (LibraryFileKeys.Num() * 3/*Request, Parse, PostSerialization*/) + 3/*Request, Parse, PostSerialization*/ + 13;//Fix, Builders, Images, Fonts, Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
 	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
 	Progress->MakeDialog();
 	if(LibraryFileKeys.IsEmpty())
@@ -187,7 +187,6 @@ void UFigmaImporter::UpdateProgress(float ExpectedWorkThisFrame, const FText& Me
 		{
 			UpdateProgressGameThread();
 		});
-
 }
 
 void UFigmaImporter::UpdateProgressGameThread()
@@ -200,6 +199,26 @@ void UFigmaImporter::UpdateProgressGameThread()
 	}
 }
 
+void UFigmaImporter::UpdateSubProgress(float ExpectedWorkThisFrame, const FText& Message)
+{
+	SubProgressThisFrame += ExpectedWorkThisFrame;
+	SubProgressMessage = Message;
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			UpdateSubProgressGameThread();
+		});
+}
+
+void UFigmaImporter::UpdateSubProgressGameThread()
+{
+	const float WorkRemaining = SubProgress ? (SubProgress->TotalAmountOfWork - (SubProgress->CompletedWork + SubProgress->CurrentFrameScope)) : 0.0f;
+	if (SubProgress && SubProgressThisFrame > 0.0f)
+	{
+		SubProgress->EnterProgressFrame(SubProgressThisFrame, SubProgressMessage);
+		SubProgressThisFrame = 0.0f;
+	}
+}
+
 void UFigmaImporter::ResetProgressBar()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
@@ -207,6 +226,10 @@ void UFigmaImporter::ResetProgressBar()
 			delete Progress;
 			Progress = nullptr;
 			ProgressThisFrame = 0.0f;
+
+			delete SubProgress;
+			SubProgress = nullptr;
+			SubProgressThisFrame = 0.0f;
 		});
 }
 
@@ -428,7 +451,7 @@ void UFigmaImporter::BuildImageDependency()
 {
 	AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
 		{
-			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
+			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Managing Images."));
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]"));
 			RequestedImages.Reset();
 
@@ -439,6 +462,7 @@ void UFigmaImporter::BuildImageDependency()
 					Texture2DBuilder->AddImageRequest(RequestedImages);
 				}
 			}
+
 			RequestImageURLs();
 		});
 }
@@ -447,19 +471,19 @@ void UFigmaImporter::RequestImageURLs()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			if (Progress)
+			if (SubProgress)
 			{
-				delete Progress;
-				Progress = nullptr;
-				ProgressThisFrame = 0.0f;
+				delete SubProgress;
+				SubProgress = nullptr;
+				SubProgressThisFrame = 0.0f;
 			}
 
 			const FImagePerFileRequests* Requests = RequestedImages.GetRequests();
 			if (Requests)
 			{
-				Progress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
-				Progress->MakeDialog();
-				UpdateProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageRequest", "Requesting Image."));
+				SubProgress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
+				SubProgress->MakeDialog();
+				UpdateSubProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageRequest", "Requesting Image."));
 				FString ImageIdsFormated = Requests->Requests[0].Id;
 				for (int i = 1; i < Requests->Requests.Num(); i++)
 				{
@@ -485,7 +509,7 @@ void UFigmaImporter::RequestImageURLs()
 
 void UFigmaImporter::OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request)
 {
-	UpdateProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageParser", "Parsing Image Result."));
+	UpdateSubProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageParser", "Parsing Image Result."));
 	if (ParseRequestReceived(TEXT("[Figma images request] "), Request))
 	{
 		UVaRestJsonObject* responseJson = Request->GetResponseObject();
@@ -526,7 +550,7 @@ void UFigmaImporter::DownloadNextImage()
 		args.Add(static_cast<int>(ImageCountTotal));
 		FString msg = FString::Format(TEXT("Downloading Image {0} of {1}"), args);
 
-		UpdateProgress(80.f / ImageCountTotal, FText::FromString(msg));
+		UpdateSubProgress(80.f / ImageCountTotal, FText::FromString(msg));
 
 		UE_LOG_Figma2UMG(Display, TEXT("Downloading image (%i/%i) %s at %s."), ImageDownloadCount , static_cast<int>(ImageCountTotal), *ImageRequest->ImageName, *ImageRequest->URL);
 		ImageRequest->StartDownload(OnImageDownloadRequestCompleted);
@@ -551,34 +575,37 @@ void UFigmaImporter::HandleImageDownload(bool Succeeded)
 
 void UFigmaImporter::FetchGoogleFontsList()
 {
-	const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
-	if (Importer && !Importer->HasGoogleFontsInfo())
+	AsyncTask(ENamedThreads::GameThread, [this]()
 	{
-		AsyncTask(ENamedThreads::GameThread, [this]()
-			{
-				if (Progress)
-				{
-					delete Progress;
-					Progress = nullptr;
-					ProgressThisFrame = 0.0f;
-				}
+		if (SubProgress)
+		{
+			delete SubProgress;
+			SubProgress = nullptr;
+			SubProgressThisFrame = 0.0f;
+		}
 
-				Progress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
-				Progress->MakeDialog();
-				UpdateProgress(10, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
+		UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Managing Fonts."));
 
+		SubProgress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google"));
+		SubProgress->MakeDialog();
+		UpdateSubProgress(5, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
+
+
+		const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
+		if (Importer && !Importer->HasGoogleFontsInfo())
+		{
 				TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
 				HttpRequest->OnProcessRequestComplete().BindUObject(this, &UFigmaImporter::OnFetchGoogleFontsResponse);
 				FString URL = "https://www.googleapis.com/webfonts/v1/webfonts?key=" + GFontsAPIKey;
 				HttpRequest->SetURL(URL);
 				HttpRequest->SetVerb(TEXT("GET"));
 				HttpRequest->ProcessRequest();
-			});
-	}
-	else
-	{
-		BuildFontDependency();
-	}
+		}
+		else
+		{
+			BuildFontDependency();
+		}
+	});
 }
 
 void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bWasSuccessful)
@@ -644,7 +671,7 @@ void UFigmaImporter::BuildFontDependency()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			//UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImageDependency", "Build Image Dependency."));
+			UpdateSubProgress(5, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma GFonts Request]"));
 			RequestedFonts.Reset();
 
@@ -674,7 +701,7 @@ void UFigmaImporter::DownloadNextFont()
 		args.Add(static_cast<int>(FontCountTotal));
 		FString msg = FString::Format(TEXT("Downloading font {0} of {1}"), args);
 
-		UpdateProgress(80.f / FontCountTotal, FText::FromString(msg));
+		UpdateSubProgress(80.f / FontCountTotal, FText::FromString(msg));
 
 		UE_LOG_Figma2UMG(Display, TEXT("Downloading font (%i/%i) %s(%s) at %s."), FontDownloadCount, static_cast<int>(FontCountTotal), *FontRequest->FamilyInfo->Family, *FontRequest->Variant, *FontRequest->GetURL());
 		FontRequest->StartDownload(OnFontDownloadRequestCompleted);
@@ -700,16 +727,14 @@ void UFigmaImporter::HandleFontDownload(bool Succeeded)
 
 void UFigmaImporter::LoadOrCreateAssets()
 {
-	if (Progress)
+	if (SubProgress)
 	{
-		delete Progress;
-		Progress = nullptr;
-		ProgressThisFrame = 0.0f;
+		delete SubProgress;
+		SubProgress = nullptr;
+		SubProgressThisFrame = 0.0f;
 	}
 
-	const float WorkCount = 8.0f;//Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
-	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
-	Progress->MakeDialog();
+	UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
 	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
 	
 	FGCScopeGuard GCScopeGuard;

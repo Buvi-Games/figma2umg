@@ -30,6 +30,8 @@ protected:
 	void UpdateStatus(eRequestStatus Status, FString Message);
 	void UpdateProgress(float ExpectedWorkThisFrame, const FText& Message);
 	void UpdateProgressGameThread();
+	void UpdateSubProgress(float ExpectedWorkThisFrame, const FText& Message);
+	void UpdateSubProgressGameThread();
 	void ResetProgressBar();
 
 	void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
@@ -164,4 +166,7 @@ protected:
 	float ProgressThisFrame = 0.0f;
 	FText ProgressMessage;
 
+	FScopedSlowTask* SubProgress = nullptr;
+	float SubProgressThisFrame = 0.0f;
+	FText SubProgressMessage;
 };
