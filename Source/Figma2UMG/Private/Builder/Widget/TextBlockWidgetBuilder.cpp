@@ -71,7 +71,7 @@ void UTextBlockWidgetBuilder::Setup() const
 	}
 
 	Widget->SetText(FText::FromString(FigmaText->Characters));
-	Widget->SetAutoWrapText(true);
+	Widget->SetAutoWrapText(FigmaText->Style.TextAutoResize != EFigmaTextAutoResize::WIDTH_AND_HEIGHT);
 
 	SetStyle(FigmaText->Style);
 
