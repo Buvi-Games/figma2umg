@@ -13,6 +13,7 @@
 #include "Engine/FontFace.h"
 #include "Factories/FontFactory.h"
 #include "Parser/Nodes/FigmaNode.h"
+#include "Misc/FileHelper.h"
 
 void UFontBuilder::LoadOrCreateAssets()
 {
