@@ -17,6 +17,9 @@
 #include "Builder/Asset/FontBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
+#include "Misc/FeedbackContext.h"
+#include "Misc/ScopedSlowTask.h"
+#include "Misc/SlowTaskStack.h"
 #include "Parser/FigmaFile.h"
 #include "Misc/ScopedSlowTask.h"
 
