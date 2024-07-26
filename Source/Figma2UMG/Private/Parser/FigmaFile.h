@@ -28,10 +28,12 @@ public:
 
 	FString FindComponentName(const FString& ComponentId);
 	FFigmaComponentRef* FindComponentRef(const FString& ComponentId);
+	FFigmaComponentRef* FindComponentRefByKey(const FString& Key);
 	TObjectPtr<UFigmaComponent> FindComponentByKey(const FString& Key);
 
 	FString FindComponentSetName(const FString& ComponentSetId);
 	FFigmaComponentSetRef* FindComponentSetRef(const FString& ComponentSetId);
+	FFigmaComponentSetRef* FindComponentSetRefByKey(const FString& Key);
 	TObjectPtr<UFigmaComponentSet> FindComponentSetByKey(const FString& Key);
 
 	void PrepareForFlow();
