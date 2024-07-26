@@ -5,6 +5,7 @@
 #include <Interfaces/FlowTransition.h>
 
 #include "CoreMinimal.h"
+#include "FigmaComponent.h"
 #include "FigmaNode.h"
 #include "Parser/Properties/FigmaComponentProperty.h"
 #include "Parser/Properties/FigmaLayoutConstraint.h"
@@ -37,8 +38,10 @@ public:
 
 	// FlowTransition
 	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
-	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; }
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
+
+	const FFigmaComponentPropertyDefinition* IsInstanceSwap() const;
 
 	UPROPERTY()
 	TArray<UFigmaNode*> Children;
@@ -227,4 +230,7 @@ protected:
 
 	UPROPERTY()
 	TObjectPtr<UTexture> MissingComponentTexture = nullptr;
+
+	UPROPERTY()
+	mutable TArray<UFigmaInstance*> InstanceSwapValues;
 };
