@@ -55,6 +55,8 @@ public:
 
 	virtual void PrepareForFlow();
 
+	void InitializeFrom(const UFigmaNode* Other, const FString& NewId);
+
 	FString GetId() const { return Id; }
 	FString GetIdForName() const;
 

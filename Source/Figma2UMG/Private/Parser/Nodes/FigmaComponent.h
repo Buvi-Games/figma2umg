@@ -8,6 +8,7 @@
 
 #include "FigmaComponent.generated.h"
 
+class UFigmaInstance;
 struct FEdGraphPinType;
 
 UCLASS()
@@ -21,6 +22,7 @@ public:
 	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const override;
 
 	void TryAddComponentPropertyDefinition(FString PropertyId, FFigmaComponentPropertyDefinition Definition);
+	TObjectPtr<UFigmaInstance> InstanciateFigmaComponent(const FString& InstanceID);
 
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;

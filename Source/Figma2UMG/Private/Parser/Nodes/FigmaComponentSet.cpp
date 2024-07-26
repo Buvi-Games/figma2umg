@@ -3,6 +3,7 @@
 
 #include "Parser/Nodes/FigmaComponentSet.h"
 
+#include "FigmaInstance.h"
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"
@@ -186,4 +187,14 @@ FString UFigmaComponentSet::GetPackageNameForBuilder(const TScriptInterface<IAss
 	}
 
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
+}
+
+TObjectPtr<UFigmaInstance> UFigmaComponentSet::InstanciateFigmaComponent(const FString& InstanceID)
+{
+	TObjectPtr<UFigmaInstance> NewFigmaInstance = NewObject<UFigmaInstance>();
+	FString NewID = "I" + InstanceID + ";" + GetId();
+	NewFigmaInstance->InitializeFrom(this, NewID);
+	NewFigmaInstance->ComponentId = GetId();
+
+	return NewFigmaInstance;
 }

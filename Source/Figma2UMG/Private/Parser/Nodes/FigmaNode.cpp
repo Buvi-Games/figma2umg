@@ -211,6 +211,131 @@ void UFigmaNode::PrepareForFlow()
 	}
 }
 
+void UFigmaNode::InitializeFrom(const UFigmaNode* Other, const FString& NewId)
+{
+	if (const UFigmaFrame* Frame = Cast<UFigmaFrame>(Other))
+	{
+		UClass* SourceClass = Other->GetClass();
+		UClass* TargetClass = this->GetClass();
+
+		for (TFieldIterator<FProperty> SourcePropIt(SourceClass); SourcePropIt; ++SourcePropIt)
+		{
+			FProperty* SourceProperty = *SourcePropIt;
+			FProperty* TargetProperty = TargetClass->FindPropertyByName(SourceProperty->GetFName());
+
+			if (TargetProperty && SourceProperty->SameType(TargetProperty))
+			{
+				const void* SourceValue = SourceProperty->ContainerPtrToValuePtr<void>(Other);
+				void* TargetValue = TargetProperty->ContainerPtrToValuePtr<void>(this);
+				SourceProperty->CopyCompleteValue(TargetValue, SourceValue);
+			}
+		}
+	}
+
+	Id = NewId;
+
+	if (this->IsA<UFigmaDocument>())
+	{
+		Type = ENodeTypes::DOCUMENT;
+	}
+	else if (this->IsA<UFigmaCanvas>()) 
+	{
+		Type = ENodeTypes::CANVAS;
+	}
+	else if (this->IsA<UFigmaFrame>())
+	{
+		Type = ENodeTypes::FRAME;
+	}
+	else if (this->IsA<UFigmaGroup>())
+	{
+		Type = ENodeTypes::GROUP;
+	}
+	else if (this->IsA<UFigmaSection>())
+	{
+		Type = ENodeTypes::SECTION;
+	}
+	else if (this->IsA<UFigmaVectorNode>())
+	{
+		Type = ENodeTypes::VECTOR;
+	}
+	else if (this->IsA<UFigmaBooleanOp>())
+	{
+		Type = ENodeTypes::BOOLEAN_OPERATION;
+	}
+	else if (this->IsA<UFigmaStar>())
+	{
+		Type = ENodeTypes::STAR;
+	}
+	else if (this->IsA<UFigmaLine>())
+	{
+		Type = ENodeTypes::LINE;
+	}
+	else if (this->IsA<UFigmaEllipse>())
+	{
+		Type = ENodeTypes::ELLIPSE;
+	}
+	else if (this->IsA<UFigmaPoly>())
+	{
+		Type = ENodeTypes::REGULAR_POLYGON;
+	}
+	else if (this->IsA<UFigmaRectangleVector>())
+	{
+		Type = ENodeTypes::RECTANGLE;
+	}
+	else if (this->IsA<UFigmaTable>())
+	{
+		Type = ENodeTypes::TABLE;
+	}
+	else if (this->IsA<UFigmaTableCell>())
+	{
+		Type = ENodeTypes::TABLE_CELL;
+	}
+	else if (this->IsA<UFigmaText>())
+	{
+		Type = ENodeTypes::TEXT;
+	}
+	else if (this->IsA<UFigmaSlice>())
+	{
+		Type = ENodeTypes::SLICE;
+	}
+	else if (this->IsA<UFigmaComponent>())
+	{
+		Type = ENodeTypes::COMPONENT;
+	}
+	else if (this->IsA<UFigmaComponentSet>())
+	{
+		Type = ENodeTypes::COMPONENT_SET;
+	}
+	else if (this->IsA<UFigmaInstance>())
+	{
+		Type = ENodeTypes::INSTANCE;
+	}
+	else if (this->IsA<UFigmaSticky>())
+	{
+		Type = ENodeTypes::STICKY;
+	}
+	else if (this->IsA<UFigmaShapeWithText>())
+	{
+		Type = ENodeTypes::SHAPE_WITH_TEXT;
+	}
+	else if (this->IsA<UFigmaConnector>())
+	{
+		Type = ENodeTypes::CONNECTOR;
+	}
+	else if (this->IsA<UFigmaWashiTape>())
+	{
+		Type = ENodeTypes::WASHI_TAPE;
+	}
+
+	ParentNode = nullptr;
+	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(this))
+	{
+		//TODO: To I need to clone the Children? As I can't let the same Node have 2 parents, cleaning the tree for now.
+		TArray<UFigmaNode*>& Children = FigmaContainer->GetChildren();
+		Children.Reset();
+	}
+}
+
 UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 {
 	static FString TypeStr("type");
