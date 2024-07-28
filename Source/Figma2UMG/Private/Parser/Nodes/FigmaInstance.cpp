@@ -90,11 +90,11 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 			InstanceSwapBuilder = NewObject<UWidgetSwitcherBuilder>();
 			InstanceSwapBuilder->SetNode(this);
 
+			const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 			for(const FFigmaInstanceSwapPreferredValue& PreferredValue : PropertyDefinition->PreferredValues)
 			{
 				TObjectPtr<UWidgetBlueprintBuilder> Builder = nullptr;
 				TObjectPtr<UFigmaInstance> NewInstance = nullptr;
-				const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 				if (PreferredValue.Type == ENodeTypes::COMPONENT)
 				{
 					if(const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRefByKey(PreferredValue.Key))
