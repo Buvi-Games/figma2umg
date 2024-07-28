@@ -8,6 +8,8 @@
 
 #include "FigmaComponentSet.generated.h"
 
+class UFigmaInstance;
+
 UCLASS()
 class UFigmaComponentSet : public  UFigmaFrame
 {
@@ -18,6 +20,8 @@ public:
 	virtual void PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj) override;
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const override;
+
+	TObjectPtr<UFigmaInstance> InstanciateFigmaComponent(const FString& InstanceID);
 
 	UPROPERTY()
 	TMap<FString, FFigmaComponentPropertyDefinition> ComponentPropertyDefinitions;

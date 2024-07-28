@@ -42,3 +42,13 @@ void UFigmaComponent::TryAddComponentPropertyDefinition(FString PropertyId, FFig
 
 	ComponentPropertyDefinitions.Add(PropertyId, Definition);
 }
+
+TObjectPtr<UFigmaInstance> UFigmaComponent::InstanciateFigmaComponent(const FString& InstanceID)
+{
+	TObjectPtr<UFigmaInstance> NewFigmaInstance = NewObject<UFigmaInstance>();
+	FString NewID = "I" + InstanceID + ";" + GetId();
+	NewFigmaInstance->InitializeFrom(this, NewID);
+	NewFigmaInstance->ComponentId = GetId();
+
+	return NewFigmaInstance;
+}

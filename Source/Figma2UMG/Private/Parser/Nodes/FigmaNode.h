@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+#include "Parser/Properties/FigmaEnums.h"
+
 #include "FigmaNode.generated.h"
 
 struct FFigmaPaint;
@@ -15,33 +17,6 @@ class UWidgetTree;
 class UPanelWidget;
 class UWidget;
 
-UENUM()
-enum class ENodeTypes
-{
-	DOCUMENT,
-	CANVAS,
-	FRAME,
-	GROUP,
-	SECTION,
-	VECTOR,
-	BOOLEAN_OPERATION,
-	STAR,
-	LINE,
-	ELLIPSE,
-	REGULAR_POLYGON,
-	RECTANGLE,
-	TABLE,
-	TABLE_CELL,
-	TEXT,
-	SLICE,
-	COMPONENT,
-	COMPONENT_SET,
-	INSTANCE,
-	STICKY,
-	SHAPE_WITH_TEXT,
-	CONNECTOR,
-	WASHI_TAPE,
-};
 
 UCLASS()
 class FIGMA2UMG_API UFigmaNode : public UObject
@@ -54,6 +29,8 @@ public:
 	//virtual void PostInsert(UWidget* Widget) const;
 
 	virtual void PrepareForFlow();
+
+	void InitializeFrom(const UFigmaNode* Other, const FString& NewId);
 
 	FString GetId() const { return Id; }
 	FString GetIdForName() const;
@@ -138,13 +115,13 @@ private:
 	UPROPERTY()
 	FString SharedPluginData;
 
-	UPROPERTY()
-	TMap<FString, FString> ComponentPropertyReferences;
-
 	//boundVariablesMap - beta
 	//explicitVariableModesMap - beta
 	
 protected:
+	UPROPERTY()
+	TMap<FString, FString> ComponentPropertyReferences;
+
 	UPROPERTY()
 	FString ScrollBehaviour; //Not in doc
 };

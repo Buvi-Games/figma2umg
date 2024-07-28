@@ -15,9 +15,11 @@
 #include "Builder/Widget/WidgetBuilder.h"
 #include "Kismet2/BlueprintEditorUtils.h"
 #include "Kismet2/KismetEditorUtilities.h"
+#include "Parser/FigmaFile.h"
 #include "Parser/Nodes/FigmaComponent.h"
 #include "Parser/Nodes/FigmaComponentSet.h"
 #include "Parser/Nodes/FigmaNode.h"
+#include "Parser/Properties/FigmaComponentRef.h"
 
 void UWidgetBlueprintBuilder::LoadOrCreateAssets()
 {
@@ -207,12 +209,9 @@ void UWidgetBlueprintBuilder::FillType(const FFigmaComponentPropertyDefinition& 
 		break;
 	case EFigmaComponentPropertyType::TEXT:
 		MemberType.PinCategory = UEdGraphSchema_K2::PC_String;
-
 		break;
 	case EFigmaComponentPropertyType::INSTANCE_SWAP:
-		MemberType.PinCategory = UEdGraphSchema_K2::PC_Object;
-		// MemberType.PinSubCategory = ?
-		// MemberType.PinSubCategoryObject = ?
+		MemberType.PinCategory = UEdGraphSchema_K2::PC_String;
 		break;
 	case EFigmaComponentPropertyType::VARIANT:
 		break;
@@ -264,11 +263,7 @@ void UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigm
 	
 	for (const TPair<FString, FFigmaComponentPropertyDefinition> Property : ComponentPropertyDefinitions)
 	{
-		if (Property.Value.Type != EFigmaComponentPropertyType::VARIANT)
-		{
-			PatchMemberVariable(WidgetBP, Property);
-		}
-		else
+		if (Property.Value.Type == EFigmaComponentPropertyType::VARIANT)
 		{
 			FString PropertyName = Property.Key;//TODO: Remove '#id'
 			if (!Property.Value.IsButton())
@@ -287,6 +282,55 @@ void UWidgetBlueprintBuilder::PatchPropertyDefinitions(const TMap<FString, FFigm
 			{
 				FBlueprintEditorUtils::RemoveMemberVariable(WidgetBP, *PropertyName);
 			}
+		}
+		else if (Property.Value.Type == EFigmaComponentPropertyType::INSTANCE_SWAP)
+		{
+			FString PropertyName = Property.Key;
+			int Index;
+			if (PropertyName.FindChar('#', Index))
+			{
+				PropertyName.LeftInline(Index);
+			}
+
+			FString WidgetName = Property.Key.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
+			TObjectPtr<UWidgetSwitcher> WidgetSwitcher = Cast<UWidgetSwitcher>(RootWidgetBuilder->FindWidgetRecursive(WidgetName));
+			if (!WidgetSwitcher)
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("[PatchPropertyDefinitions] Can't find UWidgetSwitcher to patch property %s at Node %s."), *PropertyName, *Node->GetNodeName());
+			}
+			TArray<FString> InstancesOptions;
+			const TObjectPtr<UFigmaFile> FigmaFile = Node->GetFigmaFile();
+			for (const FFigmaInstanceSwapPreferredValue& PreferredValue : Property.Value.PreferredValues)
+			{
+				TObjectPtr<UWidgetBlueprintBuilder> Builder = nullptr;
+				TObjectPtr<UFigmaInstance> NewInstance = nullptr;
+				if (PreferredValue.Type == ENodeTypes::COMPONENT)
+				{
+					if (const TObjectPtr<UFigmaComponent> Component = FigmaFile->FindComponentByKey(PreferredValue.Key))
+					{
+						InstancesOptions.Add(Component->GetId());
+
+					}
+				}
+				else if (PreferredValue.Type == ENodeTypes::COMPONENT_SET)
+				{
+					if (const TObjectPtr<UFigmaComponentSet> ComponentSet = FigmaFile->FindComponentSetByKey(PreferredValue.Key))
+					{
+						InstancesOptions.Add(ComponentSet->GetId());
+					}
+				}
+			}
+			WidgetBlueprintHelper::CreateSwitchFunction(WidgetBP, WidgetSwitcher, PropertyName, InstancesOptions);			
+
+			const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBP, *PropertyName);
+			if (VarIndex != INDEX_NONE)
+			{
+				FBlueprintEditorUtils::RemoveMemberVariable(WidgetBP, *PropertyName);
+			}
+		}
+		else
+		{
+			PatchMemberVariable(WidgetBP, Property);
 		}
 	}
 }

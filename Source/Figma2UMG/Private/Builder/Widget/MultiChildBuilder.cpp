@@ -83,6 +83,25 @@ TObjectPtr<UWidget> UMultiChildBuilder::GetWidget() const
 	return GetPanelWidget();
 }
 
+TObjectPtr<UWidget> UMultiChildBuilder::FindWidgetRecursive(const FString& WidgetName) const
+{
+	TObjectPtr<UWidget> FoundWidget = IWidgetBuilder::FindWidgetRecursive(WidgetName);
+	if (FoundWidget)
+		return FoundWidget;
+
+	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
+	{
+		if (!ChildBuilder)
+			continue;
+
+		FoundWidget = ChildBuilder->FindWidgetRecursive(WidgetName);
+		if (FoundWidget)
+			return FoundWidget;
+	}
+
+	return nullptr;
+}
+
 void UMultiChildBuilder::ResetWidget()
 {
 	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)

@@ -22,6 +22,7 @@ public:
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override PURE_VIRTUAL(UMultiChildBuilder::SetWidget;);
 	virtual TObjectPtr<UWidget> GetWidget() const override;
+	virtual TObjectPtr<UWidget> FindWidgetRecursive(const FString& WidgetName) const override;
 	virtual void ResetWidget() override;
 protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const PURE_VIRTUAL(USingleChildBuilder::GetContentWidget(), return nullptr;);

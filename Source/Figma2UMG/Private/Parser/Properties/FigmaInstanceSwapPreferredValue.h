@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 
+#include "Parser/Properties/FigmaEnums.h"
+
 #include "FigmaInstanceSwapPreferredValue.generated.h"
 
 USTRUCT()
@@ -12,5 +14,9 @@ struct FIGMA2UMG_API FFigmaInstanceSwapPreferredValue
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	ENodeTypes Type;
+
+	UPROPERTY()
+	FString Key;
 };

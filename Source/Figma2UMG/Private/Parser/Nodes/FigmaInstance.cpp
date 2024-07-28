@@ -5,17 +5,13 @@
 
 #include "Figma2UMGModule.h"
 #include "WidgetBlueprint.h"
-#include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Widget/ImageWidgetBuilder.h"
 #include "Builder/Widget/UserWidgetBuilder.h"
-#include "Components/Image.h"
-#include "Factory/RawTexture2DFactory.h"
+#include "Builder/Widget/WidgetSwitcherBuilder.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
-#include "REST/ImageRequest.h"
-#include "Templates/WidgetTemplateBlueprintClass.h"
 
 void UFigmaInstance::PrepareForFlow()
 {
@@ -88,14 +84,77 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 	}
 	else
 	{
-		const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
-		const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
-		TObjectPtr<UWidgetBlueprintBuilder> Builder = ComponentRef ? ComponentRef->GetAssetBuilder() : nullptr;
-		
-		UUserWidgetBuilder* UserWidgetBuilder = NewObject<UUserWidgetBuilder>();
-		UserWidgetBuilder->SetNode(this);
-		UserWidgetBuilder->SetWidgetBlueprintBuilder(Builder);
-		return UserWidgetBuilder;
+		UWidgetSwitcherBuilder* InstanceSwapBuilder = nullptr;
+		if (const FFigmaComponentPropertyDefinition* PropertyDefinition = IsInstanceSwap())
+		{
+			InstanceSwapBuilder = NewObject<UWidgetSwitcherBuilder>();
+			InstanceSwapBuilder->SetNode(this);
+
+			const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+			for(const FFigmaInstanceSwapPreferredValue& PreferredValue : PropertyDefinition->PreferredValues)
+			{
+				TObjectPtr<UWidgetBlueprintBuilder> Builder = nullptr;
+				TObjectPtr<UFigmaInstance> NewInstance = nullptr;
+				if (PreferredValue.Type == ENodeTypes::COMPONENT)
+				{
+					if(const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRefByKey(PreferredValue.Key))
+					{
+						Builder = ComponentRef->GetAssetBuilder();
+						TObjectPtr<UFigmaComponent> Component = ComponentRef->GetComponent();
+						NewInstance = Component->InstanciateFigmaComponent(GetIdForName());
+						
+					}
+				}
+				else if (PreferredValue.Type == ENodeTypes::COMPONENT_SET)
+				{
+					if (const FFigmaComponentSetRef* ComponentSetRef = FigmaFile->FindComponentSetRefByKey(PreferredValue.Key))
+					{
+						Builder = ComponentSetRef->GetAssetBuilder();
+						TObjectPtr<UFigmaComponentSet> Component = ComponentSetRef->GetComponentSet();
+						NewInstance = Component->InstanciateFigmaComponent(GetIdForName());
+					}
+				}
+				if (NewInstance)
+				{
+					NewInstance->ParentNode = ParentNode;
+					NewInstance->ComponentProperties = ComponentProperties;
+					NewInstance->Overrides = Overrides;
+					InstanceSwapValues.Add(NewInstance);
+				}
+
+				if (Builder && NewInstance)
+				{
+					UUserWidgetBuilder* UserWidgetBuilder = NewObject<UUserWidgetBuilder>();
+					UserWidgetBuilder->SetNode(NewInstance);
+					UserWidgetBuilder->SetWidgetBlueprintBuilder(Builder);
+					InstanceSwapBuilder->AddChild(UserWidgetBuilder);
+				}
+				else
+				{
+					UE_LOG_Figma2UMG(Warning, TEXT("[Instance] Can't find Asset Builder for PreferredValues %s in InstanceSwap Node %s"), *PreferredValue.Key, *GetNodeName());
+				}
+			}
+			return InstanceSwapBuilder;
+		}
+		else
+		{
+			const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+			const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
+			TObjectPtr<UWidgetBlueprintBuilder> Builder = ComponentRef ? ComponentRef->GetAssetBuilder() : nullptr;
+
+			UUserWidgetBuilder* UserWidgetBuilder = NewObject<UUserWidgetBuilder>();
+			UserWidgetBuilder->SetNode(this);
+			UserWidgetBuilder->SetWidgetBlueprintBuilder(Builder);
+
+			return UserWidgetBuilder;
+		}
+
+		if(InstanceSwapBuilder)
+		{
+		}
+		else
+		{
+		}
 	}
 }
 
@@ -115,4 +174,32 @@ void UFigmaInstance::ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidg
 			ProcessChildrenComponentPropertyReferences(WidgetBp, Widget, SubChildren);
 		}
 	}
+}
+
+const FFigmaComponentPropertyDefinition* UFigmaInstance::IsInstanceSwap() const
+{
+	if (!ParentNode)
+		return nullptr;
+
+	const FString MainComponentStr("mainComponent");
+	if (!ComponentPropertyReferences.Contains(MainComponentStr))
+		return nullptr;
+
+	const FString MainComponent = ComponentPropertyReferences[MainComponentStr];
+	const FFigmaComponentPropertyDefinition* PropertyDefinition = nullptr;
+	if(UFigmaComponent* FigmaComponent =  Cast<UFigmaComponent>(ParentNode))
+	{
+		PropertyDefinition = FigmaComponent->ComponentPropertyDefinitions.Find(MainComponent);
+	}
+	else if (UFigmaComponentSet* FigmaComponentSet = Cast<UFigmaComponentSet>(ParentNode))
+	{
+		PropertyDefinition = FigmaComponentSet->ComponentPropertyDefinitions.Find(MainComponent);
+	}
+
+	if (PropertyDefinition && PropertyDefinition->Type == EFigmaComponentPropertyType::INSTANCE_SWAP)
+	{
+		return PropertyDefinition;
+	}
+
+	return nullptr;
 }

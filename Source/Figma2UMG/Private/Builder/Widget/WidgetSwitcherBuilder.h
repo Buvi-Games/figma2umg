@@ -13,7 +13,7 @@ class UWidgetSwitcherBuilder : public UMultiChildBuilder
 {
 public:
 	GENERATED_BODY()
-
+	virtual TObjectPtr<UWidget> FindNodeWidgetInParent(const TObjectPtr<UPanelWidget>& ParentWidget) const override;
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
