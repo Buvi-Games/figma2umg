@@ -70,6 +70,19 @@ TObjectPtr<UWidget> USingleChildBuilder::GetWidget() const
 	return GetContentWidget();
 }
 
+TObjectPtr<UWidget> USingleChildBuilder::FindWidgetRecursive(const FString& WidgetName) const
+{
+	if (TObjectPtr<UWidget> FoundWidget = IWidgetBuilder::FindWidgetRecursive(WidgetName))
+		return FoundWidget;
+
+	if (ChildWidgetBuilder)
+	{
+		return ChildWidgetBuilder->FindWidgetRecursive(WidgetName);
+	}
+
+	return nullptr;
+}
+
 void USingleChildBuilder::ResetWidget()
 {
 	if (ChildWidgetBuilder)

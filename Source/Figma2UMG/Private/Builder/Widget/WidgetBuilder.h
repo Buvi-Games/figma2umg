@@ -39,7 +39,9 @@ public:
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) = 0;
 	virtual TObjectPtr<UWidget> GetWidget() const = 0;
+	virtual TObjectPtr<UWidget> FindWidgetRecursive(const FString& WidgetName) const;
 	virtual void ResetWidget() = 0;
+
 
 protected:
 	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;

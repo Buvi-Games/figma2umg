@@ -73,6 +73,19 @@ void IWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& Widget
 	}
 }
 
+TObjectPtr<UWidget> IWidgetBuilder::FindWidgetRecursive(const FString& WidgetName) const
+{
+	if (TObjectPtr<UWidget> Widget = GetWidget())
+	{
+		if (Widget->GetName().Contains(WidgetName))
+		{
+			return  Widget;
+		}
+	}
+
+	return nullptr;
+}
+
 bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const
 {
 	if (Parent)
