@@ -274,6 +274,89 @@ void WidgetBlueprintHelper::PatchSwitchFunction(TObjectPtr<UWidgetBlueprint> Wid
 	}
 }
 
+bool WidgetBlueprintHelper::SetPropertySwitchValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, UClass* WidgetClass, const FString& Value)
+{
+	if (UWidgetTree* ParentTree = Cast<UWidgetTree>(Widget->GetOuter()))
+	{
+		TObjectPtr<UWidgetBlueprint> WidgetBP = Cast<UWidgetBlueprint>(ParentTree->GetOuter());
+		if (WidgetBP)
+		{
+			TObjectPtr<UEdGraph> EventGraph = nullptr;
+			TObjectPtr<UK2Node_Event> EventNode = nullptr;
+			for (TObjectPtr<UEdGraph> CurrEventGraph : WidgetBP->UbergraphPages)
+			{
+				TObjectPtr<UEdGraphNode>* FoundNode = CurrEventGraph->Nodes.FindByPredicate([](const TObjectPtr<UEdGraphNode> Node)
+				{
+					TObjectPtr<UK2Node_Event> EventNode = Cast<UK2Node_Event>(Node);
+					return EventNode && EventNode->EventReference.GetMemberName() == "PreConstruct";
+				});
+				if (FoundNode)
+				{
+					EventNode = Cast<UK2Node_Event>(*FoundNode);
+					EventGraph = CurrEventGraph;
+				}
+			}
+					
+			if (EventNode)
+			{
+				FVector2D StartPos(EventNode->NodePosX, EventNode->NodePosY);
+				UEdGraphPin* ThenPin = EventNode->GetThenPin();
+				if(!ThenPin)
+				{
+					UE_LOG_Figma2UMG(Error, TEXT("Can't find PreConstruct->ThenPin in UWidgetBlueprint %s."), *WidgetBP->GetName());
+					return true;
+				}
+
+				while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
+				{
+					UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
+					if (!ConnectedNode)
+					{
+						break;
+					}
+					else if (ConnectedNode->IsA<UK2Node_CallFunctionOnMember>())
+					{
+						UK2Node_CallFunctionOnMember* CallFunctionNode = Cast<UK2Node_CallFunctionOnMember>(ConnectedNode);
+						if (Widget->GetName().Contains(CallFunctionNode->MemberVariableToCallOn.GetMemberName().ToString()))
+						{
+							//Nothing to do.
+							return true;
+						}
+					}
+
+					ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
+					StartPos = FVector2D(ConnectedNode->NodePosX, ConnectedNode->NodePosY);
+				}
+
+				const FVector2D GetGraphPosition = StartPos + FVector2D(BaseSize.X + Pan.X, BaseSize.Y + Pan.Y);
+				const UK2Node_VariableGet* VariableGetNode = PatchVariableGetNode(WidgetBP, EventGraph, *Widget->GetName(), GetGraphPosition);
+
+				const FVector2D CallFunctionPosition = StartPos + FVector2D(BaseSize.X + Pan.X, 0.0f);
+				FString FunctionName = "Set" + VariableName.ToString();
+				if(const UFunction* Function = FindUField<UFunction>(WidgetClass, *FunctionName))
+				{
+					const UK2Node_CallFunction* CallFunctionNode = AddCallFunctionOnMemberNode(EventGraph, Widget, Function,  ThenPin, VariableGetNode->GetValuePin(), CallFunctionPosition);
+
+					UEdGraphPin* InputValue = CallFunctionNode->FindPin(VariableName, EGPD_Input);
+					if (InputValue)
+					{
+						InputValue->DefaultValue = Value;
+					}
+				}
+				else
+				{
+					UE_LOG_Figma2UMG(Error, TEXT("Can't find UFunction %s in Widget %s of Class %s."), *FunctionName, *Widget->GetName(), *WidgetClass->GetName());
+				}
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Error, TEXT("Can't find PreConstruct in UWidgetBlueprint %s."), *WidgetBP->GetName());
+			}
+		}
+	}
+	return false;
+}
+
 void WidgetBlueprintHelper::SetPropertyValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, const FFigmaComponentProperty& ComponentProperty)
 {
 	if (!Widget)
@@ -308,86 +391,20 @@ void WidgetBlueprintHelper::SetPropertyValue(TObjectPtr<UUserWidget> Widget, con
 		}
 		break;
 		case EFigmaComponentPropertyType::INSTANCE_SWAP:
-			//TODO:
+		{
+			FString VariableNameFix = VariableName.ToString();
+			int Index;
+			if (VariableNameFix.FindChar('#', Index))
+			{
+				VariableNameFix.LeftInline(Index);
+			}
+			SetPropertySwitchValue(Widget, *VariableNameFix, WidgetClass, ComponentProperty.Value);
+		}
 		break;
 		case EFigmaComponentPropertyType::VARIANT:
-			if (UWidgetTree* ParentTree = Cast<UWidgetTree>(Widget->GetOuter()))
-			{
-				TObjectPtr<UWidgetBlueprint> WidgetBP = Cast<UWidgetBlueprint>(ParentTree->GetOuter());
-				if (WidgetBP)
-				{
-					TObjectPtr<UEdGraph> EventGraph = nullptr;
-					TObjectPtr<UK2Node_Event> EventNode = nullptr;
-					for (TObjectPtr<UEdGraph> CurrEventGraph : WidgetBP->UbergraphPages)
-					{
-						TObjectPtr<UEdGraphNode>* FoundNode = CurrEventGraph->Nodes.FindByPredicate([](const TObjectPtr<UEdGraphNode> Node)
-							{
-								TObjectPtr<UK2Node_Event> EventNode = Cast<UK2Node_Event>(Node);
-								return EventNode && EventNode->EventReference.GetMemberName() == "PreConstruct";
-							});
-						if (FoundNode)
-						{
-							EventNode = Cast<UK2Node_Event>(*FoundNode);
-							EventGraph = CurrEventGraph;
-						}
-					}
-					
-					if (EventNode)
-					{
-						UEdGraphPin* ThenPin = EventNode->GetThenPin();
-						if(!ThenPin)
-						{
-							UE_LOG_Figma2UMG(Error, TEXT("Can't find PreConstruct->ThenPin in UWidgetBlueprint %s."), *WidgetBP->GetName());
-							return;
-						}
-
-						while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
-						{
-							UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
-							if (!ConnectedNode)
-							{
-								break;
-							}
-							else if (ConnectedNode->IsA<UK2Node_CallFunctionOnMember>())
-							{
-								UK2Node_CallFunctionOnMember* CallFunctionNode = Cast<UK2Node_CallFunctionOnMember>(ConnectedNode);
-								if (Widget->GetName().Contains(CallFunctionNode->MemberVariableToCallOn.GetMemberName().ToString()))
-								{
-									//Nothing to do.
-									return;
-								}
-							}
-
-							ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
-						}
-
-						const FVector2D StartPos(EventNode->NodePosX, EventNode->NodePosY);
-						const FVector2D GetGraphPosition = StartPos + FVector2D(BaseSize.X + Pan.X, BaseSize.Y + Pan.Y);
-						const UK2Node_VariableGet* VariableGetNode = PatchVariableGetNode(WidgetBP, EventGraph, *Widget->GetName(), GetGraphPosition);
-
-						const FVector2D CallFunctionPosition = StartPos + FVector2D(BaseSize.X + Pan.X, 0.0f);
-						FString FunctionName = "Set" + VariableName.ToString();
-						if(const UFunction* Function = FindUField<UFunction>(WidgetClass, *FunctionName))
-						{
-							const UK2Node_CallFunction* CallFunctionNode = AddCallFunctionOnMemberNode(EventGraph, Widget, Function,  ThenPin, VariableGetNode->GetValuePin(), CallFunctionPosition);
-
-							UEdGraphPin* InputValue = CallFunctionNode->FindPin(VariableName, EGPD_Input);
-							if (InputValue)
-							{
-								InputValue->DefaultValue = ComponentProperty.Value;
-							}
-						}
-						else
-						{
-							UE_LOG_Figma2UMG(Error, TEXT("Can't find UFunction %s in Widget %s of Class %s."), *FunctionName, *Widget->GetName(), *WidgetClass->GetName());
-						}
-					}
-					else
-					{
-						UE_LOG_Figma2UMG(Error, TEXT("Can't find PreConstruct in UWidgetBlueprint %s."), *WidgetBP->GetName());
-					}
-				}
-			}
+		{
+			SetPropertySwitchValue(Widget, VariableName, WidgetClass, ComponentProperty.Value);
+		}
 		break;
 	}
 }

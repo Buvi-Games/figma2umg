@@ -33,6 +33,8 @@ private:
 	static FIGMA2UMG_API void AddBindingFunction(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, UEdGraph* FunctionGraph, const FName& PropertyName);
 	static FIGMA2UMG_API void AddBindingProperty(TObjectPtr<UWidgetBlueprint> WidgetBP, TObjectPtr<UWidget> Widget, const FName& PropertyName, const FName& MemberPropertyName);
 
+	static FIGMA2UMG_API bool SetPropertySwitchValue(TObjectPtr<UUserWidget> Widget, const FName& VariableName, UClass* WidgetClass, const FString& Value);
+
 	static FIGMA2UMG_API UK2Node_FunctionEntry* PatchFunctionEntry(UEdGraph* Graph, const FString VarName, FName VarType, EPinContainerType VarContainerType);
 	static FIGMA2UMG_API UK2Node_VariableGet* PatchVariableGetNode(TObjectPtr<UWidgetBlueprint> WidgetBP, UEdGraph* Graph, FName VariableName, FVector2D NodeLocation);
 	static FIGMA2UMG_API UK2Node_VariableSet* PatchVariableSetNode(UEdGraph* Graph, UEdGraphPin* ExecPin, UEdGraphPin* Target, UClass* TargetObjectType, int Value, FVector2D NodeLocation);
