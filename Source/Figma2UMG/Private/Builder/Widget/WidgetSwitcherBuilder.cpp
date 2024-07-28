@@ -28,6 +28,7 @@ TObjectPtr<UWidget> UWidgetSwitcherBuilder::FindNodeWidgetInParent(const TObject
 			if (IdForName.FindChar('#', Index))
 			{
 				IdForName.RightChopInline(Index+1);
+				IdForName = IdForName.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
 			}
 		}
 	}
@@ -60,6 +61,7 @@ void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widget
 		if (FigmaInstance->GetComponentPropertyReferences().Contains(MainComponentStr))
 		{
 			WidgetName = FigmaInstance->GetComponentPropertyReferences()[MainComponentStr];
+			WidgetName = WidgetName.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
 		}
 	}
 
