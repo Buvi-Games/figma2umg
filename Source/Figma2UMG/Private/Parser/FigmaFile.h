@@ -30,11 +30,13 @@ public:
 	FFigmaComponentRef* FindComponentRef(const FString& ComponentId);
 	FFigmaComponentRef* FindComponentRefByKey(const FString& Key);
 	TObjectPtr<UFigmaComponent> FindComponentByKey(const FString& Key);
+	const TObjectPtr<UFigmaComponent> FindComponentByKey(const FString& Key) const;
 
 	FString FindComponentSetName(const FString& ComponentSetId);
 	FFigmaComponentSetRef* FindComponentSetRef(const FString& ComponentSetId);
 	FFigmaComponentSetRef* FindComponentSetRefByKey(const FString& Key);
 	TObjectPtr<UFigmaComponentSet> FindComponentSetByKey(const FString& Key);
+	const TObjectPtr<UFigmaComponentSet> FindComponentSetByKey(const FString& Key) const;
 
 	void PrepareForFlow();
 	void FixComponentSetRef();
@@ -43,6 +45,16 @@ public:
 
 	template<class NodeType>
 	TObjectPtr<NodeType> FindByID(FString ID)
+	{
+		if (Document)
+		{
+			return Cast<NodeType>(Document->FindTypeByID(NodeType::StaticClass(), ID));
+		}
+
+		return nullptr;
+	}
+	template<class NodeType>
+	const TObjectPtr<NodeType> FindByID(FString ID) const
 	{
 		if (Document)
 		{

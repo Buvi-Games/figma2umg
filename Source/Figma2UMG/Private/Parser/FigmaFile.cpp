@@ -77,6 +77,22 @@ TObjectPtr<UFigmaComponent> UFigmaFile::FindComponentByKey(const FString& Key)
 	return nullptr;
 }
 
+const TObjectPtr<UFigmaComponent> UFigmaFile::FindComponentByKey(const FString& Key) const
+{
+	for (const TPair<FString, FFigmaComponentRef>& Element : Components)
+	{
+		if (Element.Value.Remote)
+			continue;
+
+		if (Element.Value.Key == Key)
+		{
+			return FindByID<UFigmaComponent>(Element.Key);
+		}
+	}
+
+	return nullptr;
+}
+
 FString UFigmaFile::FindComponentSetName(const FString& ComponentSetId)
 {
 	if (ComponentSets.Contains(ComponentSetId))
@@ -116,6 +132,22 @@ FFigmaComponentSetRef* UFigmaFile::FindComponentSetRefByKey(const FString& Key)
 }
 
 TObjectPtr<UFigmaComponentSet> UFigmaFile::FindComponentSetByKey(const FString& Key)
+{
+	for (const TPair<FString, FFigmaComponentSetRef>& Element : ComponentSets)
+	{
+		if (Element.Value.Remote)
+			continue;
+
+		if (Element.Value.Key == Key)
+		{
+			return FindByID<UFigmaComponentSet>(Element.Key);
+		}
+	}
+
+	return nullptr;
+}
+
+const TObjectPtr<UFigmaComponentSet> UFigmaFile::FindComponentSetByKey(const FString& Key) const
 {
 	for (const TPair<FString, FFigmaComponentSetRef>& Element : ComponentSets)
 	{
