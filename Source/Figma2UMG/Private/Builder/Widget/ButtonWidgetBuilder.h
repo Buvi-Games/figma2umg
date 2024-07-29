@@ -15,6 +15,7 @@ class UButtonWidgetBuilder : public USingleChildBuilder
 public:
 	GENERATED_BODY()
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint) override;
 
 	void SetDefaultNode(const UFigmaGroup* InNode);
 	void SetHoveredNode(const UFigmaGroup* InNode);
@@ -31,6 +32,9 @@ protected:
 	void Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const;
 	void SetupBrush(FSlateBrush& Brush, const UFigmaGroup& FigmaGroup) const;
 	void SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
+
+	void PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
+	void PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName);
 
 	UPROPERTY()
 	TObjectPtr<UButton> Widget = nullptr;
