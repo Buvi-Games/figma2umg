@@ -251,8 +251,18 @@ void UButtonWidgetBuilder::PatchEvent(const TObjectPtr<UWidgetBlueprint>& Widget
 	const UK2Node_ComponentBoundEvent* ExistingNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
 	if (ExistingNode == nullptr)
 	{
-		FKismetEditorUtilities::CreateNewBoundEventForClass(Widget->GetClass(), EventName, WidgetBlueprint, VariableProperty);
-		ExistingNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
+		FMulticastDelegateProperty* DelegateProperty = FindFProperty<FMulticastDelegateProperty>(Widget->GetClass(), EventName);
+		if (DelegateProperty != nullptr)
+		{
+			UEdGraph* TargetGraph = WidgetBlueprint->GetLastEditedUberGraph();
+			if (TargetGraph != nullptr)
+			{
+				const FVector2D NewNodePos = TargetGraph->GetGoodPlaceForNewNode();
+				UK2Node_ComponentBoundEvent* EventNode = FEdGraphSchemaAction_K2NewNode::SpawnNode<UK2Node_ComponentBoundEvent>(TargetGraph,NewNodePos,EK2NewNodeFlags::SelectNewNode);
+				EventNode->InitializeComponentBoundEventParams(VariableProperty, DelegateProperty);
+				ExistingNode = EventNode;
+			}
+		}
 	}
 
 	FVector2D StartPos(ExistingNode->NodePosX, ExistingNode->NodePosY);
