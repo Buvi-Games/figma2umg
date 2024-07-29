@@ -23,6 +23,17 @@ void UMultiChildBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& Widget
 	}
 }
 
+void UMultiChildBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
+{
+	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
+	{
+		if (!ChildBuilder)
+			continue;
+
+		ChildBuilder->PostInsertWidgets(WidgetBlueprint);
+	}
+}
+
 bool UMultiChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
 {
 	if (!PostPatchWidget)

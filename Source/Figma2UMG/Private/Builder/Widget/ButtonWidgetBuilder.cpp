@@ -48,6 +48,10 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wid
 	PatchAndInsertChild(WidgetBlueprint, Widget);
 }
 
+void UButtonWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
+{
+}
+
 void UButtonWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
 {
 	PatchEvents(WidgetBlueprint);

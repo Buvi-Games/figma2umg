@@ -22,6 +22,14 @@ void USingleChildBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& Widge
 	}
 }
 
+void USingleChildBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
+{
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->PostInsertWidgets(WidgetBlueprint);
+	}
+}
+
 bool USingleChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
 {
 	if (!PostPatchWidget)
