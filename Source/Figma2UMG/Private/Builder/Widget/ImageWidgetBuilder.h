@@ -19,7 +19,7 @@ public:
 	void SetMaterial(const TObjectPtr<UMaterial>& InMaterial);
 	void SetColor(const FLinearColor& InColor);
 
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;

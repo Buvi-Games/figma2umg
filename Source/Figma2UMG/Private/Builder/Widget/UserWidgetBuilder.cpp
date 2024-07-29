@@ -26,7 +26,7 @@ void UUserWidgetBuilder::SetWidgetBlueprintBuilder(const TObjectPtr<UWidgetBluep
 	}
 }
 
-void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UUserWidget>(WidgetToPatch);
 
@@ -43,7 +43,7 @@ void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree
 		{
 			TSubclassOf<UUserWidget> UserWidgetClass = ComponentAsset->GetBlueprintClass();
 			TSharedPtr<FWidgetTemplateBlueprintClass> Template = MakeShared<FWidgetTemplateBlueprintClass>(FAssetData(ComponentAsset), UserWidgetClass);
-			Widget = Cast<UUserWidget>(Template->Create(WidgetTree));
+			Widget = Cast<UUserWidget>(Template->Create(WidgetBlueprint->WidgetTree));
 			if (Widget)
 			{
 				UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
@@ -53,7 +53,7 @@ void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree
 		}
 	}
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 }
 
 bool UUserWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)

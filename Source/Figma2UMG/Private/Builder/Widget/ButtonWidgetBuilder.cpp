@@ -10,7 +10,7 @@
 #include "Components/ContentWidget.h"
 
 
-void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UButton>(WidgetToPatch);
 	const FString NodeName = Node->GetNodeName();
@@ -21,7 +21,7 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			UButton* NewButton = UFigmaImportSubsystem::NewWidget<UButton>(WidgetTree, NodeName , WidgetName, ClassOverride);
+			UButton* NewButton = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName , WidgetName, ClassOverride);
 			NewButton->SetContent(Widget->GetContent());
 			Widget = NewButton;
 		}
@@ -29,18 +29,18 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UButton>(WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
 		if (WidgetToPatch)
 		{
 			Widget->SetContent(WidgetToPatch);
 		}
 	}
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 
 	Setup();
 
-	PatchAndInsertChild(WidgetTree, Widget);
+	PatchAndInsertChild(WidgetBlueprint, Widget);
 }
 
 void UButtonWidgetBuilder::SetDefaultNode(const UFigmaGroup* InNode)

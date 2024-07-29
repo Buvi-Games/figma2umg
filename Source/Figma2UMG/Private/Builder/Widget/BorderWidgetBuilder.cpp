@@ -10,7 +10,7 @@
 #include "Parser/Nodes/FigmaSection.h"
 
 
-void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	if (const USizeBox* SizeBoxWrapper = Cast<USizeBox>(WidgetToPatch))
 	{
@@ -29,7 +29,7 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			UBorder* NewBorder = UFigmaImportSubsystem::NewWidget<UBorder>(WidgetTree, NodeName, WidgetName, ClassOverride);
+			UBorder* NewBorder = UFigmaImportSubsystem::NewWidget<UBorder>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
 			NewBorder->SetContent(Widget->GetContent());
 			Widget = NewBorder;
 		}
@@ -37,7 +37,7 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UBorder>(WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UBorder>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
 
 		if (WidgetToPatch)
 		{
@@ -45,11 +45,11 @@ void UBorderWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 		}
 	}
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 
 	Setup();
 
-	PatchAndInsertChild(WidgetTree, Widget);
+	PatchAndInsertChild(WidgetBlueprint, Widget);
 }
 
 void UBorderWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)

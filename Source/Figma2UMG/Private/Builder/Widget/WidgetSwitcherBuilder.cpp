@@ -48,7 +48,7 @@ TObjectPtr<UWidget> UWidgetSwitcherBuilder::FindNodeWidgetInParent(const TObject
 	return nullptr;
 }
 
-void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UWidgetSwitcher>(WidgetToPatch);
 	const FString NodeName = Node->GetNodeName();
@@ -67,7 +67,7 @@ void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widget
 
 	if (Widget == nullptr)
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UWidgetSwitcher>(WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UWidgetSwitcher>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
 		if (WidgetToPatch)
 		{
 			Widget->AddChild(WidgetToPatch);
@@ -79,7 +79,7 @@ void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widget
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UWidgetSwitcher>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			UWidgetSwitcher* NewSwitcher = UFigmaImportSubsystem::NewWidget<UWidgetSwitcher>(WidgetTree, NodeName, WidgetName, ClassOverride);
+			UWidgetSwitcher* NewSwitcher = UFigmaImportSubsystem::NewWidget<UWidgetSwitcher>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
 			while (Widget->GetChildrenCount() > 0)
 			{
 				NewSwitcher->AddChild(Widget->GetChildAt(0));
@@ -89,9 +89,9 @@ void UWidgetSwitcherBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widget
 		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 	}
 
-	PatchAndInsertChildren(WidgetTree, Widget);
+	PatchAndInsertChildren(WidgetBlueprint, Widget);
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 }
 
 void UWidgetSwitcherBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)

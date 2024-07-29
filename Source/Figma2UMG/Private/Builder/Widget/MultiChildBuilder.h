@@ -13,7 +13,7 @@ public:
 	GENERATED_BODY()
 
 	void AddChild(const TScriptInterface<IWidgetBuilder>& WidgetBuilder);
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UMultiChildBuilder::PatchAndInsertWidget());
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UMultiChildBuilder::PatchAndInsertWidget());
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 	virtual void PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint) override;
 	virtual void PatchWidgetProperties() override;
@@ -24,7 +24,7 @@ public:
 	virtual void ResetWidget() override;
 protected:
 	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const PURE_VIRTUAL(UMultiChildBuilder::GetPanelWidget(), return nullptr;);
-	virtual void PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget);
+	virtual void PatchAndInsertChildren(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UPanelWidget>& ParentWidget);
 	void SetChildrenWidget(TObjectPtr<UPanelWidget> ParentWidget);
 
 	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;

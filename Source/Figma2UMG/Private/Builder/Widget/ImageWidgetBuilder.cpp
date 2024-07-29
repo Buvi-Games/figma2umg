@@ -28,7 +28,7 @@ void UImageWidgetBuilder::SetColor(const FLinearColor& InColor)
 	SolidColor = InColor;
 }
 
-void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UImage>(WidgetToPatch);
 
@@ -40,13 +40,13 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTre
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UImage>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetTree, NodeName, WidgetName, ClassOverride);
+			Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
 		}
 		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
 	}
 
 	if (!Texture2DBuilder && !Material)
@@ -72,7 +72,7 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTre
 		Widget->SetBrush(Brush);
 	}
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 }
 
 bool UImageWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)

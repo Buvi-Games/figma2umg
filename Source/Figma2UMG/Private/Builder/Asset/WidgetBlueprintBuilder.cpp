@@ -145,7 +145,7 @@ void UWidgetBlueprintBuilder::PatchAndInsertWidgets()
 	}
 
 	UE_LOG_Figma2UMG(Display, TEXT("[PatchAndInsertWidget] Bluepring %s."), *Asset->GetName());
-	RootWidgetBuilder->PatchAndInsertWidget(Asset->WidgetTree, Asset->WidgetTree->RootWidget);
+	RootWidgetBuilder->PatchAndInsertWidget(Asset, Asset->WidgetTree->RootWidget);
 	if (Asset->WidgetTree->RootWidget == nullptr)
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[PatchAndInsertWidget] Node %s failed to insert RootWidget."), *Node->GetNodeName());

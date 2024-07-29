@@ -14,7 +14,7 @@ class UButtonWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
 
 	void SetDefaultNode(const UFigmaGroup* InNode);
 	void SetHoveredNode(const UFigmaGroup* InNode);

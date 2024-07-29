@@ -113,7 +113,7 @@ void UMultiChildBuilder::ResetWidget()
 	}
 }
 
-void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget)
+void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UPanelWidget>& ParentWidget)
 {
 	if (!ParentWidget)
 	{
@@ -129,7 +129,7 @@ void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTr
 			continue;
 
 		TObjectPtr<UWidget> ChildWidget = ChildBuilder->FindNodeWidgetInParent(ParentWidget);
-		ChildBuilder->PatchAndInsertWidget(WidgetTree, ChildWidget);
+		ChildBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget);
 
 		if (TObjectPtr<UWidget> PatchedWidget = ChildBuilder->GetWidget())
 		{

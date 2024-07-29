@@ -91,7 +91,7 @@ void USingleChildBuilder::ResetWidget()
 	}
 }
 
-void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget)
+void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UContentWidget>& ParentWidget)
 {
 	if (!ParentWidget)
 	{
@@ -102,7 +102,7 @@ void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree
 	if (ChildWidgetBuilder)
 	{
 		TObjectPtr<UWidget> ChildWidget = ParentWidget->GetContent();
-		ChildWidgetBuilder->PatchAndInsertWidget(WidgetTree, ChildWidget);
+		ChildWidgetBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget);
 	}
 }
 
