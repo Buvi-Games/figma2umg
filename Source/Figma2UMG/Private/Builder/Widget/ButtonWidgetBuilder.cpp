@@ -8,6 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/ContentWidget.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 
 
 void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
@@ -38,7 +39,7 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wid
 
 	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 
-	Setup();
+	Setup(WidgetBlueprint);
 
 	PatchAndInsertChild(WidgetBlueprint, Widget);
 }
@@ -101,7 +102,7 @@ void UButtonWidgetBuilder::GetPaddingValue(FMargin& Padding) const
 	Padding.Bottom = 0.0f;
 }
 
-void UButtonWidgetBuilder::Setup() const
+void UButtonWidgetBuilder::Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const
 {
 	FButtonStyle Style = Widget->GetStyle();
 
@@ -135,6 +136,64 @@ void UButtonWidgetBuilder::Setup() const
 	}
 
 	Widget->SetStyle(Style);
+
+	const FName OnButtonClicked("OnButtonClicked");
+	SetupEventDispatchers(WidgetBlueprint, OnButtonClicked);
+
+	const FName OnButtonPress("OnButtonPress");
+	SetupEventDispatchers(WidgetBlueprint, OnButtonPress);
+
+	const FName OnButtonReleased("OnButtonReleased");
+	SetupEventDispatchers(WidgetBlueprint, OnButtonReleased);
+
+	const FName OnButtonHovered("OnButtonHovered");
+	SetupEventDispatchers(WidgetBlueprint, OnButtonHovered);
+
+	const FName OnButtonUnHovered("OnButtonUnHovered");
+	SetupEventDispatchers(WidgetBlueprint, OnButtonUnHovered);
+}
+
+void UButtonWidgetBuilder::SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const
+{
+	if (UObject* ExistingObject = FindObject<UObject>(WidgetBlueprint, *(EventName.ToString())))
+	{
+		return;
+	}
+
+	FEdGraphPinType DelegateType;
+	DelegateType.PinCategory = UEdGraphSchema_K2::PC_MCDelegate;
+	const bool bVarCreatedSuccess = FBlueprintEditorUtils::AddMemberVariable(WidgetBlueprint, EventName, DelegateType);
+	if (!bVarCreatedSuccess)
+	{
+		//		LogSimpleMessage(LOCTEXT("AddDelegateVariable_Error", "Adding new delegate variable failed."));
+		return;
+	}
+
+	UEdGraph* const NewGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBlueprint, EventName, UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+	if (!NewGraph)
+	{
+		FBlueprintEditorUtils::RemoveMemberVariable(WidgetBlueprint, EventName);
+	//	LogSimpleMessage(LOCTEXT("AddDelegateVariable_Error", "Adding new delegate variable failed."));
+		return;
+	}
+
+	const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBlueprint, EventName);
+	if (VarIndex != INDEX_NONE && WidgetBlueprint->NewVariables[VarIndex].Category.EqualTo(UEdGraphSchema_K2::VR_DefaultCategory))
+	{
+		static const FText FigmaCategory(FText::FromString("Figma"));
+		WidgetBlueprint->NewVariables[VarIndex].Category = FigmaCategory;
+	}
+
+	NewGraph->bEditable = false;
+
+	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
+	K2Schema->CreateDefaultNodesForGraph(*NewGraph);
+	K2Schema->CreateFunctionGraphTerminators(*NewGraph, (UClass*)nullptr);
+	K2Schema->AddExtraFunctionFlags(NewGraph, (FUNC_BlueprintCallable | FUNC_BlueprintEvent | FUNC_Public));
+	K2Schema->MarkFunctionEntryAsEditable(NewGraph, true);
+
+	WidgetBlueprint->DelegateSignatureGraphs.Add(NewGraph);
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
 }
 
 void UButtonWidgetBuilder::SetupBrush(FSlateBrush& Brush, const UFigmaGroup& FigmaGroup) const

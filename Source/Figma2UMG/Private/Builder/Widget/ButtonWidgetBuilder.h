@@ -28,8 +28,9 @@ protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
 	virtual void GetPaddingValue(FMargin& Padding) const override;
 
-	void Setup() const;
+	void Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const;
 	void SetupBrush(FSlateBrush& Brush, const UFigmaGroup& FigmaGroup) const;
+	void SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
 
 	UPROPERTY()
 	TObjectPtr<UButton> Widget = nullptr;
