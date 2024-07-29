@@ -32,7 +32,8 @@ protected:
 
 	void Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const;
 	void SetupBrush(FSlateBrush& Brush, const UFigmaGroup& FigmaGroup) const;
-	void SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
+	void SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const;
+	void SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
 
 	void PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
 	void PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName);

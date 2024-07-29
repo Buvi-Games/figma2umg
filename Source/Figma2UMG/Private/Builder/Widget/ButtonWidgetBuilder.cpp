@@ -4,6 +4,7 @@
 #include "ButtonWidgetBuilder.h"
 
 #include "BlueprintDelegateNodeSpawner.h"
+#include "EdGraphSchema_K2_Actions.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
 #include "K2Node_CallDelegate.h"
@@ -50,6 +51,9 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wid
 
 void UButtonWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
 {
+	Super::PostInsertWidgets(WidgetBlueprint);
+
+	SetupEventDispatchers(WidgetBlueprint);
 }
 
 void UButtonWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
@@ -151,24 +155,27 @@ void UButtonWidgetBuilder::Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) c
 	}
 
 	Widget->SetStyle(Style);
-
-	const FName OnButtonClicked("OnButtonClicked");
-	SetupEventDispatchers(WidgetBlueprint, OnButtonClicked);
-
-	const FName OnButtonPressed("OnButtonPressed");
-	SetupEventDispatchers(WidgetBlueprint, OnButtonPressed);
-
-	const FName OnButtonReleased("OnButtonReleased");
-	SetupEventDispatchers(WidgetBlueprint, OnButtonReleased);
-
-	const FName OnButtonHovered("OnButtonHovered");
-	SetupEventDispatchers(WidgetBlueprint, OnButtonHovered);
-
-	const FName OnButtonUnHovered("OnButtonUnHovered");
-	SetupEventDispatchers(WidgetBlueprint, OnButtonUnHovered);
 }
 
-void UButtonWidgetBuilder::SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const
+void UButtonWidgetBuilder::SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const
+{
+	const FName OnButtonClicked("OnButtonClicked");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonClicked);
+
+	const FName OnButtonPressed("OnButtonPressed");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonPressed);
+
+	const FName OnButtonReleased("OnButtonReleased");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonReleased);
+
+	const FName OnButtonHovered("OnButtonHovered");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonHovered);
+
+	const FName OnButtonUnHovered("OnButtonUnHovered");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonUnHovered);
+}
+
+void UButtonWidgetBuilder::SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const
 {
 	if (UObject* ExistingObject = FindObject<UObject>(WidgetBlueprint, *(EventName.ToString())))
 	{
@@ -285,7 +292,7 @@ void UButtonWidgetBuilder::PatchEvent(const TObjectPtr<UWidgetBlueprint>& Widget
 		UBlueprintNodeSpawner* CallSpawner = UBlueprintDelegateNodeSpawner::Create(UK2Node_CallDelegate::StaticClass(), DelegateProperty);
 		TSet<FBindingObject> Bindings;
 		Bindings.Add(FBindingObject(WidgetBlueprint));
-		const FVector2D Offset = FVector2D(300.0f, 0.0f);
+		const FVector2D Offset = FVector2D(500.0f, 0.0f);
 		const FVector2D NodeLocation = StartPos + Offset;
 		const UEdGraphNode* GraphNode = CallSpawner->Invoke(ExistingNode->GetGraph(), Bindings, NodeLocation);
 		if (GraphNode)
