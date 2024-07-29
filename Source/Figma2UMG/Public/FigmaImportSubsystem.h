@@ -7,6 +7,7 @@
 #include "Rest/Enums.h"
 #include "Settings/ClassOverrides.h"
 #include "REST/Gfonts/GFontRequest.h"
+#include "Blueprint/WidgetTree.h"
 
 #include "FigmaImportSubsystem.generated.h"
 
@@ -42,10 +43,10 @@ public:
 	static void TryRenameWidget(const FString& InName, TObjectPtr<UWidget> Widget);
 
 	template<class Type>
-	static Type* NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName);
+	static Type* NewWidget(TObjectPtr<UWidgetTree> TreeViewOuter, const FString& NodeName, const FString& WidgetName);
 
 	template<class Type>
-	static Type* NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName, UClass* ClassOverride);
+	static Type* NewWidget(TObjectPtr<UWidgetTree> TreeViewOuter, const FString& NodeName, const FString& WidgetName, UClass* ClassOverride);
 
 private:
 	UPROPERTY()
@@ -96,7 +97,7 @@ UClass* UFigmaImportSubsystem::GetOverrideClassForNode(const FString& NodeName)
 }
 
 template <class Type>
-Type* UFigmaImportSubsystem::NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName)
+Type* UFigmaImportSubsystem::NewWidget(TObjectPtr<UWidgetTree> TreeViewOuter, const FString& NodeName, const FString& WidgetName)
 {
 	const FString UniqueName = MakeUniqueObjectName(TreeViewOuter, Type::StaticClass(), *WidgetName).ToString();
 	UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
@@ -112,7 +113,7 @@ Type* UFigmaImportSubsystem::NewWidget(UObject* TreeViewOuter, const FString& No
 }
 
 template <class Type>
-Type* UFigmaImportSubsystem::NewWidget(UObject* TreeViewOuter, const FString& NodeName, const FString& WidgetName, UClass* ClassOverride)
+Type* UFigmaImportSubsystem::NewWidget(TObjectPtr<UWidgetTree> TreeViewOuter, const FString& NodeName, const FString& WidgetName, UClass* ClassOverride)
 {
 	if (!ClassOverride)
 	{
