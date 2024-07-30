@@ -68,8 +68,11 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Widg
 	else
 	{
 		FSlateBrush Brush = Widget->GetBrush();
-		Brush.TintColor = SolidColor;
+		Brush.TintColor = FLinearColor::White;
+		Brush.DrawAs = ESlateBrushDrawType::Box;
+		Brush.SetImageSize(Node->GetAbsoluteSize());
 		Widget->SetBrush(Brush);
+		Widget->SetColorAndOpacity(SolidColor);
 	}
 
 	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
