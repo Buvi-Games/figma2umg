@@ -121,6 +121,14 @@ void IWidgetBuilder::OnInsert() const
 	SetConstraintsAndAlign();
 }
 
+bool IWidgetBuilder::IsTopWidgetForNode() const
+{
+	if (Parent == nullptr)
+		return true;
+
+	return (Node != Parent->Node);
+}
+
 void IWidgetBuilder::SetPosition() const
 {
 	const TObjectPtr<UWidget> Widget = GetWidget();

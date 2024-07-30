@@ -48,6 +48,8 @@ protected:
 	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;
 	void OnInsert() const;
 
+	bool IsTopWidgetForNode() const;
+
 	void SetPosition() const;
 	void SetSize() const;
 	void SetPadding() const;
