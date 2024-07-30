@@ -21,6 +21,8 @@
 
 #include "FigmaGroup.generated.h"
 
+class UButtonWidgetBuilder;
+
 UCLASS()
 class UFigmaGroup : public UFigmaNode, public IFigmaContainer, public IFlowTransition
 {
@@ -208,7 +210,7 @@ public:
 
 protected:
 	bool IsButton() const;
-	TScriptInterface<IWidgetBuilder> CreateButtonBuilder() const;
+	TScriptInterface<UButtonWidgetBuilder> CreateButtonBuilder() const;
 	TScriptInterface<IWidgetBuilder> CreateContainersBuilder() const;
 
 	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
