@@ -61,6 +61,7 @@ TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders(bool IsR
 	UImageWidgetBuilder* ImageWidgetBuilder = NewObject<UImageWidgetBuilder>();
 	ImageWidgetBuilder->SetNode(this);
 	ImageWidgetBuilder->SetTexture2DBuilder(AssetBuilder);
+	ImageWidgetBuilder->SetOpacityValue(Opacity);
 
 	return ImageWidgetBuilder;
 }

@@ -38,6 +38,7 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 	{
 		UImageWidgetBuilder* ImageWidgetBuilder = NewObject<UImageWidgetBuilder>();
 		ImageWidgetBuilder->SetNode(this);
+		ImageWidgetBuilder->SetOpacityValue(Opacity);
 		FLinearColor SolidColor;
 		bool FoundColor = false;
 		for (const FFigmaPaint& Paint : Fills)

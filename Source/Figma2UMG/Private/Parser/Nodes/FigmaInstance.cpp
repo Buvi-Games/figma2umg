@@ -79,6 +79,7 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 	{
 		UImageWidgetBuilder* ImageWidgetBuilder = NewObject<UImageWidgetBuilder>();
 		ImageWidgetBuilder->SetNode(this);
+		ImageWidgetBuilder->SetOpacityValue(Opacity);
 		ImageWidgetBuilder->SetTexture2DBuilder(Texture2DBuilder);
 		return ImageWidgetBuilder;
 	}
@@ -89,6 +90,7 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 		{
 			InstanceSwapBuilder = NewObject<UWidgetSwitcherBuilder>();
 			InstanceSwapBuilder->SetNode(this);
+			InstanceSwapBuilder->SetOpacityValue(Opacity);
 
 			const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
 			for(const FFigmaInstanceSwapPreferredValue& PreferredValue : PropertyDefinition->PreferredValues)

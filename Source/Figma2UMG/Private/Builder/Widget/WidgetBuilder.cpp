@@ -86,6 +86,11 @@ TObjectPtr<UWidget> IWidgetBuilder::FindWidgetRecursive(const FString& WidgetNam
 	return nullptr;
 }
 
+void IWidgetBuilder::SetOpacityValue(const float InOpacity)
+{
+	Opacity = InOpacity;
+}
+
 bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const
 {
 	if (Parent)
@@ -111,6 +116,7 @@ void IWidgetBuilder::OnInsert() const
 	SetPosition();
 	SetSize();
 	SetPadding();
+	SetOpacity();
 
 	SetConstraintsAndAlign();
 }
@@ -220,6 +226,15 @@ void IWidgetBuilder::SetPadding() const
 			ButtonSlot->SetPadding(Padding);
 		}
 	}
+}
+
+void IWidgetBuilder::SetOpacity() const
+{
+	const TObjectPtr<UWidget> Widget = GetWidget();
+	if (!Widget)
+		return;
+
+	Widget->SetRenderOpacity(Opacity);
 }
 
 void IWidgetBuilder::SetConstraintsAndAlign() const
