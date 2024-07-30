@@ -41,6 +41,7 @@ public:
 	ESlateVisibility GetVisibility() const;
 
 	FVector2D GetPosition() const;
+	float GetRotation() const { return Rotation; }
 
 	virtual FVector2D GetAbsolutePosition() const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D::ZeroVector;)
 	virtual FVector2D GetAbsoluteSize() const PURE_VIRTUAL(UFigmaNode::GetAbsoluteSize(), return FVector2D::ZeroVector;)

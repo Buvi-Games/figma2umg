@@ -109,10 +109,20 @@ bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TOb
 void IWidgetBuilder::OnInsert() const
 {
 	SetPosition();
+	SetRotation();
 	SetSize();
 	SetPadding();
+	SetOpacity();
 
 	SetConstraintsAndAlign();
+}
+
+bool IWidgetBuilder::IsTopWidgetForNode() const
+{
+	if (Parent == nullptr)
+		return true;
+
+	return (Node != Parent->Node);
 }
 
 void IWidgetBuilder::SetPosition() const
@@ -137,6 +147,22 @@ void IWidgetBuilder::SetPosition() const
 		//{
 		//	WrapBoxSlot->SetPosition(Position);
 		//}
+	}
+}
+
+void IWidgetBuilder::SetRotation() const
+{
+	const TObjectPtr<UWidget> Widget = GetWidget();
+	if (Widget && Widget->Slot)
+	{
+		if (IsTopWidgetForNode())
+		{
+			Widget->SetRenderTransformAngle(Node->GetRotation());
+		}
+		else
+		{
+			Widget->SetRenderTransformAngle(0.0f);
+		}
 	}
 }
 
@@ -219,6 +245,37 @@ void IWidgetBuilder::SetPadding() const
 		{
 			ButtonSlot->SetPadding(Padding);
 		}
+	}
+}
+
+void IWidgetBuilder::SetOpacity() const
+{
+	const TObjectPtr<UWidget> Widget = GetWidget();
+	if (!Widget)
+		return;
+
+	if (IsTopWidgetForNode())
+	{
+		if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaGroup->Opacity);
+		}
+		else if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaInstance->Opacity);
+		}
+		else if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaText->Opacity);
+		}
+		else if (const UFigmaVectorNode* FigmaVector = Cast<UFigmaVectorNode>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaVector->Opacity);
+		}
+	}
+	else
+	{
+		Widget->SetRenderOpacity(1.0f);
 	}
 }
 
