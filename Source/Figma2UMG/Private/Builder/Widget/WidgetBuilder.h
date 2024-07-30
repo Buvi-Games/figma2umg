@@ -43,14 +43,17 @@ public:
 	virtual TObjectPtr<UWidget> FindWidgetRecursive(const FString& WidgetName) const;
 	virtual void ResetWidget() = 0;
 
-
 protected:
 	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;
 	void OnInsert() const;
 
+	bool IsTopWidgetForNode() const;
+
 	void SetPosition() const;
+	void SetRotation() const;
 	void SetSize() const;
 	void SetPadding() const;
+	void SetOpacity() const;
 	void SetConstraintsAndAlign() const;
 
 	virtual bool GetSizeValue(FVector2D& Size, bool& SizeToContent) const;

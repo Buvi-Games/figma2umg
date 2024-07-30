@@ -170,6 +170,16 @@ void UFigmaNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSha
 	{
 		SerializeArray(FigmaContainer->GetChildren(), JsonObj, FigmaContainer->GetJsonArrayName());
 	}
+
+	Rotation = FMath::RadiansToDegrees(Rotation);
+	while (Rotation > 180.0f)
+	{
+		Rotation -= 360.0f;
+	}
+	while (Rotation < -180.0f)
+	{
+		Rotation += 360.0f;
+	}
 }
 
 void UFigmaNode::PrepareForFlow()

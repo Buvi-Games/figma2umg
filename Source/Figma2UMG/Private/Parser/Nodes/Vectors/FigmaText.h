@@ -63,7 +63,7 @@ public:
 	EFigmaEasingType TransitionEasing;
 
 	UPROPERTY()
-	float Opacity;
+	float Opacity = 1.0f;
 
 	UPROPERTY()
 	FFigmaRectangle AbsoluteBoundingBox;

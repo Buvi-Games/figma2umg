@@ -59,8 +59,9 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 	}
 	else
 	{
-		return CreateContainersBuilder();
-	}	
+		TScriptInterface<IWidgetBuilder> WidgetBuilder = CreateContainersBuilder();
+		return WidgetBuilder;
+	}
 }
 
 FVector2D UFigmaGroup::GetAbsolutePosition() const
