@@ -49,6 +49,7 @@ protected:
 	bool IsTopWidgetForNode() const;
 
 	void SetPosition() const;
+	void SetRotation() const;
 	void SetSize() const;
 	void SetPadding() const;
 	void SetOpacity() const;

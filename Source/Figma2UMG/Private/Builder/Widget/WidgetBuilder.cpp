@@ -109,6 +109,7 @@ bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TOb
 void IWidgetBuilder::OnInsert() const
 {
 	SetPosition();
+	SetRotation();
 	SetSize();
 	SetPadding();
 	SetOpacity();
@@ -146,6 +147,22 @@ void IWidgetBuilder::SetPosition() const
 		//{
 		//	WrapBoxSlot->SetPosition(Position);
 		//}
+	}
+}
+
+void IWidgetBuilder::SetRotation() const
+{
+	const TObjectPtr<UWidget> Widget = GetWidget();
+	if (Widget && Widget->Slot)
+	{
+		if (IsTopWidgetForNode())
+		{
+			Widget->SetRenderTransformAngle(Node->GetRotation());
+		}
+		else
+		{
+			Widget->SetRenderTransformAngle(0.0f);
+		}
 	}
 }
 
