@@ -86,11 +86,6 @@ TObjectPtr<UWidget> IWidgetBuilder::FindWidgetRecursive(const FString& WidgetNam
 	return nullptr;
 }
 
-void IWidgetBuilder::SetOpacityValue(const float InOpacity)
-{
-	Opacity = InOpacity;
-}
-
 bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const
 {
 	if (Parent)
@@ -242,7 +237,29 @@ void IWidgetBuilder::SetOpacity() const
 	if (!Widget)
 		return;
 
-	Widget->SetRenderOpacity(Opacity);
+	if (IsTopWidgetForNode())
+	{
+		if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaGroup->Opacity);
+		}
+		else if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaInstance->Opacity);
+		}
+		else if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaText->Opacity);
+		}
+		else if (const UFigmaVectorNode* FigmaVector = Cast<UFigmaVectorNode>(Node))
+		{
+			Widget->SetRenderOpacity(FigmaVector->Opacity);
+		}
+	}
+	else
+	{
+		Widget->SetRenderOpacity(1.0f);
+	}
 }
 
 void IWidgetBuilder::SetConstraintsAndAlign() const

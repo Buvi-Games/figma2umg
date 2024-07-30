@@ -63,7 +63,6 @@ TScriptInterface<IWidgetBuilder> UFigmaText::CreateWidgetBuilders(bool IsRoot/*=
 {
 	UTextBlockWidgetBuilder* TextBlockWidgetBuilder = NewObject<UTextBlockWidgetBuilder>();
 	TextBlockWidgetBuilder->SetNode(this);
-	TextBlockWidgetBuilder->SetOpacityValue(Opacity);
 
 	return TextBlockWidgetBuilder;
 }

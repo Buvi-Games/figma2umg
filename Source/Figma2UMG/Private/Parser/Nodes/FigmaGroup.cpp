@@ -53,13 +53,11 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 	if (AllowFrameButton && IsButton())
 	{
 		TScriptInterface<IWidgetBuilder> WidgetBuilder = CreateButtonBuilder();
-		WidgetBuilder->SetOpacityValue(Opacity);
 		return WidgetBuilder;
 	}
 	else
 	{
 		TScriptInterface<IWidgetBuilder> WidgetBuilder = CreateContainersBuilder();
-		WidgetBuilder->SetOpacityValue(Opacity);
 		return WidgetBuilder;
 	}
 	

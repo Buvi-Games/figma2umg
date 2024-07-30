@@ -42,8 +42,6 @@ public:
 	virtual TObjectPtr<UWidget> FindWidgetRecursive(const FString& WidgetName) const;
 	virtual void ResetWidget() = 0;
 
-	void SetOpacityValue(const float InOpacity);
-
 protected:
 	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;
 	void OnInsert() const;
@@ -73,7 +71,4 @@ protected:
 
 private:
 	TScriptInterface<IWidgetBuilder> Parent = nullptr;
-
-	//We need the Opacity to be set from the node at the Builder creation because only the top WidgetBuilder must have the value, to prevent exponential Opacity results
-	float Opacity = 1.0f;
 };
