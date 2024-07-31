@@ -13,7 +13,10 @@
 #include "Editor/MaterialEditor/Public/MaterialEditingLibrary.h"
 #include "Factories/MaterialFactoryNew.h"
 #include "Materials/MaterialExpressionComponentMask.h"
+#include "Materials/MaterialExpressionConstant.h"
 #include "Materials/MaterialExpressionCustom.h"
+#include "Materials/MaterialExpressionMultiply.h"
+#include "Materials/MaterialExpressionScalarParameter.h"
 #include "Materials/MaterialExpressionSubtract.h"
 #include "Materials/MaterialExpressionTextureCoordinate.h"
 #include "Parser/FigmaFile.h"
@@ -696,7 +699,7 @@ UMaterialExpression* UMaterialBuilder::SetupMaskExpression(UMaterialExpression* 
 	return Mask;
 }
 
-UMaterialExpressionMaterialFunctionCall* UMaterialBuilder::SetupMaterialFunction(const FString& FunctionPath, float NodePosX /*= -1200.0f*/) const
+UMaterialExpressionMaterialFunctionCall* UMaterialBuilder::SetupMaterialFunction(const FString& FunctionPath, float NodePosX /*= -1200.0f*/, float NodePosY /*= 0.0f*/) const
 {
 	UMaterialFunction* MaterialFunction = LoadObject<UMaterialFunction>(NULL, *FunctionPath, NULL, 0, NULL);
 
@@ -713,7 +716,7 @@ UMaterialExpressionMaterialFunctionCall* UMaterialBuilder::SetupMaterialFunction
 
 	if (!LinearGradientFunction)
 	{
-		LinearGradientFunction = Cast<UMaterialExpressionMaterialFunctionCall>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionMaterialFunctionCall::StaticClass(), Asset, NodePosX, 0.0f));
+		LinearGradientFunction = Cast<UMaterialExpressionMaterialFunctionCall>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionMaterialFunctionCall::StaticClass(), Asset, NodePosX, NodePosY));
 	}
 
 	if (!LinearGradientFunction->MaterialFunction)
@@ -749,4 +752,36 @@ UMaterialExpression* UMaterialBuilder::InvertOutput(UMaterialExpression* OutputE
 	Subtract->ConstA = 1.0f;
 
 	return Subtract;
+}
+
+UMaterialExpressionConstant* UMaterialBuilder::AddConstant(float ConstValue, UMaterialExpression* InputExpression, const int InputIndex) const
+{
+	UMaterialExpressionConstant* Constant = nullptr;
+	for (UMaterialExpression* Expression : Asset->GetExpressions())
+	{
+		UMaterialExpressionConstant* MaterialExpression = Cast<UMaterialExpressionConstant>(Expression);
+		if (InputExpression && InputExpression->GetInput(InputIndex)->Expression == MaterialExpression)
+		{
+			Constant = MaterialExpression;
+			break;
+		}
+	}
+
+	if (!Constant)
+	{
+		if(InputExpression)
+		{
+			Constant = Cast<UMaterialExpressionConstant>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionConstant::StaticClass(), Asset, InputExpression->MaterialExpressionEditorX - 200.0f, InputExpression->MaterialExpressionEditorY + (75.0f * InputIndex)));
+			FExpressionInput* Input = InputExpression->GetInput(InputIndex);
+			Input->Connect(0, Constant);
+		}
+		else
+		{
+			Constant = Cast<UMaterialExpressionConstant>(UMaterialEditingLibrary::CreateMaterialExpressionEx(Asset, nullptr, UMaterialExpressionConstant::StaticClass(), Asset, 0.0f, 0.0f));
+		}
+	}
+
+	Constant->R = ConstValue;
+
+	return Constant;
 }
