@@ -107,7 +107,7 @@ public:
 	TArray<FFigmaPaint> Strokes;
 
 	UPROPERTY()
-	float StrokesWeight;
+	float StrokeWeight;
 
 	UPROPERTY()
 	FFigmaStrokeWeights IndividualStrokeWeights;
