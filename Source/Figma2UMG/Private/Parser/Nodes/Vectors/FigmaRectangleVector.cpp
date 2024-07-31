@@ -45,12 +45,31 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 			if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
 			{
 				ImageWidgetBuilder->SetMaterial(Material);
+				ImageWidgetBuilder->SetColor(Paint.GetLinearColor());
 				return ImageWidgetBuilder;
 			}
 			else if(Paint.Type == EPaintTypes::SOLID)
 			{
 				FoundColor = true;
 				SolidColor = Paint.GetLinearColor();
+			}
+		}
+
+		if(Fills.IsEmpty())
+		{
+			for (const FFigmaPaint& Paint : Strokes)
+			{
+				if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
+				{
+					ImageWidgetBuilder->SetMaterial(Material);
+					ImageWidgetBuilder->SetColor(Paint.GetLinearColor());
+					return ImageWidgetBuilder;
+				}
+				else if (Paint.Type == EPaintTypes::SOLID)
+				{
+					FoundColor = true;
+					SolidColor = Paint.GetLinearColor();
+				}
 			}
 		}
 
