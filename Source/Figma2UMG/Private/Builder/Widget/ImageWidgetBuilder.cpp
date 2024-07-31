@@ -69,6 +69,7 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTre
 	{
 		FSlateBrush Brush = Widget->GetBrush();
 		Brush.TintColor = SolidColor;
+		Brush.SetImageSize(Node->GetAbsoluteSize());
 		Widget->SetBrush(Brush);
 	}
 
