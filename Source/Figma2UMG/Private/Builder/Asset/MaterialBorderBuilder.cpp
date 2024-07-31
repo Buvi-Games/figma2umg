@@ -15,6 +15,7 @@
 #include "Factories/MaterialInstanceConstantFactoryNew.h"
 #include "Materials/MaterialExpressionConstant.h"
 #include "Materials/MaterialExpressionDivide.h"
+#include "Materials/MaterialExpressionMultiply.h"
 #include "Materials/MaterialExpressionSubtract.h"
 #include "Materials/MaterialInstanceConstant.h"
 #include "Parser/Nodes/FigmaGroup.h"
@@ -264,7 +265,8 @@ UMaterialExpression* UMaterialBorderBuilder::SetupMaterial() const
 	UMaterialExpressionScalarParameter* BorderSizeExpression = AddParameter<UMaterialExpressionScalarParameter>(BorderSizeStr, 1.0f, GetUserInterfaceUVFunction->MaterialExpressionEditorX, GetUserInterfaceUVFunction->MaterialExpressionEditorY + 400.0f);
 	UMaterialExpressionScalarParameter* RoundRatioExpression = AddParameter<UMaterialExpressionScalarParameter>(RoundRatioStr, 0.0f, BorderSizeExpression->MaterialExpressionEditorX, BorderSizeExpression->MaterialExpressionEditorY + 200.0f);
 
-	UMaterialExpression* Result = Operation<UMaterialExpressionSubtract>(GetUserInterfaceUVFunction, 1, BorderSizeExpression, 0, 0.0f, 0.0f, 200.0f, -50.0f);
+	UMaterialExpression* Result = Operation<UMaterialExpressionMultiply>(BorderSizeExpression, 0, nullptr, 0, 0.0f, 2.0f);
+	Result = Operation<UMaterialExpressionSubtract>(GetUserInterfaceUVFunction, 1, Result, 0, 0.0f, 0.0f, 200.0f, -50.0f);
 	Result = Operation<UMaterialExpressionDivide>(Result, 0, GetUserInterfaceUVFunction, 1);
 	Result = Operation<UMaterialExpressionSubtract>(Result, 0, RoundRatioExpression, 0);
 
