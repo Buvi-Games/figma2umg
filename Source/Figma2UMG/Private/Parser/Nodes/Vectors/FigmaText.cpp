@@ -43,7 +43,7 @@ bool UFigmaText::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInte
 	AssetBuilder->SetFontFamily(Style.FontFamily);
 	AssetBuilders.Add(AssetBuilder);
 
-	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills, Strokes);
 
 	return true;
 }

@@ -117,7 +117,7 @@ void UBorderWidgetBuilder::SetFill(const TArray<FFigmaPaint>& Fills) const
 {
 	if (Fills.Num() > 0 && Fills[0].Visible)
 	{
-		if (const TObjectPtr<UMaterial> Material = Fills[0].GetMaterial())
+		if (const TObjectPtr<UMaterialInterface> Material = Fills[0].GetMaterial())
 		{
 			Widget->SetBrushColor(FLinearColor::White);
 			Widget->SetBrushFromMaterial(Material);
@@ -142,6 +142,26 @@ void UBorderWidgetBuilder::SetStroke(const TArray<FFigmaPaint>& Strokes, const f
 {
 	if (Strokes.Num() > 0 && Strokes[0].Visible)
 	{
+		for (const FFigmaPaint& Paint : Strokes)
+		{
+			if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
+			{
+				Widget->SetBrushFromMaterial(Material);
+				FSlateBrush Brush = Widget->Background;
+				Brush.OutlineSettings.Color = Strokes[0].GetLinearColor();
+				Brush.OutlineSettings.Width = StrokeWeight;
+				Brush.TintColor = FLinearColor::White;
+				Brush.DrawAs = ESlateBrushDrawType::Box;
+				Brush.Margin.Top = 0.5f;
+				Brush.Margin.Bottom = 0.5f;
+				Brush.Margin.Left = 0.5f;
+				Brush.Margin.Right = 0.5f;
+				Widget->SetBrush(Brush);
+				Widget->SetContentColorAndOpacity(Paint.GetLinearColor());
+				return;
+			}
+		}
+		
 		FSlateBrush Brush = Widget->Background;
 		Brush.OutlineSettings.Color = Strokes[0].GetLinearColor();
 		Brush.OutlineSettings.Width = StrokeWeight;

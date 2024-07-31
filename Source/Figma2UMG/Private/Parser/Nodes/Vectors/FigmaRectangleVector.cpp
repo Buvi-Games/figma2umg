@@ -23,7 +23,7 @@ bool UFigmaRectangleVector::CreateAssetBuilder(const FString& InFileKey, TArray<
 	}
 	else
 	{
-		CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+		CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills, Strokes);
 	}
 	return true;
 }
@@ -42,15 +42,34 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 		bool FoundColor = false;
 		for (const FFigmaPaint& Paint : Fills)
 		{
-			if (const TObjectPtr<UMaterial> Material = Paint.GetMaterial())
+			if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
 			{
 				ImageWidgetBuilder->SetMaterial(Material);
+				ImageWidgetBuilder->SetColor(Paint.GetLinearColor());
 				return ImageWidgetBuilder;
 			}
 			else if(Paint.Type == EPaintTypes::SOLID)
 			{
 				FoundColor = true;
 				SolidColor = Paint.GetLinearColor();
+			}
+		}
+
+		if(Fills.IsEmpty())
+		{
+			for (const FFigmaPaint& Paint : Strokes)
+			{
+				if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
+				{
+					ImageWidgetBuilder->SetMaterial(Material);
+					ImageWidgetBuilder->SetColor(Paint.GetLinearColor());
+					return ImageWidgetBuilder;
+				}
+				else if (Paint.Type == EPaintTypes::SOLID)
+				{
+					FoundColor = true;
+					SolidColor = Paint.GetLinearColor();
+				}
 			}
 		}
 
@@ -61,5 +80,4 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 		}
 		return ImageWidgetBuilder;
 	}
-	return nullptr;
 }
