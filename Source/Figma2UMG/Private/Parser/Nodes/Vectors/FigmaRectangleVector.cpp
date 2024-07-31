@@ -42,7 +42,7 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 		bool FoundColor = false;
 		for (const FFigmaPaint& Paint : Fills)
 		{
-			if (const TObjectPtr<UMaterial> Material = Paint.GetMaterial())
+			if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
 			{
 				ImageWidgetBuilder->SetMaterial(Material);
 				return ImageWidgetBuilder;
@@ -61,5 +61,4 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 		}
 		return ImageWidgetBuilder;
 	}
-	return nullptr;
 }

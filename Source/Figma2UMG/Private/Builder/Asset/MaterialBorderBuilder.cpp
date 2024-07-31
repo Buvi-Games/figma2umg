@@ -22,6 +22,7 @@
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Nodes/FigmaSection.h"
 #include "Parser/Nodes/Vectors/FigmaText.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 void UMaterialBorderBuilder::LoadOrCreateAssets()
 {

@@ -17,7 +17,7 @@ void UImageWidgetBuilder::SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder
 	Texture2DBuilder = InTexture2DBuilder;
 }
 
-void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterial>& InMaterial)
+void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterialInterface>& InMaterial)
 {
 	Material = InMaterial;
 }

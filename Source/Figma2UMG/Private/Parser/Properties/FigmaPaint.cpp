@@ -7,6 +7,7 @@
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Parser/Nodes/FigmaNode.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 void FFigmaPaint::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
@@ -80,9 +81,13 @@ TObjectPtr<UTexture2D> FFigmaPaint::GetTexture() const
 	return nullptr;
 }
 
-TObjectPtr<UMaterial> FFigmaPaint::GetMaterial() const
+TObjectPtr<UMaterialInterface> FFigmaPaint::GetMaterial() const
 {
-	if (const UMaterialBuilder* MaterialBuilder = AssetBuilder ? Cast<UMaterialBuilder>(AssetBuilder.GetObject()) : nullptr)
+	if (const UMaterialBorderBuilder* MaterialBorderBuilder = AssetBuilder ? Cast<UMaterialBorderBuilder>(AssetBuilder.GetObject()) : nullptr)
+	{
+		return MaterialBorderBuilder->GetInstanceAsset();
+	}
+	else if (const UMaterialBuilder* MaterialBuilder = AssetBuilder ? Cast<UMaterialBuilder>(AssetBuilder.GetObject()) : nullptr)
 	{
 		return MaterialBuilder->GetAsset();
 	}

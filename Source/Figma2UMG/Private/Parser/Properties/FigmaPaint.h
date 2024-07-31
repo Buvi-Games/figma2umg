@@ -33,7 +33,7 @@ public:
 
 	void CreateAssetBuilder(const FString& InFileKey, const UFigmaNode* OwnerNode, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, bool IsStroke = false);
 	TObjectPtr<UTexture2D> GetTexture() const;
-	TObjectPtr<UMaterial> GetMaterial() const;
+	TObjectPtr<UMaterialInterface> GetMaterial() const;
 
 	UPROPERTY()
 	EPaintTypes Type;

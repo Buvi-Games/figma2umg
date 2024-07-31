@@ -16,6 +16,8 @@ public:
 	virtual void Reset() override;
 
 	virtual void AddPackages(TArray<UPackage*>& Packages) const override;
+
+	TObjectPtr<UMaterialInstanceConstant> GetInstanceAsset() const { return InstanceAsset; }
 protected:
 	virtual void Setup() const override;
 	void SetupInstance() const;
