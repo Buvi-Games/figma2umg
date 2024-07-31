@@ -28,7 +28,7 @@ void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSh
 
 bool UFigmaGroup::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills, Strokes);
 
 	return Super::CreateAssetBuilder(InFileKey, AssetBuilders);
 }

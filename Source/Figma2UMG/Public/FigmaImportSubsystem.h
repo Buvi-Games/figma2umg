@@ -48,6 +48,13 @@ public:
 	template<class Type>
 	static Type* NewWidget(TObjectPtr<UWidgetTree> TreeViewOuter, const FString& NodeName, const FString& WidgetName, UClass* ClassOverride);
 
+	UMaterial* GetBorderMaterial() const { return BorderMaterial; }
+	void SetBorderMaterial(UMaterial* InBorderMaterial) { BorderMaterial = InBorderMaterial; }
+
+	UMaterialInstanceConstant* GetBorderMaterialInstances(float StrokeWeight) const;
+	void AddBorderMaterialInstances(float StrokeWeight, UMaterialInstanceConstant* MaterialInstanceConstant);
+
+	void ResetBorderMaterials();
 private:
 	UPROPERTY()
 	TArray<UFigmaImporter*> Requests;
@@ -60,6 +67,12 @@ private:
 
 	UPROPERTY()
 	TArray<FGFontFamilyInfo> GoogleFontsInfo;
+
+	UPROPERTY()
+	UMaterial* BorderMaterial = nullptr;
+
+	UPROPERTY()
+	TMap<float, UMaterialInstanceConstant*> BorderMaterialInstances;
 
 	FFrameToButtonOverride* FrameToButtonOverride = nullptr;
 	FClassOverrides* WidgetOverrides = nullptr;

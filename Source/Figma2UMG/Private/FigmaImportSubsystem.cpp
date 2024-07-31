@@ -119,3 +119,24 @@ void UFigmaImportSubsystem::TryRenameWidget(const FString& InName, TObjectPtr<UW
 	const FString UniqueName = MakeUniqueObjectName(Widget->GetOuter(), Widget->GetClass(), *InName).ToString();
 	Widget->Rename(*UniqueName);
 }
+
+UMaterialInstanceConstant* UFigmaImportSubsystem::GetBorderMaterialInstances(float StrokeWeight) const
+{
+	if (BorderMaterialInstances.Contains(StrokeWeight))
+	{
+		return BorderMaterialInstances[StrokeWeight];
+	}
+
+	return nullptr;
+}
+
+void UFigmaImportSubsystem::AddBorderMaterialInstances(float StrokeWeight, UMaterialInstanceConstant* MaterialInstanceConstant)
+{
+	BorderMaterialInstances.Add(StrokeWeight, MaterialInstanceConstant);
+}
+
+void UFigmaImportSubsystem::ResetBorderMaterials()
+{
+	BorderMaterial = nullptr;
+	BorderMaterialInstances.Reset();
+}

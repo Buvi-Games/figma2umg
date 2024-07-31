@@ -17,7 +17,7 @@ void UImageWidgetBuilder::SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder
 	Texture2DBuilder = InTexture2DBuilder;
 }
 
-void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterial>& InMaterial)
+void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterialInterface>& InMaterial)
 {
 	Material = InMaterial;
 }
@@ -63,7 +63,14 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Widg
 		Widget->SetBrushFromMaterial(Material);
 		FSlateBrush Brush = Widget->GetBrush();
 		Brush.SetImageSize(Node->GetAbsoluteSize());
+		Brush.TintColor = FLinearColor::White;
+		Brush.DrawAs = ESlateBrushDrawType::Box;
+		Brush.Margin.Top = 0.5f;
+		Brush.Margin.Bottom = 0.5f;
+		Brush.Margin.Left = 0.5f;
+		Brush.Margin.Right = 0.5f;
 		Widget->SetBrush(Brush);
+		Widget->SetColorAndOpacity(SolidColor);
 	}
 	else
 	{
