@@ -3,6 +3,7 @@
 #include "FigmaPaint.h"
 
 #include "Figma2UMGModule.h"
+#include "Builder/Asset/MaterialBorderBuilder.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Parser/Nodes/FigmaNode.h"
@@ -37,6 +38,14 @@ void FFigmaPaint::CreateAssetBuilder(const FString& InFileKey, const UFigmaNode*
 	switch (Type)
 	{
 	case EPaintTypes::SOLID:
+		if(IsStroke)
+		{
+			UMaterialBorderBuilder* MaterialBuilder = NewObject<UMaterialBorderBuilder>();
+			MaterialBuilder->SetNode(InFileKey, OwnerNode);
+			MaterialBuilder->SetPaint(this);
+			AssetBuilder = MaterialBuilder;
+			AssetBuilders.Add(MaterialBuilder);
+		}
 		break;
 	case EPaintTypes::GRADIENT_LINEAR:
 	case EPaintTypes::GRADIENT_RADIAL:
