@@ -146,7 +146,7 @@ void UFigmaNode::CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArra
 		{
 			if (Paint.Type == EPaintTypes::SOLID && Paint.Visible && Paint.Opacity > 0.0f)
 			{
-				Paint.CreateAssetBuilder(InFileKey, this, AssetBuilders);
+				Paint.CreateAssetBuilder(InFileKey, this, AssetBuilders, true);
 			}
 		}
 	}
