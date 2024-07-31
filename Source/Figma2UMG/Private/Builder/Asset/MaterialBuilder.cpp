@@ -59,6 +59,8 @@ void UMaterialBuilder::LoadOrCreateAssets()
 
 		MaterialAsset->SetFlags(RF_Transactional);
 		MaterialAsset->Modify();
+		MaterialAsset->MarkPackageDirty();
+		MaterialAsset->PostEditChange();
 	}
 }
 

@@ -94,6 +94,8 @@ void UMaterialBorderBuilder::LoadOrCreateAssets()
 
 		Asset->SetFlags(RF_Transactional);
 		Asset->Modify();
+		Asset->MarkPackageDirty();
+		Asset->PostEditChange();
 	}
 
 	if (InstanceAsset && ManageMaterialInstance)
@@ -102,6 +104,8 @@ void UMaterialBorderBuilder::LoadOrCreateAssets()
 
 		InstanceAsset->SetFlags(RF_Transactional);
 		InstanceAsset->Modify();
+		InstanceAsset->MarkPackageDirty();
+		InstanceAsset->PostEditChange();
 	}
 }
 
