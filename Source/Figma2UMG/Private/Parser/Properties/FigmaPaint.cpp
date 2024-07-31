@@ -32,7 +32,7 @@ void FFigmaPaint::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 	}
 }
 
-void FFigmaPaint::CreateAssetBuilder(const FString& InFileKey, const UFigmaNode* OwnerNode, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
+void FFigmaPaint::CreateAssetBuilder(const FString& InFileKey, const UFigmaNode* OwnerNode, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, bool IsStroke /*= false*/)
 {
 	switch (Type)
 	{

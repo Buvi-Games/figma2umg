@@ -133,11 +133,22 @@ TObjectPtr<UWidget> UFigmaNode::FindWidgetForNode(const TObjectPtr<UPanelWidget>
 	return nullptr;
 }
 
-void UFigmaNode::CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, TArray<FFigmaPaint>& InFills) const
+void UFigmaNode::CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, TArray<FFigmaPaint>& InFills, TArray<FFigmaPaint>& InStrokes) const
 {
 	for (FFigmaPaint& Paint : InFills)
 	{
 		Paint.CreateAssetBuilder(InFileKey, this, AssetBuilders);		
+	}
+
+	if(InFills.IsEmpty())
+	{
+		for (FFigmaPaint& Paint : InStrokes)
+		{
+			if (Paint.Type == EPaintTypes::SOLID && Paint.Visible && Paint.Opacity > 0.0f)
+			{
+				Paint.CreateAssetBuilder(InFileKey, this, AssetBuilders);
+			}
+		}
 	}
 }
 

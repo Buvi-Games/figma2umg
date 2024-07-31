@@ -34,7 +34,7 @@ bool UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey, TArray<TScri
 	AssetBuilder->SetNode(InFileKey, this);
 	AssetBuilders.Add(AssetBuilder);
 
-	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills, Strokes);
 
 	return true;
 }

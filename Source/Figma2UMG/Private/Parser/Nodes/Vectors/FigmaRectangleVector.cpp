@@ -23,7 +23,7 @@ bool UFigmaRectangleVector::CreateAssetBuilder(const FString& InFileKey, TArray<
 	}
 	else
 	{
-		CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills);
+		CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills, Strokes);
 	}
 	return true;
 }
