@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "K2Node_ComponentBoundEvent.h"
 #include "WidgetBuilder.h"
 #include "UserWidgetBuilder.generated.h"
 
+class IFlowTransition;
 class UWidgetBlueprintBuilder;
 class UTexture2DBuilder;
 class UWidget;
@@ -28,7 +30,10 @@ public:
 protected:
 	virtual void GetPaddingValue(FMargin& Padding) const override;
 	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const override;
-	void SetupTransition() const;
+	void SetupTransition(const IFlowTransition* FlowTransition) const;
+
+	UK2Node_CallFunction* AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName) const;
+	UEdGraphNode* AddNodeAfterNode(const UK2Node* PreviousNode, TSubclassOf<UEdGraphNode> const NodeClass) const;
 
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;
