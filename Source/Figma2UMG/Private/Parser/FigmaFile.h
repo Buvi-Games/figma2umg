@@ -12,6 +12,7 @@
 class IAssetBuilder;
 struct FImageRequests;
 class UFigmaDocument;
+class UFigmaImporter;
 
 DECLARE_DELEGATE_OneParam(FProcessFinishedDelegate, bool);
 
@@ -64,6 +65,9 @@ public:
 		return nullptr;
 	}
 
+	void SetImporter(UFigmaImporter* InFigmaImporter);
+	UFigmaImporter* GetImporter() const;
+
 protected:
 	void FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
@@ -112,6 +116,8 @@ protected:
 
 	FString FileKey;
 	FString PackagePath;
+
+	UFigmaImporter* FigmaImporter = nullptr;
 
 	FProcessFinishedDelegate CurrentProcessDelegate;
 };
