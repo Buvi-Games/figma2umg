@@ -27,7 +27,8 @@ public:
 	virtual void ResetWidget() override;
 protected:
 	virtual void GetPaddingValue(FMargin& Padding) const override;
-	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
+	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const override;
+	void SetupTransition() const;
 
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;

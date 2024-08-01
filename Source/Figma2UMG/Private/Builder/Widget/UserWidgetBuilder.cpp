@@ -3,13 +3,16 @@
 
 #include "UserWidgetBuilder.h"
 
+#include "EdGraphSchema_K2_Actions.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
+#include "K2Node_ComponentBoundEvent.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Components/Widget.h"
+#include "Kismet2/BlueprintEditorUtils.h"
 #include "Parser/Nodes/FigmaComponent.h"
 #include "Parser/Nodes/FigmaComponentSet.h"
 #include "Parser/Nodes/FigmaInstance.h"
@@ -79,7 +82,12 @@ void UUserWidgetBuilder::PatchWidgetProperties()
 		UE_LOG_Figma2UMG(Error, TEXT("[UUserWidgetBuilder::PatchWidgetProperties] Missing Widget for node %s."), *Node->GetNodeName());
 		return;
 	}
-	
+
+	if(FigmaInstance->HasTransition())
+	{
+		SetupTransition();
+	}
+
 	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : FigmaInstance->ComponentProperties)
 	{
 		WidgetBlueprintHelper::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
@@ -114,4 +122,31 @@ bool UUserWidgetBuilder::GetAlignmentValues(EHorizontalAlignment& HorizontalAlig
 	HorizontalAlignment = HAlign_Fill;
 	VerticalAlignment = VAlign_Fill;
 	return true;
+}
+
+void UUserWidgetBuilder::SetupTransition() const
+{
+	UWidgetTree* ParentTree = Widget ? Cast<UWidgetTree>(Widget->GetOuter()) : nullptr;
+	TObjectPtr<UWidgetBlueprint> WidgetBlueprint = ParentTree ? Cast<UWidgetBlueprint>(ParentTree->GetOuter()) : nullptr;
+	if(!WidgetBlueprint)
+		return;
+	
+	FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
+	const FName EventName("OnButtonClicked");
+	const UK2Node_ComponentBoundEvent* ExistingNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
+	if (ExistingNode == nullptr)
+	{
+		FMulticastDelegateProperty* DelegateProperty = FindFProperty<FMulticastDelegateProperty>(Widget->GetClass(), EventName);
+		if (DelegateProperty != nullptr)
+		{
+			UEdGraph* TargetGraph = WidgetBlueprint->GetLastEditedUberGraph();
+			if (TargetGraph != nullptr)
+			{
+				const FVector2D NewNodePos = TargetGraph->GetGoodPlaceForNewNode();
+				UK2Node_ComponentBoundEvent* EventNode = FEdGraphSchemaAction_K2NewNode::SpawnNode<UK2Node_ComponentBoundEvent>(TargetGraph, NewNodePos, EK2NewNodeFlags::SelectNewNode);
+				EventNode->InitializeComponentBoundEventParams(VariableProperty, DelegateProperty);
+				ExistingNode = EventNode;
+			}
+		}
+	}
 };
