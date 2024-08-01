@@ -876,7 +876,7 @@ UK2Node_FunctionResult* WidgetBlueprintHelper::PatchFunctionResult(UEdGraph* Gra
 	return FunctionResult;
 }
 
-const UK2Node_CallFunction* WidgetBlueprintHelper::AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UObject> Object, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation)
+UK2Node_CallFunction* WidgetBlueprintHelper::AddCallFunctionOnMemberNode(TObjectPtr<UEdGraph> Graph, TObjectPtr<UObject> Object, const UFunction* Function, UEdGraphPin* ExecPin, UEdGraphPin* TargetPin, FVector2D NodeLocation)
 {
 	UBlueprintFunctionNodeSpawner* Spawner = UBlueprintFunctionNodeSpawner::Create(Function, Graph);
 	TSet<FBindingObject> Bindings;

@@ -231,7 +231,7 @@ UK2Node_CallFunction* UUserWidgetBuilder::AddFunctionAfterNode(const TObjectPtr<
 		if (Function)
 		{
 			const FVector2D CallFunctionPosition = NodeLocation + FVector2D(BaseSize.X + Pan.X, 0.0f);
-			WidgetBlueprintHelper::AddCallFunctionOnMemberNode(PreviousNode->GetGraph(), WidgetBlueprint, Function, ThenPin, nullptr, CallFunctionPosition);
+			RemoveFromParentFunction = WidgetBlueprintHelper::AddCallFunctionOnMemberNode(PreviousNode->GetGraph(), WidgetBlueprint, Function, ThenPin, nullptr, CallFunctionPosition);
 		}
 	}
 
