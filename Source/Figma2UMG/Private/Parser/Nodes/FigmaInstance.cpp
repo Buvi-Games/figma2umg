@@ -158,6 +158,23 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 	}
 }
 
+const bool UFigmaInstance::HasTransition() const
+{
+	if (IFlowTransition::HasTransition())
+		return true;
+
+	static const FString TransitionNodeIDStr("transitionNodeID");
+	for (const FFigmaOverrides& Override : Overrides)
+	{
+		if(Override.OverriddenFields.ContainsByPredicate([](const FString& Field){ return Field.Equals(TransitionNodeIDStr, ESearchCase::IgnoreCase);	}))
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void UFigmaInstance::ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const
 {
 	for (UFigmaNode* Child : CurrentChildren)
