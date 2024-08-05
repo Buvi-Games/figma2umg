@@ -37,6 +37,7 @@ public:
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	// FlowTransition
+	virtual const bool HasTransition() const override;
 	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; }
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
