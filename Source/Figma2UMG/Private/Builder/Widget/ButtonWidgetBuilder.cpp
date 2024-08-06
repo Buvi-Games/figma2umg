@@ -173,6 +173,8 @@ void UButtonWidgetBuilder::SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> Wi
 
 	const FName OnButtonUnHovered("OnButtonUnHovered");
 	SetupEventDispatcher(WidgetBlueprint, OnButtonUnHovered);
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
 }
 
 void UButtonWidgetBuilder::SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const
@@ -215,7 +217,6 @@ void UButtonWidgetBuilder::SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> Wid
 	K2Schema->MarkFunctionEntryAsEditable(NewGraph, true);
 
 	WidgetBlueprint->DelegateSignatureGraphs.Add(NewGraph);
-	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
 }
 
 void UButtonWidgetBuilder::PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
