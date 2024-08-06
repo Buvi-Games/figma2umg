@@ -21,7 +21,9 @@ public:
 	void SetWidgetBlueprintBuilder(const TObjectPtr<UWidgetBlueprintBuilder>& InWidgetBlueprintBuilder);
 
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) override;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
+	virtual void PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
 	virtual void PatchWidgetProperties() override;
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
@@ -34,6 +36,9 @@ protected:
 
 	UK2Node_CallFunction* AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName) const;
 	UEdGraphNode* AddNodeAfterNode(const UK2Node* PreviousNode, TSubclassOf<UEdGraphNode> const NodeClass) const;
+	void SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
+	void PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
+	void PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName);
 
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;

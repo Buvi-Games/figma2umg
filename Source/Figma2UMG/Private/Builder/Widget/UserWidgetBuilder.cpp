@@ -3,10 +3,12 @@
 
 #include "UserWidgetBuilder.h"
 
+#include "BlueprintDelegateNodeSpawner.h"
 #include "BlueprintNodeSpawner.h"
 #include "EdGraphSchema_K2_Actions.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
+#include "K2Node_CallDelegate.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_ComponentBoundEvent.h"
 #include "WidgetBlueprint.h"
@@ -66,10 +68,49 @@ void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Widge
 	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 }
 
+void UUserWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
+{
+	IWidgetBuilder::PostInsertWidgets(WidgetBlueprint);
+
+	if (WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	{
+		const UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
+		if(!ComponentAsset)
+			return;
+
+		bool Modified = false;
+		for (TFieldIterator<FMulticastInlineDelegateProperty>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
+		{
+			FString PropertyName = It->GetFName().ToString();
+			if (PropertyName.Equals("OnVisibilityChanged"))
+				continue;
+
+			FString EventName = Widget->GetName() + PropertyName;
+			SetupEventDispatcher(WidgetBlueprint, *EventName);
+			Modified = true;
+		}
+
+		if (Modified)
+		{
+			FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
+		}
+	}
+}
+
 bool UUserWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
 {
 	UE_LOG_Figma2UMG(Warning, TEXT("[UUserWidgetBuilder::TryInsertOrReplace] Node %s is an UUserWidget and can't insert widgets."), *Node->GetNodeName());
 	return false;
+}
+
+void UUserWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	if (WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	{
+		PatchEvents(WidgetBlueprint);
+	}
+
+	IWidgetBuilder::PatchWidgetBinds(WidgetBlueprint);
 }
 
 void UUserWidgetBuilder::PatchWidgetProperties()
@@ -195,6 +236,9 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition) 
 
 UK2Node_CallFunction* UUserWidgetBuilder::AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName) const
 {
+	if(!PreviousNode)
+		return nullptr;
+
 	FVector2D NodeLocation(PreviousNode->NodePosX, PreviousNode->NodePosY);
 	UK2Node_CallFunction* RemoveFromParentFunction = nullptr;
 
@@ -275,4 +319,143 @@ UEdGraphNode* UUserWidgetBuilder::AddNodeAfterNode(const UK2Node* PreviousNode, 
 
 
 	return NewNode;
+}
+void UUserWidgetBuilder::SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const
+{
+	if (UObject* ExistingObject = FindObject<UObject>(WidgetBlueprint, *(EventName.ToString())))
+	{
+		return;
+	}
+
+	FEdGraphPinType DelegateType;
+	DelegateType.PinCategory = UEdGraphSchema_K2::PC_MCDelegate;
+	const bool bVarCreatedSuccess = FBlueprintEditorUtils::AddMemberVariable(WidgetBlueprint, EventName, DelegateType);
+	if (!bVarCreatedSuccess)
+	{
+		//		LogSimpleMessage(LOCTEXT("AddDelegateVariable_Error", "Adding new delegate variable failed."));
+		return;
+	}
+
+	UEdGraph* const NewGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBlueprint, EventName, UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+	if (!NewGraph)
+	{
+		FBlueprintEditorUtils::RemoveMemberVariable(WidgetBlueprint, EventName);
+		//	LogSimpleMessage(LOCTEXT("AddDelegateVariable_Error", "Adding new delegate variable failed."));
+		return;
+	}
+
+	const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBlueprint, EventName);
+	if (VarIndex != INDEX_NONE && WidgetBlueprint->NewVariables[VarIndex].Category.EqualTo(UEdGraphSchema_K2::VR_DefaultCategory))
+	{
+		static const FText FigmaCategory(FText::FromString("Figma"));
+		WidgetBlueprint->NewVariables[VarIndex].Category = FigmaCategory;
+	}
+
+	NewGraph->bEditable = false;
+
+	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
+	K2Schema->CreateDefaultNodesForGraph(*NewGraph);
+	K2Schema->CreateFunctionGraphTerminators(*NewGraph, (UClass*)nullptr);
+	K2Schema->AddExtraFunctionFlags(NewGraph, (FUNC_BlueprintCallable | FUNC_BlueprintEvent | FUNC_Public));
+	K2Schema->MarkFunctionEntryAsEditable(NewGraph, true);
+
+	WidgetBlueprint->DelegateSignatureGraphs.Add(NewGraph);
+}
+
+void UUserWidgetBuilder::PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
+
+	if (!VariableProperty)
+		return;
+
+	const UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
+	if (!ComponentAsset)
+		return;
+
+	for (TFieldIterator<FMulticastInlineDelegateProperty>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
+	{
+		FString EventName = It->GetFName().ToString();
+		if (EventName.Equals("OnVisibilityChanged"))
+			continue;
+
+		FString EventDispatcherName = Widget->GetName() + EventName;
+		PatchEvent(WidgetBlueprint, VariableProperty, *EventName, *EventDispatcherName);
+	}
+}
+
+void UUserWidgetBuilder::PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName)
+{
+	const UK2Node_ComponentBoundEvent* ExistingNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
+	if (ExistingNode == nullptr)
+	{
+		FMulticastDelegateProperty* DelegateProperty = FindFProperty<FMulticastDelegateProperty>(Widget->GetClass(), EventName);
+		if (DelegateProperty != nullptr)
+		{
+			UEdGraph* TargetGraph = WidgetBlueprint->GetLastEditedUberGraph();
+			if (TargetGraph != nullptr)
+			{
+				const FVector2D NewNodePos = TargetGraph->GetGoodPlaceForNewNode();
+				UK2Node_ComponentBoundEvent* EventNode = FEdGraphSchemaAction_K2NewNode::SpawnNode<UK2Node_ComponentBoundEvent>(TargetGraph, NewNodePos, EK2NewNodeFlags::SelectNewNode);
+				EventNode->InitializeComponentBoundEventParams(VariableProperty, DelegateProperty);
+				ExistingNode = EventNode;
+			}
+		}
+	}
+
+	if(!ExistingNode)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UUserWidgetBuilder::PatchEvent] Can't create Event %s for Property %s at Bluepriunt %s."), *EventName.ToString(), *VariableProperty->GetName(), *WidgetBlueprint->GetName());
+		return;
+	}
+
+	FVector2D StartPos(ExistingNode->NodePosX, ExistingNode->NodePosY);
+	UEdGraphPin* ThenPin = ExistingNode->FindPin(UEdGraphSchema_K2::PN_Then);
+	while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
+	{
+		UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
+		if (!ConnectedNode)
+		{
+			break;
+		}
+		else if (ConnectedNode->IsA<UK2Node_CallDelegate>())
+		{
+			UK2Node_CallDelegate* CallFunctionNode = Cast<UK2Node_CallDelegate>(ConnectedNode);
+			if (Widget->GetName().Contains(CallFunctionNode->DelegateReference.GetMemberName().ToString()))
+			{
+				//Nothing to do.
+				return;
+			}
+		}
+
+		ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
+		StartPos = FVector2D(ConnectedNode->NodePosX, ConnectedNode->NodePosY);
+	}
+
+	FMulticastInlineDelegateProperty* DispatcherProperty = FindFProperty<FMulticastInlineDelegateProperty>(WidgetBlueprint->SkeletonGeneratedClass, EventDispatchersName);
+	if (!DispatcherProperty)
+	{
+		return;
+	}
+
+	bool const bIsDelegate = DispatcherProperty->IsA(FMulticastDelegateProperty::StaticClass());
+	if (bIsDelegate)
+	{
+		FMulticastDelegateProperty* DelegateProperty = CastFieldChecked<FMulticastDelegateProperty>(DispatcherProperty);
+
+		UBlueprintNodeSpawner* CallSpawner = UBlueprintDelegateNodeSpawner::Create(UK2Node_CallDelegate::StaticClass(), DelegateProperty);
+		TSet<FBindingObject> Bindings;
+		Bindings.Add(FBindingObject(WidgetBlueprint));
+		const FVector2D Offset = FVector2D(500.0f, 0.0f);
+		const FVector2D NodeLocation = StartPos + Offset;
+		const UEdGraphNode* GraphNode = CallSpawner->Invoke(ExistingNode->GetGraph(), Bindings, NodeLocation);
+		if (GraphNode)
+		{
+			UEdGraphPin* ExecutePin = GraphNode->FindPin(UEdGraphSchema_K2::PN_Execute);
+			if (ThenPin && ExecutePin)
+			{
+				ThenPin->MakeLinkTo(ExecutePin);
+			}
+		}
+	}
 }
