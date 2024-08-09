@@ -32,7 +32,8 @@ public:
 protected:
 	virtual void GetPaddingValue(FMargin& Padding) const override;
 	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const override;
-	void SetupTransition(const IFlowTransition* FlowTransition) const;
+	void SetupTransitions(const IFlowTransition* FlowTransition) const;
+	void SetupTransition(const IFlowTransition* FlowTransition, TObjectPtr<UWidgetBlueprint> WidgetBlueprint, FName EventName, FObjectProperty* VariableProperty) const;
 
 	UK2Node_CallFunction* AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName) const;
 	UEdGraphNode* AddNodeAfterNode(const UK2Node* PreviousNode, TSubclassOf<UEdGraphNode> const NodeClass) const;

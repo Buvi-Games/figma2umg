@@ -206,20 +206,25 @@ void UFigmaNode::PrepareForFlow()
 	{
 		if (FlowTransition->HasTransition())
 		{
-			const FString& NodeID = FlowTransition->GetTransitionNodeID();
-			TObjectPtr<UFigmaFrame> Frame = FigmaFile->FindByID<UFigmaFrame>(NodeID);
-			if (Frame)
+			TArray<FString> TransitionNodeIDs;
+			FlowTransition->GetAllTransitionNodeID(TransitionNodeIDs);
+
+			for (FString NodeID : TransitionNodeIDs)
 			{
-				Frame->SetGenerateFile();
-			}
-			else if (TObjectPtr<UFigmaNode> Node = FigmaFile->FindByID<UFigmaNode>(NodeID))
-			{
-				UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's contain Node with ID %s and type %s. Expecting a UFigmaFrame type"), *Name, *NodeID, *Node->GetClass()->GetName());
-			}
-			else
-			{
-				UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's doesn't contain Node with ID %s."), *Name, *NodeID);
-			}
+				TObjectPtr<UFigmaFrame> Frame = FigmaFile->FindByID<UFigmaFrame>(NodeID);
+				if (Frame)
+				{
+					Frame->SetGenerateFile();
+				}
+				else if (TObjectPtr<UFigmaNode> Node = FigmaFile->FindByID<UFigmaNode>(NodeID))
+				{
+					UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's contain Node with ID %s and type %s. Expecting a UFigmaFrame type"), *Name, *NodeID, *Node->GetClass()->GetName());
+				}
+				else
+				{
+					UE_LOG_Figma2UMG(Error, TEXT("[PrepareForFlow] File %s's doesn't contain Node with ID %s."), *Name, *NodeID);
+				}
+			}			
 		}
 	}
 

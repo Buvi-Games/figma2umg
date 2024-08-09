@@ -133,7 +133,7 @@ void UUserWidgetBuilder::PatchWidgetProperties()
 
 	if (FigmaInstance->HasTransition())
 	{
-		SetupTransition(FigmaInstance);
+		SetupTransitions(FigmaInstance);
 	}
 
 	for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : FigmaInstance->ComponentProperties)
@@ -172,15 +172,50 @@ bool UUserWidgetBuilder::GetAlignmentValues(EHorizontalAlignment& HorizontalAlig
 	return true;
 }
 
-void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition) const
+void UUserWidgetBuilder::SetupTransitions(const IFlowTransition* FlowTransition) const
 {
 	UWidgetTree* ParentTree = Widget ? Cast<UWidgetTree>(Widget->GetOuter()) : nullptr;
 	TObjectPtr<UWidgetBlueprint> WidgetBlueprint = ParentTree ? Cast<UWidgetBlueprint>(ParentTree->GetOuter()) : nullptr;
 	if(!WidgetBlueprint)
 		return;
-	
-	FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
-	const FName EventName("OnButtonClicked");
+
+	if(Node->GetId().Equals("7:694") || Node->GetId().Equals("10:453"))
+	{
+		int a = 0;
+		a = 1;
+	}
+
+//	if (WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	{
+		const UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
+		if (!ComponentAsset)
+			return;
+
+		FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
+		bool Modified = false;
+		for (TFieldIterator<FMulticastInlineDelegateProperty>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
+		{
+			FString PropertyName = It->GetFName().ToString();
+			if (!PropertyName.EndsWith("OnButtonClicked"))
+				continue;
+
+			SetupTransition(FlowTransition, WidgetBlueprint, *PropertyName, VariableProperty);
+			Modified = true;
+		}
+
+		if (Modified)
+		{
+			FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
+		}
+	}
+}
+
+void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName EventName, FObjectProperty* VariableProperty) const
+{
+	const FString& TransitionNodeID = FlowTransition->GetTransitionNodeID(EventName);
+	if (TransitionNodeID.IsEmpty())
+		return;
+
 	const UK2Node_ComponentBoundEvent* OnButtonClickedNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
 	if (OnButtonClickedNode == nullptr)
 	{
@@ -200,7 +235,7 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition) 
 
 	const FString RemoveFromParentFunctionName("RemoveFromParent");
 	UK2Node_CallFunction* RemoveFromParentFunction = AddFunctionAfterNode(WidgetBlueprint, OnButtonClickedNode, RemoveFromParentFunctionName);
-	if(RemoveFromParentFunction)
+	if (RemoveFromParentFunction)
 	{
 		UClass* FoundClass = FindObject<UClass>(nullptr, TEXT("/Script/UMGEditor.K2Node_CreateWidget"), true);
 
@@ -210,9 +245,9 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition) 
 		{
 			const TObjectPtr<UFigmaFile> File = Node->GetFigmaFile();
 			const UFigmaImporter* Importer = File ? File->GetImporter() : nullptr;
-			const TObjectPtr<UWidgetBlueprintBuilder> AssetBuilder = Importer ? Importer->FintAssetBuilderForNode<UWidgetBlueprintBuilder>(FlowTransition->GetTransitionNodeID()) : nullptr;
+			const TObjectPtr<UWidgetBlueprintBuilder> AssetBuilder = Importer ? Importer->FintAssetBuilderForNode<UWidgetBlueprintBuilder>(TransitionNodeID) : nullptr;
 			const TObjectPtr<UWidgetBlueprint> TransitionBP = AssetBuilder ? AssetBuilder->GetAsset() : nullptr;
-			if(TransitionBP)
+			if (TransitionBP)
 			{
 				ClassPin->DefaultObject = TransitionBP->GeneratedClass;
 			}
@@ -224,15 +259,13 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition) 
 		if (AddToViewPortFunction && ReturnValuePin)
 		{
 			UEdGraphPin* TargetPin = AddToViewPortFunction->FindPin(UEdGraphSchema_K2::PN_Self, EGPD_Input);
-			if(TargetPin)
+			if (TargetPin)
 			{
 				ReturnValuePin->MakeLinkTo(TargetPin);
 			}
 		}
 	}
-
-	const FString AddToViewPortFunctionName("AddToViewPort");
-};
+}
 
 UK2Node_CallFunction* UUserWidgetBuilder::AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName) const
 {

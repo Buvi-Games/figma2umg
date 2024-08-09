@@ -45,7 +45,7 @@ public:
 	FMargin GetPadding() const;
 
 	// FlowTransition
-	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const FString& GetTransitionNodeID(const FName EventName) const override { return TransitionNodeID; }
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 

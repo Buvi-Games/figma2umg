@@ -175,6 +175,71 @@ const bool UFigmaInstance::HasTransition() const
 	return false;
 }
 
+const FString& UFigmaInstance::GetTransitionNodeID(const FName EventName) const
+{
+	if(EventName.IsEqual("OnButtonClicked", ENameCase::IgnoreCase))
+	{
+		return TransitionNodeID;
+	}
+	else
+	{
+		FString OverrideId = EventName.ToString();
+
+		for (const FFigmaOverrides& Override : Overrides)
+		{
+			FString InstanceId;
+			FString InstanceComponentId;
+			Override.Id.Split(";", &InstanceId, &InstanceComponentId);
+			FString IdForName = InstanceComponentId.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
+			if (OverrideId.Contains(IdForName))
+			{
+				OverrideId = Override.Id;
+				break;
+			}
+		}
+		UFigmaNode* Node = FindNodeForOverriden(OverrideId, Children);
+		if (Node)
+		{
+			const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Node);
+			FString TransitionId = FlowTransition ? FlowTransition->GetTransitionNodeID("OnButtonClicked") : "";
+			if (!TransitionId.IsEmpty())
+			{
+				return FlowTransition->GetTransitionNodeID("OnButtonClicked");
+			}
+		}
+
+		UE_LOG_Figma2UMG(Warning, TEXT("[GetTransitionNodeID] Can't find Transition for Event %s inside instance %s"), *EventName.ToString(), *GetNodeName());
+
+		return TransitionNodeID;
+	}
+}
+
+void UFigmaInstance::GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) const
+{
+	IFlowTransition::GetAllTransitionNodeID(TransitionNodeIDs);
+	static const FString TransitionNodeIDStr("transitionNodeID");
+	for (const FFigmaOverrides& Override : Overrides)
+	{
+		if (Override.OverriddenFields.ContainsByPredicate([](const FString& Field) { return Field.Equals(TransitionNodeIDStr, ESearchCase::IgnoreCase);	}))
+		{
+			UFigmaNode* Node = FindNodeForOverriden(Override.Id, Children);
+			if(Node)
+			{
+				const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Node);
+				FString TransitionId = FlowTransition ? FlowTransition->GetTransitionNodeID("OnButtonClicked") : "";
+				if (!TransitionId.IsEmpty())
+				{
+					TransitionNodeIDs.Add(TransitionId);
+				}
+			}
+			else
+			{
+				UE_LOG_Figma2UMG(Warning, TEXT("[GetAllTransitionNodeID] Can't find Node %s inside instance %s"), *Override.Id, *GetNodeName());
+			}
+		}
+	}
+}
+
 void UFigmaInstance::ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const
 {
 	for (UFigmaNode* Child : CurrentChildren)
@@ -191,6 +256,35 @@ void UFigmaInstance::ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidg
 			ProcessChildrenComponentPropertyReferences(WidgetBp, Widget, SubChildren);
 		}
 	}
+}
+
+UFigmaNode* UFigmaInstance::FindNodeForOverriden(const FString& NodeId, const TArray<UFigmaNode*>& ChildrenArray) const
+{
+	for (UFigmaNode* Child : ChildrenArray)
+	{
+		if(!Child)
+			continue;
+
+		if (Child->GetId().Equals(NodeId))
+			return Child;
+
+		UFigmaNode* Found = nullptr;
+		if (const IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(Child))
+		{
+			const TArray<UFigmaNode*>& SubChildren = FigmaContainer->GetChildrenConst();
+			Found = FindNodeForOverriden(NodeId, SubChildren);
+		}
+		else if(const UFigmaInstance* SubInstance = Cast<UFigmaInstance>(Child))
+		{
+			Found = FindNodeForOverriden(NodeId, SubInstance->Children);
+		}
+		if(Found)
+		{
+			return Found;
+		}
+	}
+
+	return nullptr;
 }
 
 const FFigmaComponentPropertyDefinition* UFigmaInstance::IsInstanceSwap() const
