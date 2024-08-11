@@ -278,7 +278,7 @@ void UButtonWidgetBuilder::PatchEvent(const TObjectPtr<UWidgetBlueprint>& Widget
 		else if (ConnectedNode->IsA<UK2Node_CallDelegate>())
 		{
 			UK2Node_CallDelegate* CallFunctionNode = Cast<UK2Node_CallDelegate>(ConnectedNode);
-			if (Widget->GetName().Contains(CallFunctionNode->DelegateReference.GetMemberName().ToString()))
+			if (EventDispatchersName.IsEqual(CallFunctionNode->DelegateReference.GetMemberName()))
 			{
 				//Nothing to do.
 				return;

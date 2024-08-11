@@ -454,7 +454,7 @@ void UUserWidgetBuilder::PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBl
 		else if (ConnectedNode->IsA<UK2Node_CallDelegate>())
 		{
 			UK2Node_CallDelegate* CallFunctionNode = Cast<UK2Node_CallDelegate>(ConnectedNode);
-			if (Widget->GetName().Contains(CallFunctionNode->DelegateReference.GetMemberName().ToString()))
+			if (EventDispatchersName.IsEqual(CallFunctionNode->DelegateReference.GetMemberName()))
 			{
 				//Nothing to do.
 				return;
