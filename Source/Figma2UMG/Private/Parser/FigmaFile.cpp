@@ -8,6 +8,7 @@
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Nodes/FigmaDocument.h"
 #include "Nodes/FigmaInstance.h"
+#include "REST/FigmaImporter.h"
 #include "Properties/FigmaComponentRef.h"
 
 
@@ -225,6 +226,16 @@ void UFigmaFile::FixRemoteReferences(const TMap<FString, TObjectPtr<UFigmaFile>>
 			}
 		}
 	}
+}
+
+void UFigmaFile::SetImporter(UFigmaImporter* InFigmaImporter)
+{
+	FigmaImporter = InFigmaImporter;
+}
+
+UFigmaImporter* UFigmaFile::GetImporter() const
+{
+	return FigmaImporter;
 }
 
 void UFigmaFile::FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)

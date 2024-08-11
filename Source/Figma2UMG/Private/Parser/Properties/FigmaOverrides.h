@@ -12,5 +12,9 @@ struct FIGMA2UMG_API FFigmaOverrides
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	FString Id;
+
+	UPROPERTY()
+	TArray<FString> OverriddenFields;
 };

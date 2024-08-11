@@ -22,6 +22,14 @@ void USingleChildBuilder::SetChild(const TScriptInterface<IWidgetBuilder>& Widge
 	}
 }
 
+void USingleChildBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
+{
+	if (ChildWidgetBuilder)
+	{
+		ChildWidgetBuilder->PostInsertWidgets(WidgetBlueprint);
+	}
+}
+
 bool USingleChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
 {
 	if (!PostPatchWidget)
@@ -91,7 +99,7 @@ void USingleChildBuilder::ResetWidget()
 	}
 }
 
-void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UContentWidget>& ParentWidget)
+void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UContentWidget>& ParentWidget)
 {
 	if (!ParentWidget)
 	{
@@ -102,7 +110,7 @@ void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetTree> WidgetTree
 	if (ChildWidgetBuilder)
 	{
 		TObjectPtr<UWidget> ChildWidget = ParentWidget->GetContent();
-		ChildWidgetBuilder->PatchAndInsertWidget(WidgetTree, ChildWidget);
+		ChildWidgetBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget);
 	}
 }
 

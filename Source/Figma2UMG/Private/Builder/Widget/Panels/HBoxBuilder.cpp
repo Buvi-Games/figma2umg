@@ -5,13 +5,13 @@
 
 #include "Figma2UMGModule.h"
 
-void UHBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UHBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
-    Box = Patch<UHorizontalBox>(WidgetTree, WidgetToPatch);
+    Box = Patch<UHorizontalBox>(WidgetBlueprint->WidgetTree, WidgetToPatch);
 
-    Insert(WidgetTree, WidgetToPatch, Box);
+    Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Box);
     Setup();
-    PatchAndInsertChildren(WidgetTree, Box);
+    PatchAndInsertChildren(WidgetBlueprint, Box);
 }
 
 void UHBoxBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)

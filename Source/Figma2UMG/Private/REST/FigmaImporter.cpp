@@ -373,6 +373,7 @@ void UFigmaImporter::OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Reque
 				{
 					UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeLib", "PostSerialize Library File."));
 					CurrentFile->PostSerialize(CurrentLibraryFileKey, ContentRootFolder, JsonObj);
+					CurrentFile->SetImporter(this);
 					CurrentLibraryFileKey = nullptr;
 					UE_LOG_Figma2UMG(Display, TEXT("Library file %s downloaded."), *CurrentFile->GetFileName());
 					DownloadNextDependency();
@@ -413,6 +414,7 @@ void UFigmaImporter::OnFigmaFileRequestReceived(UVaRestRequestJSON* Request)
 					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
 					UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeFile", "PostSerialize Design File."));
 					File->PostSerialize(FileKey, ContentRootFolder, JsonObj);
+					File->SetImporter(this);
 
 					FixReferences();
 				}

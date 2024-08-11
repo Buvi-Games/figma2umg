@@ -3,14 +3,20 @@
 
 #include "ButtonWidgetBuilder.h"
 
+#include "BlueprintDelegateNodeSpawner.h"
+#include "EdGraphSchema_K2_Actions.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
+#include "K2Node_CallDelegate.h"
+#include "K2Node_ComponentBoundEvent.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Button.h"
 #include "Components/ContentWidget.h"
+#include "Kismet2/BlueprintEditorUtils.h"
+#include "Kismet2/KismetEditorUtilities.h"
 
 
-void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UButton>(WidgetToPatch);
 	const FString NodeName = Node->GetNodeName();
@@ -21,7 +27,7 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			UButton* NewButton = UFigmaImportSubsystem::NewWidget<UButton>(WidgetTree, NodeName , WidgetName, ClassOverride);
+			UButton* NewButton = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName , WidgetName, ClassOverride);
 			NewButton->SetContent(Widget->GetContent());
 			Widget = NewButton;
 		}
@@ -29,18 +35,32 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTr
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UButton>(WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
 		if (WidgetToPatch)
 		{
 			Widget->SetContent(WidgetToPatch);
 		}
 	}
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 
-	Setup();
+	Setup(WidgetBlueprint);
 
-	PatchAndInsertChild(WidgetTree, Widget);
+	PatchAndInsertChild(WidgetBlueprint, Widget);
+}
+
+void UButtonWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
+{
+	Super::PostInsertWidgets(WidgetBlueprint);
+
+	SetupEventDispatchers(WidgetBlueprint);
+}
+
+void UButtonWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	PatchEvents(WidgetBlueprint);
+
+	Super::PatchWidgetBinds(WidgetBlueprint);
 }
 
 void UButtonWidgetBuilder::SetDefaultNode(const UFigmaGroup* InNode)
@@ -101,7 +121,7 @@ void UButtonWidgetBuilder::GetPaddingValue(FMargin& Padding) const
 	Padding.Bottom = 0.0f;
 }
 
-void UButtonWidgetBuilder::Setup() const
+void UButtonWidgetBuilder::Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const
 {
 	FButtonStyle Style = Widget->GetStyle();
 
@@ -135,6 +155,166 @@ void UButtonWidgetBuilder::Setup() const
 	}
 
 	Widget->SetStyle(Style);
+}
+
+void UButtonWidgetBuilder::SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const
+{
+	const FName OnButtonClicked("OnButtonClicked");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonClicked);
+
+	const FName OnButtonPressed("OnButtonPressed");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonPressed);
+
+	const FName OnButtonReleased("OnButtonReleased");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonReleased);
+
+	const FName OnButtonHovered("OnButtonHovered");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonHovered);
+
+	const FName OnButtonUnHovered("OnButtonUnHovered");
+	SetupEventDispatcher(WidgetBlueprint, OnButtonUnHovered);
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
+}
+
+void UButtonWidgetBuilder::SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const
+{
+	if (UObject* ExistingObject = FindObject<UObject>(WidgetBlueprint, *(EventName.ToString())))
+	{
+		return;
+	}
+
+	FEdGraphPinType DelegateType;
+	DelegateType.PinCategory = UEdGraphSchema_K2::PC_MCDelegate;
+	const bool bVarCreatedSuccess = FBlueprintEditorUtils::AddMemberVariable(WidgetBlueprint, EventName, DelegateType);
+	if (!bVarCreatedSuccess)
+	{
+		//		LogSimpleMessage(LOCTEXT("AddDelegateVariable_Error", "Adding new delegate variable failed."));
+		return;
+	}
+
+	UEdGraph* const NewGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBlueprint, EventName, UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+	if (!NewGraph)
+	{
+		FBlueprintEditorUtils::RemoveMemberVariable(WidgetBlueprint, EventName);
+	//	LogSimpleMessage(LOCTEXT("AddDelegateVariable_Error", "Adding new delegate variable failed."));
+		return;
+	}
+
+	const int32 VarIndex = FBlueprintEditorUtils::FindNewVariableIndex(WidgetBlueprint, EventName);
+	if (VarIndex != INDEX_NONE && WidgetBlueprint->NewVariables[VarIndex].Category.EqualTo(UEdGraphSchema_K2::VR_DefaultCategory))
+	{
+		static const FText FigmaCategory(FText::FromString("Figma"));
+		WidgetBlueprint->NewVariables[VarIndex].Category = FigmaCategory;
+	}
+
+	NewGraph->bEditable = false;
+
+	const UEdGraphSchema_K2* K2Schema = GetDefault<UEdGraphSchema_K2>();
+	K2Schema->CreateDefaultNodesForGraph(*NewGraph);
+	K2Schema->CreateFunctionGraphTerminators(*NewGraph, (UClass*)nullptr);
+	K2Schema->AddExtraFunctionFlags(NewGraph, (FUNC_BlueprintCallable | FUNC_BlueprintEvent | FUNC_Public));
+	K2Schema->MarkFunctionEntryAsEditable(NewGraph, true);
+
+	WidgetBlueprint->DelegateSignatureGraphs.Add(NewGraph);
+}
+
+void UButtonWidgetBuilder::PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
+
+	if (VariableProperty)
+	{
+		const FName OnClicked("OnClicked");
+		const FName OnButtonClicked("OnButtonClicked");
+		PatchEvent(WidgetBlueprint, VariableProperty, OnClicked, OnButtonClicked);
+
+		const FName OnPressed("OnPressed");
+		const FName OnButtonPressed("OnButtonPressed");
+		PatchEvent(WidgetBlueprint, VariableProperty, OnPressed, OnButtonPressed);
+
+		const FName OnReleased("OnReleased");
+		const FName OnButtonReleased("OnButtonReleased");
+		PatchEvent(WidgetBlueprint, VariableProperty, OnReleased, OnButtonReleased);
+
+		const FName OnHovered("OnHovered");
+		const FName OnButtonHovered("OnButtonHovered");
+		PatchEvent(WidgetBlueprint, VariableProperty, OnHovered, OnButtonHovered);
+
+		const FName OnUnHovered("OnUnHovered");
+		const FName OnButtonUnHovered("OnButtonUnHovered");
+		PatchEvent(WidgetBlueprint, VariableProperty, OnUnHovered, OnButtonUnHovered);
+	}
+}
+
+void UButtonWidgetBuilder::PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName)
+{
+	const UK2Node_ComponentBoundEvent* ExistingNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
+	if (ExistingNode == nullptr)
+	{
+		FMulticastDelegateProperty* DelegateProperty = FindFProperty<FMulticastDelegateProperty>(Widget->GetClass(), EventName);
+		if (DelegateProperty != nullptr)
+		{
+			UEdGraph* TargetGraph = WidgetBlueprint->GetLastEditedUberGraph();
+			if (TargetGraph != nullptr)
+			{
+				const FVector2D NewNodePos = TargetGraph->GetGoodPlaceForNewNode();
+				UK2Node_ComponentBoundEvent* EventNode = FEdGraphSchemaAction_K2NewNode::SpawnNode<UK2Node_ComponentBoundEvent>(TargetGraph,NewNodePos,EK2NewNodeFlags::SelectNewNode);
+				EventNode->InitializeComponentBoundEventParams(VariableProperty, DelegateProperty);
+				ExistingNode = EventNode;
+			}
+		}
+	}
+
+	FVector2D StartPos(ExistingNode->NodePosX, ExistingNode->NodePosY);
+	UEdGraphPin* ThenPin = ExistingNode->FindPin(UEdGraphSchema_K2::PN_Then);
+	while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
+	{
+		UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
+		if (!ConnectedNode)
+		{
+			break;
+		}
+		else if (ConnectedNode->IsA<UK2Node_CallDelegate>())
+		{
+			UK2Node_CallDelegate* CallFunctionNode = Cast<UK2Node_CallDelegate>(ConnectedNode);
+			if (EventDispatchersName.IsEqual(CallFunctionNode->DelegateReference.GetMemberName()))
+			{
+				//Nothing to do.
+				return;
+			}
+		}
+
+		ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
+		StartPos = FVector2D(ConnectedNode->NodePosX, ConnectedNode->NodePosY);
+	}
+
+	FMulticastInlineDelegateProperty* DispatcherProperty = FindFProperty<FMulticastInlineDelegateProperty>(WidgetBlueprint->SkeletonGeneratedClass, EventDispatchersName);
+	if(!DispatcherProperty)
+	{
+		return;
+	}
+
+	bool const bIsDelegate = DispatcherProperty->IsA(FMulticastDelegateProperty::StaticClass());
+	if (bIsDelegate)
+	{
+		FMulticastDelegateProperty* DelegateProperty = CastFieldChecked<FMulticastDelegateProperty>(DispatcherProperty);
+
+		UBlueprintNodeSpawner* CallSpawner = UBlueprintDelegateNodeSpawner::Create(UK2Node_CallDelegate::StaticClass(), DelegateProperty);
+		TSet<FBindingObject> Bindings;
+		Bindings.Add(FBindingObject(WidgetBlueprint));
+		const FVector2D Offset = FVector2D(500.0f, 0.0f);
+		const FVector2D NodeLocation = StartPos + Offset;
+		const UEdGraphNode* GraphNode = CallSpawner->Invoke(ExistingNode->GetGraph(), Bindings, NodeLocation);
+		if (GraphNode)
+		{
+			UEdGraphPin* ExecutePin = GraphNode->FindPin(UEdGraphSchema_K2::PN_Execute);
+			if (ThenPin && ExecutePin)
+			{
+				ThenPin->MakeLinkTo(ExecutePin);
+			}
+		}
+	}
 }
 
 void UButtonWidgetBuilder::SetupBrush(FSlateBrush& Brush, const UFigmaGroup& FigmaGroup) const

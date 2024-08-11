@@ -20,7 +20,7 @@ class UPanelWidgetBuilder : public UMultiChildBuilder
 public:
 	GENERATED_BODY()
 
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchAndInsertWidget());
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchAndInsertWidget());
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
 	virtual void ResetWidget() override;

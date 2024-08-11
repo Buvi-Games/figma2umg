@@ -6,7 +6,7 @@
 #include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Builder/Widget/PanelWidgetBuilder.h"
 
-const FString& UFigmaCanvas::GetTransitionNodeID() const
+const FString& UFigmaCanvas::GetTransitionNodeID(const FName EventName) const
 {
 	return PrototypeStartNodeID;
 }

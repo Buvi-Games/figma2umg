@@ -37,7 +37,9 @@ public:
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	// FlowTransition
-	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const bool HasTransition() const override;
+	virtual const FString& GetTransitionNodeID(const FName EventName) const override;
+	virtual void GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) const override;
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; }
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
@@ -222,6 +224,7 @@ public:
 
 protected:
 	void ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const;
+	UFigmaNode* FindNodeForOverriden(const FString& NodeId, const TArray<UFigmaNode*>& Children) const;
 
 	bool IsMissingComponent = false;
 

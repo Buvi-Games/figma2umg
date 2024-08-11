@@ -22,6 +22,9 @@ public:
 	virtual void SetNode(const FString& InFileKey, const UFigmaNode* InNode);
 
 	UFUNCTION()
+	virtual const UFigmaNode* GetNode() const;
+
+	UFUNCTION()
 	virtual void LoadOrCreateAssets() = 0;
 
 	UFUNCTION()

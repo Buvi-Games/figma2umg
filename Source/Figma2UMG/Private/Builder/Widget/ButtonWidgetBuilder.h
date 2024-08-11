@@ -14,7 +14,9 @@ class UButtonWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) override;
+	virtual void PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint) override;
 
 	void SetDefaultNode(const UFigmaGroup* InNode);
 	void SetHoveredNode(const UFigmaGroup* InNode);
@@ -28,8 +30,13 @@ protected:
 	virtual TObjectPtr<UContentWidget> GetContentWidget() const override;
 	virtual void GetPaddingValue(FMargin& Padding) const override;
 
-	void Setup() const;
+	void Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const;
 	void SetupBrush(FSlateBrush& Brush, const UFigmaGroup& FigmaGroup) const;
+	void SetupEventDispatchers(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) const;
+	void SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
+
+	void PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
+	void PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName);
 
 	UPROPERTY()
 	TObjectPtr<UButton> Widget = nullptr;

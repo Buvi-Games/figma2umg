@@ -21,6 +21,8 @@
 
 #include "FigmaGroup.generated.h"
 
+class UButtonWidgetBuilder;
+
 UCLASS()
 class UFigmaGroup : public UFigmaNode, public IFigmaContainer, public IFlowTransition
 {
@@ -43,7 +45,7 @@ public:
 	FMargin GetPadding() const;
 
 	// FlowTransition
-	virtual const FString& GetTransitionNodeID() const override { return TransitionNodeID; }
+	virtual const FString& GetTransitionNodeID(const FName EventName) const override { return TransitionNodeID; }
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 
@@ -208,7 +210,7 @@ public:
 
 protected:
 	bool IsButton() const;
-	TScriptInterface<IWidgetBuilder> CreateButtonBuilder() const;
+	TScriptInterface<UButtonWidgetBuilder> CreateButtonBuilder() const;
 	TScriptInterface<IWidgetBuilder> CreateContainersBuilder() const;
 
 	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;

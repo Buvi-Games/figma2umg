@@ -12,7 +12,7 @@
 #include "Parser/Nodes/Vectors/FigmaText.h"
 
 
-void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<USizeBox>(WidgetToPatch);
 	const FString NodeName = Node->GetNodeName();
@@ -23,7 +23,7 @@ void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetT
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<USizeBox>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			USizeBox* NewSizeBox = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetTree, NodeName, WidgetName, ClassOverride);
+			USizeBox* NewSizeBox = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
 			NewSizeBox->SetContent(Widget->GetContent());
 			Widget = NewSizeBox;
 		}
@@ -31,7 +31,7 @@ void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetT
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
 
 		if (WidgetToPatch)
 		{
@@ -39,9 +39,9 @@ void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetT
 		}
 	}
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 	Setup();
-	PatchAndInsertChild(WidgetTree, Widget);
+	PatchAndInsertChild(WidgetBlueprint, Widget);
 }
 
 void USizeBoxWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)

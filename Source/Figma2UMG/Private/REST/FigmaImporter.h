@@ -25,6 +25,9 @@ public:
 	void Init(const TObjectPtr<URequestParams> InProperties, const FOnFigmaImportUpdateStatusCB& InRequesterCallback);
 	void Run();
 
+	template<class BuilderT>
+	TObjectPtr<BuilderT> FintAssetBuilderForNode(const FString& Id) const;
+
 protected:
 	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
@@ -170,3 +173,23 @@ protected:
 	float SubProgressThisFrame = 0.0f;
 	FText SubProgressMessage;
 };
+
+template <class BuilderT>
+TObjectPtr<BuilderT> UFigmaImporter::FintAssetBuilderForNode(const FString& Id) const
+{
+	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+	{
+		if (BuilderT* Builder = Cast<BuilderT>(AssetBuilder.GetObject()))
+		{
+			if(const UFigmaNode* Node = Builder->GetNode())
+			{
+				if(Node->GetId().Equals(Id))
+				{
+					return Builder;
+				}
+			}
+		}
+	}
+
+	return nullptr;
+}

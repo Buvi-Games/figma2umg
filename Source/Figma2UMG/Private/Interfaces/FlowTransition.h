@@ -19,10 +19,13 @@ class FIGMA2UMG_API IFlowTransition
 public:
 
 	UFUNCTION()
-	virtual const bool HasTransition() const { return !GetTransitionNodeID().IsEmpty(); }
+	virtual const bool HasTransition() const { return !GetTransitionNodeID("OnButtonClicked").IsEmpty(); }
 
 	UFUNCTION()
-	virtual const FString& GetTransitionNodeID() const = 0;
+	virtual const FString& GetTransitionNodeID(const FName EventName) const = 0;
+
+	UFUNCTION()
+	virtual void GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) const;
 
 	UFUNCTION()
 	virtual const float GetTransitionDuration() const = 0;

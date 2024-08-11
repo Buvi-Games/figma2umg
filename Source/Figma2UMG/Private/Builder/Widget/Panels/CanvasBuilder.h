@@ -18,7 +18,7 @@ public:
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
 	virtual void ResetWidget() override;
 protected:
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
 	virtual void Setup() const override;
 
 	UPROPERTY()

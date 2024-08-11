@@ -14,7 +14,7 @@
 #include "Engine/Font.h"
 #include "Engine/ObjectLibrary.h"
 
-void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
 	Widget = Cast<UTextBlock>(WidgetToPatch);
 
@@ -26,17 +26,17 @@ void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetTree> Widge
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UTextBlock>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetTree, NodeName, WidgetName, ClassOverride);
+			Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
 		}
 
 		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
 	}
 
-	Insert(WidgetTree, WidgetToPatch, Widget);
+	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 
 	Setup();
 }

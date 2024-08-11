@@ -52,15 +52,16 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 {
 	if (AllowFrameButton && IsButton())
 	{
-		TScriptInterface<IWidgetBuilder> WidgetBuilder = CreateButtonBuilder();
-		return WidgetBuilder;
+		TScriptInterface<UButtonWidgetBuilder> Button = CreateButtonBuilder();
+		const TScriptInterface<IWidgetBuilder> Container = CreateContainersBuilder();
+		Button->SetChild(Container);
+		return Button;
 	}
 	else
 	{
 		TScriptInterface<IWidgetBuilder> WidgetBuilder = CreateContainersBuilder();
 		return WidgetBuilder;
 	}
-	
 }
 
 FVector2D UFigmaGroup::GetAbsolutePosition() const
@@ -97,7 +98,7 @@ bool UFigmaGroup::IsButton() const
 	}
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateButtonBuilder() const
+TScriptInterface<UButtonWidgetBuilder> UFigmaGroup::CreateButtonBuilder() const
 {
 	UButtonWidgetBuilder* ButtonBuilder = NewObject<UButtonWidgetBuilder>();
 	ButtonBuilder->SetNode(this);

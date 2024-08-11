@@ -23,6 +23,17 @@ void UMultiChildBuilder::AddChild(const TScriptInterface<IWidgetBuilder>& Widget
 	}
 }
 
+void UMultiChildBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
+{
+	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
+	{
+		if (!ChildBuilder)
+			continue;
+
+		ChildBuilder->PostInsertWidgets(WidgetBlueprint);
+	}
+}
+
 bool UMultiChildBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
 {
 	if (!PostPatchWidget)
@@ -113,7 +124,7 @@ void UMultiChildBuilder::ResetWidget()
 	}
 }
 
-void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UPanelWidget>& ParentWidget)
+void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UPanelWidget>& ParentWidget)
 {
 	if (!ParentWidget)
 	{
@@ -129,7 +140,7 @@ void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetTree> WidgetTr
 			continue;
 
 		TObjectPtr<UWidget> ChildWidget = ChildBuilder->FindNodeWidgetInParent(ParentWidget);
-		ChildBuilder->PatchAndInsertWidget(WidgetTree, ChildWidget);
+		ChildBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget);
 
 		if (TObjectPtr<UWidget> PatchedWidget = ChildBuilder->GetWidget())
 		{
