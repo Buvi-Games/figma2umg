@@ -55,6 +55,7 @@ protected:
 	void SetPadding() const;
 	void SetOpacity() const;
 	void SetConstraintsAndAlign() const;
+	void SetClipsContent() const;
 
 	virtual bool GetSizeValue(FVector2D& Size, bool& SizeToContent) const;
 	virtual void GetPaddingValue(FMargin& Padding) const;

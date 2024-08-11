@@ -134,6 +134,9 @@ public:
 	FFigmaTransform RelativeTransform;
 
 	UPROPERTY()
+	bool ClipsContent = false;
+
+	UPROPERTY()
 	EFigmaLayoutMode LayoutMode = EFigmaLayoutMode::NONE;
 
 	UPROPERTY()

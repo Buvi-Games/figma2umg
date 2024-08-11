@@ -115,6 +115,8 @@ void IWidgetBuilder::OnInsert() const
 	SetOpacity();
 
 	SetConstraintsAndAlign();
+
+	SetClipsContent();
 }
 
 bool IWidgetBuilder::IsTopWidgetForNode() const
@@ -328,6 +330,26 @@ void IWidgetBuilder::SetConstraintsAndAlign() const
 		{
 			ButtonSlot->SetHorizontalAlignment(HorizontalAlignment);
 			ButtonSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+	}
+}
+
+void IWidgetBuilder::SetClipsContent() const
+{
+	const TObjectPtr<UWidget> Widget = GetWidget();
+	if (!Widget)
+		return;
+
+	const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node);
+	if(FigmaGroup)
+	{
+		if (FigmaGroup->ClipsContent)
+		{
+			Widget->SetClipping(EWidgetClipping::ClipToBounds);
+		}
+		else 
+		{
+			Widget->SetClipping(EWidgetClipping::Inherit);
 		}
 	}
 }
