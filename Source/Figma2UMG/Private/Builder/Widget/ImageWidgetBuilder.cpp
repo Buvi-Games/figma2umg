@@ -17,9 +17,10 @@ void UImageWidgetBuilder::SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder
 	Texture2DBuilder = InTexture2DBuilder;
 }
 
-void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterialInterface>& InMaterial)
+void UImageWidgetBuilder::SetMaterial(const TObjectPtr<UMaterialInterface>& InMaterial, const FLinearColor& InColor)
 {
 	Material = InMaterial;
+	SolidColor = InColor;
 }
 
 void UImageWidgetBuilder::SetColor(const FLinearColor& InColor)

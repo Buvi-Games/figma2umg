@@ -44,8 +44,7 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 		{
 			if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
 			{
-				ImageWidgetBuilder->SetMaterial(Material);
-				ImageWidgetBuilder->SetColor(Paint.GetLinearColor());
+				ImageWidgetBuilder->SetMaterial(Material, Paint.GetLinearColor());
 				return ImageWidgetBuilder;
 			}
 			else if(Paint.Type == EPaintTypes::SOLID)
@@ -61,8 +60,7 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 			{
 				if (const TObjectPtr<UMaterialInterface> Material = Paint.GetMaterial())
 				{
-					ImageWidgetBuilder->SetMaterial(Material);
-					ImageWidgetBuilder->SetColor(Paint.GetLinearColor());
+					ImageWidgetBuilder->SetMaterial(Material, Paint.GetLinearColor());
 					return ImageWidgetBuilder;
 				}
 				else if (Paint.Type == EPaintTypes::SOLID)

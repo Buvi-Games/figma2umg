@@ -13,14 +13,14 @@ public:
 	GENERATED_BODY()
 
 	UPROPERTY()
-	float R = 0.0f;
+	float R = 1.0f;
 
 	UPROPERTY()
-	float G = 0.0f;
+	float G = 1.0f;
 
 	UPROPERTY()
-	float B = 0.0f;
+	float B = 1.0f;
 
 	UPROPERTY()
-	float A = 0.0f;
+	float A = 1.0f;
 };

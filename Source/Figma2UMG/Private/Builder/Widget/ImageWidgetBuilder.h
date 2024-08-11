@@ -16,7 +16,7 @@ class UImageWidgetBuilder : public UObject, public IWidgetBuilder
 public:
 	GENERATED_BODY()
 	void SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder>& InTexture2DBuilder);
-	void SetMaterial(const TObjectPtr<UMaterialInterface>& InMaterial);
+	void SetMaterial(const TObjectPtr<UMaterialInterface>& InMaterial, const FLinearColor& InColor);
 	void SetColor(const FLinearColor& InColor);
 
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
@@ -33,7 +33,7 @@ protected:
 	TObjectPtr<UMaterialInterface> Material = nullptr;
 
 	bool HasSolidColor = false;
-	FLinearColor SolidColor = FLinearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	FLinearColor SolidColor = FLinearColor::White;
 
 	UPROPERTY()
 	TObjectPtr<UImage> Widget = nullptr;
