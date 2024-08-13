@@ -86,6 +86,22 @@ TObjectPtr<UWidget> IWidgetBuilder::FindWidgetRecursive(const FString& WidgetNam
 	return nullptr;
 }
 
+bool IWidgetBuilder::IsInsideComponentPackage(FString PackagePath) const
+{
+	if (!PackagePath.Contains("Components"))
+		return false;
+
+	TObjectPtr<UFigmaNode> TopParentNode = Node ? Node->GetParentNode() : nullptr;
+	while (TopParentNode && TopParentNode->GetParentNode())
+	{
+		TopParentNode = TopParentNode->GetParentNode();
+	}
+
+	FString Suffix = "Components";
+	FString ComponentPath = TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
+	return PackagePath.Contains(ComponentPath);
+}
+
 bool IWidgetBuilder::Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const
 {
 	if (Parent)

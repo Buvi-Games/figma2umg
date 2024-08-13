@@ -359,7 +359,7 @@ void UButtonWidgetBuilder::PatchEnabledFunction(const TObjectPtr<UWidgetBlueprin
 	if (!WidgetBlueprint)
 		return;
 
-	if (!WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	if (!IsInsideComponentPackage(WidgetBlueprint->GetPackage()->GetName()))
 		return;
 
 	if(!Widget)

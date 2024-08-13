@@ -43,6 +43,7 @@ public:
 	virtual TObjectPtr<UWidget> FindWidgetRecursive(const FString& WidgetName) const;
 	virtual void ResetWidget() = 0;
 
+	bool IsInsideComponentPackage(FString PackagePath) const;
 protected:
 	bool Insert(const TObjectPtr<UWidgetTree>& WidgetTree, const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) const;
 	void OnInsert() const;

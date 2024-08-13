@@ -73,8 +73,8 @@ void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Widge
 void UUserWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
 {
 	IWidgetBuilder::PostInsertWidgets(WidgetBlueprint);
-
-	if (WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	
+	if (IsInsideComponentPackage(WidgetBlueprint->GetPackage()->GetName()))
 	{
 		const UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
 		if(!ComponentAsset)
@@ -107,7 +107,7 @@ bool UUserWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchW
 
 void UUserWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
 {
-	if (WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	if (IsInsideComponentPackage(WidgetBlueprint->GetPackage()->GetName()))
 	{
 		PatchEvents(WidgetBlueprint);
 		PatchButtonsEnabled(WidgetBlueprint);
@@ -468,7 +468,7 @@ void UUserWidgetBuilder::PatchRelayEnabledFunction(const TObjectPtr<UWidgetBluep
 	if (!WidgetBlueprint)
 		return;
 
-	if (!WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	if (!IsInsideComponentPackage(WidgetBlueprint->GetPackage()->GetName()))
 		return;
 
 	if (!Widget)
