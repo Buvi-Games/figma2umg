@@ -35,7 +35,6 @@ protected:
 	void SetupTransitions(const IFlowTransition* FlowTransition) const;
 	void SetupTransition(const IFlowTransition* FlowTransition, TObjectPtr<UWidgetBlueprint> WidgetBlueprint, FName EventName, FObjectProperty* VariableProperty) const;
 
-	UK2Node_CallFunction* AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName) const;
 	UEdGraphNode* AddNodeAfterNode(const UK2Node* PreviousNode, TSubclassOf<UEdGraphNode> const NodeClass) const;
 	void SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
 	void PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);

@@ -900,3 +900,91 @@ UK2Node_CallFunction* WidgetBlueprintHelper::AddCallFunctionOnMemberNode(TObject
 	return Cast<UK2Node_CallFunction>(Node);
 }
 
+
+
+UK2Node_CallFunction* WidgetBlueprintHelper::AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName)
+{
+	if (!PreviousNode)
+		return nullptr;
+
+	FVector2D NodeLocation(PreviousNode->NodePosX, PreviousNode->NodePosY);
+	UK2Node_CallFunction* FunctionNode = nullptr;
+
+	UEdGraphPin* ThenPin = PreviousNode->FindPin(UEdGraphSchema_K2::PN_Then);
+	while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
+	{
+		UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
+		if (!ConnectedNode)
+		{
+			break;
+		}
+		else if (ConnectedNode->IsA<UK2Node_CallFunction>())
+		{
+			UK2Node_CallFunction* CallFunctionNode = Cast<UK2Node_CallFunction>(ConnectedNode);
+			if (CallFunctionNode->GetTargetFunction()->GetName().Equals(FunctionName, ESearchCase::IgnoreCase))
+			{
+				FunctionNode = CallFunctionNode;
+				break;
+			}
+		}
+
+		ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
+		NodeLocation = FVector2D(ConnectedNode->NodePosX, ConnectedNode->NodePosY);
+	}
+
+	if (FunctionNode == nullptr)
+	{
+		const UFunction* Function = FindUField<UFunction>(WidgetBlueprint->GetClass(), *FunctionName);
+		if (!Function && WidgetBlueprint->SkeletonGeneratedClass)
+		{
+			Function = FindUField<UFunction>(Cast<UClass>(WidgetBlueprint->SkeletonGeneratedClass), *FunctionName);
+		}
+
+		if (Function)
+		{
+			const FVector2D CallFunctionPosition = NodeLocation + FVector2D(BaseSize.X + Pan.X, 0.0f);
+			FunctionNode = WidgetBlueprintHelper::AddCallFunctionOnMemberNode(PreviousNode->GetGraph(), WidgetBlueprint, Function, ThenPin, nullptr, CallFunctionPosition);
+		}
+	}
+
+	return FunctionNode;
+}
+
+UK2Node_CallFunction* WidgetBlueprintHelper::AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const UFunction* Function)
+{
+	if (!PreviousNode || !Function)
+		return nullptr;
+
+	FVector2D NodeLocation(PreviousNode->NodePosX, PreviousNode->NodePosY);
+	UK2Node_CallFunction* FunctionNode = nullptr;
+
+	UEdGraphPin* ThenPin = PreviousNode->FindPin(UEdGraphSchema_K2::PN_Then);
+	while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
+	{
+		UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
+		if (!ConnectedNode)
+		{
+			break;
+		}
+		else if (ConnectedNode->IsA<UK2Node_CallFunction>())
+		{
+			UK2Node_CallFunction* CallFunctionNode = Cast<UK2Node_CallFunction>(ConnectedNode);
+			if (CallFunctionNode->GetTargetFunction()->GetName().Equals(Function->GetName(), ESearchCase::IgnoreCase))
+			{
+				FunctionNode = CallFunctionNode;
+				break;
+			}
+		}
+
+		ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
+		NodeLocation = FVector2D(ConnectedNode->NodePosX, ConnectedNode->NodePosY);
+	}
+
+	if (FunctionNode == nullptr)
+	{
+		const FVector2D CallFunctionPosition = NodeLocation + FVector2D(BaseSize.X + Pan.X, 0.0f);
+		FunctionNode = WidgetBlueprintHelper::AddCallFunctionOnMemberNode(PreviousNode->GetGraph(), WidgetBlueprint, Function, ThenPin, nullptr, CallFunctionPosition);
+	}
+
+	return FunctionNode;
+}

@@ -234,7 +234,7 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, 
 	}
 
 	const FString RemoveFromParentFunctionName("RemoveFromParent");
-	UK2Node_CallFunction* RemoveFromParentFunction = AddFunctionAfterNode(WidgetBlueprint, OnButtonClickedNode, RemoveFromParentFunctionName);
+	UK2Node_CallFunction* RemoveFromParentFunction = WidgetBlueprintHelper::AddFunctionAfterNode(WidgetBlueprint, OnButtonClickedNode, RemoveFromParentFunctionName);
 	if (RemoveFromParentFunction)
 	{
 		UClass* FoundClass = FindObject<UClass>(nullptr, TEXT("/Script/UMGEditor.K2Node_CreateWidget"), true);
@@ -255,7 +255,7 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, 
 		UEdGraphPin* ReturnValuePin = UK2Node_CreateWidget->FindPin(UEdGraphSchema_K2::PN_ReturnValue, EGPD_Output);
 
 		const FString AddToViewPortFunctionName("AddToViewPort");
-		UK2Node_CallFunction* AddToViewPortFunction = AddFunctionAfterNode(WidgetBlueprint, UK2Node_CreateWidget, AddToViewPortFunctionName);
+		UK2Node_CallFunction* AddToViewPortFunction = WidgetBlueprintHelper::AddFunctionAfterNode(WidgetBlueprint, UK2Node_CreateWidget, AddToViewPortFunctionName);
 		if (AddToViewPortFunction && ReturnValuePin)
 		{
 			UEdGraphPin* TargetPin = AddToViewPortFunction->FindPin(UEdGraphSchema_K2::PN_Self, EGPD_Input);
@@ -265,54 +265,6 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, 
 			}
 		}
 	}
-}
-
-UK2Node_CallFunction* UUserWidgetBuilder::AddFunctionAfterNode(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const UEdGraphNode* PreviousNode, const FString& FunctionName) const
-{
-	if(!PreviousNode)
-		return nullptr;
-
-	FVector2D NodeLocation(PreviousNode->NodePosX, PreviousNode->NodePosY);
-	UK2Node_CallFunction* RemoveFromParentFunction = nullptr;
-
-	UEdGraphPin* ThenPin = PreviousNode->FindPin(UEdGraphSchema_K2::PN_Then);
-	while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
-	{
-		UEdGraphNode* ConnectedNode = ThenPin->LinkedTo[0]->GetOwningNode();
-		if (!ConnectedNode)
-		{
-			break;
-		}
-		else if (ConnectedNode->IsA<UK2Node_CallFunction>())
-		{
-			UK2Node_CallFunction* CallFunctionNode = Cast<UK2Node_CallFunction>(ConnectedNode);
-			if (CallFunctionNode->GetTargetFunction()->GetName().Equals(FunctionName, ESearchCase::IgnoreCase))
-			{
-				RemoveFromParentFunction = CallFunctionNode;
-				break;
-			}
-		}
-
-		ThenPin = ConnectedNode->FindPin(UEdGraphSchema_K2::PN_Then);
-		NodeLocation = FVector2D(ConnectedNode->NodePosX, ConnectedNode->NodePosY);
-	}
-
-	if (RemoveFromParentFunction == nullptr)
-	{
-		const UFunction* Function = FindUField<UFunction>(WidgetBlueprint->GetClass(), *FunctionName);
-		if (!Function && WidgetBlueprint->SkeletonGeneratedClass)
-		{
-			Function = FindUField<UFunction>(Cast<UClass>(WidgetBlueprint->SkeletonGeneratedClass), *FunctionName);
-		}
-
-		if (Function)
-		{
-			const FVector2D CallFunctionPosition = NodeLocation + FVector2D(BaseSize.X + Pan.X, 0.0f);
-			RemoveFromParentFunction = WidgetBlueprintHelper::AddCallFunctionOnMemberNode(PreviousNode->GetGraph(), WidgetBlueprint, Function, ThenPin, nullptr, CallFunctionPosition);
-		}
-	}
-
-	return RemoveFromParentFunction;
 }
 
 UEdGraphNode* UUserWidgetBuilder::AddNodeAfterNode(const UK2Node* PreviousNode, TSubclassOf<UEdGraphNode> const NodeClass) const
