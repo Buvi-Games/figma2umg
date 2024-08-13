@@ -57,7 +57,7 @@ void UButtonWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> Widget
 {
 	Super::PostInsertWidgets(WidgetBlueprint);
 
-	PatchDisableFunction(WidgetBlueprint);
+	PatchEnabledFunction(WidgetBlueprint);
 	SetupEventDispatchers(WidgetBlueprint);
 }
 
@@ -354,9 +354,12 @@ void UButtonWidgetBuilder::SetupBrush(FSlateBrush& Brush, const UFigmaGroup& Fig
 }
 
 
-void UButtonWidgetBuilder::PatchDisableFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+void UButtonWidgetBuilder::PatchEnabledFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
 {
 	if (!WidgetBlueprint)
+		return;
+
+	if (!WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
 		return;
 
 	if(!Widget)

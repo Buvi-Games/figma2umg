@@ -38,7 +38,7 @@ protected:
 	void PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
 	void PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName);
 
-	void PatchDisableFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
+	void PatchEnabledFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
 
 	UPROPERTY()
 	TObjectPtr<UButton> Widget = nullptr;
