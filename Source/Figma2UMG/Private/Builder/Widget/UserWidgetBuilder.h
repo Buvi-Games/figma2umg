@@ -39,6 +39,8 @@ protected:
 	void SetupEventDispatcher(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName& EventName) const;
 	void PatchEvents(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
 	void PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName);
+	void PatchButtonsEnabled(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
+	void PatchRelayEnabledFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FString& FunctionName);
 
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;

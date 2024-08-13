@@ -11,6 +11,8 @@
 #include "K2Node_CallDelegate.h"
 #include "K2Node_CallFunction.h"
 #include "K2Node_ComponentBoundEvent.h"
+#include "K2Node_FunctionEntry.h"
+#include "K2Node_VariableGet.h"
 #include "WidgetBlueprint.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
@@ -108,6 +110,7 @@ void UUserWidgetBuilder::PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& Wi
 	if (WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
 	{
 		PatchEvents(WidgetBlueprint);
+		PatchButtonsEnabled(WidgetBlueprint);
 	}
 
 	IWidgetBuilder::PatchWidgetBinds(WidgetBlueprint);
@@ -179,34 +182,25 @@ void UUserWidgetBuilder::SetupTransitions(const IFlowTransition* FlowTransition)
 	if(!WidgetBlueprint)
 		return;
 
-	if(Node->GetId().Equals("7:694") || Node->GetId().Equals("10:453"))
+	const UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
+	if (!ComponentAsset)
+		return;
+
+	FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
+	bool Modified = false;
+	for (TFieldIterator<FMulticastInlineDelegateProperty>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
 	{
-		int a = 0;
-		a = 1;
+		FString PropertyName = It->GetFName().ToString();
+		if (!PropertyName.EndsWith("OnButtonClicked"))
+			continue;
+
+		SetupTransition(FlowTransition, WidgetBlueprint, *PropertyName, VariableProperty);
+		Modified = true;
 	}
 
-//	if (WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+	if (Modified)
 	{
-		const UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
-		if (!ComponentAsset)
-			return;
-
-		FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
-		bool Modified = false;
-		for (TFieldIterator<FMulticastInlineDelegateProperty>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
-		{
-			FString PropertyName = It->GetFName().ToString();
-			if (!PropertyName.EndsWith("OnButtonClicked"))
-				continue;
-
-			SetupTransition(FlowTransition, WidgetBlueprint, *PropertyName, VariableProperty);
-			Modified = true;
-		}
-
-		if (Modified)
-		{
-			FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
-		}
+		FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
 	}
 }
 
@@ -440,6 +434,95 @@ void UUserWidgetBuilder::PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBl
 			if (ThenPin && ExecutePin)
 			{
 				ThenPin->MakeLinkTo(ExecutePin);
+			}
+		}
+	}
+}
+
+void UUserWidgetBuilder::PatchButtonsEnabled(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	FObjectProperty* VariableProperty = FindFProperty<FObjectProperty>(WidgetBlueprint->SkeletonGeneratedClass, *Widget->GetName());
+
+	if (!VariableProperty)
+		return;
+
+	const UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
+	if (!ComponentAsset)
+		return;
+
+	const FString SetEnabledStr("SetEnabled");
+	for (TFieldIterator<UFunction>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
+	{
+		FString FunctionName = It->GetFName().ToString();
+		if (!FunctionName.StartsWith(SetEnabledStr))
+			continue;
+
+		PatchRelayEnabledFunction(WidgetBlueprint, FunctionName);
+	}
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
+}
+
+void UUserWidgetBuilder::PatchRelayEnabledFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const FString& FunctionName)
+{
+	if (!WidgetBlueprint)
+		return;
+
+	if (!WidgetBlueprint->GetPackage()->GetName().Contains("Components"))
+		return;
+
+	if (!Widget)
+		return;
+
+	const FString SetEnabledStr("SetEnabled");
+	FString RelayFunctionName = SetEnabledStr + Widget->GetName() + FunctionName.Right(SetEnabledStr.Len());
+	TObjectPtr<UEdGraph>* Graph = WidgetBlueprint->FunctionGraphs.FindByPredicate([RelayFunctionName](const TObjectPtr<UEdGraph> Graph)
+		{
+			return Graph.GetName() == RelayFunctionName;
+		});
+	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+	if (!FunctionGraph)
+	{
+		FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBlueprint, FBlueprintEditorUtils::FindUniqueKismetName(WidgetBlueprint, RelayFunctionName), UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+
+		FBlueprintEditorUtils::AddFunctionGraph<UClass>(WidgetBlueprint, FunctionGraph, true, nullptr);
+	}
+
+	FString EnableStr("Enable");
+	const UK2Node_FunctionEntry* FunctionEntry = WidgetBlueprintHelper::PatchFunctionEntry(FunctionGraph, EnableStr, UEdGraphSchema_K2::PC_Boolean, EPinContainerType::None);
+	const FVector2D StartPos = FVector2D(FunctionEntry->NodePosX, FunctionEntry->NodePosY);
+
+	const FVector2D GetPosition = StartPos + FVector2D(400.0f, 100.0f);
+	UK2Node_VariableGet* ButtonNode = WidgetBlueprintHelper::PatchVariableGetNode(WidgetBlueprint, FunctionGraph, Widget->GetFName(), GetPosition);
+
+	if (ButtonNode)
+	{
+		UEdGraphPin* ReturnValuePin = ButtonNode->GetValuePin();
+
+		const UFunction* Function = FindUField<UFunction>(Widget->GetClass(), *FunctionName);
+		UK2Node_CallFunction* SetIsEnabledFunction = WidgetBlueprintHelper::AddFunctionAfterNode(WidgetBlueprint, FunctionEntry, Function);
+		if (SetIsEnabledFunction)
+		{
+			SetIsEnabledFunction->NodePosY = GetPosition.X + 400.0f;
+			SetIsEnabledFunction->NodePosY = StartPos.Y - 10.0f;
+			UEdGraphPin* TargetPin = SetIsEnabledFunction->FindPin(UEdGraphSchema_K2::PN_Self, EGPD_Input);
+			if (TargetPin && ReturnValuePin)
+			{
+				ReturnValuePin->MakeLinkTo(TargetPin);
+			}
+
+			UEdGraphPin* ThenPin = FunctionEntry->FindPin(UEdGraphSchema_K2::PN_Then, EGPD_Output);
+			UEdGraphPin* ExecPin = SetIsEnabledFunction->FindPin(UEdGraphSchema_K2::PN_Execute, EGPD_Input);
+			if (ThenPin && ExecPin)
+			{
+				ThenPin->MakeLinkTo(ExecPin);
+			}
+
+			UEdGraphPin* InputValuePin = FunctionEntry->FindPin(EnableStr, EGPD_Output);
+			UEdGraphPin* IsEnablePin = SetIsEnabledFunction->FindPin(EnableStr, EGPD_Input);
+			if (InputValuePin && IsEnablePin)
+			{
+				InputValuePin->MakeLinkTo(IsEnablePin);
 			}
 		}
 	}
