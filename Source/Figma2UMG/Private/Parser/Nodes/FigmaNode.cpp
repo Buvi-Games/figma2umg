@@ -44,9 +44,18 @@ FString UFigmaNode::GetNodeName() const
 	return Name;
 }
 
-FString UFigmaNode::GetUniqueName() const
+FString UFigmaNode::GetUniqueName(bool RemoveInstanceId) const
 {
-	return Name + "--" + GetIdForName();
+	FString IdForName = GetIdForName();
+	if(RemoveInstanceId)
+	{
+		int index = -1;
+		if (IdForName.FindChar(';', index))
+		{
+			IdForName.RemoveAt(0, index+1);
+		}
+	}
+	return Name + "--" + IdForName;
 }
 
 FString UFigmaNode::GetUAssetName() const
