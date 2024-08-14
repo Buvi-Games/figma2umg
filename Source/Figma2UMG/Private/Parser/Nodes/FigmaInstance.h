@@ -222,6 +222,7 @@ public:
 	UPROPERTY()
 	TArray<FFigmaOverrides> Overrides;
 
+	UFigmaNode* FindNodeForOverriden(const FString& NodeId) const;
 protected:
 	void ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const;
 	UFigmaNode* FindNodeForOverriden(const FString& NodeId, const TArray<UFigmaNode*>& Children) const;

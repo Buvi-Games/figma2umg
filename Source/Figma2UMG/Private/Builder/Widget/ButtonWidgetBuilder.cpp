@@ -8,8 +8,12 @@
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
 #include "K2Node_CallDelegate.h"
+#include "K2Node_CallFunction.h"
 #include "K2Node_ComponentBoundEvent.h"
+#include "K2Node_FunctionEntry.h"
+#include "K2Node_VariableGet.h"
 #include "Blueprint/WidgetTree.h"
+#include "Builder/WidgetBlueprintHelper.h"
 #include "Components/Button.h"
 #include "Components/ContentWidget.h"
 #include "Kismet2/BlueprintEditorUtils.h"
@@ -53,6 +57,7 @@ void UButtonWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> Widget
 {
 	Super::PostInsertWidgets(WidgetBlueprint);
 
+	PatchEnabledFunction(WidgetBlueprint);
 	SetupEventDispatchers(WidgetBlueprint);
 }
 
@@ -346,4 +351,73 @@ void UButtonWidgetBuilder::SetupBrush(FSlateBrush& Brush, const UFigmaGroup& Fig
 	Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
 	Brush.OutlineSettings.CornerRadii = Corners;
 	Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
+}
+
+
+void UButtonWidgetBuilder::PatchEnabledFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint)
+{
+	if (!WidgetBlueprint)
+		return;
+
+	if (!IsInsideComponentPackage(WidgetBlueprint->GetPackage()->GetName()))
+		return;
+
+	if(!Widget)
+		return;
+
+	FString FunctionName = "SetEnabled" + Widget.GetName();
+	TObjectPtr<UEdGraph>* Graph = WidgetBlueprint->FunctionGraphs.FindByPredicate([FunctionName](const TObjectPtr<UEdGraph> Graph)
+		{
+			return Graph.GetName() == FunctionName;
+		});
+	UEdGraph* FunctionGraph = Graph ? *Graph : nullptr;
+	if (!FunctionGraph)
+	{
+		FunctionGraph = FBlueprintEditorUtils::CreateNewGraph(WidgetBlueprint, FBlueprintEditorUtils::FindUniqueKismetName(WidgetBlueprint, FunctionName), UEdGraph::StaticClass(), UEdGraphSchema_K2::StaticClass());
+
+		FBlueprintEditorUtils::AddFunctionGraph<UClass>(WidgetBlueprint, FunctionGraph, true, nullptr);
+	}
+
+	FString EnableStr("Enable");
+	const UK2Node_FunctionEntry* FunctionEntry = WidgetBlueprintHelper::PatchFunctionEntry(FunctionGraph, EnableStr, UEdGraphSchema_K2::PC_Boolean, EPinContainerType::None);
+	const FVector2D StartPos = FVector2D(FunctionEntry->NodePosX, FunctionEntry->NodePosY);
+
+	const FVector2D GetPosition = StartPos + FVector2D(300.0f, 100.0f);
+	UK2Node_VariableGet* ButtonNode = WidgetBlueprintHelper::PatchVariableGetNode(WidgetBlueprint, FunctionGraph, Widget->GetFName(), GetPosition);
+	
+	if (ButtonNode)
+	{
+		UEdGraphPin* ReturnValuePin = ButtonNode->GetValuePin();
+
+		const FString SetIsEnabledFunctionName("SetIsEnabled");
+		const UFunction* Function = FindUField<UFunction>(Widget->GetClass(), *SetIsEnabledFunctionName);
+		UK2Node_CallFunction* SetIsEnabledFunction = WidgetBlueprintHelper::AddFunctionAfterNode(WidgetBlueprint, FunctionEntry, Function);
+		if (SetIsEnabledFunction)
+		{
+			SetIsEnabledFunction->NodePosY = GetPosition.X + 200.0f;
+			SetIsEnabledFunction->NodePosY = StartPos.Y - 10.0f;
+			UEdGraphPin* TargetPin = SetIsEnabledFunction->FindPin(UEdGraphSchema_K2::PN_Self, EGPD_Input);
+			if (TargetPin && ReturnValuePin)
+			{
+				ReturnValuePin->MakeLinkTo(TargetPin);
+			}
+
+			UEdGraphPin* ThenPin = FunctionEntry->FindPin(UEdGraphSchema_K2::PN_Then, EGPD_Output);
+			UEdGraphPin* ExecPin = SetIsEnabledFunction->FindPin(UEdGraphSchema_K2::PN_Execute, EGPD_Input);
+			if(ThenPin && ExecPin)
+			{
+				ThenPin->MakeLinkTo(ExecPin);
+			}
+
+			UEdGraphPin* InputValuePin = FunctionEntry->FindPin(EnableStr, EGPD_Output);
+			FString InIsEnabledStr("bInIsEnabled");
+			UEdGraphPin* IsEnablePin = SetIsEnabledFunction->FindPin(InIsEnabledStr, EGPD_Input);
+			if (InputValuePin && IsEnablePin)
+			{
+				InputValuePin->MakeLinkTo(IsEnablePin);
+			}
+		}
+	}
+
+	FBlueprintEditorUtils::MarkBlueprintAsStructurallyModified(WidgetBlueprint);
 }
