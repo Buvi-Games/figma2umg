@@ -143,6 +143,8 @@ void UUserWidgetBuilder::PatchWidgetProperties()
 	{
 		WidgetBlueprintHelper::SetPropertyValue(Widget, *ComponentProperty.Key, ComponentProperty.Value);
 	}
+
+	PatchInteractiveStateDisabled(FigmaInstance);
 }
 
 void UUserWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
@@ -475,7 +477,7 @@ void UUserWidgetBuilder::PatchRelayEnabledFunction(const TObjectPtr<UWidgetBluep
 		return;
 
 	const FString SetEnabledStr("SetEnabled");
-	FString RelayFunctionName = SetEnabledStr + Widget->GetName() + FunctionName.Right(SetEnabledStr.Len());
+	FString RelayFunctionName = SetEnabledStr + Widget->GetName() + FunctionName.Right(FunctionName.Len() - SetEnabledStr.Len());
 	TObjectPtr<UEdGraph>* Graph = WidgetBlueprint->FunctionGraphs.FindByPredicate([RelayFunctionName](const TObjectPtr<UEdGraph> Graph)
 		{
 			return Graph.GetName() == RelayFunctionName;
@@ -523,6 +525,96 @@ void UUserWidgetBuilder::PatchRelayEnabledFunction(const TObjectPtr<UWidgetBluep
 			if (InputValuePin && IsEnablePin)
 			{
 				InputValuePin->MakeLinkTo(IsEnablePin);
+			}
+		}
+	}
+}
+
+void UUserWidgetBuilder::PatchInteractiveStateDisabled(const UFigmaInstance* FigmaInstance)
+{
+	if (!FigmaInstance)
+		return;
+
+	UWidgetTree* ParentTree = Widget ? Cast<UWidgetTree>(Widget->GetOuter()) : nullptr;
+	TObjectPtr<UWidgetBlueprint> WidgetBlueprint = ParentTree ? Cast<UWidgetBlueprint>(ParentTree->GetOuter()) : nullptr;
+	if (!WidgetBlueprint)
+		return;
+
+	UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr;
+	if (!ComponentAsset)
+		return;
+
+	TObjectPtr<UEdGraph> EventGraph = nullptr;
+	TObjectPtr<UK2Node_Event> PreConstructNode = nullptr;
+	for (TObjectPtr<UEdGraph> CurrEventGraph : WidgetBlueprint->UbergraphPages)
+	{
+		TObjectPtr<UEdGraphNode>* FoundNode = CurrEventGraph->Nodes.FindByPredicate([](const TObjectPtr<UEdGraphNode> GraphNode)
+			{
+				TObjectPtr<UK2Node_Event> EventNode = Cast<UK2Node_Event>(GraphNode);
+				return EventNode && EventNode->EventReference.GetMemberName() == "PreConstruct";
+			});
+		if (FoundNode)
+		{
+			PreConstructNode = Cast<UK2Node_Event>(*FoundNode);
+			EventGraph = CurrEventGraph;
+		}
+	}
+
+	if (!PreConstructNode)
+	{
+		return;
+	}
+
+	const FString SetEnabledStr("SetEnabled");
+	static const FString DisabledStr("Disabled");
+	static const FString ComponentPropertiesStr("componentProperties");
+	for(const FFigmaOverrides& Override : FigmaInstance->Overrides)
+	{
+		if (!Override.OverriddenFields.ContainsByPredicate([](const FString& Field) { return Field.Equals(ComponentPropertiesStr, ESearchCase::IgnoreCase);	}))
+		{
+			continue;
+		}
+
+		const UFigmaNode* SubNode = FigmaInstance->FindNodeForOverriden(Override.Id);
+		const UFigmaInstance* SubFigmaInstance = Cast<UFigmaInstance>(SubNode);
+		if(!SubFigmaInstance)
+		{
+			continue;
+		}
+
+		const FString SetEnabledFunctionStartName = SetEnabledStr + SubFigmaInstance->GetUniqueName(true);
+		UFunction* Function = nullptr;
+		for (TFieldIterator<UFunction>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
+		{
+			FString FunctionName = It->GetFName().ToString();
+			if (!FunctionName.StartsWith(SetEnabledFunctionStartName))
+				continue;
+
+			Function = *It;
+			break;
+		}
+
+		if(Function)
+		{
+			for (const TPair<FString, FFigmaComponentProperty>& ComponentProperty : SubFigmaInstance->ComponentProperties)
+			{
+				if (ComponentProperty.Value.Type == EFigmaComponentPropertyType::VARIANT && ComponentProperty.Value.Value.Equals(DisabledStr))
+				{
+					UK2Node_CallFunction* SetEnabledButtonFunction = WidgetBlueprintHelper::AddFunctionAfterNode(WidgetBlueprint, PreConstructNode, Function);
+					if (SetEnabledButtonFunction)
+					{
+						const FVector2D GetPosition = FVector2D(SetEnabledButtonFunction->NodePosX - 200.0f, SetEnabledButtonFunction->NodePosY + 200.0f);
+						UK2Node_VariableGet* ButtonNode = WidgetBlueprintHelper::PatchVariableGetNode(WidgetBlueprint, EventGraph, Widget->GetFName(), GetPosition);
+
+						UEdGraphPin* ReturnValuePin = ButtonNode ? ButtonNode->GetValuePin() : nullptr;
+						UEdGraphPin* TargetPin = SetEnabledButtonFunction->FindPin(UEdGraphSchema_K2::PN_Self, EGPD_Input);
+						if (ReturnValuePin && TargetPin)
+						{
+							ReturnValuePin->MakeLinkTo(TargetPin);
+						}
+					}
+					break;
+				}
 			}
 		}
 	}

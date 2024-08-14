@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "K2Node_ComponentBoundEvent.h"
 #include "WidgetBuilder.h"
 #include "UserWidgetBuilder.generated.h"
 
+class UFigmaInstance;
 class IFlowTransition;
 class UWidgetBlueprintBuilder;
 class UTexture2DBuilder;
@@ -41,6 +41,7 @@ protected:
 	void PatchEvent(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, FObjectProperty* VariableProperty, const FName& EventName, const FName& EventDispatchersName);
 	void PatchButtonsEnabled(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
 	void PatchRelayEnabledFunction(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const FString& FunctionName);
+	void PatchInteractiveStateDisabled(const UFigmaInstance* FigmaInstance);
 
 	UPROPERTY()
 	TObjectPtr<UWidgetBlueprintBuilder> WidgetBlueprintBuilder = nullptr;
