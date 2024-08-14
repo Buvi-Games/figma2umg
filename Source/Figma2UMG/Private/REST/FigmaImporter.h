@@ -92,19 +92,16 @@ protected:
 	void OnAssetsCreated(bool Succeeded);
 
 	UFUNCTION()
-	void PatchAssets();
-
-	UFUNCTION()
 	void CreateWidgetBuilders();
 
 	UFUNCTION()
 	void PatchPreInsertWidget();
 
 	UFUNCTION()
-	void CompileBPs();
+	void CompileBPs(bool ProceedToNextState);
 
 	UFUNCTION()
-	void ReloadBPAssets();
+	void ReloadBPAssets(bool ProceedToNextState);
 
 	UFUNCTION()
 	void PatchWidgetBinds();

@@ -69,7 +69,7 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 void UFigmaImporter::Run()
 {
-	int WorkCount = (LibraryFileKeys.Num() * 3/*Request, Parse, PostSerialization*/) + 3/*Request, Parse, PostSerialization*/ + 13;//Fix, Builders, Images, Fonts, Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
+	int WorkCount = (LibraryFileKeys.Num() * 3/*Request, Parse, PostSerialization*/) + 3/*Request, Parse, PostSerialization*/ + 14;//Fix, Builders, Images, Fonts, Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
 	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
 	Progress->MakeDialog();
 	if(LibraryFileKeys.IsEmpty())
@@ -198,9 +198,9 @@ void UFigmaImporter::UpdateProgress(float ExpectedWorkThisFrame, const FText& Me
 void UFigmaImporter::UpdateProgressGameThread()
 {
 	const float WorkRemaining = Progress ? (Progress->TotalAmountOfWork - (Progress->CompletedWork + Progress->CurrentFrameScope)) : 0.0f;
-	if (Progress && ProgressThisFrame > 0.0f)
+	if (Progress && ProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
 	{
-		Progress->EnterProgressFrame(ProgressThisFrame, ProgressMessage);
+		Progress->EnterProgressFrame(FMath::Min(ProgressThisFrame, WorkRemaining), ProgressMessage);
 		ProgressThisFrame = 0.0f;
 	}
 }
@@ -218,19 +218,22 @@ void UFigmaImporter::UpdateSubProgress(float ExpectedWorkThisFrame, const FText&
 void UFigmaImporter::UpdateSubProgressGameThread()
 {
 	const float WorkRemaining = SubProgress ? (SubProgress->TotalAmountOfWork - (SubProgress->CompletedWork + SubProgress->CurrentFrameScope)) : 0.0f;
-	if (SubProgress && SubProgressThisFrame > 0.0f)
+	if (SubProgress && SubProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
 	{
-		SubProgress->EnterProgressFrame(SubProgressThisFrame, SubProgressMessage);
+		SubProgress->EnterProgressFrame(FMath::Min(SubProgressThisFrame, WorkRemaining), SubProgressMessage);
 		SubProgressThisFrame = 0.0f;
 	}
 }
 
 void UFigmaImporter::ResetProgressBar()
 {
+	if (Progress == nullptr)
+		return;
+
 	AsyncTask(ENamedThreads::GameThread, [this]()
 	{
 		const FSlowTaskStack& Stack = GWarn->GetScopeStack();
-		if(Stack.Last() == Progress)
+		if(Progress != nullptr && Stack.Last() == Progress)
 		{
 		   delete Progress;
 		   Progress = nullptr;
@@ -622,7 +625,7 @@ void UFigmaImporter::FetchGoogleFontsList()
 		}
 		else
 		{
-			BuildFontDependency();
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this](){BuildFontDependency();});
 		}
 	});
 }
@@ -669,11 +672,11 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 
 		if (!GoogleFontsInfo.IsEmpty())
 		{
-			BuildFontDependency();
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {BuildFontDependency(); });
 		}
 		else
 		{
-			LoadOrCreateAssets();
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {LoadOrCreateAssets(); });
 		}
 	}
 	else
@@ -682,7 +685,7 @@ void UFigmaImporter::OnFetchGoogleFontsResponse(FHttpRequestPtr HttpRequest, FHt
 		FString ErrorContent = BytesToString(Content.GetData(), Content.Num());
 		UE_LOG_Figma2UMG(Warning, TEXT("[UFigmaImporter] Failed to Fetch Google Fonts's list. Response %s"), *ErrorContent);
 
-		LoadOrCreateAssets();
+		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {LoadOrCreateAssets(); });
 	}
 }
 
@@ -740,7 +743,7 @@ void UFigmaImporter::HandleFontDownload(bool Succeeded)
 	else
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("Failed to download font."));
-		LoadOrCreateAssets();
+		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {LoadOrCreateAssets(); });
 	}
 }
 
@@ -755,14 +758,17 @@ void UFigmaImporter::LoadOrCreateAssets()
 
 	UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
 	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
-	
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		AssetBuilder->LoadOrCreateAssets();
-	}
 
-	OnAssetsCreated(true);
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			FGCScopeGuard GCScopeGuard;
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				AssetBuilder->LoadOrCreateAssets();
+			}
+
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {OnAssetsCreated(true); });
+		});
 }
 
 void UFigmaImporter::OnAssetsCreated(bool Succeeded)
@@ -773,104 +779,129 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 		return;
 	}
 
-	PatchAssets();
-}
-
-void UFigmaImporter::PatchAssets()
-{
 	UE_LOG_Figma2UMG(Display, TEXT("Patching UAssets."));
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_CreateWidgetBuilders", "Creating UWidget Builders"));
 	CreateWidgetBuilders();
-
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
-	PatchPreInsertWidget();
-
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
-	CompileBPs();
-	
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
-	ReloadBPAssets();
-
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
-	PatchWidgetBinds();
-
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
-	PatchWidgetProperties();
-
-	UFigmaImporter::OnPatchUAssets(true);	
 }
 
 void UFigmaImporter::CreateWidgetBuilders()
 {
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_CreateWidgetBuilders", "Creating UWidget Builders"));
+
+	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			BlueprintBuilder->CreateWidgetBuilders();
-		}
-	}
+			FGCScopeGuard GCScopeGuard;
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+				{
+					BlueprintBuilder->CreateWidgetBuilders();
+				}
+			}
+
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {PatchPreInsertWidget(); });
+		});
 }
 
 void UFigmaImporter::PatchPreInsertWidget()
 {
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
+
+	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			BlueprintBuilder->PatchAndInsertWidgets();
-		}
-	}
+			FGCScopeGuard GCScopeGuard;
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+				{
+					BlueprintBuilder->PatchAndInsertWidgets();
+				}
+			}
+
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {CompileBPs(true); });
+		});
 }
 
-void UFigmaImporter::CompileBPs()
+void UFigmaImporter::CompileBPs(bool ProceedToNextState)
 {
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
+
+	AsyncTask(ENamedThreads::GameThread, [this, ProceedToNextState]()
 		{
-			BlueprintBuilder->CompileBP(EBlueprintCompileOptions::None);
-		}
-	}
+			FGCScopeGuard GCScopeGuard;
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+				{
+					BlueprintBuilder->CompileBP(EBlueprintCompileOptions::None);
+				}
+			}
+
+			if (ProceedToNextState)
+			{
+				AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {ReloadBPAssets(true); });
+			}
+		});
 }
 
-void UFigmaImporter::ReloadBPAssets()
+void UFigmaImporter::ReloadBPAssets(bool ProceedToNextState)
 {
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
+
+	AsyncTask(ENamedThreads::GameThread, [this, ProceedToNextState]()
 		{
-			BlueprintBuilder->LoadAssets();
-			BlueprintBuilder->ResetWidgets();
-		}
-	}
+			FGCScopeGuard GCScopeGuard;
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+				{
+					BlueprintBuilder->LoadAssets();
+					BlueprintBuilder->ResetWidgets();
+				}
+			}
+
+			if (ProceedToNextState)
+			{
+				AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {PatchWidgetBinds(); });
+			}
+		});
 }
 
 void UFigmaImporter::PatchWidgetBinds()
 {
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
+
+	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			BlueprintBuilder->PatchWidgetBinds();
-		}
-	}
+			FGCScopeGuard GCScopeGuard;
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+				{
+					BlueprintBuilder->PatchWidgetBinds();
+				}
+			}
+
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {PatchWidgetProperties(); });
+		});
 }
 
 void UFigmaImporter::PatchWidgetProperties()
 {
-	FGCScopeGuard GCScopeGuard;
-	for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
+
+	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			BlueprintBuilder->PatchWidgetProperties();
-		}
-	}
+			FGCScopeGuard GCScopeGuard;
+			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				if (const TObjectPtr<UWidgetBlueprintBuilder> BlueprintBuilder = Cast<UWidgetBlueprintBuilder>(AssetBuilder.GetObject()))
+				{
+					BlueprintBuilder->PatchWidgetProperties();
+				}
+			}
+
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {UFigmaImporter::OnPatchUAssets(true); });
+		});
 }
 
 void UFigmaImporter::OnPatchUAssets(bool Succeeded)
@@ -885,18 +916,21 @@ void UFigmaImporter::OnPatchUAssets(bool Succeeded)
 	UE_LOG_Figma2UMG(Display, TEXT("Post-patch UAssets."));
 	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostPatch", "Post-patch UAssets"));
 
-	if(SaveAllAtEnd)
-	{
-		CompileBPs();
-		ReloadBPAssets();
-		SaveAll();
-	}
-	else
-	{
-		CompileBPs();
-	}
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			if(SaveAllAtEnd)
+			{
+				CompileBPs(false);
+				ReloadBPAssets(false);
+				SaveAll();
+			}
+			else
+			{
+				CompileBPs(false);
+			}
 
-	OnPostPatchUAssets(true);
+			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]() {OnPostPatchUAssets(true); });
+		});
 }
 
 void UFigmaImporter::SaveAll()
@@ -916,17 +950,20 @@ void UFigmaImporter::SaveAll()
 
 void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
 {
-	for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
-	{
-		AssetBuilder->Reset();
-	}
-	AssetBuilders.Reset();
-	if (Succeeded)
-	{
-		UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + TEXT(" was successfully imported."));
-	}
-	else
-	{
-		UpdateStatus(eRequestStatus::Failed, TEXT("Failed at Post-patch of UAssets."));
-	}
+	AsyncTask(ENamedThreads::GameThread, [this, Succeeded]()
+		{
+			for (const TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
+			{
+				AssetBuilder->Reset();
+			}
+			AssetBuilders.Reset();
+			if (Succeeded)
+			{
+				UpdateStatus(eRequestStatus::Succeeded, File->GetFileName() + TEXT(" was successfully imported."));
+			}
+			else
+			{
+				UpdateStatus(eRequestStatus::Failed, TEXT("Failed at Post-patch of UAssets."));
+			}
+		});
 }
