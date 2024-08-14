@@ -240,6 +240,11 @@ void UFigmaInstance::GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) 
 	}
 }
 
+UFigmaNode* UFigmaInstance::FindNodeForOverriden(const FString& NodeId) const
+{
+	return FindNodeForOverriden(NodeId, Children);
+}
+
 void UFigmaInstance::ProcessChildrenComponentPropertyReferences(TObjectPtr<UWidgetBlueprint> WidgetBp, TObjectPtr<UWidget> Widget, const TArray<UFigmaNode*>& CurrentChildren) const
 {
 	for (UFigmaNode* Child : CurrentChildren)
