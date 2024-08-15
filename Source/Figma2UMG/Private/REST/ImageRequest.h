@@ -12,7 +12,7 @@ DECLARE_DELEGATE_OneParam(FOnImageRequestCompleteDelegate, bool);
 DECLARE_DELEGATE_OneParam(FOnRawImageReceiveDelegate, const TArray<uint8>& );
 
 USTRUCT()
-struct FImageRequest
+struct FIGMA2UMG_API FImageRequest
 {
 	GENERATED_BODY()
 public:
@@ -39,7 +39,7 @@ private:
 };
 
 USTRUCT()
-struct FImagePerFileRequests
+struct FIGMA2UMG_API FImagePerFileRequests
 {
 	GENERATED_BODY()
 public:
@@ -51,7 +51,7 @@ public:
 };
 
 USTRUCT()
-struct FImageRequests
+struct FIGMA2UMG_API FImageRequests
 {
 	GENERATED_BODY()
 public:

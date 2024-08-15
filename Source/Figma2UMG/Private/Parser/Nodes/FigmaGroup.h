@@ -24,7 +24,7 @@
 class UButtonWidgetBuilder;
 
 UCLASS()
-class UFigmaGroup : public UFigmaNode, public IFigmaContainer, public IFlowTransition
+class FIGMA2UMG_API UFigmaGroup : public UFigmaNode, public IFigmaContainer, public IFlowTransition
 {
 public:
 	GENERATED_BODY()

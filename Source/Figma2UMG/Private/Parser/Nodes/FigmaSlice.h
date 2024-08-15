@@ -8,7 +8,7 @@
 #include "FigmaSlice.generated.h"
 
 UCLASS()
-class UFigmaSlice : public  UFigmaNode
+class FIGMA2UMG_API UFigmaSlice : public  UFigmaNode
 {
 public:
 	GENERATED_BODY()

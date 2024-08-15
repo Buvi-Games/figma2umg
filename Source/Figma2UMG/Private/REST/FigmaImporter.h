@@ -15,7 +15,7 @@ class URequestParams;
 class UFigmaFile;
 
 UCLASS()
-class UFigmaImporter : public UObject
+class FIGMA2UMG_API UFigmaImporter : public UObject
 {
 	GENERATED_BODY()
 public:

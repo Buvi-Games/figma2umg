@@ -11,7 +11,7 @@ class UObjectLibrary;
 class UTextBlock;
 
 UCLASS()
-class UTextBlockWidgetBuilder : public UObject, public IWidgetBuilder
+class FIGMA2UMG_API UTextBlockWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

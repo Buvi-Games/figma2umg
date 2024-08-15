@@ -11,7 +11,7 @@
 class UFigmaInstance;
 
 UCLASS()
-class UFigmaComponentSet : public  UFigmaFrame
+class FIGMA2UMG_API UFigmaComponentSet : public  UFigmaFrame
 {
 public:
 	GENERATED_BODY()

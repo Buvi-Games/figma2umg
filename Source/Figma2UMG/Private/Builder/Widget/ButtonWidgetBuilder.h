@@ -10,7 +10,7 @@
 class UButton;
 
 UCLASS()
-class UButtonWidgetBuilder : public USingleChildBuilder
+class FIGMA2UMG_API UButtonWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()

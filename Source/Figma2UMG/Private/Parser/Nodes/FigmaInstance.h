@@ -22,7 +22,7 @@ struct FFigmaExportSetting;
 class UTexture2DBuilder;
 
 UCLASS()
-class UFigmaInstance : public UFigmaNode, public IFlowTransition
+class FIGMA2UMG_API UFigmaInstance : public UFigmaNode, public IFlowTransition
 {
 public:
 	GENERATED_BODY()

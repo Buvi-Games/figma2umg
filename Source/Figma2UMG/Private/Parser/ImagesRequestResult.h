@@ -6,7 +6,7 @@
 #include "ImagesRequestResult.generated.h"
 
 USTRUCT()
-struct FImagesRequestResult
+struct FIGMA2UMG_API FImagesRequestResult
 {
 	GENERATED_BODY()
 public:

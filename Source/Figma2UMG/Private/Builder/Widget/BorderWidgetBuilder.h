@@ -10,7 +10,7 @@ struct FFigmaPaint;
 class UBorder;
 
 UCLASS()
-class UBorderWidgetBuilder : public USingleChildBuilder
+class FIGMA2UMG_API UBorderWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()

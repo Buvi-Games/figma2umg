@@ -16,7 +16,7 @@
 class UCanvasPanel;
 
 UCLASS()
-class UFigmaCanvas : public UFigmaNode, public IFigmaContainer, public IFlowTransition
+class FIGMA2UMG_API UFigmaCanvas : public UFigmaNode, public IFigmaContainer, public IFlowTransition
 {
 public:
 	GENERATED_BODY()

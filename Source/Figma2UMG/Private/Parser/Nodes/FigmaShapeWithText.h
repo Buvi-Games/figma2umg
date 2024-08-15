@@ -8,7 +8,7 @@
 #include "FigmaShapeWithText.generated.h"
 
 UCLASS()
-class UFigmaShapeWithText : public  UFigmaNode //FigJam Shape-with-text node
+class FIGMA2UMG_API UFigmaShapeWithText : public  UFigmaNode //FigJam Shape-with-text node
 {
 public:
 	GENERATED_BODY()

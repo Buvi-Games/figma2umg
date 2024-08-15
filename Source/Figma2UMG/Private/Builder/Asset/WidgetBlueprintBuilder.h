@@ -12,7 +12,7 @@ struct FFigmaComponentPropertyDefinition;
 class UWidgetBlueprint;
 
 UCLASS()
-class UWidgetBlueprintBuilder : public UObject, public IAssetBuilder
+class FIGMA2UMG_API UWidgetBlueprintBuilder : public UObject, public IAssetBuilder
 {
 	GENERATED_BODY()
 public:

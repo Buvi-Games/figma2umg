@@ -7,7 +7,7 @@
 #include "MultiChildBuilder.generated.h"
 
 UCLASS(Abstract)
-class UMultiChildBuilder : public UObject, public IWidgetBuilder
+class FIGMA2UMG_API UMultiChildBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

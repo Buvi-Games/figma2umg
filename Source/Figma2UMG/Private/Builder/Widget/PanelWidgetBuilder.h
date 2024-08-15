@@ -15,7 +15,7 @@
 class UPanelWidget;
 
 UCLASS(Abstract)
-class UPanelWidgetBuilder : public UMultiChildBuilder
+class FIGMA2UMG_API UPanelWidgetBuilder : public UMultiChildBuilder
 {
 public:
 	GENERATED_BODY()

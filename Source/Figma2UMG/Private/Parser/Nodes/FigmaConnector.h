@@ -8,7 +8,7 @@
 #include "FigmaConnector.generated.h"
 
 UCLASS()
-class UFigmaConnector : public UFigmaNode // FigJam Connector node
+class FIGMA2UMG_API UFigmaConnector : public UFigmaNode // FigJam Connector node
 {
 public:
 	GENERATED_BODY()

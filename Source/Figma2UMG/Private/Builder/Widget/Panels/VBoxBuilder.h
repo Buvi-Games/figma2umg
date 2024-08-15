@@ -8,7 +8,7 @@
 #include "VBoxBuilder.generated.h"
 
 UCLASS()
-class UVBoxBuilder : public UPanelWidgetBuilder
+class FIGMA2UMG_API UVBoxBuilder : public UPanelWidgetBuilder
 {
 public:
 	GENERATED_BODY()

@@ -8,7 +8,7 @@
 #include "FigmaPoly.generated.h"
 
 UCLASS()
-class UFigmaPoly : public UFigmaVectorNode
+class FIGMA2UMG_API UFigmaPoly : public UFigmaVectorNode
 {
 public:
 	GENERATED_BODY()

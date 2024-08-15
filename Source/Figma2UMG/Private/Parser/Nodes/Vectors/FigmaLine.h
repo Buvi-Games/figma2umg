@@ -8,7 +8,7 @@
 #include "FigmaLine.generated.h"
 
 UCLASS()
-class UFigmaLine : public UFigmaVectorNode
+class FIGMA2UMG_API UFigmaLine : public UFigmaVectorNode
 {
 public:
 	GENERATED_BODY()

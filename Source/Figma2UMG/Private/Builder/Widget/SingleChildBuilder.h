@@ -8,7 +8,7 @@
 
 
 UCLASS(Abstract)
-class USingleChildBuilder : public UObject, public IWidgetBuilder
+class FIGMA2UMG_API USingleChildBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

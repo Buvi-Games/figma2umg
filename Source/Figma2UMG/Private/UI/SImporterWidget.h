@@ -8,7 +8,7 @@
 class IDetailsView;
 class SGridPanel;
 
-class SImporterWidget : public SCompoundWidget, public FNotifyHook
+class FIGMA2UMG_API SImporterWidget : public SCompoundWidget, public FNotifyHook
 {
 public:
 	SLATE_BEGIN_ARGS(SImporterWidget)

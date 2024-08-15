@@ -12,7 +12,7 @@ class UFont;
 class UFontFace;
 
 UCLASS()
-class UFontBuilder : public UObject, public IAssetBuilder
+class FIGMA2UMG_API UFontBuilder : public UObject, public IAssetBuilder
 {
 	GENERATED_BODY()
 public:

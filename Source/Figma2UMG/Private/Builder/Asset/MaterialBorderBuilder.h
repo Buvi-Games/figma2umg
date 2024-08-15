@@ -7,7 +7,7 @@
 #include "MaterialBorderBuilder.generated.h"
 
 UCLASS()
-class UMaterialBorderBuilder : public UMaterialBuilder
+class FIGMA2UMG_API UMaterialBorderBuilder : public UMaterialBuilder
 {
 	GENERATED_BODY()
 public:

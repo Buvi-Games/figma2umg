@@ -8,7 +8,7 @@
 class UFigma2UMGSettings;
 class FFigma2UMGManager;
 
-class FFigma2UMGModule : public IModuleInterface
+class FIGMA2UMG_API FFigma2UMGModule : public IModuleInterface
 {
 public:
 

@@ -8,7 +8,7 @@
 #include "FigmaRectangleVector.generated.h"
 
 UCLASS()
-class UFigmaRectangleVector : public UFigmaVectorNode
+class FIGMA2UMG_API UFigmaRectangleVector : public UFigmaVectorNode
 {
 public:
 	GENERATED_BODY()

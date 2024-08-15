@@ -12,7 +12,7 @@
 class UMaterialExpressionConstant;
 
 UCLASS()
-class UMaterialBuilder : public UObject, public IAssetBuilder
+class FIGMA2UMG_API UMaterialBuilder : public UObject, public IAssetBuilder
 {
 	GENERATED_BODY()
 public:

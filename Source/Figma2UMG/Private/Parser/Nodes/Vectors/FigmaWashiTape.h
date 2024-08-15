@@ -8,7 +8,7 @@
 #include "FigmaWashiTape.generated.h"
 
 UCLASS()
-class UFigmaWashiTape : public UFigmaVectorNode
+class FIGMA2UMG_API UFigmaWashiTape : public UFigmaVectorNode
 {
 public:
 	GENERATED_BODY()

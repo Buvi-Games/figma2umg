@@ -11,7 +11,7 @@
 #include "FigmaSection.generated.h"
 
 UCLASS()
-class UFigmaSection : public  UFigmaNode, public IFigmaContainer
+class FIGMA2UMG_API UFigmaSection : public  UFigmaNode, public IFigmaContainer
 {
 public:
 	GENERATED_BODY()

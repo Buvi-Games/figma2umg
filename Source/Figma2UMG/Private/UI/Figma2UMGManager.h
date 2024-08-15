@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 
-class FFigma2UMGManager : public TSharedFromThis<FFigma2UMGManager>
+class FIGMA2UMG_API FFigma2UMGManager : public TSharedFromThis<FFigma2UMGManager>
 {
 public:
 	FFigma2UMGManager();

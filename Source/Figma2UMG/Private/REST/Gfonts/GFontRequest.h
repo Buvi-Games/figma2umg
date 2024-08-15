@@ -12,7 +12,7 @@ DECLARE_DELEGATE_OneParam(FOnFontRequestCompleteDelegate, bool);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnRawFontFileReceive, const FString&, const TArray<uint8>&);
 
 USTRUCT()
-struct FGFontFamilyInfo
+struct FIGMA2UMG_API FGFontFamilyInfo
 {
 	GENERATED_BODY()
 public:
@@ -43,7 +43,7 @@ public:
 };
 
 USTRUCT()
-struct FGFontRequest
+struct FIGMA2UMG_API FGFontRequest
 {
 	GENERATED_BODY()
 public:
@@ -65,7 +65,7 @@ private:
 };
 
 USTRUCT()
-struct FFontRequests
+struct FIGMA2UMG_API FFontRequests
 {
 	GENERATED_BODY()
 public:

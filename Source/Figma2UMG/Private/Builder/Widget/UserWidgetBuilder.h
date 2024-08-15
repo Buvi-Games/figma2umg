@@ -14,7 +14,7 @@ class UWidget;
 class UImage;
 
 UCLASS()
-class UUserWidgetBuilder : public UObject, public IWidgetBuilder
+class FIGMA2UMG_API UUserWidgetBuilder : public UObject, public IWidgetBuilder
 {
 public:
 	GENERATED_BODY()

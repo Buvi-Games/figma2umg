@@ -8,7 +8,7 @@
 #include "Texture2DBuilder.generated.h"
 
 UCLASS()
-class UTexture2DBuilder : public UObject, public IAssetBuilder
+class FIGMA2UMG_API UTexture2DBuilder : public UObject, public IAssetBuilder
 {
 	GENERATED_BODY()
 public:

@@ -12,7 +12,7 @@ class UWidgetBlueprint;
 class UFigmaFile;
 
 UCLASS()
-class UFigmaDocument : public UFigmaNode, public IFigmaContainer
+class FIGMA2UMG_API UFigmaDocument : public UFigmaNode, public IFigmaContainer
 {
 public:
 	GENERATED_BODY()

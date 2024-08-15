@@ -8,7 +8,7 @@
 #include "FigmaStar.generated.h"
 
 UCLASS()
-class UFigmaStar : public UFigmaVectorNode
+class FIGMA2UMG_API UFigmaStar : public UFigmaVectorNode
 {
 public:
 	GENERATED_BODY()

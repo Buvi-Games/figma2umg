@@ -8,7 +8,7 @@
 #include "FigmaSticky.generated.h"
 
 UCLASS()
-class UFigmaSticky : public  UFigmaNode //FigJam Sticky node.
+class FIGMA2UMG_API UFigmaSticky : public  UFigmaNode //FigJam Sticky node.
 {
 public:
 	GENERATED_BODY()

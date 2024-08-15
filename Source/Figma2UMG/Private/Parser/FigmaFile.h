@@ -17,7 +17,7 @@ class UFigmaImporter;
 DECLARE_DELEGATE_OneParam(FProcessFinishedDelegate, bool);
 
 UCLASS()
-class UFigmaFile : public UObject
+class FIGMA2UMG_API UFigmaFile : public UObject
 {
 public:
 	GENERATED_BODY()

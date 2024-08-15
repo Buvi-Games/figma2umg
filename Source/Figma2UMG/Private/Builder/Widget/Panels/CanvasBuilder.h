@@ -10,7 +10,7 @@
 class UCanvasPanel;
 
 UCLASS()
-class UCanvasBuilder : public UPanelWidgetBuilder
+class FIGMA2UMG_API UCanvasBuilder : public UPanelWidgetBuilder
 {
 public:
 	GENERATED_BODY()

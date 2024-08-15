@@ -4,7 +4,7 @@
 
 class FSlateStyleSet;
 class ISlateStyle;
-class FFigma2UMGStyle
+class FIGMA2UMG_API FFigma2UMGStyle
 {
 public:
 	static void Initialize();

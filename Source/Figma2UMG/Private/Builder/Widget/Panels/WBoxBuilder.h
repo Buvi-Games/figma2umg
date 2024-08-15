@@ -8,7 +8,7 @@
 #include "WBoxBuilder.generated.h"
 
 UCLASS()
-class UWBoxBuilder : public UPanelWidgetBuilder
+class FIGMA2UMG_API UWBoxBuilder : public UPanelWidgetBuilder
 {
 public:
 	GENERATED_BODY()

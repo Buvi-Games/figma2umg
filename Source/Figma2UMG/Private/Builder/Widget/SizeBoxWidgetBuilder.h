@@ -10,7 +10,7 @@
 class USizeBox;
 
 UCLASS()
-class USizeBoxWidgetBuilder : public USingleChildBuilder
+class FIGMA2UMG_API USizeBoxWidgetBuilder : public USingleChildBuilder
 {
 public:
 	GENERATED_BODY()

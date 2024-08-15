@@ -8,7 +8,7 @@
 #include "FigmaEllipse.generated.h"
 
 UCLASS()
-class UFigmaEllipse : public UFigmaVectorNode
+class FIGMA2UMG_API UFigmaEllipse : public UFigmaVectorNode
 {
 public:
 	GENERATED_BODY()

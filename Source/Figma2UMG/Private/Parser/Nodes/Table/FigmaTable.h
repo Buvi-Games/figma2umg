@@ -9,7 +9,7 @@
 #include "FigmaTable.generated.h"
 
 UCLASS()
-class UFigmaTable : public  UFigmaNode //FigJam Table node.
+class FIGMA2UMG_API UFigmaTable : public  UFigmaNode //FigJam Table node.
 {
 public:
 	GENERATED_BODY()

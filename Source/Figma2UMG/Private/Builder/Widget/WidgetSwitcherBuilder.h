@@ -9,7 +9,7 @@
 class UWidgetSwitcher;
 
 UCLASS()
-class UWidgetSwitcherBuilder : public UMultiChildBuilder
+class FIGMA2UMG_API UWidgetSwitcherBuilder : public UMultiChildBuilder
 {
 public:
 	GENERATED_BODY()

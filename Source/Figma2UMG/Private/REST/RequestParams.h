@@ -9,7 +9,7 @@
 
 
 UCLASS()
-class URequestParams : public  UObject
+class FIGMA2UMG_API URequestParams : public  UObject
 {
 	GENERATED_BODY()
 public:

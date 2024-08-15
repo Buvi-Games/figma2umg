@@ -12,7 +12,7 @@ class UFigmaInstance;
 struct FEdGraphPinType;
 
 UCLASS()
-class UFigmaComponent : public  UFigmaFrame
+class FIGMA2UMG_API UFigmaComponent : public  UFigmaFrame
 {
 public:
 	GENERATED_BODY()

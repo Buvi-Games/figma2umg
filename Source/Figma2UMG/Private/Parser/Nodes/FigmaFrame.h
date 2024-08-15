@@ -11,7 +11,7 @@
 class UWidgetBlueprintBuilder;
 
 UCLASS()
-class UFigmaFrame : public  UFigmaGroup
+class FIGMA2UMG_API UFigmaFrame : public  UFigmaGroup
 {
 public:
 	GENERATED_BODY()
