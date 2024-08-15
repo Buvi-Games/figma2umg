@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "FigmaImportSubsystem.h"
 #include "ImageRequest.h"
-#include "VaRestSubsystem.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/ImagesRequestResult.h"
 #include "Interfaces/IHttpRequest.h"
@@ -29,7 +28,7 @@ public:
 	TObjectPtr<BuilderT> FintAssetBuilderForNode(const FString& Id) const;
 
 protected:
-	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FVaRestCallDelegate& VaRestCallDelegate);
+	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FHttpRequestCompleteDelegate& HttpRequestCompleteDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
 	void UpdateProgress(float ExpectedWorkThisFrame, const FText& Message);
 	void UpdateProgressGameThread();
@@ -37,17 +36,11 @@ protected:
 	void UpdateSubProgressGameThread();
 	void ResetProgressBar();
 
-	void OnCurrentRequestComplete(UVaRestRequestJSON* Request);
-	void OnCurrentRequestFail(UVaRestRequestJSON* Request);
+	TSharedPtr<FJsonObject> ParseRequestReceived(FString MessagePrefix, FHttpResponsePtr HttpResponse);
 
-	UFUNCTION()
-	bool ParseRequestReceived(FString MessagePrefix, UVaRestRequestJSON* Request);
+	void OnFigmaFileRequestReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
-	UFUNCTION()
-	void OnFigmaFileRequestReceived(UVaRestRequestJSON* Request);
-
-	UFUNCTION()
-	void OnFigmaLibraryFileRequestReceived(UVaRestRequestJSON* Request);
+	void OnFigmaLibraryFileRequestReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 	void DownloadNextDependency();
 
 	UFUNCTION()
@@ -65,8 +58,7 @@ protected:
 	UFUNCTION()
 	void DownloadNextImage();
 
-	UFUNCTION()
-	void OnFigmaImagesRequestReceived(UVaRestRequestJSON* Request);
+	void OnFigmaImagesRequestReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
 	UFUNCTION()
 	void HandleImageDownload(bool Succeeded);
@@ -118,17 +110,15 @@ protected:
 	UFUNCTION()
 	void SaveAll();
 
-	FVaRestCallDelegate OnVaRestLibraryFileRequestDelegate;
-	FVaRestCallDelegate OnVaRestFileRequestDelegate;
+	FHttpRequestCompleteDelegate OnVaRestLibraryFileRequestDelegate;
+	FHttpRequestCompleteDelegate OnVaRestFileRequestDelegate;
 	FProcessFinishedDelegate OnBuildersCreatedDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
-	FVaRestCallDelegate OnVaRestImagesRequestDelegate;
+	FHttpRequestCompleteDelegate OnVaRestImagesRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
 	FOnFontRequestCompleteDelegate OnFontDownloadRequestCompleted;
 	FProcessFinishedDelegate OnPatchUAssetsDelegate;
 	FProcessFinishedDelegate OnPostPatchUAssetsDelegate;
-
-	FVaRestCallResponse Response;
 
 	FString AccessToken;
 	FString FileKey;

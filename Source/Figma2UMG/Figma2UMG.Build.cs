@@ -27,6 +27,7 @@ public class Figma2UMG : ModuleRules
 			new string[]
 			{
 				"Core",
+                "HTTP",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -51,7 +52,6 @@ public class Figma2UMG : ModuleRules
                 "MaterialEditor",
                 "ToolMenus",
                 "ContentBrowserData",
-                "VaRest",
                 "Json",
                 "JsonUtilities",
                 "HTTP",
