@@ -114,7 +114,7 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 
 
 	TArray<FString> Headers = HttpRequest->GetAllHeaders();
-	if(Headers.Contains(TEXT("Content-Length")))
+	if(Headers.ContainsByPredicate([](const FString& Header) { return Header.Contains(TEXT("Content-Length")); }))
 	{
 		// This section bellow is a hack due to the FCurlHttpRequest::SetupRequest() always adding the header Content-Length. Adding it makes the Figma AIP return the error 400 
 		// To avoid reimplementing the curl class, we need to manually remove the Header item.
@@ -238,6 +238,7 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 {
 	if (HttpResponse)
 	{
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 2)
 		const EHttpRequestStatus::Type status = HttpResponse->GetStatus();
 		switch (status)
 		{
@@ -257,29 +258,41 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 #endif
 
 		case EHttpRequestStatus::Succeeded:
-			UE_LOG_Figma2UMG(Display, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Succeeded"));
-			TSharedPtr<FJsonObject> JsonObj;
-			TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
+#else
+		const EHttpResponseCodes::Type status = static_cast<EHttpResponseCodes::Type>(HttpResponse->GetResponseCode());
+		switch (status)
+		{
+		case EHttpResponseCodes::Ok:
+#endif
+		{
+				UE_LOG_Figma2UMG(Display, TEXT("%s%s"), *MessagePrefix, TEXT("EVaRestRequestStatus::Succeeded"));
+				TSharedPtr<FJsonObject> JsonObj;
+				TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
 
-			bool DeserializeSuccess =  FJsonSerializer::Deserialize(Reader, JsonObj) && JsonObj.IsValid();
-			if (!DeserializeSuccess)
-			{
-				UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("HttpResponse has no response object"));
+				bool DeserializeSuccess = FJsonSerializer::Deserialize(Reader, JsonObj) && JsonObj.IsValid();
+				if (!DeserializeSuccess)
+				{
+					UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("HttpResponse has no response object"));
 
-				return nullptr;
+					return nullptr;
+				}
+
+				static FString StatusStr("status");
+				static FString ErrorStr("err");
+				if (JsonObj->HasField(StatusStr) && JsonObj->HasField(ErrorStr))
+				{
+					UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField(ErrorStr));
+
+					return nullptr;
+				}
+
+				return JsonObj;
 			}
-
-			static FString StatusStr("status");
-			static FString ErrorStr("err");
-			if (JsonObj->HasField(StatusStr) && JsonObj->HasField(ErrorStr))
-			{
-				UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField(ErrorStr));
-
-				return nullptr;
-			}
-
-			return JsonObj;
-			
+#if (ENGINE_MAJOR_VERSION < 5 || ENGINE_MINOR_VERSION <= 2)
+		default:
+			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(HttpResponse->GetResponseCode()) + TEXT(")"));
+			break;
+#endif
 		}
 	}
 	else

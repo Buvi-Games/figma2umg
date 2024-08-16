@@ -10,7 +10,7 @@
 #include "Nodes/FigmaInstance.h"
 #include "REST/FigmaImporter.h"
 #include "Properties/FigmaComponentRef.h"
-
+#include "Dom/JsonObject.h"
 
 void UFigmaFile::PostSerialize(const FString& InFileKey, const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)
 {

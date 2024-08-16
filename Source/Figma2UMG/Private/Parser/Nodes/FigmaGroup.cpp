@@ -7,16 +7,17 @@
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"
-#include "Builder/Widget/Panels/CanvasBuilder.h"
-#include "Builder/Widget/Panels/HBoxBuilder.h"
 #include "Builder/Widget/PanelWidgetBuilder.h"
 #include "Builder/Widget/SizeBoxWidgetBuilder.h"
+#include "Builder/Widget/WidgetBuilder.h"
+#include "Builder/Widget/Panels/CanvasBuilder.h"
+#include "Builder/Widget/Panels/HBoxBuilder.h"
 #include "Builder/Widget/Panels/VBoxBuilder.h"
 #include "Builder/Widget/Panels/WBoxBuilder.h"
 #include "Components/CanvasPanel.h"
 #include "Components/Spacer.h"
 #include "Components/WrapBox.h"
-
+#include "UObject/ScriptInterface.h"
 
 void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
@@ -55,7 +56,12 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 		TScriptInterface<UButtonWidgetBuilder> Button = CreateButtonBuilder();
 		const TScriptInterface<IWidgetBuilder> Container = CreateContainersBuilder();
 		Button->SetChild(Container);
+
+#if (ENGINE_MAJOR_VERSION < 5 || ENGINE_MINOR_VERSION <= 2)
+		return Button.GetInterface();
+#else
 		return Button;
+#endif
 	}
 	else
 	{

@@ -15,6 +15,7 @@ class UObjectLibrary;
 struct FClassOverrides;
 class UFigmaImporter;
 class URequestParams;
+class UMaterialInstanceConstant;
 
 DECLARE_DELEGATE_TwoParams(FOnFigmaImportUpdateStatusCB, eRequestStatus, FString);
 

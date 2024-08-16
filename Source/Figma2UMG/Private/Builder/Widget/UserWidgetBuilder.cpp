@@ -28,8 +28,6 @@
 #include "REST/FigmaImporter.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
-static const FVector2D BaseSize = FVector2D(300.0f, 150.0f);
-static const FVector2D Pan = FVector2D(20.0f, 20.0f);
 
 void UUserWidgetBuilder::SetWidgetBlueprintBuilder(const TObjectPtr<UWidgetBlueprintBuilder>& InWidgetBlueprintBuilder)
 {
@@ -265,7 +263,7 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, 
 
 UEdGraphNode* UUserWidgetBuilder::AddNodeAfterNode(const UK2Node* PreviousNode, TSubclassOf<UEdGraphNode> const NodeClass) const
 {
-	FVector2D NodeLocation = FVector2D(PreviousNode->NodePosX + BaseSize.X + Pan.X, PreviousNode->NodePosY);
+	FVector2D NodeLocation = FVector2D(PreviousNode->NodePosX + 320.0f, PreviousNode->NodePosY);
 	UEdGraphPin* ThenPin = PreviousNode->FindPin(UEdGraphSchema_K2::PN_Then);
 	UEdGraphNode* NewNode = nullptr;
 	while (ThenPin && !ThenPin->LinkedTo.IsEmpty())
