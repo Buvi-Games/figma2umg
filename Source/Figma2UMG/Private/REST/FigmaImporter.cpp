@@ -238,7 +238,7 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 {
 	if (HttpResponse)
 	{
-#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 2)
+#if (ENGINE_MAJOR_VERSION >= 5 && ENGINE_MINOR_VERSION > 3)
 		const EHttpRequestStatus::Type status = HttpResponse->GetStatus();
 		switch (status)
 		{
@@ -288,7 +288,7 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 
 				return JsonObj;
 			}
-#if (ENGINE_MAJOR_VERSION < 5 || ENGINE_MINOR_VERSION <= 2)
+#if (ENGINE_MAJOR_VERSION < 5 || ENGINE_MINOR_VERSION <= 3)
 		default:
 			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(HttpResponse->GetResponseCode()) + TEXT(")"));
 			break;
