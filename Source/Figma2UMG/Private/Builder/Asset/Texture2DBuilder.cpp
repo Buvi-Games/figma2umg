@@ -10,7 +10,11 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Factory/RawTexture2DFactory.h"
 #include "Parser/FigmaFile.h"
+#include "Parser/Nodes/FigmaInstance.h"
 #include "Parser/Nodes/FigmaNode.h"
+#include "Parser/Nodes/FigmaSection.h"
+#include "Parser/Nodes/Vectors/FigmaText.h"
+#include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 
 void UTexture2DBuilder::LoadOrCreateAssets()
 {
@@ -87,6 +91,40 @@ void UTexture2DBuilder::Reset()
 void UTexture2DBuilder::AddImageRequest(FImageRequests& ImageRequests)
 {
 	OnRawImageReceivedCB.BindUObject(this, &UTexture2DBuilder::OnRawImageReceived);
+	const TArray<FFigmaPaint>* Fills = nullptr;
+	if (const UFigmaGroup* Group = Cast<UFigmaGroup>(Node))
+	{
+		Fills = &Group->Fills;
+	}
+	else if (const UFigmaInstance* Instance = Cast<UFigmaInstance>(Node))
+	{
+		Fills = &Instance->Fills;
+	}
+	else if (const UFigmaSection* Section = Cast<UFigmaSection>(Node))
+	{
+		Fills = &Section->Fills;
+	}
+	else if (const UFigmaVectorNode* Vector = Cast<UFigmaVectorNode>(Node))
+	{
+		Fills = &Vector->Fills;
+	}
+	else if (const UFigmaText* Text = Cast<UFigmaText>(Node))
+	{
+		Fills = &Text->Fills;
+	}
+
+	if(Fills)
+	{
+		for (const FFigmaPaint& Fill : *Fills)
+		{
+			if (Fill.Type == EPaintTypes::IMAGE && !Fill.ImageRef.IsEmpty())
+			{
+				ImageRequests.AddRequest(FileKey, Node->GetNodeName(), Node->GetId(), OnRawImageReceivedCB, Fill.ImageRef);
+				return;
+			}
+		}
+	}
+
 	ImageRequests.AddRequest(FileKey, Node->GetNodeName(), Node->GetId(), OnRawImageReceivedCB);
 }
 
