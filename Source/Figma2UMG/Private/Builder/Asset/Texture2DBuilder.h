@@ -27,5 +27,5 @@ protected:
 	TObjectPtr<UTexture2D> Asset = nullptr;
 
 	TArray<uint8> RawData;
-	FOnRawImageReceiveDelegate OnRawImageReceivedCB;
+	FOnRawImageReceive::FDelegate OnRawImageReceivedCB;
 };
