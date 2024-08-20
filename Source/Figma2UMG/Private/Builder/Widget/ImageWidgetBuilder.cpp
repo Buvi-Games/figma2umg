@@ -57,7 +57,11 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Widg
 
 	if (const TObjectPtr<UTexture2D>& Texture = Texture2DBuilder ? Texture2DBuilder->GetAsset() : nullptr)
 	{
-		Widget->SetBrushFromTexture(Texture, true);
+		Widget->SetBrushFromTexture(Texture, false);
+		FSlateBrush Brush = Widget->GetBrush();
+		Brush.SetImageSize(Node->GetAbsoluteSize());
+		Widget->SetBrush(Brush);
+		Widget->SetColorAndOpacity(FLinearColor::White);
 	}
 	else if (Material)
 	{
