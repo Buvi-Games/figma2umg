@@ -61,7 +61,11 @@ void FFigmaPaint::CreateAssetBuilder(const FString& InFileKey, const UFigmaNode*
 	}
 	break;
 	case EPaintTypes::IMAGE:
-		UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type IMAGE is not supported."), *OwnerNode->GetUniqueName());
+	{
+		AssetBuilder = NewObject<UTexture2DBuilder>();
+		AssetBuilder->SetNode(InFileKey, OwnerNode);
+		AssetBuilders.Add(AssetBuilder);
+	}
 		break;
 	case EPaintTypes::EMOJI:
 		UE_LOG_Figma2UMG(Warning, TEXT("[CreatePaintAssetBuilderIfNeeded] Node %s - Paint.Type EMOJI is not supported."), *OwnerNode->GetUniqueName());
