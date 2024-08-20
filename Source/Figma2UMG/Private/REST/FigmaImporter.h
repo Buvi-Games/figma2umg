@@ -29,6 +29,7 @@ public:
 
 protected:
 	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FHttpRequestCompleteDelegate& HttpRequestCompleteDelegate);
+	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FString& Suffix, const FHttpRequestCompleteDelegate& HttpRequestCompleteDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
 	void UpdateProgress(float ExpectedWorkThisFrame, const FText& Message);
 	void UpdateProgressGameThread();
@@ -53,12 +54,17 @@ protected:
 	void BuildImageDependency ();
 
 	UFUNCTION()
+	void RequestImageRefURLs();
+
+	void OnFigmaImagesRefURLReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
+
+	UFUNCTION()
 	void RequestImageURLs();
+
+	void OnFigmaImagesURLReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
 	UFUNCTION()
 	void DownloadNextImage();
-
-	void OnFigmaImagesRequestReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
 
 	UFUNCTION()
 	void HandleImageDownload(bool Succeeded);
@@ -115,6 +121,7 @@ protected:
 	FProcessFinishedDelegate OnBuildersCreatedDelegate;
 	FProcessFinishedDelegate OnAssetsCreatedDelegate;
 	FHttpRequestCompleteDelegate OnVaRestImagesRequestDelegate;
+	FHttpRequestCompleteDelegate OnVaRestImagesRefRequestDelegate;
 	FOnImageRequestCompleteDelegate OnImageDownloadRequestCompleted;
 	FOnFontRequestCompleteDelegate OnFontDownloadRequestCompleted;
 	FProcessFinishedDelegate OnPatchUAssetsDelegate;
