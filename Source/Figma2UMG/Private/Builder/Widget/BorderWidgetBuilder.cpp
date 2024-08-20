@@ -183,6 +183,15 @@ void UBorderWidgetBuilder::SetCorner(const FVector4& CornerRadii) const
 		FSlateBrush Brush = Widget->Background;
 		Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
 		Brush.OutlineSettings.CornerRadii = CornerRadii;
+		FVector2D AbsoluteSize = Node->GetAbsoluteSize();
+		AbsoluteSize.X -= Brush.OutlineSettings.Width * 2.0f;
+		AbsoluteSize.Y -= Brush.OutlineSettings.Width * 2.0f;
+
+		Brush.OutlineSettings.CornerRadii.X = FMath::Min(Brush.OutlineSettings.CornerRadii.X, FMath::Min(AbsoluteSize.X, AbsoluteSize.Y) * 0.5f);
+		Brush.OutlineSettings.CornerRadii.Y = FMath::Min(Brush.OutlineSettings.CornerRadii.Y, FMath::Min(AbsoluteSize.X, AbsoluteSize.Y) * 0.5f);
+		Brush.OutlineSettings.CornerRadii.Z = FMath::Min(Brush.OutlineSettings.CornerRadii.Z, FMath::Min(AbsoluteSize.X, AbsoluteSize.Y) * 0.5f);
+		Brush.OutlineSettings.CornerRadii.W = FMath::Min(Brush.OutlineSettings.CornerRadii.W, FMath::Min(AbsoluteSize.X, AbsoluteSize.Y) * 0.5f);
+
 		Widget->SetBrush(Brush);
 	}
 }
