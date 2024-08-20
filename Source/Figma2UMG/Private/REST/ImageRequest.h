@@ -9,7 +9,7 @@
 
 
 DECLARE_DELEGATE_OneParam(FOnImageRequestCompleteDelegate, bool);
-DECLARE_DELEGATE_OneParam(FOnRawImageReceiveDelegate, const TArray<uint8>& );
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnRawImageReceive, const TArray<uint8>& );
 
 USTRUCT()
 struct FIGMA2UMG_API FImageRequest
@@ -23,9 +23,15 @@ public:
 	FString Id;
 
 	UPROPERTY()
+	FString ImageRef;
+
+	UPROPERTY()
 	FString URL;
 
-	FOnRawImageReceiveDelegate OnImageRawReceive;
+	FOnRawImageReceive OnImageRawReceive;
+
+	void SetRequestedURL();
+	bool GetRequestedURL() const;
 
 	void StartDownload(const FOnImageRequestCompleteDelegate& Delegate);
 
@@ -36,6 +42,7 @@ private:
 	FOnImageRequestCompleteDelegate OnImageRequestCompleteDelegate;
 
 	eRequestStatus Status = eRequestStatus::NotStarted;
+	bool RequestedURL = false;
 };
 
 USTRUCT()
@@ -47,6 +54,9 @@ public:
 	FString FileKey;
 
 	UPROPERTY()
+	bool ImageRefRequested = false;
+
+	UPROPERTY()
 	TArray<FImageRequest> Requests;
 };
 
@@ -55,10 +65,14 @@ struct FIGMA2UMG_API FImageRequests
 {
 	GENERATED_BODY()
 public:
-	void AddRequest(FString FileKey, const FString& ImageName, const FString& Id, const FOnRawImageReceiveDelegate& OnImageRawReceive);
+	void AddFile(FString FileKey);
+	void AddRequest(FString FileKey, const FString& ImageName, const FString& Id, const FOnRawImageReceive::FDelegate& OnImageRawReceive, const FString& ImageRef = FString());
 	void Reset();
 
-	const FImagePerFileRequests* GetRequests() const;
+	FImagePerFileRequests* GetNextImageRefFile();
+
+	FImagePerFileRequests* GetRequestsPendingURL();
+	void SetURLFromImageRef(const FString& ImageRef, const FString& URL);
 	void SetURL(const FString& Id, const FString& URL);
 
 	FImageRequest* GetNextToDownload();

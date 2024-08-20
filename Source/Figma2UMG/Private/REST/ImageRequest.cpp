@@ -8,6 +8,16 @@
 #include "Interfaces/IHttpResponse.h"
 
 
+void FImageRequest::SetRequestedURL()
+{
+	RequestedURL = true;
+}
+
+bool FImageRequest::GetRequestedURL() const
+{
+	return RequestedURL;
+}
+
 void FImageRequest::StartDownload(const FOnImageRequestCompleteDelegate& Delegate)
 {
 	OnImageRequestCompleteDelegate = Delegate;
@@ -33,7 +43,10 @@ void FImageRequest::HandleImageDownload(FHttpRequestPtr HttpRequest, FHttpRespon
 		RawData.AddUninitialized(dataSize);
 		FMemory::Memcpy(RawData.GetData(), HttpResponse->GetContent().GetData(), dataSize);
 
-		OnImageRawReceive.ExecuteIfBound(RawData);
+		if (OnImageRawReceive.IsBound())
+		{
+			OnImageRawReceive.Broadcast(RawData);
+		}
 
 		Status = eRequestStatus::Succeeded;
 		OnImageRequestCompleteDelegate.ExecuteIfBound(true);
@@ -47,7 +60,17 @@ void FImageRequest::HandleImageDownload(FHttpRequestPtr HttpRequest, FHttpRespon
 	}
 }
 
-void FImageRequests::AddRequest(FString FileKey, const FString& ImageName, const FString& Id, const FOnRawImageReceiveDelegate& OnImageRawReceive)
+void FImageRequests::AddFile(FString FileKey)
+{
+	FImagePerFileRequests* FileRequest = RequestsPerFile.FindByPredicate([FileKey](const FImagePerFileRequests& Request) { return (Request.FileKey == FileKey); });
+	if (!FileRequest)
+	{
+		FileRequest = &RequestsPerFile.Emplace_GetRef();
+		FileRequest->FileKey = FileKey;
+	}
+}
+
+void FImageRequests::AddRequest(FString FileKey, const FString& ImageName, const FString& Id, const FOnRawImageReceive::FDelegate& OnImageRawReceive, const FString& ImageRef)
 {
 	FImagePerFileRequests* FileRequest = RequestsPerFile.FindByPredicate([FileKey](const FImagePerFileRequests& Request) { return (Request.FileKey == FileKey); });
 	if (!FileRequest)
@@ -56,10 +79,16 @@ void FImageRequests::AddRequest(FString FileKey, const FString& ImageName, const
 		FileRequest->FileKey = FileKey;
 	}
 
-	FImageRequest& Request = FileRequest->Requests.Emplace_GetRef();
-	Request.ImageName = ImageName;
-	Request.Id = Id;
-	Request.OnImageRawReceive = OnImageRawReceive;
+	FImageRequest* Request = FileRequest->Requests.FindByPredicate([Id](const FImageRequest& Request) { return (Request.Id == Id); });
+	if(!Request)
+	{
+		Request = &FileRequest->Requests.Emplace_GetRef();
+		Request->ImageName = ImageName;
+		Request->Id = Id;
+		Request->ImageRef = ImageRef;
+	}
+
+	Request->OnImageRawReceive.Add(OnImageRawReceive);
 }
 
 void FImageRequests::Reset()
@@ -67,31 +96,74 @@ void FImageRequests::Reset()
 	RequestsPerFile.Reset();
 }
 
-const FImagePerFileRequests* FImageRequests::GetRequests() const
+FImagePerFileRequests* FImageRequests::GetNextImageRefFile()
+{
+	for (FImagePerFileRequests& CurrentFile : RequestsPerFile)
+	{
+		if (!CurrentFile.ImageRefRequested)
+		{
+			return &CurrentFile;
+		}
+	}
+
+	return nullptr;
+}
+
+FImagePerFileRequests* FImageRequests::GetRequestsPendingURL()
 {
 	if (RequestsPerFile.IsEmpty())
 		return nullptr;
 
-	return &RequestsPerFile[0];
+	for (FImagePerFileRequests& CurrentFile : RequestsPerFile)
+	{
+		FImageRequest* ImageRequest = CurrentFile.Requests.FindByPredicate([](const FImageRequest& Request) { return !Request.GetRequestedURL() && Request.URL.IsEmpty(); });
+		if(ImageRequest)
+		{
+			return &CurrentFile;
+		}
+	}
+
+	return nullptr;
+}
+
+void FImageRequests::SetURLFromImageRef(const FString& ImageRef, const FString& URL)
+{
+	for (FImagePerFileRequests& CurrentFile : RequestsPerFile)
+	{
+		for (FImageRequest& ImageRequest : CurrentFile.Requests)
+		{
+			if(ImageRequest.ImageRef.Equals(ImageRef, ESearchCase::IgnoreCase))
+			{
+				ImageRequest.SetRequestedURL();
+				ImageRequest.URL = URL;
+			}
+		}
+	}
 }
 
 void FImageRequests::SetURL(const FString& Id, const FString& URL)
 {
-	FImagePerFileRequests& CurrentFile = RequestsPerFile[0];
-	FImageRequest* FoundRequest = CurrentFile.Requests.FindByPredicate([Id](const FImageRequest& Request) { return (Request.Id == Id); });
-	if (FoundRequest)
+	for (FImagePerFileRequests& CurrentFile : RequestsPerFile)
 	{
-		FoundRequest->URL = URL;
+		FImageRequest* FoundRequest = CurrentFile.Requests.FindByPredicate([Id](const FImageRequest& Request) { return (Request.Id == Id); });
+		if (FoundRequest)
+		{
+			FoundRequest->URL = URL;
+		}
 	}
 }
 
 FImageRequest* FImageRequests::GetNextToDownload()
 {
+	if (RequestsPerFile.Num() == 0)
+		return nullptr;
+
 	FImagePerFileRequests& CurrentFile = RequestsPerFile[0];
-	FImageRequest* ImageRequest = CurrentFile.Requests.FindByPredicate([](const FImageRequest& Request) { return (Request.GetStatus() == eRequestStatus::NotStarted && !Request.URL.IsEmpty()); });
+	FImageRequest* ImageRequest = CurrentFile.Requests.FindByPredicate([](const FImageRequest& Request) { return (Request.GetStatus() == eRequestStatus::NotStarted && (!Request.GetRequestedURL() || !Request.URL.IsEmpty())); });
 	if(ImageRequest == nullptr)
 	{
 		RequestsPerFile.RemoveAt(0);
+		return GetNextToDownload();
 	}
 	return ImageRequest;
 }
