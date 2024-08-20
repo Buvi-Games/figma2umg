@@ -330,8 +330,7 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 				TObjectPtr<UFigmaComponentSet> ComponentSet = ComponentSetPair.Value.GetComponentSet();
 				if (ComponentSet)
 				{
-					;
-					if (!ComponentSet->CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey, AssetBuilders))
+					if (!CreateAssetBuilder(ComponentSetPair.Value.RemoteFileKey, *ComponentSet, AssetBuilders))
 					{
 						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] ComponentSet %s Id %s failed to return a AssetBuilder"), *ComponentSet->GetNodeName(), *ComponentSet->GetIdForName());
 					}
@@ -346,7 +345,7 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 				TObjectPtr<UFigmaComponent> Component = ComponentPair.Value.GetComponent();
 				if (Component)
 				{
-					if (!Component->CreateAssetBuilder(ComponentPair.Value.RemoteFileKey, AssetBuilders))
+					if (!CreateAssetBuilder(ComponentPair.Value.RemoteFileKey, *Component, AssetBuilders))
 					{
 						UE_LOG_Figma2UMG(Warning, TEXT("[Asset] Component %s Id %s failed to return a AssetBuilder"), *Component->GetNodeName(), *Component->GetIdForName());
 					}
@@ -355,7 +354,7 @@ void UFigmaFile::CreateAssetBuilders(const FProcessFinishedDelegate& ProcessDele
 
 			if (Document)
 			{
-				CreateAssetBuilder(*Document, AssetBuilders);
+				CreateAssetBuilder(FileKey, *Document, AssetBuilders);
 
 				ExecuteDelegate(true);
 			}
@@ -465,16 +464,18 @@ void UFigmaFile::ExecuteDelegate(const bool Succeeded)
 	}
 }
 
-void UFigmaFile::CreateAssetBuilder(UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
+bool UFigmaFile::CreateAssetBuilder(const FString& InFileKey, UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	Node.CreateAssetBuilder(FileKey, AssetBuilders);
+	bool Created = Node.CreateAssetBuilder(InFileKey, AssetBuilders);
 
 	if (IFigmaContainer* FigmaContainer = Cast<IFigmaContainer>(&Node))
 	{
 		FigmaContainer->ForEach(IFigmaContainer::FOnEachFunction::CreateLambda([&](UFigmaNode& ChildNode, const int Index)
 			{
-				CreateAssetBuilder(ChildNode, AssetBuilders);
+				CreateAssetBuilder(InFileKey, ChildNode, AssetBuilders);
 			}));
 	}
+
+	return Created;
 }
 

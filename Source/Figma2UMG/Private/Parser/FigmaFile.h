@@ -76,7 +76,7 @@ protected:
 	void AddRemoteComponentSet(FFigmaComponentSetRef& ComponentSetRef, const TPair<FString, TObjectPtr<UFigmaFile>>& LibraryFile, TObjectPtr<UFigmaComponentSet> ComponentSet, TMap<FString, FFigmaComponentRef>& PendingComponents, TMap<FString, FFigmaComponentSetRef>& PendingComponentSets);
 	void ExecuteDelegate(const bool Succeeded);
 
-	void CreateAssetBuilder(UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders);
+	bool CreateAssetBuilder(const FString& InFileKey, UFigmaNode& Node, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders);
 
 	UPROPERTY()
 	int SchemaVersion = 0;
