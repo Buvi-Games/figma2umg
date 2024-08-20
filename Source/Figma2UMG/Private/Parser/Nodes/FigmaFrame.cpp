@@ -4,6 +4,7 @@
 #include "Parser/Nodes/FigmaFrame.h"
 
 #include "Builder/Asset/MaterialBuilder.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Builder/Widget/UserWidgetBuilder.h"
 
@@ -53,6 +54,10 @@ FString UFigmaFrame::GetPackageNameForBuilder(const TScriptInterface<IAssetBuild
 	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
 	{
 		Suffix = "Material";
+	}
+	else if (Cast<UTexture2DBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Textures";
 	}
 
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
