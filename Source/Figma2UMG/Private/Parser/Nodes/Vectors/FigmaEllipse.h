@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Parser/Nodes/Vectors/FigmaVectorNode.h"
+#include "Parser/Properties/FigmaArcData.h"
 
 #include "FigmaEllipse.generated.h"
 
@@ -13,5 +14,6 @@ class FIGMA2UMG_API UFigmaEllipse : public UFigmaVectorNode
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	FFigmaArcData ArcData;
 };

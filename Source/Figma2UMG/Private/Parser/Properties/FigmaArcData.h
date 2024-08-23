@@ -12,5 +12,12 @@ struct FIGMA2UMG_API FFigmaArcData
 public:
 	GENERATED_BODY()
 
-protected:
+	UPROPERTY()
+	float StartingAngle = 0.0f;
+
+	UPROPERTY()
+	float EndingAngle = 0.0f;
+
+	UPROPERTY()
+	float InnerRadius = 0.0f;
 };
