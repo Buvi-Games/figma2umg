@@ -17,4 +17,13 @@ public:
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	virtual bool DoesSupportImageRef() const override;
+
+	UPROPERTY()
+	float CornerRadius;
+
+	UPROPERTY()
+	TArray<float> RectangleCornerRadii;
+
+	UPROPERTY()
+	float CornerSmoothing;
 };
