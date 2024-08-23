@@ -21,9 +21,10 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		FrameToButton = Settings->FrameToButton;
 		WidgetOverrides = Settings->WidgetOverrides;
 		SaveAllAtEnd = Settings->SaveAllAtEnd;
+		NodeImageScale = Settings->NodeImageScale;
+		ContentRootFolder = Settings->ContentRootFolder;
 	}
 
-	ContentRootFolder = "/Game/Figma";
 
 	//#if !UE_BUILD_SHIPPING
 	//Ids.Add("212:1394"); // Impost Sections

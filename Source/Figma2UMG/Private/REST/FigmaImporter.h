@@ -136,6 +136,8 @@ protected:
 
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
+	float NodeImageScale = 4.0f;
+
 	bool DownloadFontsFromGoogle = false;
 	FString GFontsAPIKey;
 

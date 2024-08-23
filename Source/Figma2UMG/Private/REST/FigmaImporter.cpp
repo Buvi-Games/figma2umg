@@ -48,7 +48,6 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 		{
 			Ids += "," + InProperties->Ids[i];
 		}
-
 	}
 
 	for (FString Element : InProperties->LibraryFileKeys)
@@ -58,6 +57,8 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 	ContentRootFolder = InProperties->ContentRootFolder;
 	RequesterCallback = InRequesterCallback;
+
+	NodeImageScale = InProperties->NodeImageScale;
 
 	DownloadFontsFromGoogle = InProperties->DownloadFontsFromGoogle;
 	GFontsAPIKey = InProperties->GFontsAPIKey;
@@ -569,6 +570,7 @@ void UFigmaImporter::RequestImageURLs()
 
 				if (!ImageIdsFormated.IsEmpty())
 				{
+					ImageIdsFormated += "&scale=" + FString::SanitizeFloat(NodeImageScale, 0);
 				   if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
 				   {
 					   UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);

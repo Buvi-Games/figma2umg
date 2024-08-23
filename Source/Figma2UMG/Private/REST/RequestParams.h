@@ -36,6 +36,9 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Implement the prototype flow."))
 	bool UsePrototypeFlow = true;
 
+	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Scale for node images requested from Figma (between 0.01 and 4).", ClampMin = "0.1", ClampMax = "4.0", UIMin = "0.1", UIMax = "4.0"))
+	float NodeImageScale = 4.0f;
+
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Rules to make Frames generate UButtons."))
 	FFrameToButtonOverride FrameToButton;
 
