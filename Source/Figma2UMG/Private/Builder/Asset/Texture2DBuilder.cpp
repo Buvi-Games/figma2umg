@@ -106,7 +106,10 @@ void UTexture2DBuilder::AddImageRequest(FImageRequests& ImageRequests)
 	}
 	else if (const UFigmaVectorNode* Vector = Cast<UFigmaVectorNode>(Node))
 	{
-		Fills = &Vector->Fills;
+		if (Vector->DoesSupportImageRef())
+		{
+			Fills = &Vector->Fills;
+		}
 	}
 	else if (const UFigmaText* Text = Cast<UFigmaText>(Node))
 	{

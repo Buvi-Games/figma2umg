@@ -34,7 +34,10 @@ bool UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey, TArray<TScri
 	AssetBuilder->SetNode(InFileKey, this);
 	AssetBuilders.Add(AssetBuilder);
 
-	CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills, Strokes);
+	if (DoesSupportImageRef())
+	{
+		CreatePaintAssetBuilderIfNeeded(InFileKey, AssetBuilders, Fills, Strokes);
+	}
 
 	return true;
 }
@@ -64,3 +67,9 @@ TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders(bool IsR
 
 	return ImageWidgetBuilder;
 }
+
+bool UFigmaVectorNode::DoesSupportImageRef() const
+{
+	return false;
+}
+

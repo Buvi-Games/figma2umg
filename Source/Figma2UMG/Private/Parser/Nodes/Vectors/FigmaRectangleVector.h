@@ -15,5 +15,6 @@ public:
 
 	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
-protected:
+
+	virtual bool DoesSupportImageRef() const override;
 };

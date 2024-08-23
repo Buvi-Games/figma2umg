@@ -79,3 +79,8 @@ TScriptInterface<IWidgetBuilder> UFigmaRectangleVector::CreateWidgetBuilders(boo
 		return ImageWidgetBuilder;
 	}
 }
+
+bool UFigmaRectangleVector::DoesSupportImageRef() const
+{
+	return true;
+}

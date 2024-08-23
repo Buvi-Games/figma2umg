@@ -40,8 +40,10 @@ public:
 
 	// FlowTransition
 	virtual const FString& GetTransitionNodeID(const FName EventName) const override { return TransitionNodeID; }
-	virtual const float GetTransitionDuration() const override { return TransitionDuration; };
+	virtual const float GetTransitionDuration() const override { return TransitionDuration; }
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
+
+	virtual bool DoesSupportImageRef() const;
 
 	UPROPERTY()
 	bool Locked = false;

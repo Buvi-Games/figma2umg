@@ -14,6 +14,8 @@ class FIGMA2UMG_API UFigmaEllipse : public UFigmaVectorNode
 public:
 	GENERATED_BODY()
 
+	virtual bool DoesSupportImageRef() const override;
+
 	UPROPERTY()
 	FFigmaArcData ArcData;
 };
