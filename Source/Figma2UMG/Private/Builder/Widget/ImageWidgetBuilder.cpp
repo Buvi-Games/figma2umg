@@ -9,7 +9,12 @@
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Components/Image.h"
 #include "Components/Widget.h"
+#include "Parser/Nodes/FigmaGroup.h"
 #include "Parser/Nodes/FigmaNode.h"
+#include "Parser/Nodes/FigmaSection.h"
+#include "Parser/Nodes/Vectors/FigmaEllipse.h"
+#include "Parser/Nodes/Vectors/FigmaRectangleVector.h"
+#include "Parser/Nodes/Vectors/FigmaVectorNode.h"
 
 
 void UImageWidgetBuilder::SetTexture2DBuilder(const TObjectPtr<UTexture2DBuilder>& InTexture2DBuilder)
@@ -55,46 +60,9 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Widg
 		UE_LOG_Figma2UMG(Warning, TEXT("[UImageWidgetBuilder::PatchAndInsertWidget] Node<%s> %s didn't set the Texture2DBuilder or UMaterial."), *Node->GetClass()->GetName(), *Node->GetNodeName());
 	}
 
-	if (const TObjectPtr<UTexture2D>& Texture = Texture2DBuilder ? Texture2DBuilder->GetAsset() : nullptr)
-	{
-		Widget->SetBrushFromTexture(Texture, false);
-		FSlateBrush Brush = Widget->GetBrush();
-		Brush.SetImageSize(Node->GetAbsoluteSize());
-		Widget->SetBrush(Brush);
-		Widget->SetColorAndOpacity(FLinearColor::White);
-	}
-	else if (Material)
-	{
-		Widget->SetBrushFromMaterial(Material);
-		FSlateBrush Brush = Widget->GetBrush();
-		Brush.SetImageSize(Node->GetAbsoluteSize());
-		Brush.TintColor = FLinearColor::White;
-		Brush.DrawAs = ESlateBrushDrawType::Box;
-		Brush.Margin.Top = 0.5f;
-		Brush.Margin.Bottom = 0.5f;
-		Brush.Margin.Left = 0.5f;
-		Brush.Margin.Right = 0.5f;
-		Widget->SetBrush(Brush);
-		Widget->SetColorAndOpacity(SolidColor);
-	}
-	else
-	{
-		FSlateBrush Brush = Widget->GetBrush();
-		Brush.TintColor = FLinearColor::White;
-		Brush.DrawAs = ESlateBrushDrawType::Box;
-		Brush.SetImageSize(Node->GetAbsoluteSize());
-		Widget->SetBrush(Brush);
-		if (HasSolidColor)
-		{
-			Widget->SetColorAndOpacity(SolidColor);
-		}
-		else
-		{
-			Widget->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
-		}
-	}
-
 	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
+
+	Setup();
 }
 
 bool UImageWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget)
@@ -116,4 +84,98 @@ TObjectPtr<UWidget> UImageWidgetBuilder::GetWidget() const
 void UImageWidgetBuilder::ResetWidget()
 {
 	Widget = nullptr;
+}
+
+void UImageWidgetBuilder::Setup() const
+{
+	SetupFill();
+
+	if (const UFigmaSection* FigmaSection = Cast<UFigmaSection>(Node))
+	{
+		SetStroke(Widget, FigmaSection->Strokes, FigmaSection->StrokeWeight);
+	}
+	else if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+	{
+		SetStroke(Widget, FigmaGroup->Strokes, FigmaGroup->StrokeWeight);
+
+		const FVector4 Corners = FigmaGroup->RectangleCornerRadii.Num() == 4 ? FVector4(FigmaGroup->RectangleCornerRadii[0], FigmaGroup->RectangleCornerRadii[1], FigmaGroup->RectangleCornerRadii[2], FigmaGroup->RectangleCornerRadii[3])
+			: FVector4(FigmaGroup->CornerRadius, FigmaGroup->CornerRadius, FigmaGroup->CornerRadius, FigmaGroup->CornerRadius);
+		SetCorner(Widget, Corners);
+	}
+	else if (const UFigmaRectangleVector* FigmaRectangleVector = Cast<UFigmaRectangleVector>(Node))
+	{
+		SetStroke(Widget, FigmaRectangleVector->Strokes, FigmaRectangleVector->StrokeWeight);
+
+		const FVector4 Corners = FigmaRectangleVector->RectangleCornerRadii.Num() == 4 ? FVector4(FigmaRectangleVector->RectangleCornerRadii[0], FigmaRectangleVector->RectangleCornerRadii[1], FigmaRectangleVector->RectangleCornerRadii[2], FigmaRectangleVector->RectangleCornerRadii[3])
+			: FVector4(FigmaRectangleVector->CornerRadius, FigmaRectangleVector->CornerRadius, FigmaRectangleVector->CornerRadius, FigmaRectangleVector->CornerRadius);
+
+		SetCorner(Widget, Corners, !Corners.IsNearlyZero3());
+	}
+	else if (const UFigmaVectorNode* FigmaVectorNode = Cast<UFigmaVectorNode>(Node))
+	{
+		SetStroke(Widget, FigmaVectorNode->Strokes, FigmaVectorNode->StrokeWeight);
+	}
+}
+
+void UImageWidgetBuilder::SetupFill() const
+{
+	if (const TObjectPtr<UTexture2D>& Texture = Texture2DBuilder ? Texture2DBuilder->GetAsset() : nullptr)
+	{
+		Widget->SetBrushFromTexture(Texture, false);
+		FSlateBrush Brush = Widget->GetBrush();
+		Brush.SetImageSize(Node->GetAbsoluteSize());
+		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
+		{
+			if (FigmaVectorNode->AbsoluteBoundingBox.Height == FigmaVectorNode->AbsoluteBoundingBox.Width)
+			{
+				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
+			}
+		}
+		SetBrush(Widget, Brush);
+		Widget->SetColorAndOpacity(FLinearColor::White);
+	}
+	else if (Material)
+	{
+		Widget->SetBrushFromMaterial(Material);
+		FSlateBrush Brush = Widget->GetBrush();
+		Brush.SetImageSize(Node->GetAbsoluteSize());
+		Brush.TintColor = FLinearColor::White;
+		Brush.DrawAs = ESlateBrushDrawType::Box;
+		Brush.Margin.Top = 0.5f;
+		Brush.Margin.Bottom = 0.5f;
+		Brush.Margin.Left = 0.5f;
+		Brush.Margin.Right = 0.5f;
+		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
+		{
+			if (FigmaVectorNode->AbsoluteBoundingBox.Height == FigmaVectorNode->AbsoluteBoundingBox.Width)
+			{
+				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
+			}
+		}
+		SetBrush(Widget, Brush);
+		Widget->SetColorAndOpacity(SolidColor);
+	}
+	else
+	{
+		FSlateBrush Brush = Widget->GetBrush();
+		Brush.TintColor = FLinearColor::White;
+		Brush.DrawAs = ESlateBrushDrawType::Box;
+		Brush.SetImageSize(Node->GetAbsoluteSize());
+		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
+		{
+			if (FigmaVectorNode->AbsoluteBoundingBox.Height == FigmaVectorNode->AbsoluteBoundingBox.Width)
+			{
+				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
+			}
+		}
+		SetBrush(Widget, Brush);
+		if (HasSolidColor)
+		{
+			Widget->SetColorAndOpacity(SolidColor);
+		}
+		else
+		{
+			Widget->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
+		}
+	}
 };

@@ -26,6 +26,9 @@ public:
 	virtual TObjectPtr<UWidget> GetWidget() const override;
 	virtual void ResetWidget() override;
 protected:
+	void Setup() const;
+	void SetupFill() const;
+
 	UPROPERTY()
 	TObjectPtr<UTexture2DBuilder> Texture2DBuilder = nullptr;
 
