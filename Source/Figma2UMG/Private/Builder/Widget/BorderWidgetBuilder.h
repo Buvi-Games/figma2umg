@@ -25,10 +25,6 @@ protected:
 
 	void Setup() const;
 
-	void SetFill(const TArray<FFigmaPaint>& Fills) const;
-	void SetStroke(const TArray<FFigmaPaint>& Strokes, const float& StrokeWeight) const;
-	void SetCorner(const FVector4& CornerRadii) const;
-
 	UPROPERTY()
 	TObjectPtr<UBorder> Widget = nullptr;
 };

@@ -6,10 +6,12 @@
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"
 #include "Builder/WidgetBlueprintHelper.h"
+#include "Components/Border.h"
 #include "Components/BorderSlot.h"
 #include "Components/ButtonSlot.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBoxSlot.h"
+#include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/SizeBoxSlot.h"
 #include "Components/VerticalBoxSlot.h"
@@ -370,6 +372,40 @@ void IWidgetBuilder::SetClipsContent() const
 	}
 }
 
+
+void IWidgetBuilder::SetFill(const TArray<FFigmaPaint>& Fills) const
+{
+	const TObjectPtr<UWidget> Widget = GetWidget();
+	if (!Widget)
+		return;
+
+	TObjectPtr<UBorder> Border = Cast<UBorder>(Widget);
+	if (Border)
+	{
+		if (Fills.Num() > 0 && Fills[0].Visible)
+		{
+			if (const TObjectPtr<UMaterialInterface> Material = Fills[0].GetMaterial())
+			{
+				Border->SetBrushColor(FLinearColor::White);
+				Border->SetBrushFromMaterial(Material);
+			}
+			else if (const TObjectPtr<UTexture2D> Texture = Fills[0].GetTexture())
+			{
+				Border->SetBrushColor(FLinearColor::White);
+				Border->SetBrushFromTexture(Texture);
+			}
+			else
+			{
+				Border->SetBrushColor(Fills[0].GetLinearColor());
+			}
+		}
+		else
+		{
+			Border->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+		}
+	}
+}
+
 bool IWidgetBuilder::GetSizeValue(FVector2D& Size, bool& SizeToContent) const
 {
 	if(const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
@@ -626,4 +662,38 @@ void IWidgetBuilder::ProcessComponentPropertyReference(const TObjectPtr<UWidgetB
 	}
 
 	UE_LOG_Figma2UMG(Error, TEXT("[ProcessComponentPropertyReference] Variable '%s' not found in UWidgetBlueprint %s or UWidget %s."), *PropertyReference.Value, *WidgetBlueprint->GetName(), *Widget->GetName());
+}
+
+FSlateBrush IWidgetBuilder::GetBrush(TObjectPtr<UBorder> Widget) const
+{
+	return Widget->Background;
+}
+
+FSlateBrush IWidgetBuilder::GetBrush(TObjectPtr<UImage> Widget) const
+{
+	return Widget->GetBrush();
+}
+
+void IWidgetBuilder::SetBrush(TObjectPtr<UBorder> Widget, FSlateBrush& Brush) const
+{
+	Widget->SetBrush(Brush);
+}
+
+void IWidgetBuilder::SetBrush(TObjectPtr<UImage> Widget, FSlateBrush& Brush) const
+{
+	//This is to force the update as only some of the fields are checked for change.
+	Brush.ImageSize.X += 0.1f;
+	Widget->SetBrush(Brush);
+	Brush.ImageSize.X -= 0.1f;
+	Widget->SetBrush(Brush);
+}
+
+void IWidgetBuilder::SetColorAndOpacity(TObjectPtr<UBorder> Widget, const FLinearColor& Color) const
+{
+	Widget->SetContentColorAndOpacity(Color);
+}
+
+void IWidgetBuilder::SetColorAndOpacity(TObjectPtr<UImage> Widget, const FLinearColor& Color) const
+{
+	Widget->SetColorAndOpacity(Color);
 }
