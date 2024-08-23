@@ -25,12 +25,12 @@ void UFigmaInstance::PrepareForFlow()
 
 FVector2D UFigmaInstance::GetAbsolutePosition() const
 {
-	return AbsoluteBoundingBox.GetPosition();
+	return AbsoluteRenderBounds.GetPosition();
 }
 
 FVector2D UFigmaInstance::GetAbsoluteSize() const
 {
-	return AbsoluteBoundingBox.GetSize();
+	return AbsoluteRenderBounds.GetSize();
 }
 
 void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)

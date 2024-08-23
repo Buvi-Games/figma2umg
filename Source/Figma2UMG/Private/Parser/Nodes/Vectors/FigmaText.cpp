@@ -27,12 +27,12 @@ void UFigmaText::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSha
 
 FVector2D UFigmaText::GetAbsolutePosition() const
 {
-	return AbsoluteBoundingBox.GetPosition();
+	return AbsoluteRenderBounds.GetPosition();
 }
 
 FVector2D UFigmaText::GetAbsoluteSize() const
 {
-	return AbsoluteBoundingBox.GetSize();
+	return AbsoluteRenderBounds.GetSize();
 }
 
 bool UFigmaText::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)

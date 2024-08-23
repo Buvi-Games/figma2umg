@@ -7,7 +7,7 @@
 
 bool UFigmaEllipse::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	if(AbsoluteBoundingBox.Height != AbsoluteBoundingBox.Width)
+	if(AbsoluteRenderBounds.Height != AbsoluteRenderBounds.Width)
 	{
 		return Super::CreateAssetBuilder(InFileKey, AssetBuilders);
 	}
@@ -77,5 +77,5 @@ TScriptInterface<IWidgetBuilder> UFigmaEllipse::CreateWidgetBuilders(bool IsRoot
 bool UFigmaEllipse::DoesSupportImageRef() const
 {
 	// Only Circle ca support by doing RoundCorners
-	return (AbsoluteBoundingBox.Height == AbsoluteBoundingBox.Width);
+	return (AbsoluteRenderBounds.Height == AbsoluteRenderBounds.Width);
 }

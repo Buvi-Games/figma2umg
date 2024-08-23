@@ -94,21 +94,21 @@ void USizeBoxWidgetBuilder::GetValues(EFigmaLayoutSizing& LayoutSizingHorizontal
 	{
 		LayoutSizingHorizontal = FigmaGroup->LayoutSizingHorizontal;
 		LayoutSizingVertical = FigmaGroup->LayoutSizingVertical;
-		FixedWidth = FigmaGroup->AbsoluteBoundingBox.Width;
-		FixedHeight = FigmaGroup->AbsoluteBoundingBox.Height;
+		FixedWidth = FigmaGroup->AbsoluteRenderBounds.Width;
+		FixedHeight = FigmaGroup->AbsoluteRenderBounds.Height;
 	}
 	else if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
 	{
 		LayoutSizingHorizontal = FigmaInstance->LayoutSizingHorizontal;
 		LayoutSizingVertical = FigmaInstance->LayoutSizingVertical;
-		FixedWidth = FigmaInstance->AbsoluteBoundingBox.Width;
-		FixedHeight = FigmaInstance->AbsoluteBoundingBox.Height;
+		FixedWidth = FigmaInstance->AbsoluteRenderBounds.Width;
+		FixedHeight = FigmaInstance->AbsoluteRenderBounds.Height;
 	}
 	else if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
 	{
 		LayoutSizingHorizontal = FigmaText->LayoutSizingHorizontal;
 		LayoutSizingVertical = FigmaText->LayoutSizingVertical;
-		FixedWidth = FigmaText->AbsoluteBoundingBox.Width;
-		FixedHeight = FigmaText->AbsoluteBoundingBox.Height;
+		FixedWidth = FigmaText->AbsoluteRenderBounds.Width;
+		FixedHeight = FigmaText->AbsoluteRenderBounds.Height;
 	}
 }

@@ -410,35 +410,35 @@ bool IWidgetBuilder::GetSizeValue(FVector2D& Size, bool& SizeToContent) const
 {
 	if(const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
 	{
-		Size = FigmaGroup->AbsoluteBoundingBox.GetSize();
+		Size = FigmaGroup->AbsoluteRenderBounds.GetSize();
 		SizeToContent = FigmaGroup->LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || FigmaGroup->LayoutSizingVertical == EFigmaLayoutSizing::FILL;
 		return true;
 	}
 	
 	if (const UFigmaSection* FigmaSection = Cast<UFigmaSection>(Node))
 	{
-		Size = FigmaSection->AbsoluteBoundingBox.GetSize();
+		Size = FigmaSection->AbsoluteRenderBounds.GetSize();
 		SizeToContent = false;
 		return true;
 	}
 	
 	if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
 	{
-		Size = FigmaInstance->AbsoluteBoundingBox.GetSize();
+		Size = FigmaInstance->AbsoluteRenderBounds.GetSize();
 		SizeToContent = false;
 		return true;
 	}
 	
 	if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
 	{
-		Size = FigmaText->AbsoluteBoundingBox.GetSize();
+		Size = FigmaText->AbsoluteRenderBounds.GetSize();
 		SizeToContent = FigmaText->LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || FigmaText->LayoutSizingVertical == EFigmaLayoutSizing::FILL;
 		return true;
 	}
 	
 	if (const UFigmaVectorNode* FigmaVectorNode = Cast<UFigmaVectorNode>(Node))
 	{
-		Size = FigmaVectorNode->AbsoluteBoundingBox.GetSize();
+		Size = FigmaVectorNode->AbsoluteRenderBounds.GetSize();
 		SizeToContent = false;
 		return true;
 	}

@@ -126,7 +126,7 @@ void UImageWidgetBuilder::SetupFill() const
 		Brush.SetImageSize(Node->GetAbsoluteSize());
 		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
 		{
-			if (FigmaVectorNode->AbsoluteBoundingBox.Height == FigmaVectorNode->AbsoluteBoundingBox.Width)
+			if (FigmaVectorNode->AbsoluteRenderBounds.Height == FigmaVectorNode->AbsoluteRenderBounds.Width)
 			{
 				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
 			}
@@ -147,7 +147,7 @@ void UImageWidgetBuilder::SetupFill() const
 		Brush.Margin.Right = 0.5f;
 		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
 		{
-			if (FigmaVectorNode->AbsoluteBoundingBox.Height == FigmaVectorNode->AbsoluteBoundingBox.Width)
+			if (FigmaVectorNode->AbsoluteRenderBounds.Height == FigmaVectorNode->AbsoluteRenderBounds.Width)
 			{
 				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
 			}
@@ -163,7 +163,7 @@ void UImageWidgetBuilder::SetupFill() const
 		Brush.SetImageSize(Node->GetAbsoluteSize());
 		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
 		{
-			if (FigmaVectorNode->AbsoluteBoundingBox.Height == FigmaVectorNode->AbsoluteBoundingBox.Width)
+			if (FigmaVectorNode->AbsoluteRenderBounds.Height == FigmaVectorNode->AbsoluteRenderBounds.Width)
 			{
 				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
 			}

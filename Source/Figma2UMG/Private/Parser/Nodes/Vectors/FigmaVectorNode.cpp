@@ -20,12 +20,12 @@ void UFigmaVectorNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, cons
 
 FVector2D UFigmaVectorNode::GetAbsolutePosition() const
 {
-	return AbsoluteBoundingBox.GetPosition();
+	return AbsoluteRenderBounds.GetPosition();
 }
 
 FVector2D UFigmaVectorNode::GetAbsoluteSize() const
 {
-	return AbsoluteBoundingBox.GetSize();
+	return AbsoluteRenderBounds.GetSize();
 }
 
 bool UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)

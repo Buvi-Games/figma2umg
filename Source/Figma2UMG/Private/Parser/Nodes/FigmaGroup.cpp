@@ -72,12 +72,12 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 
 FVector2D UFigmaGroup::GetAbsolutePosition() const
 {
-	return AbsoluteBoundingBox.GetPosition();
+	return AbsoluteRenderBounds.GetPosition();
 }
 
 FVector2D UFigmaGroup::GetAbsoluteSize() const
 {
-	return AbsoluteBoundingBox.GetSize();
+	return AbsoluteRenderBounds.GetSize();
 }
 
 FMargin UFigmaGroup::GetPadding() const

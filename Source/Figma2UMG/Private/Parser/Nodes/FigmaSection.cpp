@@ -33,12 +33,12 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 
 FVector2D UFigmaSection::GetAbsolutePosition() const
 {
-	return AbsoluteBoundingBox.GetPosition();
+	return AbsoluteRenderBounds.GetPosition();
 }
 
 FVector2D UFigmaSection::GetAbsoluteSize() const
 {
-	return AbsoluteBoundingBox.GetSize();
+	return AbsoluteRenderBounds.GetSize();
 }
 
 FString UFigmaSection::GetCurrentPackagePath() const
