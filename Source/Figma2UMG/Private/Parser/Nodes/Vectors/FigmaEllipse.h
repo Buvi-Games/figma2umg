@@ -14,6 +14,10 @@ class FIGMA2UMG_API UFigmaEllipse : public UFigmaVectorNode
 public:
 	GENERATED_BODY()
 
+	// UFigmaNode
+	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
+	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
+
 	virtual bool DoesSupportImageRef() const override;
 
 	UPROPERTY()
