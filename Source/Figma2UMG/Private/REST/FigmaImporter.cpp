@@ -20,6 +20,7 @@
 #include "Misc/ScopedSlowTask.h"
 #include "Misc/SlowTaskStack.h"
 #include "Parser/FigmaFile.h"
+#include "Misc/FileHelper.h"
 
 UFigmaImporter::UFigmaImporter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

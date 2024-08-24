@@ -9,6 +9,8 @@
 #include "Builder/Asset/FontBuilder.h"
 #include "Builder/Widget/TextBlockWidgetBuilder.h"
 #include "Components/TextBlock.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonTypes.h"
 
 void UFigmaText::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {

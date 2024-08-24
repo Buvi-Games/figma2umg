@@ -2,6 +2,9 @@
 
 #include "FigmaTypeStyle.h"
 
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonTypes.h"
+
 void FFigmaTypeStyle::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
 	static FString FillsStr("fills");

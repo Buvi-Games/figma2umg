@@ -6,8 +6,10 @@
 #include "Builder/Asset/MaterialBorderBuilder.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
+#include "Dom/JsonObject.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Materials/MaterialInstanceConstant.h"
+#include "Serialization/JsonTypes.h"
 
 void FFigmaPaint::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
