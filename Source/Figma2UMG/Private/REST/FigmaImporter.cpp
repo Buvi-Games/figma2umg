@@ -833,18 +833,18 @@ void UFigmaImporter::HandleFontDownload(bool Succeeded)
 
 void UFigmaImporter::LoadOrCreateAssets()
 {
-	if (SubProgress)
-	{
-		delete SubProgress;
-		SubProgress = nullptr;
-		SubProgressThisFrame = 0.0f;
-	}
-
 	UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
 	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
+			if (SubProgress)
+			{
+				delete SubProgress;
+				SubProgress = nullptr;
+				SubProgressThisFrame = 0.0f;
+			}
+
 			FGCScopeGuard GCScopeGuard;
 			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
 			{
