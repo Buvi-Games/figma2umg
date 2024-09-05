@@ -59,6 +59,7 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 	ContentRootFolder = InProperties->ContentRootFolder;
 	RequesterCallback = InRequesterCallback;
 
+	MaxURLImageRequest = InProperties->MaxURLImageRequest;
 	NodeImageScale = InProperties->NodeImageScale;
 
 	DownloadFontsFromGoogle = InProperties->DownloadFontsFromGoogle;
@@ -552,7 +553,7 @@ void UFigmaImporter::RequestImageURLs()
 				FString ImageIdsFormated;
 				FString ImageRef;
 				int RequestCount = 0;
-				for (int i = 0; i < Requests->Requests.Num() && RequestCount < 30; i++)
+				for (int i = 0; i < Requests->Requests.Num() && RequestCount < MaxURLImageRequest; i++)
 				{
 					if(!Requests->Requests[i].URL.IsEmpty())
 						continue;

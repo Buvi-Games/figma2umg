@@ -21,6 +21,7 @@ URequestParams::URequestParams(const FObjectInitializer& ObjectInitializer)
 		FrameToButton = Settings->FrameToButton;
 		WidgetOverrides = Settings->WidgetOverrides;
 		SaveAllAtEnd = Settings->SaveAllAtEnd;
+		MaxURLImageRequest = Settings->MaxURLImageRequest;
 		NodeImageScale = Settings->NodeImageScale;
 		ContentRootFolder = Settings->ContentRootFolder;
 	}

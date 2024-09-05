@@ -136,6 +136,7 @@ protected:
 
 	FOnFigmaImportUpdateStatusCB RequesterCallback;
 
+	int MaxURLImageRequest = 20;
 	float NodeImageScale = 4.0f;
 
 	bool DownloadFontsFromGoogle = false;

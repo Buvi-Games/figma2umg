@@ -36,6 +36,9 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Implement the prototype flow."))
 	bool UsePrototypeFlow = true;
 
+	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Maximun amount of Images requested per REST request.", ClampMin = "1", ClampMax = "30", UIMin = "1", UIMax = "30"))
+	int MaxURLImageRequest = 20;
+
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma|Options", ToolTip = "Scale for node images requested from Figma (between 0.01 and 4).", ClampMin = "0.1", ClampMax = "4.0", UIMin = "0.1", UIMax = "4.0"))
 	float NodeImageScale = 4.0f;
 
