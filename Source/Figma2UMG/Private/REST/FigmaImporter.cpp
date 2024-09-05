@@ -608,6 +608,8 @@ void UFigmaImporter::OnFigmaImagesURLReceived(FHttpRequestPtr HttpRequest, FHttp
 		constexpr int64 SkipFlags = 0;
 		constexpr bool StrictMode = false;
 		FText OutFailReason;
+		TryFixNullImagesURLResponse(JsonObj);
+
 		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 		{
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] %u images received from Figma API."), ImagesRequestResult.Images.Num());
@@ -629,6 +631,31 @@ void UFigmaImporter::OnFigmaImagesURLReceived(FHttpRequestPtr HttpRequest, FHttp
 			UpdateStatus(eRequestStatus::Failed, OutFailReason.ToString());
 		}
 	}
+}
+
+void UFigmaImporter::TryFixNullImagesURLResponse(TSharedPtr<FJsonObject> JsonObj)
+{
+	TSharedPtr<FJsonValue> Field = JsonObj->TryGetField(TEXT("images"));
+	if (!Field)
+		return;
+
+	if (Field->Type == EJson::Array)
+	{
+		
+	}
+	else if (Field->Type == EJson::Object)
+	{
+		TSharedPtr<FJsonValueString> empty = MakeShared<FJsonValueString>(FString("INVALID"));
+		TSharedPtr<FJsonObject> ObjectValue = Field->AsObject();
+		for (TTuple<FString, TSharedPtr<FJsonValue>>& Entry : ObjectValue->Values)
+		{
+			if (Entry.Value.IsValid() && Entry.Value->IsNull())
+			{
+				Entry.Value = empty;
+			}
+		}
+	}
+
 }
 
 void UFigmaImporter::DownloadNextImage()

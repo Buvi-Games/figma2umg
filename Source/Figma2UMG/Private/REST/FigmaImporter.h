@@ -62,6 +62,7 @@ protected:
 	void RequestImageURLs();
 
 	void OnFigmaImagesURLReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded);
+	void TryFixNullImagesURLResponse(TSharedPtr<FJsonObject> JsonObj);
 
 	UFUNCTION()
 	void DownloadNextImage();
