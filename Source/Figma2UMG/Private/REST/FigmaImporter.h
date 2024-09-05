@@ -31,8 +31,6 @@ protected:
 	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FHttpRequestCompleteDelegate& HttpRequestCompleteDelegate);
 	bool CreateRequest(const char* EndPoint, const FString& CurrentFileKey, const FString& RequestIds, const FString& Suffix, const FHttpRequestCompleteDelegate& HttpRequestCompleteDelegate);
 	void UpdateStatus(eRequestStatus Status, FString Message);
-	void UpdateProgress(float ExpectedWorkThisFrame, const FText& Message);
-	void UpdateProgressGameThread();
 	void ResetProgressBar();
 
 	TSharedPtr<FJsonObject> ParseRequestReceived(FString MessagePrefix, FHttpResponsePtr HttpResponse);
@@ -163,11 +161,7 @@ protected:
 	FFontRequests RequestedFonts;
 	int FontDownloadCount = 0;
 
-	FScopedSlowTask* Progress = nullptr;
-	float ProgressThisFrame = 0.0f;
-	FText ProgressMessage;
-
-	struct SubProgressData
+	struct ProgressBar
 	{
 	public:
 		void Start(float InAmountOfWork, const FText& InDefaultMessage);
@@ -177,15 +171,16 @@ protected:
 	private:
 		void UpdateGameThread();
 
-		FScopedSlowTask* SubProgress = nullptr;
-		float SubProgressThisFrame = 0.0f;
-		FText SubProgressMessage;
+		FScopedSlowTask* ProgressTask = nullptr;
+		float ProgressThisFrame = 0.0f;
+		FText ProgressMessage;
 
 	};
 
-	SubProgressData SubProgressImageURLRequest;
-	SubProgressData SubProgressImageDownload;
-	SubProgressData SubProgressGFontDownload;
+	ProgressBar MainProgress;
+	ProgressBar SubProgressImageURLRequest;
+	ProgressBar SubProgressImageDownload;
+	ProgressBar SubProgressGFontDownload;
 };
 
 template <class BuilderT>

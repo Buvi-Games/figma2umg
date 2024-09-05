@@ -73,11 +73,10 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 void UFigmaImporter::Run()
 {
 	int WorkCount = (LibraryFileKeys.Num() * 3/*Request, Parse, PostSerialization*/) + 3/*Request, Parse, PostSerialization*/ + 15;//Fix, Builders, Images, Fonts, Load/Create, Patch(WidgetBuilders,PreInsert+Compiling+Reloading+Binds+Properties), Post-patch
-	Progress = new FScopedSlowTask(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
-	Progress->MakeDialog();
+	MainProgress.Start(WorkCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
 	if(LibraryFileKeys.IsEmpty())
 	{
-		UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_RequestFile", "Downloading Design File."));
+		MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_RequestFile", "Downloading Design File."));
 		if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
 		{
 			UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
@@ -192,51 +191,14 @@ void UFigmaImporter::UpdateStatus(eRequestStatus Status, FString Message)
 	}
 }
 
-void UFigmaImporter::UpdateProgress(float ExpectedWorkThisFrame, const FText& Message)
-{
-	ProgressThisFrame += ExpectedWorkThisFrame;
-	ProgressMessage = Message;
-	AsyncTask(ENamedThreads::GameThread, [this]()
-		{
-			UpdateProgressGameThread();
-		});
-}
-
-void UFigmaImporter::UpdateProgressGameThread()
-{
-	const float WorkRemaining = Progress ? (Progress->TotalAmountOfWork - (Progress->CompletedWork + Progress->CurrentFrameScope)) : 0.0f;
-	if (Progress && ProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
-	{
-		Progress->EnterProgressFrame(FMath::Min(ProgressThisFrame, WorkRemaining), ProgressMessage);
-		ProgressThisFrame = 0.0f;
-	}
-}
-
 void UFigmaImporter::ResetProgressBar()
 {
-	if (Progress == nullptr)
-		return;
-
 	AsyncTask(ENamedThreads::GameThread, [this]()
 	{
-		const FSlowTaskStack& Stack = GWarn->GetScopeStack();
-		if(Progress != nullptr && Stack.Last() == Progress)
-		{
-		   delete Progress;
-		   Progress = nullptr;
-		   ProgressThisFrame = 0.0f;
-
-		   SubProgressImageURLRequest.Finish();
-		   SubProgressImageDownload.Finish();
-		   SubProgressGFontDownload.Finish();
-		}
-		else
-		{
-			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
-				{
-					ResetProgressBar();
-				});		
-		}
+		SubProgressGFontDownload.Finish();
+		SubProgressImageDownload.Finish();
+		SubProgressImageURLRequest.Finish();
+		MainProgress.Finish();
 	});
 }
 
@@ -333,7 +295,7 @@ void UFigmaImporter::DownloadNextDependency()
 	{
 		if (Lib.Value == nullptr)
 		{
-			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_RequestLib", "Downloading Library File."));
+			MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_RequestLib", "Downloading Library File."));
 			CurrentLibraryFileKey = Lib.Key;
 			if (CreateRequest(FIGMA_ENDPOINT_FILES, CurrentLibraryFileKey, FString(), OnVaRestLibraryFileRequestDelegate))
 			{
@@ -343,7 +305,7 @@ void UFigmaImporter::DownloadNextDependency()
 		}
 	}
 
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_RequestFile", "Downloading Design File."));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_RequestFile", "Downloading Design File."));
 	if (CreateRequest(FIGMA_ENDPOINT_FILES, FileKey, Ids, OnVaRestFileRequestDelegate))
 	{
 		UE_LOG_Figma2UMG(Display, TEXT("Requesting file %s from Figma API"), *FileKey);
@@ -352,7 +314,7 @@ void UFigmaImporter::DownloadNextDependency()
 
 void UFigmaImporter::OnFigmaLibraryFileRequestReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ParseLib", "Parsing Library File."));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ParseLib", "Parsing Library File."));
 	;
 	TSharedPtr<FJsonObject> JsonObj = ParseRequestReceived(TEXT("[Figma library file request] "), HttpResponse);
 	if (JsonObj.IsValid())
@@ -374,7 +336,7 @@ void UFigmaImporter::OnFigmaLibraryFileRequestReceived(FHttpRequestPtr HttpReque
 				FText OutFailReason;
 				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), CurrentFile->StaticClass(), CurrentFile, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 				{
-					UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeLib", "PostSerialize Library File."));
+					MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeLib", "PostSerialize Library File."));
 					CurrentFile->PostSerialize(CurrentLibraryFileKey, ContentRootFolder, JsonObj.ToSharedRef());
 					CurrentFile->SetImporter(this);
 					CurrentLibraryFileKey = nullptr;
@@ -392,7 +354,7 @@ void UFigmaImporter::OnFigmaLibraryFileRequestReceived(FHttpRequestPtr HttpReque
 
 void UFigmaImporter::OnFigmaFileRequestReceived(FHttpRequestPtr HttpRequest, FHttpResponsePtr HttpResponse, bool bSucceeded)
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ParseFile", "Parsing Design File."));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_ParseFile", "Parsing Design File."));
 
 	TSharedPtr<FJsonObject> JsonObj = ParseRequestReceived(TEXT("[Figma file request] "), HttpResponse);
 	if (JsonObj.IsValid())
@@ -414,7 +376,7 @@ void UFigmaImporter::OnFigmaFileRequestReceived(FHttpRequestPtr HttpRequest, FHt
 				if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), File->StaticClass(), File, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 				{
 					UE_LOG_Figma2UMG(Display, TEXT("Post-Serialize"));
-					UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeFile", "PostSerialize Design File."));
+					MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostSerializeFile", "PostSerialize Design File."));
 					File->PostSerialize(FileKey, ContentRootFolder, JsonObj.ToSharedRef());
 					File->SetImporter(this);
 
@@ -432,7 +394,7 @@ void UFigmaImporter::FixReferences()
 {
 	AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
 		{
-			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_FixRefs", "Fixing component references."));
+			MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_FixRefs", "Fixing component references."));
 			if (UsePrototypeFlow)
 			{
 				File->PrepareForFlow();
@@ -451,7 +413,7 @@ void UFigmaImporter::FixReferences()
 				File->FixRemoteReferences(LibraryFileKeys);
 			}
 
-			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_FixRefs", "Creating Builders."));
+			MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_FixRefs", "Creating Builders."));
 			File->CreateAssetBuilders(OnBuildersCreatedDelegate, AssetBuilders);
 		});
 }
@@ -472,7 +434,7 @@ void UFigmaImporter::BuildImageDependency()
 {
 	AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
 		{
-			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Building Image dependency."));
+			MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Building Image dependency."));
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request]"));
 			RequestedImages.Reset();
 
@@ -485,7 +447,7 @@ void UFigmaImporter::BuildImageDependency()
 				}
 			}
 
-			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Request Image's URLs."));
+			MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Request Image's URLs."));
 			RequestImageRefURLs();
 		});
 }
@@ -593,7 +555,7 @@ void UFigmaImporter::RequestImageURLs()
 			SubProgressImageURLRequest.Finish();
 			SubProgressImageDownload.Start(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
 
-			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Downloading Images."));
+			MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Downloading Images."));
 
 			AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
 				{
@@ -718,7 +680,7 @@ void UFigmaImporter::FetchGoogleFontsList()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
 	{
-		UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Managing Fonts."));
+		MainProgress.Update(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Managing Fonts."));
 
 		SubProgressGFontDownload.Start(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google"));
 		SubProgressGFontDownload.Update(5, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
@@ -860,13 +822,13 @@ void UFigmaImporter::HandleFontDownload(bool Succeeded)
 
 void UFigmaImporter::LoadOrCreateAssets()
 {
-	UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
+	MainProgress.Update(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_LoadOrCreateAssets", "Loading or create UAssets"));
 	UE_LOG_Figma2UMG(Display, TEXT("Creating UAssets"));
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			SubProgressImageDownload.Finish();
 			SubProgressGFontDownload.Finish();
+			SubProgressImageDownload.Finish();
 
 			FGCScopeGuard GCScopeGuard;
 			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
@@ -892,7 +854,7 @@ void UFigmaImporter::OnAssetsCreated(bool Succeeded)
 
 void UFigmaImporter::CreateWidgetBuilders()
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_CreateWidgetBuilders", "Creating UWidget Builders"));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_CreateWidgetBuilders", "Creating UWidget Builders"));
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
@@ -911,7 +873,7 @@ void UFigmaImporter::CreateWidgetBuilders()
 
 void UFigmaImporter::PatchPreInsertWidget()
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patch PreInsert Widgets"));
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
@@ -930,7 +892,7 @@ void UFigmaImporter::PatchPreInsertWidget()
 
 void UFigmaImporter::CompileBPs(bool ProceedToNextState)
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Compiling BluePrints"));
 
 	AsyncTask(ENamedThreads::GameThread, [this, ProceedToNextState]()
 		{
@@ -952,7 +914,7 @@ void UFigmaImporter::CompileBPs(bool ProceedToNextState)
 
 void UFigmaImporter::ReloadBPAssets(bool ProceedToNextState)
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Reloading compiled BluePrints"));
 
 	AsyncTask(ENamedThreads::GameThread, [this, ProceedToNextState]()
 		{
@@ -975,7 +937,7 @@ void UFigmaImporter::ReloadBPAssets(bool ProceedToNextState)
 
 void UFigmaImporter::PatchWidgetBinds()
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Binds"));
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
@@ -994,7 +956,7 @@ void UFigmaImporter::PatchWidgetBinds()
 
 void UFigmaImporter::PatchWidgetProperties()
 {
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PatchPreInsertWidget", "Patching Widget Properties"));
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
@@ -1021,7 +983,7 @@ void UFigmaImporter::OnPatchUAssets(bool Succeeded)
 
 	
 	UE_LOG_Figma2UMG(Display, TEXT("Post-patch UAssets."));
-	UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostPatch", "Post-patch UAssets"));
+	MainProgress.Update(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_PostPatch", "Post-patch UAssets"));
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
@@ -1075,41 +1037,55 @@ void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
 		});
 }
 
-void UFigmaImporter::SubProgressData::Start(float InAmountOfWork, const FText& InDefaultMessage)
+void UFigmaImporter::ProgressBar::Start(float InAmountOfWork, const FText& InDefaultMessage)
 {
-	SubProgress = new FScopedSlowTask(InAmountOfWork, InDefaultMessage);
-	SubProgress->MakeDialog();
+	ProgressTask = new FScopedSlowTask(InAmountOfWork, InDefaultMessage);
+	ProgressTask->MakeDialog();
 }
 
-void UFigmaImporter::SubProgressData::Update(float ExpectedWorkThisFrame, const FText& Message)
+void UFigmaImporter::ProgressBar::Update(float ExpectedWorkThisFrame, const FText& Message)
 {
-	SubProgressThisFrame += ExpectedWorkThisFrame;
-	SubProgressMessage = Message;
+	ProgressThisFrame += ExpectedWorkThisFrame;
+	ProgressMessage = Message;
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
 			UpdateGameThread();
 		});
 }
 
-void UFigmaImporter::SubProgressData::UpdateGameThread()
+void UFigmaImporter::ProgressBar::UpdateGameThread()
 {
-	const float WorkRemaining = SubProgress ? (SubProgress->TotalAmountOfWork - (SubProgress->CompletedWork + SubProgress->CurrentFrameScope)) : 0.0f;
-	if (SubProgress && SubProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
+	const float WorkRemaining = ProgressTask ? (ProgressTask->TotalAmountOfWork - (ProgressTask->CompletedWork + ProgressTask->CurrentFrameScope)) : 0.0f;
+	if (ProgressTask && ProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
 	{
-		SubProgress->EnterProgressFrame(FMath::Min(SubProgressThisFrame, WorkRemaining), SubProgressMessage);
-		SubProgressThisFrame = 0.0f;
+		ProgressTask->EnterProgressFrame(FMath::Min(ProgressThisFrame, WorkRemaining), ProgressMessage);
+		ProgressThisFrame = 0.0f;
 	}
 }
 
-void UFigmaImporter::SubProgressData::Finish()
+void UFigmaImporter::ProgressBar::Finish()
 {
 	if(IsInGameThread())
 	{
-		delete SubProgress;
-		SubProgress = nullptr;
-		SubProgressThisFrame = 0.0f;
+		if (ProgressTask != nullptr)
+		{
+			const FSlowTaskStack& Stack = GWarn->GetScopeStack();
+			if(Stack.Last() == ProgressTask)
+			{
+				delete ProgressTask;
+				ProgressTask = nullptr;
+				ProgressThisFrame = 0.0f;
+			}
+			else
+			{
+				AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
+					{
+						Finish();
+					});
+			}
+		}
 	}
-	else
+	else if (ProgressTask != nullptr)
 	{
 		AsyncTask(ENamedThreads::GameThread, [this]()
 			{
