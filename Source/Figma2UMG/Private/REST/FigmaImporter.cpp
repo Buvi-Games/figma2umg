@@ -127,6 +127,7 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 		}
 	}
 
+	UE_LOG_Figma2UMG(Display, TEXT("[Figma REST] URL: %s."), *URL);
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = FHttpModule::Get().CreateRequest();
 	HttpRequest->SetURL(URL);
 	HttpRequest->SetVerb(TEXT("GET"));
@@ -211,26 +212,6 @@ void UFigmaImporter::UpdateProgressGameThread()
 	}
 }
 
-void UFigmaImporter::UpdateSubProgress(float ExpectedWorkThisFrame, const FText& Message)
-{
-	SubProgressThisFrame += ExpectedWorkThisFrame;
-	SubProgressMessage = Message;
-	AsyncTask(ENamedThreads::GameThread, [this]()
-		{
-			UpdateSubProgressGameThread();
-		});
-}
-
-void UFigmaImporter::UpdateSubProgressGameThread()
-{
-	const float WorkRemaining = SubProgress ? (SubProgress->TotalAmountOfWork - (SubProgress->CompletedWork + SubProgress->CurrentFrameScope)) : 0.0f;
-	if (SubProgress && SubProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
-	{
-		SubProgress->EnterProgressFrame(FMath::Min(SubProgressThisFrame, WorkRemaining), SubProgressMessage);
-		SubProgressThisFrame = 0.0f;
-	}
-}
-
 void UFigmaImporter::ResetProgressBar()
 {
 	if (Progress == nullptr)
@@ -245,9 +226,9 @@ void UFigmaImporter::ResetProgressBar()
 		   Progress = nullptr;
 		   ProgressThisFrame = 0.0f;
 
-		   delete SubProgress;
-		   SubProgress = nullptr;
-		   SubProgressThisFrame = 0.0f;
+		   SubProgressImageURLRequest.Finish();
+		   SubProgressImageDownload.Finish();
+		   SubProgressGFontDownload.Finish();
 		}
 		else
 		{
@@ -315,7 +296,26 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 			}
 #if (ENGINE_MAJOR_VERSION < 5 || ENGINE_MINOR_VERSION <= 3)
 		default:
-			UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(HttpResponse->GetResponseCode()) + TEXT(")"));
+			TSharedPtr<FJsonObject> JsonObj;
+			TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
+			bool DeserializeSuccess = FJsonSerializer::Deserialize(Reader, JsonObj) && JsonObj.IsValid();
+			if (DeserializeSuccess)
+			{
+				static FString StatusStr("status");
+				static FString ErrorStr("err");
+				if (JsonObj->HasField(StatusStr) && JsonObj->HasField(ErrorStr))
+				{
+					UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField(ErrorStr));
+				}
+				else
+				{
+					UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(HttpResponse->GetResponseCode()) + TEXT(")"));
+				}
+			}
+			else
+			{
+				UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(HttpResponse->GetResponseCode()) + TEXT(")"));
+			}
 			break;
 #endif
 		}
@@ -504,6 +504,8 @@ void UFigmaImporter::RequestImageRefURLs()
 			}
 			else
 			{
+				TotalImageURLRequestedCount = RequestedImages.GetRequestTotalCount();
+				SubProgressImageURLRequest.Start(TotalImageURLRequestedCount, NSLOCTEXT("Figma2UMG", "Figma2UMG_RequestImageURL", "Requesting Image's URL from FIGMA"));
 				AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
 					{
 						RequestImageURLs();
@@ -558,6 +560,9 @@ void UFigmaImporter::RequestImageURLs()
 					if(!Requests->Requests[i].URL.IsEmpty())
 						continue;
 
+					if (Requests->Requests[i].GetRequestedURL())
+						continue;
+
 					if(ImageIdsFormated.IsEmpty())
 					{
 						ImageIdsFormated += Requests->Requests[i].Id;
@@ -572,23 +577,21 @@ void UFigmaImporter::RequestImageURLs()
 
 				if (!ImageIdsFormated.IsEmpty())
 				{
+					TArray<FStringFormatArg> args;
+					args.Add(FMath::Min(ImageURLRequestedCount + RequestCount, TotalImageURLRequestedCount));
+					args.Add(TotalImageURLRequestedCount);
+					FString msg = FString::Format(TEXT("Requesting Image's URL {0} of {1}"), args);
+					SubProgressImageURLRequest.Update(RequestCount, FText::FromString(msg));
+
 					ImageIdsFormated += "&scale=" + FString::SanitizeFloat(NodeImageScale, 0);
-				   if (CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate))
-				   {
-					   UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), Requests->Requests.Num(), *Requests->FileKey);
-				   }
-				   return;
+					UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] Requesting %u images in file %s from Figma API."), RequestCount, *Requests->FileKey);
+					CreateRequest(FIGMA_ENDPOINT_IMAGES, Requests->FileKey, ImageIdsFormated, OnVaRestImagesRequestDelegate);
+					return;
 				}
 			}
 
-			if (SubProgress)
-			{
-				delete SubProgress;
-				SubProgress = nullptr;
-				SubProgressThisFrame = 0.0f;
-			}
-			SubProgress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
-			SubProgress->MakeDialog();
+			SubProgressImageURLRequest.Finish();
+			SubProgressImageDownload.Start(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_ImportProgress", "Importing from FIGMA"));
 
 			UpdateProgress(1.0f, NSLOCTEXT("Figma2UMG", "Figma2UMG_Image", "Downloading Images."));
 
@@ -612,16 +615,19 @@ void UFigmaImporter::OnFigmaImagesURLReceived(FHttpRequestPtr HttpRequest, FHttp
 
 		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), &ImagesRequestResult, CheckFlags, SkipFlags, StrictMode, &OutFailReason))
 		{
-			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] %u images received from Figma API."), ImagesRequestResult.Images.Num());
+			int ValidURL = 0;
 			for (TPair<FString, FString> Element : ImagesRequestResult.Images)
 			{
-				if(Element.Value.IsEmpty())
+				if(Element.Value.IsEmpty() || Element.Value.Equals("INVALID"))
 				{
 					UE_LOG_Figma2UMG(Warning, TEXT("[Figma images Request] Coudn't get URL for Id %s."), *Element.Key);
 					continue;
 				}
 				RequestedImages.SetURL(Element.Key, Element.Value);
+				ValidURL++;
 			}
+			ImageURLRequestedCount += ImagesRequestResult.Images.Num();
+			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] %u/%u images received from Figma API."), ValidURL, ImagesRequestResult.Images.Num());
 
 			ImageDownloadCount = 0;
 			RequestImageURLs();
@@ -673,7 +679,7 @@ void UFigmaImporter::DownloadNextImage()
 				args.Add(static_cast<int>(ImageCountTotal));
 				FString msg = FString::Format(TEXT("Downloading Image {0} of {1}"), args);
 
-				UpdateSubProgress(100.f / ImageCountTotal, FText::FromString(msg));
+				SubProgressImageDownload.Update(100.f / ImageCountTotal, FText::FromString(msg));
 
 				UE_LOG_Figma2UMG(Display, TEXT("Downloading image (%i/%i) %s at %s."), ImageDownloadCount, static_cast<int>(ImageCountTotal), *ImageRequest->ImageName, *ImageRequest->URL);
 				ImageRequest->StartDownload(OnImageDownloadRequestCompleted);
@@ -682,6 +688,7 @@ void UFigmaImporter::DownloadNextImage()
 			{
 				AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this]()
 					{
+						SubProgressImageDownload.Finish();
 						if (DownloadFontsFromGoogle)
 						{
 							FetchGoogleFontsList();
@@ -711,18 +718,10 @@ void UFigmaImporter::FetchGoogleFontsList()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
 	{
-		if (SubProgress)
-		{
-			delete SubProgress;
-			SubProgress = nullptr;
-			SubProgressThisFrame = 0.0f;
-		}
-
 		UpdateProgress(1, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Managing Fonts."));
 
-		SubProgress = new FScopedSlowTask(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google"));
-		SubProgress->MakeDialog();
-		UpdateSubProgress(5, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
+		SubProgressGFontDownload.Start(100, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google"));
+		SubProgressGFontDownload.Update(5, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
 
 
 		const UFigmaImportSubsystem* Importer = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>();
@@ -805,7 +804,7 @@ void UFigmaImporter::BuildFontDependency()
 {
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			UpdateSubProgress(5, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
+			SubProgressGFontDownload.Update(5, NSLOCTEXT("Figma2UMG", "Figma2UMG_GFontRequest", "Requesting Font list from Google."));
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma GFonts Request]"));
 			RequestedFonts.Reset();
 
@@ -835,7 +834,7 @@ void UFigmaImporter::DownloadNextFont()
 		args.Add(static_cast<int>(FontCountTotal));
 		FString msg = FString::Format(TEXT("Downloading font {0} of {1}"), args);
 
-		UpdateSubProgress(80.f / FontCountTotal, FText::FromString(msg));
+		SubProgressGFontDownload.Update(80.f / FontCountTotal, FText::FromString(msg));
 
 		UE_LOG_Figma2UMG(Display, TEXT("Downloading font (%i/%i) %s(%s) at %s."), FontDownloadCount, static_cast<int>(FontCountTotal), *FontRequest->FamilyInfo->Family, *FontRequest->Variant, *FontRequest->GetURL());
 		FontRequest->StartDownload(OnFontDownloadRequestCompleted);
@@ -866,12 +865,8 @@ void UFigmaImporter::LoadOrCreateAssets()
 
 	AsyncTask(ENamedThreads::GameThread, [this]()
 		{
-			if (SubProgress)
-			{
-				delete SubProgress;
-				SubProgress = nullptr;
-				SubProgressThisFrame = 0.0f;
-			}
+			SubProgressImageDownload.Finish();
+			SubProgressGFontDownload.Finish();
 
 			FGCScopeGuard GCScopeGuard;
 			for (TScriptInterface<IAssetBuilder>& AssetBuilder : AssetBuilders)
@@ -1078,4 +1073,48 @@ void UFigmaImporter::OnPostPatchUAssets(bool Succeeded)
 				UpdateStatus(eRequestStatus::Failed, TEXT("Failed at Post-patch of UAssets."));
 			}
 		});
+}
+
+void UFigmaImporter::SubProgressData::Start(float InAmountOfWork, const FText& InDefaultMessage)
+{
+	SubProgress = new FScopedSlowTask(InAmountOfWork, InDefaultMessage);
+	SubProgress->MakeDialog();
+}
+
+void UFigmaImporter::SubProgressData::Update(float ExpectedWorkThisFrame, const FText& Message)
+{
+	SubProgressThisFrame += ExpectedWorkThisFrame;
+	SubProgressMessage = Message;
+	AsyncTask(ENamedThreads::GameThread, [this]()
+		{
+			UpdateGameThread();
+		});
+}
+
+void UFigmaImporter::SubProgressData::UpdateGameThread()
+{
+	const float WorkRemaining = SubProgress ? (SubProgress->TotalAmountOfWork - (SubProgress->CompletedWork + SubProgress->CurrentFrameScope)) : 0.0f;
+	if (SubProgress && SubProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
+	{
+		SubProgress->EnterProgressFrame(FMath::Min(SubProgressThisFrame, WorkRemaining), SubProgressMessage);
+		SubProgressThisFrame = 0.0f;
+	}
+}
+
+void UFigmaImporter::SubProgressData::Finish()
+{
+	if(IsInGameThread())
+	{
+		delete SubProgress;
+		SubProgress = nullptr;
+		SubProgressThisFrame = 0.0f;
+	}
+	else
+	{
+		AsyncTask(ENamedThreads::GameThread, [this]()
+			{
+				Finish();
+			});
+		
+	}
 }

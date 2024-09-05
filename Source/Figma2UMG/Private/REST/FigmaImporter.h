@@ -33,8 +33,6 @@ protected:
 	void UpdateStatus(eRequestStatus Status, FString Message);
 	void UpdateProgress(float ExpectedWorkThisFrame, const FText& Message);
 	void UpdateProgressGameThread();
-	void UpdateSubProgress(float ExpectedWorkThisFrame, const FText& Message);
-	void UpdateSubProgressGameThread();
 	void ResetProgressBar();
 
 	TSharedPtr<FJsonObject> ParseRequestReceived(FString MessagePrefix, FHttpResponsePtr HttpResponse);
@@ -159,6 +157,8 @@ protected:
 	FImagesRequestResult ImagesRequestResult;
 	FImageRequests RequestedImages;
 	int ImageDownloadCount = 0;
+	int ImageURLRequestedCount = 0;
+	int TotalImageURLRequestedCount = 0;
 
 	FFontRequests RequestedFonts;
 	int FontDownloadCount = 0;
@@ -167,9 +167,25 @@ protected:
 	float ProgressThisFrame = 0.0f;
 	FText ProgressMessage;
 
-	FScopedSlowTask* SubProgress = nullptr;
-	float SubProgressThisFrame = 0.0f;
-	FText SubProgressMessage;
+	struct SubProgressData
+	{
+	public:
+		void Start(float InAmountOfWork, const FText& InDefaultMessage);
+		void Update(float ExpectedWorkThisFrame, const FText& Message);
+		void Finish();
+
+	private:
+		void UpdateGameThread();
+
+		FScopedSlowTask* SubProgress = nullptr;
+		float SubProgressThisFrame = 0.0f;
+		FText SubProgressMessage;
+
+	};
+
+	SubProgressData SubProgressImageURLRequest;
+	SubProgressData SubProgressImageDownload;
+	SubProgressData SubProgressGFontDownload;
 };
 
 template <class BuilderT>
