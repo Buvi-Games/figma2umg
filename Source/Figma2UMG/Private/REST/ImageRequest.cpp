@@ -183,3 +183,31 @@ int FImageRequests::GetCurrentRequestTotalCount() const
 
 	return Count;
 }
+
+int FImageRequests::GetRequestTotalCount() const
+{
+	int Count = 0;
+	TArray<FString> UniqueImageRef;
+	for (const FImagePerFileRequests& CurrentFile : RequestsPerFile)
+	{
+		for (const FImageRequest& Request : CurrentFile.Requests)
+		{
+			if (!Request.URL.IsEmpty())
+				continue;
+
+			if (Request.ImageRef.IsEmpty())
+			{
+				Count++;
+				continue;
+			}
+
+			if (!UniqueImageRef.Contains(Request.ImageRef))
+			{
+				Count++;
+				UniqueImageRef.Add(Request.ImageRef);
+			}
+		}
+	}
+
+	return Count;
+}
