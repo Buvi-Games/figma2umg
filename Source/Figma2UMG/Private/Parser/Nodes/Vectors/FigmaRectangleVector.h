@@ -19,9 +19,6 @@ public:
 	virtual bool DoesSupportImageRef() const override;
 
 	UPROPERTY()
-	float CornerRadius;
-
-	UPROPERTY()
 	TArray<float> RectangleCornerRadii;
 
 	UPROPERTY()

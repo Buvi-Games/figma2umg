@@ -133,6 +133,9 @@ public:
 	EFigmaStrokeAlign StrokeAlign = EFigmaStrokeAlign::INSIDE;
 
 	UPROPERTY()
+	float CornerRadius;
+
+	UPROPERTY()
 	TMap<EFigmaStyleType, FString> styles;
 
 	//UPROPERTY()
