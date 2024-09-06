@@ -4,6 +4,7 @@
 #include "HBoxBuilder.h"
 
 #include "Figma2UMGModule.h"
+#include "Parser/Nodes/FigmaGroup.h"
 
 void UHBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
@@ -29,4 +30,18 @@ void UHBoxBuilder::ResetWidget()
 void UHBoxBuilder::Setup() const
 {
     UE_LOG_Figma2UMG(Warning, TEXT("[UHBoxBuilder::Setup] TODO."));
+}
+
+bool UHBoxBuilder::GetSizeValue(FVector2D& Size, bool& SizeToContent) const
+{
+    bool IsValid = Super::GetSizeValue(Size, SizeToContent);
+    if (IsValid)
+    {
+        if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+        {
+            SizeToContent = FigmaGroup->LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || FigmaGroup->LayoutSizingHorizontal == EFigmaLayoutSizing::HUG;
+        }
+    }
+
+    return IsValid;
 }

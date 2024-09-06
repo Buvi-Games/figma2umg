@@ -19,6 +19,8 @@ protected:
 	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
 	virtual void Setup() const override;
 
+	virtual bool GetSizeValue(FVector2D& Size, bool& SizeToContent) const override;
+
 	UPROPERTY()
 	TObjectPtr<UVerticalBox> Box = nullptr;
 };

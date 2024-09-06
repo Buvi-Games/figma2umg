@@ -4,6 +4,7 @@
 #include "VBoxBuilder.h"
 
 #include "Figma2UMGModule.h"
+#include "Parser/Nodes/FigmaGroup.h"
 
 void UVBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
 {
@@ -29,4 +30,18 @@ void UVBoxBuilder::ResetWidget()
 void UVBoxBuilder::Setup() const
 {
     UE_LOG_Figma2UMG(Warning, TEXT("[UVBoxBuilder::Setup] TODO."));
+}
+
+bool UVBoxBuilder::GetSizeValue(FVector2D& Size, bool& SizeToContent) const
+{
+    bool IsValid = Super::GetSizeValue(Size, SizeToContent);
+    if (IsValid)
+    {
+        if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+        {
+            SizeToContent = FigmaGroup->LayoutSizingVertical == EFigmaLayoutSizing::FILL || FigmaGroup->LayoutSizingVertical == EFigmaLayoutSizing::HUG;
+        }
+    }
+
+    return IsValid;
 }
