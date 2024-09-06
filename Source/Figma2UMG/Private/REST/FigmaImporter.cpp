@@ -147,7 +147,7 @@ bool UFigmaImporter::CreateRequest(const char* EndPoint, const FString& CurrentF
 
 		int HeaderAddressOffset = 0;
 
-#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4 && ENGINE_PATCH_VERSION <= 4)
+#if (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 4)
 		HeaderAddressOffset = 664;
 #elif (ENGINE_MAJOR_VERSION == 5 && ENGINE_MINOR_VERSION == 3)
 		HeaderAddressOffset = 256;
