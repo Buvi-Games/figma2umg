@@ -43,11 +43,11 @@ void FFigmaPaint::CreateAssetBuilder(const FString& InFileKey, const UFigmaNode*
 	case EPaintTypes::SOLID:
 		if(IsStroke)
 		{
-			UMaterialBorderBuilder* MaterialBuilder = NewObject<UMaterialBorderBuilder>();
-			MaterialBuilder->SetNode(InFileKey, OwnerNode);
-			MaterialBuilder->SetPaint(this);
-			AssetBuilder = MaterialBuilder;
-			AssetBuilders.Add(MaterialBuilder);
+			//UMaterialBorderBuilder* MaterialBuilder = NewObject<UMaterialBorderBuilder>();
+			//MaterialBuilder->SetNode(InFileKey, OwnerNode);
+			//MaterialBuilder->SetPaint(this);
+			//AssetBuilder = MaterialBuilder;
+			//AssetBuilders.Add(MaterialBuilder);
 		}
 		break;
 	case EPaintTypes::GRADIENT_LINEAR:

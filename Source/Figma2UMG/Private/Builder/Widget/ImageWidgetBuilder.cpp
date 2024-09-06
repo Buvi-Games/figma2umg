@@ -10,6 +10,7 @@
 #include "Components/Image.h"
 #include "Components/Widget.h"
 #include "Parser/Nodes/FigmaGroup.h"
+#include "Parser/Nodes/FigmaInstance.h"
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Nodes/FigmaSection.h"
 #include "Parser/Nodes/Vectors/FigmaEllipse.h"
@@ -114,6 +115,9 @@ void UImageWidgetBuilder::Setup() const
 	else if (const UFigmaVectorNode* FigmaVectorNode = Cast<UFigmaVectorNode>(Node))
 	{
 		SetStroke(Widget, FigmaVectorNode->Strokes, FigmaVectorNode->StrokeWeight);
+
+		const FVector4 Corners = FVector4(FigmaVectorNode->CornerRadius, FigmaVectorNode->CornerRadius, FigmaVectorNode->CornerRadius, FigmaVectorNode->CornerRadius);
+		SetCorner(Widget, Corners);
 	}
 }
 
@@ -124,13 +128,7 @@ void UImageWidgetBuilder::SetupFill() const
 		Widget->SetBrushFromTexture(Texture, false);
 		FSlateBrush Brush = Widget->GetBrush();
 		Brush.SetImageSize(Node->GetAbsoluteSize());
-		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
-		{
-			if (FigmaVectorNode->AbsoluteRenderBounds.Height == FigmaVectorNode->AbsoluteRenderBounds.Width)
-			{
-				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
-			}
-		}
+		Brush.DrawAs = GetDrawAs(Brush.DrawAs);
 		SetBrush(Widget, Brush);
 		Widget->SetColorAndOpacity(FLinearColor::White);
 	}
@@ -140,34 +138,20 @@ void UImageWidgetBuilder::SetupFill() const
 		FSlateBrush Brush = Widget->GetBrush();
 		Brush.SetImageSize(Node->GetAbsoluteSize());
 		Brush.TintColor = FLinearColor::White;
-		Brush.DrawAs = ESlateBrushDrawType::Box;
+		Brush.DrawAs = GetDrawAs(Brush.DrawAs);
 		Brush.Margin.Top = 0.5f;
 		Brush.Margin.Bottom = 0.5f;
 		Brush.Margin.Left = 0.5f;
 		Brush.Margin.Right = 0.5f;
-		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
-		{
-			if (FigmaVectorNode->AbsoluteRenderBounds.Height == FigmaVectorNode->AbsoluteRenderBounds.Width)
-			{
-				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
-			}
-		}
 		SetBrush(Widget, Brush);
 		Widget->SetColorAndOpacity(SolidColor);
 	}
 	else
 	{
 		FSlateBrush Brush = Widget->GetBrush();
-		Brush.TintColor = FLinearColor::White;
-		Brush.DrawAs = ESlateBrushDrawType::Box;
+		Brush.TintColor = GetTintColor();
+		Brush.DrawAs = GetDrawAs(Brush.DrawAs);
 		Brush.SetImageSize(Node->GetAbsoluteSize());
-		if (const UFigmaEllipse* FigmaVectorNode = Cast<UFigmaEllipse>(Node))
-		{
-			if (FigmaVectorNode->AbsoluteRenderBounds.Height == FigmaVectorNode->AbsoluteRenderBounds.Width)
-			{
-				Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
-			}
-		}
 		SetBrush(Widget, Brush);
 		if (HasSolidColor)
 		{
@@ -178,4 +162,98 @@ void UImageWidgetBuilder::SetupFill() const
 			Widget->SetColorAndOpacity(FLinearColor(0.0f, 0.0f, 0.0f, 0.0f));
 		}
 	}
+}
+
+FLinearColor UImageWidgetBuilder::GetTintColor() const
+{
+	bool HasFill = false;
+	if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+	{
+		for (const FFigmaPaint& Fill : FigmaGroup->Fills)
+		{
+			if (Fill.Visible)
+			{
+				HasFill = true;
+				break;
+			}
+		}
+	}
+	else if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
+	{
+		for (const FFigmaPaint& Fill : FigmaInstance->Fills)
+		{
+			if (Fill.Visible)
+			{
+				HasFill = true;
+				break;
+			}
+		}
+	}
+	else if (const UFigmaSection* FigmaSection = Cast<UFigmaSection>(Node))
+	{
+		for (const FFigmaPaint& Fill : FigmaSection->Fills)
+		{
+			if (Fill.Visible)
+			{
+				HasFill = true;
+				break;
+			}
+		}
+	}
+	else if (const UFigmaVectorNode* FigmaVector = Cast<UFigmaVectorNode>(Node))
+	{
+		for (const FFigmaPaint& Fill : FigmaVector->Fills)
+		{
+			if (Fill.Visible)
+			{
+				HasFill = true;
+				break;
+			}
+		}
+	}
+
+	if(HasFill)
+	{
+		return FLinearColor::White;
+	}
+	else
+	{
+		return FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	}
+}
+
+TEnumAsByte<ESlateBrushDrawType::Type> UImageWidgetBuilder::GetDrawAs(TEnumAsByte<ESlateBrushDrawType::Type> DefaultReturn) const
+{
+	bool HasBorder = false;
+	if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+	{
+		HasBorder = FigmaGroup->StrokeWeight > 0.0f && !FigmaGroup->Strokes.IsEmpty();
+	}
+	else if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
+	{
+		HasBorder = FigmaInstance->StrokeWeight > 0.0f && !FigmaInstance->Strokes.IsEmpty();
+	}
+	else if (const UFigmaSection* FigmaSection = Cast<UFigmaSection>(Node))
+	{
+		HasBorder = FigmaSection->StrokeWeight > 0.0f && !FigmaSection->Strokes.IsEmpty();
+	}
+	else if (const UFigmaVectorNode* FigmaVector = Cast<UFigmaVectorNode>(Node))
+	{
+		HasBorder = FigmaVector->StrokeWeight > 0.0f && !FigmaVector->Strokes.IsEmpty() && !FigmaVector->Fills.IsEmpty();
+	}
+
+	if (HasBorder)
+	{
+		return ESlateBrushDrawType::RoundedBox;
+	}
+
+	if (const UFigmaEllipse* FigmaEllipse = Cast<UFigmaEllipse>(Node))
+	{
+		if (FigmaEllipse->AbsoluteRenderBounds.Height == FigmaEllipse->AbsoluteRenderBounds.Width)
+		{
+			return ESlateBrushDrawType::RoundedBox;
+		}
+	}
+
+	return DefaultReturn;
 };

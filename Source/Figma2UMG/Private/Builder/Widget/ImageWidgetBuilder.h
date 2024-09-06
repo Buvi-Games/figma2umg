@@ -28,6 +28,8 @@ public:
 protected:
 	void Setup() const;
 	void SetupFill() const;
+	FLinearColor GetTintColor() const;
+	TEnumAsByte<enum ESlateBrushDrawType::Type > GetDrawAs(TEnumAsByte<ESlateBrushDrawType::Type> DefaultReturn = ESlateBrushDrawType::Box) const;
 
 	UPROPERTY()
 	TObjectPtr<UTexture2DBuilder> Texture2DBuilder = nullptr;
