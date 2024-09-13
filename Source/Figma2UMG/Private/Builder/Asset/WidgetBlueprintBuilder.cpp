@@ -81,7 +81,7 @@ void UWidgetBlueprintBuilder::Reset()
 
 void UWidgetBlueprintBuilder::ResetWidgets()
 {
-	if (Asset)
+	if (Asset && RootWidgetBuilder)
 	{
 		RootWidgetBuilder->SetWidget(Asset->WidgetTree->RootWidget);
 	}
@@ -174,6 +174,11 @@ void UWidgetBlueprintBuilder::PatchWidgetBinds()
 		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetBinds] Missing Blueprint for node %s."), *Node->GetNodeName());
 		return;
 	}
+	if (!RootWidgetBuilder)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetBinds] Missing WidgetRoot for node %s."), *Node->GetNodeName());
+		return;
+	}
 	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetBinds] Bluepring %s."), *Asset->GetName());
 	RootWidgetBuilder->PatchWidgetBinds(Asset);
 }
@@ -184,6 +189,11 @@ void UWidgetBlueprintBuilder::PatchWidgetProperties()
 	if (!WidgetBP)
 	{
 		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetProperties] Missing Blueprint for node %s."), *Node->GetNodeName());
+		return;
+	}
+	if (!RootWidgetBuilder)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[PatchWidgetProperties] Missing WidgetRoot for node %s."), *Node->GetNodeName());
 		return;
 	}
 	UE_LOG_Figma2UMG(Display, TEXT("[PatchWidgetProperties] Bluepring %s."), *WidgetBP->GetName());
