@@ -55,7 +55,7 @@ void FImageRequest::HandleImageDownload(FHttpRequestPtr HttpRequest, FHttpRespon
 	{
 		Status = eRequestStatus::Failed;
 
-		UE_LOG_Figma2UMG(Warning, TEXT("Failed to download image at %s."), *URL);
+		UE_LOG_Figma2UMG(Error, TEXT("Failed to download image at %s."), *URL);
 		OnImageRequestCompleteDelegate.ExecuteIfBound(false);
 	}
 }

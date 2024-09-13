@@ -61,6 +61,7 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 
 	MaxURLImageRequest = InProperties->MaxURLImageRequest;
 	NodeImageScale = InProperties->NodeImageScale;
+	ProgressOnFailToDownloadImage = InProperties->ProgressOnFailToDownloadImage;
 
 	DownloadFontsFromGoogle = InProperties->DownloadFontsFromGoogle;
 	GFontsAPIKey = InProperties->GFontsAPIKey;
@@ -284,7 +285,7 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 	}
 	else
 	{
-		UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("Result from Figma request is nullptr."));
+		UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("No Response from Figma REST Server."));
 	}
 	return nullptr;
 }
@@ -666,7 +667,7 @@ void UFigmaImporter::DownloadNextImage()
 
 void UFigmaImporter::HandleImageDownload(bool Succeeded)
 {
-	if (Succeeded)
+	if (Succeeded || ProgressOnFailToDownloadImage)
 	{
 		DownloadNextImage();
 	}

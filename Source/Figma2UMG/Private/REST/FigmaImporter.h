@@ -135,6 +135,7 @@ protected:
 
 	int MaxURLImageRequest = 20;
 	float NodeImageScale = 4.0f;
+	bool ProgressOnFailToDownloadImage = false;
 
 	bool DownloadFontsFromGoogle = false;
 	FString GFontsAPIKey;
