@@ -303,13 +303,19 @@ const FFigmaComponentPropertyDefinition* UFigmaInstance::IsInstanceSwap() const
 
 	const FString MainComponent = ComponentPropertyReferences[MainComponentStr];
 	const FFigmaComponentPropertyDefinition* PropertyDefinition = nullptr;
-	if(UFigmaComponent* FigmaComponent =  Cast<UFigmaComponent>(ParentNode))
+	TObjectPtr<UFigmaNode> HigherNode = ParentNode;
+	while(HigherNode != nullptr && PropertyDefinition == nullptr)
 	{
-		PropertyDefinition = FigmaComponent->ComponentPropertyDefinitions.Find(MainComponent);
-	}
-	else if (UFigmaComponentSet* FigmaComponentSet = Cast<UFigmaComponentSet>(ParentNode))
-	{
-		PropertyDefinition = FigmaComponentSet->ComponentPropertyDefinitions.Find(MainComponent);
+		if(UFigmaComponent* FigmaComponent =  Cast<UFigmaComponent>(HigherNode))
+		{
+			PropertyDefinition = FigmaComponent->ComponentPropertyDefinitions.Find(MainComponent);
+		}
+		else if (UFigmaComponentSet* FigmaComponentSet = Cast<UFigmaComponentSet>(HigherNode))
+		{
+			PropertyDefinition = FigmaComponentSet->ComponentPropertyDefinitions.Find(MainComponent);
+		}
+
+		HigherNode = ParentNode->GetParentNode();
 	}
 
 	if (PropertyDefinition && PropertyDefinition->Type == EFigmaComponentPropertyType::INSTANCE_SWAP)
