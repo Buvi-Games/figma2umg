@@ -72,7 +72,7 @@ public:
 	FString DestinationId;
 
 	UPROPERTY()
-	FFigmaNavigation Navigation;
+	EFigmaNavigationType Navigation;
 
 	UPROPERTY()
 	FString Transition;//ToDo
