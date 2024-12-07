@@ -39,6 +39,7 @@ void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const 
 
 	PostSerializeProperty(JsonObj, "fills", Fills);
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
+	PostSerializeProperty(JsonObj, "interactions", Interactions);
 
 	SerializeArray(Children, JsonObj,"Children");
 }

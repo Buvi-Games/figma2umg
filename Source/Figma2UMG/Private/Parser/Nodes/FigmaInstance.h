@@ -94,6 +94,9 @@ public:
 	FString LayoutAlign;
 
 	UPROPERTY()
+	TArray<FFigmaInteraction> Interactions;
+
+	UPROPERTY()
 	FString TransitionNodeID;
 
 	UPROPERTY()

@@ -25,6 +25,7 @@ void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSh
 
 	PostSerializeProperty(JsonObj, "fills", Fills);
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
+	PostSerializeProperty(JsonObj, "interactions", Interactions);
 }
 
 bool UFigmaGroup::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)

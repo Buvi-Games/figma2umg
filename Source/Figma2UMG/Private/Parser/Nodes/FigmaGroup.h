@@ -11,6 +11,7 @@
 #include "Parser/Properties/FigmaEffect.h"
 #include "Parser/Properties/FigmaEnums.h"
 #include "Parser/Properties/FigmaExportSetting.h"
+#include "Parser/Properties/FigmaInteraction.h"
 #include "Parser/Properties/FigmaLayoutConstraint.h"
 #include "Parser/Properties/FigmaPaint.h"
 #include "Parser/Properties/FigmaRectangle.h"
@@ -95,6 +96,9 @@ public:
 
 	UPROPERTY()
 	FString LayoutAlign;
+
+	UPROPERTY()
+	TArray<FFigmaInteraction> Interactions;
 
 	UPROPERTY()
 	FString TransitionNodeID;

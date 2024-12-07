@@ -251,6 +251,97 @@ enum class EFigmaComponentPropertyType
 	INSTANCE_SWAP,
 	TEXT,
 	VARIANT,
+};
+
+UENUM()
+enum class EFigmaTriggerType
+{
+	ON_CLICK,
+	ON_HOVER,
+	ON_PRESS,
+	ON_DRAG,
+	AFTER_TIMEOUT,
+	MOUSE_ENTER,
+	MOUSE_LEAVE,
+	MOUSE_UP,
+	MOUSE_DOWN,
+	ON_MEDIA_END,
+	ON_KEY_DOWN,
+	ON_KEY_UP,
+	ON_MEDIA_HIT,
+};
+
+UENUM()
+enum class EFigmaInputDevice
+{
+	KEYBOARD,
+	XBOX_ONE,
+	PS4,
+	SWITCH_PRO,
+	UNKNOWN_CONTROLLER,
+};
+
+UENUM()
+enum class EFigmaActionType
+{
+	BACK,
+	CLOSE,
+	URL,
+	UPDATE_MEDIA_RUNTIME,
+	SET_VARIABLE,
+	SET_VARIABLE_MODE,
+	CONDITIONAL,
+	NODE,
+};
+
+UENUM()
+enum class EFigmaActionNodeNavigation
+{
+	NAVIGATE,
+	SWAP,
+	OVERLAY,
+	SCROLL_TO,
+	CHANGE_TO,
+};
+
+UENUM()
+enum class EFigmaActionMedia
+{
+	PLAY,
+	PAUSE,
+	TOGGLE_PLAY_PAUSE,
+	MUTE,
+	UNMUTE,
+	TOGGLE_MUTE_UNMUTE,
+	SKIP_FORWARD,
+	SKIP_BACKWARD,
+	SKIP_TO,
+};
+
+UENUM()
+enum class EFigmaNavigationType	
+{
+	NAVIGATE,
+	SWAP,
+	OVERLAY,
+	SCROLL_TO,
+	CHANGE_TO,
+};
+
+
+UENUM()
+enum class EFigmaTransitionType
+{
+	DISSOLVE,
+	SMART_ANIMATE,
+	SCROLL_ANIMATE,
+	MOVE_IN,
+	MOVE_OUT,
+	PUSH,
+	SLIDE_IN,
+	SLIDE_OUT
+};
+
 UENUM()
 enum class EFigmaEasingType
 {
