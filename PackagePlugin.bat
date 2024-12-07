@@ -1,3 +1,4 @@
 REM "C:\Program Files\Epic Games\UE_5.2\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.2"
 REM "C:\Program Files\Epic Games\UE_5.3\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.3"
-"C:\Program Files\Epic Games\UE_5.4\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.4"
+REM "C:\Program Files\Epic Games\UE_5.4\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.4"
+"C:\Program Files\Epic Games\UE_5.5\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.5"
