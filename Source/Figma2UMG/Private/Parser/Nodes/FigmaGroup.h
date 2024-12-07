@@ -8,7 +8,6 @@
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Properties/FigmaBlendMode.h"
 #include "Parser/Properties/FigmaColor.h"
-#include "Parser/Properties/FigmaEasingType.h"
 #include "Parser/Properties/FigmaEffect.h"
 #include "Parser/Properties/FigmaEnums.h"
 #include "Parser/Properties/FigmaExportSetting.h"

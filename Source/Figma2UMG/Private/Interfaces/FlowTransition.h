@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Parser/Properties/FigmaEasingType.h"
+#include "Parser/Properties/FigmaEnums.h"
 
 #include "FlowTransition.generated.h"
 
