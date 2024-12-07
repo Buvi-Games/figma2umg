@@ -2,30 +2,42 @@
 
 #include "FigmaInteraction.h"
 
+#include "FigmaAction.h"
+#include "FigmaTrigger.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonTypes.h"
 
 void FFigmaInteraction::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
-	//static FString ImageTransformStr("imageTransform");
-	//if (JsonObj.IsValid() && JsonObj->HasTypedField<EJson::Array>(ImageTransformStr))
-	//{
-	//	const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField(ImageTransformStr);
-	//	for (int i = 0; i < ArrayJson.Num(); i++)
-	//	{
-	//		const TSharedPtr<FJsonValue>& ItemLine = ArrayJson[i];
-	//		if (ItemLine.IsValid() && ItemLine->Type == EJson::Array)
-	//		{
-	//			const TArray<TSharedPtr<FJsonValue>>& LineArrayJson = ItemLine->AsArray();
-	//			for (int j = 0; j < LineArrayJson.Num(); j++)
-	//			{
-	//				const TSharedPtr<FJsonValue>& Item = LineArrayJson[i];
-	//				if (Item.IsValid() && Item->Type == EJson::Number)
-	//				{
-	//					ImageTransform.Matrix.M[i][j] = Item->AsNumber();
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
+	static FString TriggerStr("trigger");
+	if (JsonObj.IsValid() && JsonObj->HasTypedField<EJson::Object>(TriggerStr))
+	{
+		const TSharedPtr<FJsonObject>& ObjectJson = JsonObj->GetObjectField(TriggerStr);
+		if (ObjectJson.IsValid())
+		{
+			Trigger =  UFigmaTrigger::CreateTrigger(ObjectJson);
+		}
+	}
+
+	static FString ActionsStr("actions");
+	if (JsonObj.IsValid() && JsonObj->HasTypedField<EJson::Array>(ActionsStr))
+	{
+		const TArray<TSharedPtr<FJsonValue>>& ArrayJson = JsonObj->GetArrayField(ActionsStr);
+		for (int i = 0; i < ArrayJson.Num(); i++)
+		{
+			const TSharedPtr<FJsonValue>& ItemJson = ArrayJson[i];
+			if (ItemJson.IsValid() && ItemJson->Type == EJson::Object)
+			{
+				const TSharedPtr<FJsonObject>& ObjectJson = ItemJson->AsObject();
+				if (ObjectJson.IsValid())
+				{
+					UFigmaAction* Action = UFigmaAction::CreateAction(ObjectJson);
+					if(Action)
+					{
+						Actions.Push(Action);
+					}
+				}
+			}
+		}
+	}
 }

@@ -18,7 +18,7 @@ public:
 	void PostSerialize(const TSharedPtr<FJsonObject> JsonObj);
 
 	UPROPERTY()
-	UFigmaTrigger* Trigger;
+	UFigmaTrigger* Trigger = nullptr;
 
 	UPROPERTY()
 	TArray<UFigmaAction*> Actions;

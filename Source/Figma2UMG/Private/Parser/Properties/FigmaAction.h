@@ -15,6 +15,8 @@ class FIGMA2UMG_API UFigmaAction : public UObject
 public:
 	GENERATED_BODY()
 
+	static UFigmaAction* CreateAction(const TSharedPtr<FJsonObject>& ObjectJson);
+
 	UPROPERTY()
 	EFigmaActionType Type;
 };

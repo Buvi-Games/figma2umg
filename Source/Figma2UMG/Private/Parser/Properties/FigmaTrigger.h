@@ -13,6 +13,8 @@ class FIGMA2UMG_API UFigmaTrigger : public UObject
 public:
 	GENERATED_BODY()
 
+	static UFigmaTrigger* CreateTrigger(const TSharedPtr<FJsonObject>& ObjectJson);
+
 	UPROPERTY()
 	EFigmaTriggerType Type;
 };
