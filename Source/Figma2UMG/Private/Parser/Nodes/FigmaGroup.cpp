@@ -17,6 +17,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Spacer.h"
 #include "Components/WrapBox.h"
+#include "Parser/Properties/FigmaTrigger.h"
 #include "UObject/ScriptInterface.h"
 
 void UFigmaGroup::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
@@ -90,6 +91,16 @@ FMargin UFigmaGroup::GetPadding() const
 	Padding.Bottom = PaddingBottom;
 
 	return Padding;
+}
+
+const FFigmaInteraction& UFigmaGroup::GetInteractionFromTrigger(const EFigmaTriggerType TriggerType) const
+{
+	return UFigmaNode::GetInteractionFromTrigger(Interactions, TriggerType);
+}
+
+const FFigmaInteraction& UFigmaGroup::GetInteractionFromAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const
+{
+	return UFigmaNode::GetInteractionFromAction(Interactions, ActionType, Navigation);
 }
 
 bool UFigmaGroup::IsButton() const

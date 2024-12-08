@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Parser/Properties/FigmaEnums.h"
+#include "Parser/Properties/FigmaInteraction.h"
 
 #include "FlowTransition.generated.h"
 
@@ -19,13 +20,19 @@ class FIGMA2UMG_API IFlowTransition
 public:
 
 	UFUNCTION()
-	virtual const bool HasTransition() const { return !GetTransitionNodeID("OnButtonClicked").IsEmpty(); }
+	virtual const bool HasTrigger(const EFigmaTriggerType TriggerType) const { return GetInteractionFromTrigger(TriggerType).IsValid(); }
 
 	UFUNCTION()
-	virtual const FString& GetTransitionNodeID(const FName EventName) const = 0;
+	virtual const bool HasAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const { return GetInteractionFromAction(ActionType, Navigation).IsValid(); }
 
 	UFUNCTION()
-	virtual void GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) const;
+	virtual const FFigmaInteraction& GetInteractionFromTrigger(const EFigmaTriggerType TriggerType) const = 0;
+
+	UFUNCTION()
+	virtual const FFigmaInteraction& GetInteractionFromAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const = 0;
+
+	UFUNCTION()
+	virtual void GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const;
 
 	UFUNCTION()
 	virtual const float GetTransitionDuration() const = 0;

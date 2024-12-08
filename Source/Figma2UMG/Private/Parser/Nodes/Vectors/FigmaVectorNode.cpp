@@ -68,6 +68,16 @@ TScriptInterface<IWidgetBuilder> UFigmaVectorNode::CreateWidgetBuilders(bool IsR
 	return ImageWidgetBuilder;
 }
 
+const FFigmaInteraction& UFigmaVectorNode::GetInteractionFromTrigger(const EFigmaTriggerType TriggerType) const
+{
+	return UFigmaNode::GetInteractionFromTrigger(Interactions, TriggerType);
+}
+
+const FFigmaInteraction& UFigmaVectorNode::GetInteractionFromAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const
+{
+	return UFigmaNode::GetInteractionFromAction(Interactions, ActionType, Navigation);
+}
+
 bool UFigmaVectorNode::DoesSupportImageRef() const
 {
 	return false;

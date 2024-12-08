@@ -55,3 +55,26 @@ UFigmaTrigger* UFigmaTrigger::CreateTrigger(const TSharedPtr<FJsonObject>& Objec
 
 	return FigmaTrigger;
 }
+
+bool UFigmaTrigger::MatchEvent(FString EventName) const
+{
+	switch (Type)
+	{
+	case EFigmaTriggerType::ON_CLICK:
+		return EventName.EndsWith("OnButtonClicked");
+	case EFigmaTriggerType::ON_HOVER:
+	case EFigmaTriggerType::ON_PRESS:
+	case EFigmaTriggerType::ON_DRAG:
+	case EFigmaTriggerType::AFTER_TIMEOUT:
+	case EFigmaTriggerType::MOUSE_ENTER:
+	case EFigmaTriggerType::MOUSE_LEAVE:
+	case EFigmaTriggerType::MOUSE_UP:
+	case EFigmaTriggerType::MOUSE_DOWN:
+	case EFigmaTriggerType::ON_MEDIA_HIT:
+	case EFigmaTriggerType::ON_MEDIA_END:
+	case EFigmaTriggerType::ON_KEY_DOWN:
+	case EFigmaTriggerType::ON_KEY_UP:
+		return false;
+	}
+	return false;
+}

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "FigmaEnums.h"
-#include "FigmaNavigation.h"
 #include "FigmaVector.h"
 
 #include "FigmaAction.generated.h"
@@ -74,7 +73,7 @@ public:
 	FString DestinationId;
 
 	UPROPERTY()
-	EFigmaNavigationType Navigation;
+	EFigmaActionNodeNavigation Navigation;
 
 	UPROPERTY()
 	FString Transition;//ToDo

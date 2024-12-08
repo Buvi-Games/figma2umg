@@ -3,11 +3,17 @@
 
 #include "Interfaces/FlowTransition.h"
 
-void IFlowTransition::GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) const
+#include "Parser/Properties/FigmaAction.h"
+
+void IFlowTransition::GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const
 {
-	FString TransitionId = GetTransitionNodeID("OnButtonClicked");
-	if(!TransitionId.IsEmpty())
+	const FFigmaInteraction& FigmaInteraction = GetInteractionFromAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE);
+	if(FigmaInteraction.IsValid())
 	{
-		TransitionNodeIDs.Add(TransitionId);
+		const UFigmaNodeAction* FigmaAction = FigmaInteraction.FindActionNode(EFigmaActionNodeNavigation::NAVIGATE);
+		if (FigmaAction && !TransitionNodeIDs.Contains(FigmaAction->DestinationId))
+		{
+			TransitionNodeIDs.Add(FigmaAction->DestinationId);
+		}
 	}
 }

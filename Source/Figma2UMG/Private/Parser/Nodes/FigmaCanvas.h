@@ -30,7 +30,10 @@ public:
 	virtual const TArray<UFigmaNode*>& GetChildrenConst() const override { return Children; }
 
 	// FlowTransition
-	virtual const FString& GetTransitionNodeID(const FName EventName) const override;
+	virtual const bool HasAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const override;
+	virtual const FFigmaInteraction& GetInteractionFromTrigger(const EFigmaTriggerType TriggerType) const override;
+	virtual const FFigmaInteraction& GetInteractionFromAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const override;
+	virtual void GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const override;
 	virtual const float GetTransitionDuration() const override;
 	virtual const EFigmaEasingType GetTransitionEasing() const override;
 protected:

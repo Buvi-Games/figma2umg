@@ -37,9 +37,11 @@ public:
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	// FlowTransition
-	virtual const bool HasTransition() const override;
-	virtual const FString& GetTransitionNodeID(const FName EventName) const override;
-	virtual void GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) const override;
+	virtual const bool HasTrigger(const EFigmaTriggerType TriggerType) const override;
+	virtual const bool HasAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const override;
+	virtual const FFigmaInteraction& GetInteractionFromTrigger(const EFigmaTriggerType TriggerType) const override;
+	virtual const FFigmaInteraction& GetInteractionFromAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const override;
+	virtual void GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const override;
 	virtual const float GetTransitionDuration() const override { return TransitionDuration; }
 	virtual const EFigmaEasingType GetTransitionEasing() const override { return TransitionEasing; };
 

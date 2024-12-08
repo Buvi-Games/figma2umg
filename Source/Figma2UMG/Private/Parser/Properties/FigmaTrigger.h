@@ -15,6 +15,8 @@ public:
 
 	static UFigmaTrigger* CreateTrigger(const TSharedPtr<FJsonObject>& ObjectJson);
 
+	virtual bool MatchEvent(FString EventName) const;
+
 	UPROPERTY()
 	EFigmaTriggerType Type;
 };

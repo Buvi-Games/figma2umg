@@ -9,6 +9,7 @@
 #include "FigmaNode.generated.h"
 
 struct FFigmaPaint;
+struct FFigmaInteraction;
 class IWidgetBuilder;
 class IAssetBuilder;
 class UWidgetBlueprint;
@@ -67,6 +68,9 @@ public:
 
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
+
+	const FFigmaInteraction& GetInteractionFromTrigger(const TArray<FFigmaInteraction>& InInteractions, const EFigmaTriggerType TriggerType) const;
+	const FFigmaInteraction& GetInteractionFromAction(const TArray<FFigmaInteraction>& InInteractions, const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const;
 
 	template<class PropertyT>
 	void PostSerializeProperty(const TSharedRef<FJsonObject> JsonObj, const FString& ArrayName, TArray<PropertyT>& PropertyArray) const

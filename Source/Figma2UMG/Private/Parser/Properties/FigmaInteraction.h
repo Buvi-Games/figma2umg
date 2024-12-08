@@ -3,9 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FigmaEnums.h"
 
 #include "FigmaInteraction.generated.h"
 
+class UFigmaNodeAction;
 class UFigmaTrigger;
 class UFigmaAction;
 
@@ -16,6 +18,11 @@ public:
 	GENERATED_BODY()
 
 	void PostSerialize(const TSharedPtr<FJsonObject> JsonObj);
+
+	const UFigmaNodeAction* FindActionNode(const EFigmaActionNodeNavigation& Navigate) const;
+
+	static FFigmaInteraction Invalid;
+	bool IsValid() const;
 
 	UPROPERTY()
 	UFigmaTrigger* Trigger = nullptr;

@@ -25,6 +25,8 @@
 #include "Parser/Nodes/FigmaComponentSet.h"
 #include "Parser/Nodes/FigmaInstance.h"
 #include "Parser/Nodes/FigmaNode.h"
+#include "Parser/Properties/FigmaAction.h"
+#include "Parser/Properties/FigmaTrigger.h"
 #include "REST/FigmaImporter.h"
 #include "Templates/WidgetTemplateBlueprintClass.h"
 
@@ -132,7 +134,7 @@ void UUserWidgetBuilder::PatchWidgetProperties()
 		return;
 	}
 
-	if (FigmaInstance->HasTransition())
+	if (FigmaInstance->HasAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE))
 	{
 		SetupTransitions(FigmaInstance);
 	}
@@ -190,6 +192,7 @@ void UUserWidgetBuilder::SetupTransitions(const IFlowTransition* FlowTransition)
 	bool Modified = false;
 	for (TFieldIterator<FMulticastInlineDelegateProperty>It(ComponentAsset->SkeletonGeneratedClass, EFieldIterationFlags::Default); It; ++It)
 	{
+		//ToDO: Support Navigation on Triggers that are NOT onClicked
 		FString PropertyName = It->GetFName().ToString();
 		if (!PropertyName.EndsWith("OnButtonClicked"))
 			continue;
@@ -206,8 +209,12 @@ void UUserWidgetBuilder::SetupTransitions(const IFlowTransition* FlowTransition)
 
 void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName EventName, FObjectProperty* VariableProperty) const
 {
-	const FString& TransitionNodeID = FlowTransition->GetTransitionNodeID(EventName);
-	if (TransitionNodeID.IsEmpty())
+	const FFigmaInteraction& Iteraction = FlowTransition->GetInteractionFromAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE);
+	if (!Iteraction.Trigger || !Iteraction.Trigger->MatchEvent(EventName.ToString()))
+		return;
+
+	const UFigmaNodeAction* Action = Iteraction.FindActionNode(EFigmaActionNodeNavigation::NAVIGATE);
+	if (!Action || Action->DestinationId.IsEmpty())
 		return;
 
 	const UK2Node_ComponentBoundEvent* OnButtonClickedNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
@@ -239,7 +246,7 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, 
 		{
 			const TObjectPtr<UFigmaFile> File = Node->GetFigmaFile();
 			const UFigmaImporter* Importer = File ? File->GetImporter() : nullptr;
-			const TObjectPtr<UWidgetBlueprintBuilder> AssetBuilder = Importer ? Importer->FintAssetBuilderForNode<UWidgetBlueprintBuilder>(TransitionNodeID) : nullptr;
+			const TObjectPtr<UWidgetBlueprintBuilder> AssetBuilder = Importer ? Importer->FintAssetBuilderForNode<UWidgetBlueprintBuilder>(Action->DestinationId) : nullptr;
 			const TObjectPtr<UWidgetBlueprint> TransitionBP = AssetBuilder ? AssetBuilder->GetAsset() : nullptr;
 			if (TransitionBP)
 			{

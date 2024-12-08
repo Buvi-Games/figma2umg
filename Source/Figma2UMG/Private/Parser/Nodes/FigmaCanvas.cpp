@@ -6,9 +6,31 @@
 #include "Builder/Widget/Panels/CanvasBuilder.h"
 #include "Builder/Widget/PanelWidgetBuilder.h"
 
-const FString& UFigmaCanvas::GetTransitionNodeID(const FName EventName) const
+const bool UFigmaCanvas::HasAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const
 {
-	return PrototypeStartNodeID;
+	if (Navigation == EFigmaActionNodeNavigation::NAVIGATE)
+	{
+		return !PrototypeStartNodeID.IsEmpty();
+	}
+	return false;
+}
+
+const FFigmaInteraction& UFigmaCanvas::GetInteractionFromTrigger(const EFigmaTriggerType TriggerType) const
+{
+	return FFigmaInteraction::Invalid;
+}
+
+const FFigmaInteraction& UFigmaCanvas::GetInteractionFromAction(const EFigmaActionType ActionType,const EFigmaActionNodeNavigation Navigation) const
+{
+	return FFigmaInteraction::Invalid;
+}
+
+void UFigmaCanvas::GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const
+{
+	if (!PrototypeStartNodeID.IsEmpty() && TransitionNodeIDs.Contains(PrototypeStartNodeID))
+	{
+		TransitionNodeIDs.Add(PrototypeStartNodeID);
+	}
 }
 
 const float UFigmaCanvas::GetTransitionDuration() const

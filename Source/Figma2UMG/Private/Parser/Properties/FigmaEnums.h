@@ -319,17 +319,6 @@ enum class EFigmaActionMedia
 };
 
 UENUM()
-enum class EFigmaNavigationType	
-{
-	NAVIGATE,
-	SWAP,
-	OVERLAY,
-	SCROLL_TO,
-	CHANGE_TO,
-};
-
-
-UENUM()
 enum class EFigmaTransitionType
 {
 	DISSOLVE,

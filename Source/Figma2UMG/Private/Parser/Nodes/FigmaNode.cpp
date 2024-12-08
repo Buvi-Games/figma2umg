@@ -21,6 +21,7 @@
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Parser/FigmaFile.h"
+#include "Parser/Properties/FigmaTrigger.h"
 #include "Table/FigmaTable.h"
 #include "Table/FigmaTableCell.h"
 #include "Vectors/FigmaBooleanOp.h"
@@ -182,6 +183,38 @@ void UFigmaNode::SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJs
 	}
 }
 
+const FFigmaInteraction& UFigmaNode::GetInteractionFromTrigger(const TArray<FFigmaInteraction>& InInteractions, const EFigmaTriggerType TriggerType) const
+{
+	for (const FFigmaInteraction& Interaction : InInteractions)
+	{
+		if (!Interaction.Trigger)
+			continue;
+
+		if (Interaction.Trigger->Type == TriggerType)
+		{
+			return Interaction;
+		}
+	}
+
+	return FFigmaInteraction::Invalid;
+}
+
+const FFigmaInteraction& UFigmaNode::GetInteractionFromAction(const TArray<FFigmaInteraction>& InInteractions, const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const
+{
+	for (const FFigmaInteraction& Interaction : InInteractions)
+	{
+		if (!Interaction.IsValid())
+			continue;
+
+		if (Interaction.FindActionNode(Navigation) != nullptr)
+		{
+			return Interaction;
+		}
+	}
+
+	return FFigmaInteraction::Invalid;
+}
+
 void UFigmaNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
 	ParentNode = InParent;
@@ -219,10 +252,10 @@ void UFigmaNode::PrepareForFlow()
 
 	if (IFlowTransition* FlowTransition = Cast<IFlowTransition>(this))
 	{
-		if (FlowTransition->HasTransition())
+		if (FlowTransition->HasAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE))
 		{
 			TArray<FString> TransitionNodeIDs;
-			FlowTransition->GetAllTransitionNodeID(TransitionNodeIDs);
+			FlowTransition->GetAllDestinationId(TransitionNodeIDs);
 
 			for (FString NodeID : TransitionNodeIDs)
 			{

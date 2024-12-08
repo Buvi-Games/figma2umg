@@ -159,84 +159,59 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 	}
 }
 
-const bool UFigmaInstance::HasTransition() const
+const bool UFigmaInstance::HasTrigger(const EFigmaTriggerType TriggerType) const
 {
-	if (IFlowTransition::HasTransition())
-		return true;
-
-	static const FString TransitionNodeIDStr("transitionNodeID");
-	for (const FFigmaOverrides& Override : Overrides)
+	if (IFlowTransition::HasTrigger(TriggerType))
 	{
-		if(Override.OverriddenFields.ContainsByPredicate([](const FString& Field){ return Field.Equals(TransitionNodeIDStr, ESearchCase::IgnoreCase);	}))
-		{
+		return true;
+	}
+
+	for (UFigmaNode* Child : Children)
+	{
+		const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Child);
+		if (FlowTransition && FlowTransition->HasTrigger(TriggerType))
 			return true;
-		}
 	}
 
 	return false;
 }
 
-const FString& UFigmaInstance::GetTransitionNodeID(const FName EventName) const
+const bool UFigmaInstance::HasAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const
 {
-	if(EventName.IsEqual("OnButtonClicked", ENameCase::IgnoreCase))
+	if (IFlowTransition::HasAction(ActionType, Navigation))
 	{
-		return TransitionNodeID;
+		return true;
 	}
-	else
+
+	for (UFigmaNode* Child : Children)
 	{
-		FString OverrideId = EventName.ToString();
-
-		for (const FFigmaOverrides& Override : Overrides)
-		{
-			FString InstanceId;
-			FString InstanceComponentId;
-			Override.Id.Split(";", &InstanceId, &InstanceComponentId);
-			FString IdForName = InstanceComponentId.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
-			if (OverrideId.Contains(IdForName))
-			{
-				OverrideId = Override.Id;
-				break;
-			}
-		}
-		UFigmaNode* Node = FindNodeForOverriden(OverrideId, Children);
-		if (Node)
-		{
-			const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Node);
-			FString TransitionId = FlowTransition ? FlowTransition->GetTransitionNodeID("OnButtonClicked") : "";
-			if (!TransitionId.IsEmpty())
-			{
-				return FlowTransition->GetTransitionNodeID("OnButtonClicked");
-			}
-		}
-
-		UE_LOG_Figma2UMG(Warning, TEXT("[GetTransitionNodeID] Can't find Transition for Event %s inside instance %s"), *EventName.ToString(), *GetNodeName());
-
-		return TransitionNodeID;
+		const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Child);
+		if (FlowTransition && FlowTransition->HasAction(ActionType, Navigation))
+			return true;
 	}
+
+	return false;
 }
 
-void UFigmaInstance::GetAllTransitionNodeID(TArray<FString>& TransitionNodeIDs) const
+const FFigmaInteraction& UFigmaInstance::GetInteractionFromTrigger(const EFigmaTriggerType TriggerType) const
 {
-	IFlowTransition::GetAllTransitionNodeID(TransitionNodeIDs);
-	static const FString TransitionNodeIDStr("transitionNodeID");
-	for (const FFigmaOverrides& Override : Overrides)
+	return Super::GetInteractionFromTrigger(Interactions, TriggerType);
+}
+
+const FFigmaInteraction& UFigmaInstance::GetInteractionFromAction(const EFigmaActionType ActionType,const EFigmaActionNodeNavigation Navigation) const
+{
+	return Super::GetInteractionFromAction(Interactions, ActionType, Navigation);
+}
+
+void UFigmaInstance::GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const
+{
+	IFlowTransition::GetAllDestinationId(TransitionNodeIDs);
+	for (UFigmaNode* Child : Children)
 	{
-		if (Override.OverriddenFields.ContainsByPredicate([](const FString& Field) { return Field.Equals(TransitionNodeIDStr, ESearchCase::IgnoreCase);	}))
+		const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Child);
+		if (FlowTransition)
 		{
-			UFigmaNode* Node = FindNodeForOverriden(Override.Id, Children);
-			if(Node)
-			{
-				const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Node);
-				FString TransitionId = FlowTransition ? FlowTransition->GetTransitionNodeID("OnButtonClicked") : "";
-				if (!TransitionId.IsEmpty())
-				{
-					TransitionNodeIDs.Add(TransitionId);
-				}
-			}
-			else
-			{
-				UE_LOG_Figma2UMG(Warning, TEXT("[GetAllTransitionNodeID] Can't find Node %s inside instance %s"), *Override.Id, *GetNodeName());
-			}
+			FlowTransition->GetAllDestinationId(TransitionNodeIDs);
 		}
 	}
 }

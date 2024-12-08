@@ -7,6 +7,8 @@
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonTypes.h"
 
+FFigmaInteraction FFigmaInteraction::Invalid = FFigmaInteraction();
+
 void FFigmaInteraction::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 {
 	static FString TriggerStr("trigger");
@@ -40,4 +42,30 @@ void FFigmaInteraction::PostSerialize(const TSharedPtr<FJsonObject> JsonObj)
 			}
 		}
 	}
+}
+
+const UFigmaNodeAction* FFigmaInteraction::FindActionNode(const EFigmaActionNodeNavigation& Navigate) const
+{
+	for (UFigmaAction* Action : Actions)
+	{
+		if(!Action || Action->Type != EFigmaActionType::NODE)
+			continue;
+
+		UFigmaNodeAction* ActionNode = Cast<UFigmaNodeAction>(Action);
+		if(!ActionNode)
+			continue;
+
+		if (ActionNode->Navigation == Navigate)
+			return ActionNode;
+	}
+
+	return nullptr;
+}
+
+bool FFigmaInteraction::IsValid() const
+{
+	if(this == &Invalid)
+		return false;
+
+	return (Trigger != nullptr || !Actions.IsEmpty());
 }
