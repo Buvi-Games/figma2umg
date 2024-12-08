@@ -209,13 +209,17 @@ void UUserWidgetBuilder::SetupTransitions(const IFlowTransition* FlowTransition)
 
 void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const FName EventName, FObjectProperty* VariableProperty) const
 {
-	const FFigmaInteraction& Iteraction = FlowTransition->GetInteractionFromAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE);
-	if (!Iteraction.Trigger || !Iteraction.Trigger->MatchEvent(EventName.ToString()))
+	//const FFigmaInteraction& Iteraction = FlowTransition->GetInteractionFromAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE);
+	//if (!Iteraction.Trigger || !Iteraction.Trigger->MatchEvent(EventName.ToString()))
+	//	return;
+	//
+	//const UFigmaNodeAction* Action = Iteraction.FindActionNode(EFigmaActionNodeNavigation::NAVIGATE);
+	//if (!Action || Action->DestinationId.IsEmpty())
+	//	return;
+	const FString& DestinationId = FlowTransition->GetDestinationIdFromEvent(EventName);
+	if (DestinationId.IsEmpty())
 		return;
 
-	const UFigmaNodeAction* Action = Iteraction.FindActionNode(EFigmaActionNodeNavigation::NAVIGATE);
-	if (!Action || Action->DestinationId.IsEmpty())
-		return;
 
 	const UK2Node_ComponentBoundEvent* OnButtonClickedNode = FKismetEditorUtilities::FindBoundEventForComponent(WidgetBlueprint, EventName, VariableProperty->GetFName());
 	if (OnButtonClickedNode == nullptr)
@@ -246,7 +250,7 @@ void UUserWidgetBuilder::SetupTransition(const IFlowTransition* FlowTransition, 
 		{
 			const TObjectPtr<UFigmaFile> File = Node->GetFigmaFile();
 			const UFigmaImporter* Importer = File ? File->GetImporter() : nullptr;
-			const TObjectPtr<UWidgetBlueprintBuilder> AssetBuilder = Importer ? Importer->FintAssetBuilderForNode<UWidgetBlueprintBuilder>(Action->DestinationId) : nullptr;
+			const TObjectPtr<UWidgetBlueprintBuilder> AssetBuilder = Importer ? Importer->FintAssetBuilderForNode<UWidgetBlueprintBuilder>(DestinationId) : nullptr;
 			const TObjectPtr<UWidgetBlueprint> TransitionBP = AssetBuilder ? AssetBuilder->GetAsset() : nullptr;
 			if (TransitionBP)
 			{

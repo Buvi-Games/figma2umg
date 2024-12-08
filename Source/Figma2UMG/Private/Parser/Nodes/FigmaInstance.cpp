@@ -11,7 +11,9 @@
 #include "Builder/Widget/UserWidgetBuilder.h"
 #include "Builder/Widget/WidgetSwitcherBuilder.h"
 #include "Parser/FigmaFile.h"
+#include "Parser/Properties/FigmaAction.h"
 #include "Parser/Properties/FigmaComponentRef.h"
+#include "Parser/Properties/FigmaTrigger.h"
 
 void UFigmaInstance::PrepareForFlow()
 {
@@ -201,6 +203,49 @@ const FFigmaInteraction& UFigmaInstance::GetInteractionFromTrigger(const EFigmaT
 const FFigmaInteraction& UFigmaInstance::GetInteractionFromAction(const EFigmaActionType ActionType,const EFigmaActionNodeNavigation Navigation) const
 {
 	return Super::GetInteractionFromAction(Interactions, ActionType, Navigation);
+}
+
+const FString& UFigmaInstance::GetDestinationIdFromEvent(const FName& EventName) const
+{
+	if (EventName.IsEqual("OnButtonClicked", ENameCase::IgnoreCase))
+	{
+		const FFigmaInteraction& Interaction = GetInteractionFromAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE);
+		if (!Interaction.Trigger || !Interaction.Trigger->MatchEvent(EventName.ToString()))
+			return TransitionNodeID;
+
+		const UFigmaNodeAction* Action = Interaction.FindActionNode(EFigmaActionNodeNavigation::NAVIGATE);
+		if (!Action || Action->DestinationId.IsEmpty())
+			return TransitionNodeID;
+
+		return Action->DestinationId;
+	}
+	else
+	{
+		FString OverrideId = EventName.ToString();
+		for (const FFigmaOverrides& Override : Overrides)
+		{
+			FString InstanceId;
+			FString InstanceComponentId;
+			Override.Id.Split(";", &InstanceId, &InstanceComponentId);
+			FString IdForName = InstanceComponentId.Replace(TEXT(":"), TEXT("-"), ESearchCase::CaseSensitive);
+			if (OverrideId.Contains(IdForName))
+			{
+				OverrideId = Override.Id;
+				break;
+			}
+		}
+		UFigmaNode* Node = FindNodeForOverriden(OverrideId, Children);
+		if (Node)
+		{
+			const IFlowTransition* FlowTransition = Cast<IFlowTransition>(Node);
+			FString TransitionId = FlowTransition ? FlowTransition->GetDestinationIdFromEvent("OnButtonClicked") : "";
+			if (!TransitionId.IsEmpty())
+			{
+				return FlowTransition->GetDestinationIdFromEvent("OnButtonClicked");
+			}
+		}
+	}
+	return TransitionNodeID;
 }
 
 void UFigmaInstance::GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const

@@ -25,6 +25,11 @@ const FFigmaInteraction& UFigmaCanvas::GetInteractionFromAction(const EFigmaActi
 	return FFigmaInteraction::Invalid;
 }
 
+const FString& UFigmaCanvas::GetDestinationIdFromEvent(const FName& EventName) const
+{
+	return PrototypeStartNodeID;
+}
+
 void UFigmaCanvas::GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const
 {
 	if (!PrototypeStartNodeID.IsEmpty() && TransitionNodeIDs.Contains(PrototypeStartNodeID))

@@ -17,6 +17,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/Spacer.h"
 #include "Components/WrapBox.h"
+#include "Parser/Properties/FigmaAction.h"
 #include "Parser/Properties/FigmaTrigger.h"
 #include "UObject/ScriptInterface.h"
 
@@ -101,6 +102,19 @@ const FFigmaInteraction& UFigmaGroup::GetInteractionFromTrigger(const EFigmaTrig
 const FFigmaInteraction& UFigmaGroup::GetInteractionFromAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const
 {
 	return UFigmaNode::GetInteractionFromAction(Interactions, ActionType, Navigation);
+}
+
+const FString& UFigmaGroup::GetDestinationIdFromEvent(const FName& EventName) const
+{
+	const FFigmaInteraction& Interaction = GetInteractionFromAction(EFigmaActionType::NODE, EFigmaActionNodeNavigation::NAVIGATE);
+	if (!Interaction.Trigger || !Interaction.Trigger->MatchEvent(EventName.ToString()))
+		return TransitionNodeID;
+
+	const UFigmaNodeAction* Action = Interaction.FindActionNode(EFigmaActionNodeNavigation::NAVIGATE);
+	if (!Action || Action->DestinationId.IsEmpty())
+		return TransitionNodeID;
+
+	return Action->DestinationId;
 }
 
 bool UFigmaGroup::IsButton() const

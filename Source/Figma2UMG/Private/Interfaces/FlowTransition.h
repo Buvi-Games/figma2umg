@@ -32,6 +32,9 @@ public:
 	virtual const FFigmaInteraction& GetInteractionFromAction(const EFigmaActionType ActionType, const EFigmaActionNodeNavigation Navigation) const = 0;
 
 	UFUNCTION()
+	virtual const FString& GetDestinationIdFromEvent(const FName& EventName) const = 0;
+
+	UFUNCTION()
 	virtual void GetAllDestinationId(TArray<FString>& TransitionNodeIDs) const;
 
 	UFUNCTION()
