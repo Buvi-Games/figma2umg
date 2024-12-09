@@ -20,11 +20,15 @@ SImporterWidget::SImporterWidget()
 
 SImporterWidget::~SImporterWidget()
 {
-	if (Properties != nullptr)
-	{
-		Properties->RemoveFromRoot();
-		Properties = nullptr;
-	}
+	// Crashing due to Garbage collector
+	//if (Properties != nullptr)
+	//{
+	//	if (Properties->IsRooted())
+	//	{
+	//		Properties->RemoveFromRoot();
+	//	}
+	//	Properties = nullptr;
+	//}
 }
 
 void SImporterWidget::Construct(const FArguments& InArgs)

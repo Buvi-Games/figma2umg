@@ -28,9 +28,9 @@ void FFigma2UMGManager::Initialize()
 
 void FFigma2UMGManager::Shutdown()
 {
-	if (ImporterDockTab != NULL && ImporterDockTab.IsValid())
+	if (ImporterDockTab != nullptr && ImporterDockTab.IsValid())
 	{
-		ImporterDockTab = NULL;
+		ImporterDockTab->RequestCloseTab();
 	}
 
 	FFigma2UMGStyle::Shutdown();
@@ -46,7 +46,7 @@ void FFigma2UMGManager::SetupMenuItem()
 	FToolMenuSection& ContextMenuSection = ContextMenu->FindOrAddSection("ContentBrowserGetContent");
 
 	TWeakPtr<FFigma2UMGManager> WeakPtr = AsShared();
-	ContextMenuSection.AddDynamicEntry("ImpportFigma", FNewToolMenuSectionDelegate::CreateLambda([WeakPtr](FToolMenuSection& InSection)
+	ContextMenuSection.AddDynamicEntry("ImportFigma", FNewToolMenuSectionDelegate::CreateLambda([WeakPtr](FToolMenuSection& InSection)
 		{
 			UContentBrowserDataMenuContext_AddNewMenu* AddNewMenuContext = InSection.FindContext<UContentBrowserDataMenuContext_AddNewMenu>();
 			if (AddNewMenuContext && AddNewMenuContext->bCanBeModified && AddNewMenuContext->bContainsValidPackagePath && WeakPtr.IsValid())
