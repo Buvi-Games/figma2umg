@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 #include "Parser/Properties/FigmaEnums.h"
-
+#include "Dom/JsonObject.h"
 #include "FigmaNode.generated.h"
 
 struct FFigmaPaint;
