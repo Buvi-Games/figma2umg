@@ -49,6 +49,11 @@ void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const 
 bool UFigmaInstance::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	const TObjectPtr<UFigmaFile> FigmaFile = GetFigmaFile();
+	if(!FigmaFile)
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[Instance] Can't find Parent for instance %s. Check the logs for JsonValueToUProperty errors."), *GetNodeName());
+		return false;
+	}
 	const FFigmaComponentRef* ComponentRef = FigmaFile->FindComponentRef(ComponentId);
 	const TObjectPtr<UFigmaComponent> FigmaComponent = ComponentRef ? ComponentRef->GetComponent() : nullptr;
 	IsMissingComponent = (FigmaComponent == nullptr);
@@ -150,13 +155,6 @@ TScriptInterface<IWidgetBuilder> UFigmaInstance::CreateWidgetBuilders(bool IsRoo
 			UserWidgetBuilder->SetWidgetBlueprintBuilder(Builder);
 
 			return UserWidgetBuilder;
-		}
-
-		if(InstanceSwapBuilder)
-		{
-		}
-		else
-		{
 		}
 	}
 }
