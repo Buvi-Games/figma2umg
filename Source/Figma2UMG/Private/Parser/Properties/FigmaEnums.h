@@ -196,6 +196,7 @@ enum class EFigmaTextAutoResize
 	NONE,
 	HEIGHT,
 	WIDTH_AND_HEIGHT,
+	TRUNCATE,
 };
 
 UENUM()
@@ -260,6 +261,7 @@ enum class EFigmaTriggerType
 	ON_HOVER,
 	ON_PRESS,
 	ON_DRAG,
+	DRAG,
 	AFTER_TIMEOUT,
 	MOUSE_ENTER,
 	MOUSE_LEAVE,
@@ -340,4 +342,6 @@ enum class EFigmaEasingType
 	EASE_OUT,// : Ease out with an animation curve similar to CSS ease - out.
 	EASE_IN_AND_OUT,// : Ease in and then out with an animation curve similar to CSS ease - in - out.
 	GENTLE_SPRING,// : Gentle spring animation similar to react - spring.
+	CUSTOM_BEZIER,
+	GENTLE,
 };

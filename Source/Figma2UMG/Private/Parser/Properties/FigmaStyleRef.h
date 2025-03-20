@@ -14,7 +14,9 @@ enum class EFigmaStyleType
 	FILLS,
 	TEXT,
 	EFFECT,
-	GRID
+	GRID,
+	STROKE,
+	STROKES,
 };
 
 USTRUCT()
