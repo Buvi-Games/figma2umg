@@ -100,8 +100,7 @@ UMaterialExpression* UMaterialBuilder::Operation(UMaterialExpression* AExpressio
 
 	if (!OperationExpression)
 	{
-		;
-		FVector2D NodePosition;
+		FVector2D NodePosition = FVector2D(0.0f, 0.0f);
 		if (AExpression && BExpression)
 		{
 			NodePosition.X = FMath::Max(AExpression->MaterialExpressionEditorX, BExpression->MaterialExpressionEditorX);
