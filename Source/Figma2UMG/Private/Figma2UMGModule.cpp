@@ -62,5 +62,5 @@ UFigma2UMGSettings* FFigma2UMGModule::GetSettings() const
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_MODULE(FFigma2UMGModule, FFigma2UMG)
+IMPLEMENT_MODULE(FFigma2UMGModule, Figma2UMG)
 DEFINE_LOG_CATEGORY(LogFigma2UMG)
