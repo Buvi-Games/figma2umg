@@ -495,6 +495,11 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 	{
 		FigmaNode->PostSerialize(this, JsonObj.ToSharedRef());
 	}
+	else
+	{
+		UE_LOG_Figma2UMG(Error, TEXT("[CreateNode] A ndoe failt to be serialized from JSON. Figma must have updated its API. Please contact figma2umg@buvi.games and send your log. Thank you!"));
+		return nullptr;
+	}
 	
 	return FigmaNode;
 }
