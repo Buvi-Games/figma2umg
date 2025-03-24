@@ -20,14 +20,14 @@ void UFigmaVectorNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, cons
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
-FVector2D UFigmaVectorNode::GetAbsolutePosition() const
+FVector2D UFigmaVectorNode::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition();
+	return AbsoluteRenderBounds.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
-FVector2D UFigmaVectorNode::GetAbsoluteSize() const
+FVector2D UFigmaVectorNode::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize();
+	return AbsoluteRenderBounds.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
 bool UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)

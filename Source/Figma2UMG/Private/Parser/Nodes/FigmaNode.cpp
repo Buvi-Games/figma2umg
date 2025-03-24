@@ -71,13 +71,29 @@ ESlateVisibility UFigmaNode::GetVisibility() const
 
 FVector2D UFigmaNode::GetPosition() const
 {
-	FVector2D Pos = GetAbsolutePosition();
+	FVector2D Pos = GetAbsolutePosition(true);
 	if (ParentNode)
 	{
-		const FVector2D ParentPos = ParentNode->GetAbsolutePosition();
+		const FVector2D ParentPos = ParentNode->GetAbsolutePosition(true);
 		Pos = (Pos - ParentPos);
 	}
 	return Pos;
+}
+
+float UFigmaNode::GetRotation() const
+{
+	return Rotation;
+}
+
+float UFigmaNode::GetAbsoluteRotation() const
+{
+	float GlobalRotation = Rotation;
+	if (ParentNode)
+	{
+		const float ParentRotation = ParentNode->GetAbsoluteRotation();
+		GlobalRotation += ParentRotation;
+	}
+	return GlobalRotation;
 }
 
 void UFigmaNode::SetCurrentPackagePath(const FString& InPackagePath)

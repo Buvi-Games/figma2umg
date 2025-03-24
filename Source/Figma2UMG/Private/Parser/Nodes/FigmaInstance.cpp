@@ -25,14 +25,14 @@ void UFigmaInstance::PrepareForFlow()
 	}
 }
 
-FVector2D UFigmaInstance::GetAbsolutePosition() const
+FVector2D UFigmaInstance::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition();
+	return AbsoluteRenderBounds.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
-FVector2D UFigmaInstance::GetAbsoluteSize() const
+FVector2D UFigmaInstance::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize();
+	return AbsoluteRenderBounds.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
 void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)

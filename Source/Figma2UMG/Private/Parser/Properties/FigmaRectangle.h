@@ -12,13 +12,22 @@ struct FIGMA2UMG_API FFigmaRectangle
 public:
 	GENERATED_BODY()
 
-	FVector2D GetPosition() const
+	FVector2D GetPosition(const float Rotation) const
 	{
-		return FVector2D(X, Y);
+		const FVector2D Position(X, Y);
+	    return Position.GetRotated(-Rotation);
 	}
-	FVector2D GetSize() const
+
+	FVector2D GetSize(float Rotation) const
 	{
-		return FVector2D(Width, Height);
+		const float Radians = FMath::DegreesToRadians(Rotation);
+	    const float CosAngle = FMath::Abs(FMath::Cos(Radians));
+		const float SinAngle = FMath::Abs(FMath::Sin(Radians));
+
+		const float RotatedWidth = Width * CosAngle + Height * SinAngle;
+		const float RotatedHeight = Width * SinAngle + Height * CosAngle;
+
+	    return FVector2D(RotatedWidth, RotatedHeight);
 	}
 
 	UPROPERTY()

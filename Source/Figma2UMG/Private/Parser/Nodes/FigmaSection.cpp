@@ -31,14 +31,14 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
-FVector2D UFigmaSection::GetAbsolutePosition() const
+FVector2D UFigmaSection::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition();
+	return AbsoluteRenderBounds.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
-FVector2D UFigmaSection::GetAbsoluteSize() const
+FVector2D UFigmaSection::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize();
+	return AbsoluteRenderBounds.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
 FString UFigmaSection::GetCurrentPackagePath() const

@@ -42,10 +42,11 @@ public:
 	ESlateVisibility GetVisibility() const;
 
 	FVector2D GetPosition() const;
-	float GetRotation() const { return Rotation; }
+	float GetRotation() const;
+	float GetAbsoluteRotation() const;
 
-	virtual FVector2D GetAbsolutePosition() const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D::ZeroVector;)
-	virtual FVector2D GetAbsoluteSize() const PURE_VIRTUAL(UFigmaNode::GetAbsoluteSize(), return FVector2D::ZeroVector;)
+	virtual FVector2D GetAbsolutePosition(const bool IsTopWidgetForNode) const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D::ZeroVector;)
+	virtual FVector2D GetAbsoluteSize(const bool IsTopWidgetForNode) const PURE_VIRTUAL(UFigmaNode::GetAbsoluteSize(), return FVector2D::ZeroVector;)
 
 	void SetCurrentPackagePath(const FString & InPackagePath);
 	virtual FString GetCurrentPackagePath() const;

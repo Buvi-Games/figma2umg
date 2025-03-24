@@ -408,37 +408,42 @@ void IWidgetBuilder::SetFill(const TArray<FFigmaPaint>& Fills) const
 
 bool IWidgetBuilder::GetSizeValue(FVector2D& Size, bool& SizeToContent) const
 {
+	float Rotation = 0.0f;
+	if (IsTopWidgetForNode())
+	{
+		Rotation = Node->GetAbsoluteRotation();
+	}
 	if(const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
 	{
-		Size = FigmaGroup->AbsoluteRenderBounds.GetSize();
+		Size = FigmaGroup->AbsoluteRenderBounds.GetSize(Rotation);
 		SizeToContent = FigmaGroup->LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || FigmaGroup->LayoutSizingVertical == EFigmaLayoutSizing::FILL;
 		return true;
 	}
 	
 	if (const UFigmaSection* FigmaSection = Cast<UFigmaSection>(Node))
 	{
-		Size = FigmaSection->AbsoluteRenderBounds.GetSize();
+		Size = FigmaSection->AbsoluteRenderBounds.GetSize(Rotation);
 		SizeToContent = false;
 		return true;
 	}
 	
 	if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
 	{
-		Size = FigmaInstance->AbsoluteRenderBounds.GetSize();
+		Size = FigmaInstance->AbsoluteRenderBounds.GetSize(Rotation);
 		SizeToContent = false;
 		return true;
 	}
 	
 	if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
 	{
-		Size = FigmaText->AbsoluteRenderBounds.GetSize();
+		Size = FigmaText->AbsoluteRenderBounds.GetSize(Rotation);
 		SizeToContent = FigmaText->LayoutSizingHorizontal == EFigmaLayoutSizing::FILL || FigmaText->LayoutSizingVertical == EFigmaLayoutSizing::FILL;
 		return true;
 	}
 	
 	if (const UFigmaVectorNode* FigmaVectorNode = Cast<UFigmaVectorNode>(Node))
 	{
-		Size = FigmaVectorNode->AbsoluteRenderBounds.GetSize();
+		Size = FigmaVectorNode->AbsoluteRenderBounds.GetSize(Rotation);
 		SizeToContent = false;
 		return true;
 	}

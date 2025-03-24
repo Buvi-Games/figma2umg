@@ -127,7 +127,7 @@ void UImageWidgetBuilder::SetupFill() const
 	{
 		Widget->SetBrushFromTexture(Texture, false);
 		FSlateBrush Brush = Widget->GetBrush();
-		Brush.SetImageSize(Node->GetAbsoluteSize());
+		Brush.SetImageSize(Node->GetAbsoluteSize(IsTopWidgetForNode()));
 		Brush.DrawAs = GetDrawAs(Brush.DrawAs);
 		SetBrush(Widget, Brush);
 		Widget->SetColorAndOpacity(FLinearColor::White);
@@ -136,7 +136,7 @@ void UImageWidgetBuilder::SetupFill() const
 	{
 		Widget->SetBrushFromMaterial(Material);
 		FSlateBrush Brush = Widget->GetBrush();
-		Brush.SetImageSize(Node->GetAbsoluteSize());
+		Brush.SetImageSize(Node->GetAbsoluteSize(IsTopWidgetForNode()));
 		Brush.TintColor = FLinearColor::White;
 		Brush.DrawAs = GetDrawAs(Brush.DrawAs);
 		Brush.Margin.Top = 0.5f;
@@ -151,7 +151,7 @@ void UImageWidgetBuilder::SetupFill() const
 		FSlateBrush Brush = Widget->GetBrush();
 		Brush.TintColor = GetTintColor();
 		Brush.DrawAs = GetDrawAs(Brush.DrawAs);
-		Brush.SetImageSize(Node->GetAbsoluteSize());
+		Brush.SetImageSize(Node->GetAbsoluteSize(IsTopWidgetForNode()));
 		SetBrush(Widget, Brush);
 		if (HasSolidColor)
 		{
