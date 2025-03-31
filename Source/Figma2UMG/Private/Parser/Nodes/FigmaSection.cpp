@@ -33,13 +33,19 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 
 FVector2D UFigmaSection::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	return AbsoluteBoundingBox.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
 FVector2D UFigmaSection::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
+
+inline FVector2D UFigmaSection::GetAbsoluteCenter() const
+{
+	return AbsoluteBoundingBox.GetCenter();
+}
+
 
 FString UFigmaSection::GetCurrentPackagePath() const
 {

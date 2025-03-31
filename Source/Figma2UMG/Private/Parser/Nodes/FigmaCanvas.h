@@ -22,6 +22,8 @@ public:
 	GENERATED_BODY()
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition(const bool IsTopWidgetForNode) const override { return FVector2D::ZeroVector; }
+	virtual FVector2D GetAbsoluteSize(const bool IsTopWidgetForNode) const override { return FVector2D::ZeroVector; }
+	virtual FVector2D GetAbsoluteCenter() const override { return FVector2D::ZeroVector; }
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 
 	// IFigmaContainer

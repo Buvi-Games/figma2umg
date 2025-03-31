@@ -112,6 +112,19 @@ void UImageWidgetBuilder::Setup() const
 
 		SetCorner(Widget, Corners, !Corners.IsNearlyZero3());
 	}
+	else if (const UFigmaEllipse* FigmaEllipse = Cast<UFigmaEllipse>(Node))
+	{
+		SetStroke(Widget, FigmaEllipse->Strokes, FigmaEllipse->StrokeWeight);
+
+		float CornerRadius = FigmaEllipse->CornerRadius;
+		if (FigmaEllipse->AbsoluteBoundingBox.Width == FigmaEllipse->AbsoluteBoundingBox.Height)
+		{
+			CornerRadius = FigmaEllipse->AbsoluteBoundingBox.Width * 0.5f;
+		}
+
+		const FVector4 Corners = FVector4(CornerRadius, CornerRadius, CornerRadius, CornerRadius);
+		SetCorner(Widget, Corners);
+	}
 	else if (const UFigmaVectorNode* FigmaVectorNode = Cast<UFigmaVectorNode>(Node))
 	{
 		SetStroke(Widget, FigmaVectorNode->Strokes, FigmaVectorNode->StrokeWeight);
@@ -249,7 +262,7 @@ TEnumAsByte<ESlateBrushDrawType::Type> UImageWidgetBuilder::GetDrawAs(TEnumAsByt
 
 	if (const UFigmaEllipse* FigmaEllipse = Cast<UFigmaEllipse>(Node))
 	{
-		if (FigmaEllipse->AbsoluteRenderBounds.Height == FigmaEllipse->AbsoluteRenderBounds.Width)
+		if (FigmaEllipse->AbsoluteBoundingBox.Height == FigmaEllipse->AbsoluteBoundingBox.Width)
 		{
 			return ESlateBrushDrawType::RoundedBox;
 		}

@@ -36,6 +36,7 @@ public:
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const override;
 	virtual FVector2D GetAbsolutePosition(const bool IsTopWidgetForNode) const override;
 	virtual FVector2D GetAbsoluteSize(const bool IsTopWidgetForNode) const override;
+	virtual FVector2D GetAbsoluteCenter() const override;
 
 	// IFigmaContainer
 	virtual FString GetJsonArrayName() const override { return FString("Children"); };
@@ -223,3 +224,4 @@ protected:
 
 	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
 };
+

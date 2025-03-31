@@ -75,12 +75,18 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 
 FVector2D UFigmaGroup::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	const float CurrentRotation = IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f;
+	return AbsoluteBoundingBox.GetPosition(CurrentRotation);
 }
 
 FVector2D UFigmaGroup::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+}
+
+FVector2D UFigmaGroup::GetAbsoluteCenter() const
+{
+	return AbsoluteBoundingBox.GetCenter();
 }
 
 FMargin UFigmaGroup::GetPadding() const

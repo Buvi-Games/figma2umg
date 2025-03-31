@@ -71,23 +71,47 @@ ESlateVisibility UFigmaNode::GetVisibility() const
 
 FVector2D UFigmaNode::GetPosition() const
 {
-	FVector2D Pos = GetAbsolutePosition(true);
-	if (ParentNode)
+	FVector2D Position = GetAbsolutePosition(true);
+	if (ParentNode && !ParentNode->IsA<UFigmaCanvas>())
 	{
-		const FVector2D ParentPos = ParentNode->GetAbsolutePosition(true);
-		Pos = (Pos - ParentPos);
+		FVector2D ParentAbsolutTopLeft = ParentNode->GetAbsolutePosition(true);
+
+		const FVector2D ParentUnRotatedSize = ParentNode->GetAbsoluteSize(true);
+		const FVector2D ParentCenter = ParentAbsolutTopLeft + (ParentUnRotatedSize * 0.5f);
+		const float ParentRotation = ParentNode->GetAbsoluteRotation();
+	
+		const FVector2D ParentOffset = ParentAbsolutTopLeft - ParentCenter;
+		const FVector2D ParentRotatedTopLeft = ParentOffset.GetRotated(ParentRotation)+ ParentCenter;
+
+		const FVector2D Center = GetAbsoluteCenter();
+		const FVector2D RotatedCenterOffset = Center - ParentRotatedTopLeft;
+		const FVector2D CenterOffset = RotatedCenterOffset.GetRotated(-ParentRotation);
+		
+		const FVector2D Size = GetAbsoluteSize(true);
+		Position = CenterOffset - (Size * 0.5f);
 	}
-	return Pos;
+
+	return Position;
 }
 
 float UFigmaNode::GetRotation() const
 {
+	const UFigmaVectorNode* FigmaVectorNode = Cast<UFigmaVectorNode>(this);
+	if (FigmaVectorNode && FigmaVectorNode->ShouldIgnoreRotation())
+	{
+		if (ParentNode)
+		{
+			const float ParentRotation = ParentNode->GetAbsoluteRotation();
+			return -ParentRotation;
+		}
+		return 0.0f;
+	}
 	return Rotation;
 }
 
 float UFigmaNode::GetAbsoluteRotation() const
 {
-	float GlobalRotation = Rotation;
+	float GlobalRotation = GetRotation();
 	if (ParentNode)
 	{
 		const float ParentRotation = ParentNode->GetAbsoluteRotation();

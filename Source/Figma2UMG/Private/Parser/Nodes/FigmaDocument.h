@@ -19,6 +19,9 @@ public:
 
 	// UFigmaNode
 	virtual FVector2D GetAbsolutePosition(const bool IsTopWidgetForNode) const override { return FVector2D::ZeroVector; }
+	virtual FVector2D GetAbsoluteSize(const bool IsTopWidgetForNode) const override { return FVector2D::ZeroVector; }
+	virtual FVector2D GetAbsoluteCenter() const override { return FVector2D::ZeroVector; }
+
 	virtual TObjectPtr<UFigmaFile> GetFigmaFile() const override { return FigmaFile; }
 	virtual bool CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders) override;
 	virtual FString GetPackageNameForBuilder(const TScriptInterface<IAssetBuilder>& InAssetBuilder) const override;

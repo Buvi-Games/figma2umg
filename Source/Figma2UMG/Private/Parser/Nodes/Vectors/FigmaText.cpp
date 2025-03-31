@@ -29,12 +29,17 @@ void UFigmaText::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSha
 
 FVector2D UFigmaText::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	return AbsoluteBoundingBox.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
 FVector2D UFigmaText::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+}
+
+FVector2D UFigmaText::GetAbsoluteCenter() const
+{
+	return AbsoluteBoundingBox.GetCenter();
 }
 
 bool UFigmaText::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
