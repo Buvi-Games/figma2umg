@@ -184,6 +184,24 @@ int FImageRequests::GetCurrentRequestTotalCount() const
 	return Count;
 }
 
+int FImageRequests::GetAllRequestsTotalCount() const
+{
+	if (RequestsPerFile.Num() == 0)
+		return 0;
+
+	int Count = 0;
+	for (const FImagePerFileRequests& CurrentFile : RequestsPerFile)
+	{
+		for(const FImageRequest& Request : CurrentFile.Requests)
+		{
+			if (!Request.URL.IsEmpty())
+				Count++;
+		}
+	}
+
+	return Count;
+}
+
 int FImageRequests::GetRequestTotalCount() const
 {
 	int Count = 0;

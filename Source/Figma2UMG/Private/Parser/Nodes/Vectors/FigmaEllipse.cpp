@@ -5,9 +5,24 @@
 
 #include "Builder/Widget/ImageWidgetBuilder.h"
 
+FVector2D UFigmaEllipse::GetAbsolutePosition(const bool IsTopWidgetForNode) const
+{
+	return AbsoluteBoundingBox.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+}
+
+FVector2D UFigmaEllipse::GetAbsoluteSize(const bool IsTopWidgetForNode) const
+{
+	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);	
+}
+
+FVector2D UFigmaEllipse::GetAbsoluteCenter() const
+{
+	return AbsoluteBoundingBox.GetCenter();
+}
+
 bool UFigmaEllipse::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
-	if(AbsoluteRenderBounds.Height != AbsoluteRenderBounds.Width)
+	if(AbsoluteBoundingBox.Height != AbsoluteBoundingBox.Width)
 	{
 		return Super::CreateAssetBuilder(InFileKey, AssetBuilders);
 	}
@@ -77,5 +92,5 @@ TScriptInterface<IWidgetBuilder> UFigmaEllipse::CreateWidgetBuilders(bool IsRoot
 bool UFigmaEllipse::DoesSupportImageRef() const
 {
 	// Only Circle ca support by doing RoundCorners
-	return (AbsoluteRenderBounds.Height == AbsoluteRenderBounds.Width);
+	return (AbsoluteBoundingBox.Height == AbsoluteBoundingBox.Width);
 }

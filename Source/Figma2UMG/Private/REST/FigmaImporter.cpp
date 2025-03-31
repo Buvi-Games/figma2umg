@@ -595,6 +595,7 @@ void UFigmaImporter::OnFigmaImagesURLReceived(FHttpRequestPtr HttpRequest, FHttp
 			UE_LOG_Figma2UMG(Display, TEXT("[Figma images Request] %u/%u images received from Figma API."), ValidURL, ImagesRequestResult.Images.Num());
 
 			ImageDownloadCount = 0;
+			ImageDownloadCountTotal = RequestedImages.GetAllRequestsTotalCount();
 			RequestImageURLs();
 		}
 		else
@@ -637,16 +638,15 @@ void UFigmaImporter::DownloadNextImage()
 			if (ImageRequest && ImageRequest->GetRequestedURL() && !ImageRequest->URL.IsEmpty())
 			{
 				ImageDownloadCount++;
-				const float ImageCountTotal = RequestedImages.GetCurrentRequestTotalCount();
 
 				TArray<FStringFormatArg> args;
 				args.Add(ImageDownloadCount);
-				args.Add(static_cast<int>(ImageCountTotal));
+				args.Add(static_cast<int>(ImageDownloadCountTotal));
 				FString msg = FString::Format(TEXT("Downloading Image {0} of {1}"), args);
 
-				SubProgressImageDownload.Update(100.f / ImageCountTotal, FText::FromString(msg));
+				SubProgressImageDownload.Update(100.f / ImageDownloadCountTotal, FText::FromString(msg));
 
-				UE_LOG_Figma2UMG(Display, TEXT("Downloading image (%i/%i) %s at %s."), ImageDownloadCount, static_cast<int>(ImageCountTotal), *ImageRequest->ImageName, *ImageRequest->URL);
+				UE_LOG_Figma2UMG(Display, TEXT("Downloading image (%i/%i) %s at %s."), ImageDownloadCount, static_cast<int>(ImageDownloadCountTotal), *ImageRequest->ImageName, *ImageRequest->URL);
 				ImageRequest->StartDownload(OnImageDownloadRequestCompleted);
 			}
 			else
@@ -1059,7 +1059,7 @@ void UFigmaImporter::ProgressBar::Update(float ExpectedWorkThisFrame, const FTex
 void UFigmaImporter::ProgressBar::UpdateGameThread()
 {
 	const float WorkRemaining = ProgressTask ? (ProgressTask->TotalAmountOfWork - (ProgressTask->CompletedWork + ProgressTask->CurrentFrameScope)) : 0.0f;
-	if (ProgressTask && ProgressThisFrame > 0.0f && WorkRemaining > 0.0f)
+	if (ProgressTask)
 	{
 		ProgressTask->EnterProgressFrame(FMath::Min(ProgressThisFrame, WorkRemaining), ProgressMessage);
 		ProgressThisFrame = 0.0f;

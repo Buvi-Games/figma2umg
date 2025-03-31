@@ -6,8 +6,6 @@
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Widget/ImageWidgetBuilder.h"
-#include "Components/Image.h"
-#include "Factory/RawTexture2DFactory.h"
 #include "Parser/Properties/FigmaAction.h"
 #include "Parser/Properties/FigmaTrigger.h"
 #include "REST/FigmaImporter.h"
@@ -20,14 +18,40 @@ void UFigmaVectorNode::PostSerialize(const TObjectPtr<UFigmaNode> InParent, cons
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
-FVector2D UFigmaVectorNode::GetAbsolutePosition() const
+FVector2D UFigmaVectorNode::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition();
+	if (AssetBuilder)
+	{
+		return AbsoluteRenderBounds.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	}
+	else
+	{
+		return AbsoluteBoundingBox.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+	}
 }
 
-FVector2D UFigmaVectorNode::GetAbsoluteSize() const
+FVector2D UFigmaVectorNode::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize();
+	if (AssetBuilder)
+	{
+		return AbsoluteRenderBounds.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);	
+	}
+	else
+	{
+		return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);	
+	}
+}
+
+FVector2D UFigmaVectorNode::GetAbsoluteCenter() const
+{
+	if (AssetBuilder)
+	{
+		return AbsoluteRenderBounds.GetCenter();
+	}
+	else
+	{
+		return AbsoluteBoundingBox.GetCenter();
+	}
 }
 
 bool UFigmaVectorNode::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
@@ -96,4 +120,18 @@ const FString& UFigmaVectorNode::GetDestinationIdFromEvent(const FName& EventNam
 bool UFigmaVectorNode::DoesSupportImageRef() const
 {
 	return false;
+}
+
+bool UFigmaVectorNode::ShouldIgnoreRotation() const
+{
+	switch (GetType())
+	{
+		case ENodeTypes::VECTOR:
+		case ENodeTypes::STAR:
+		case ENodeTypes::LINE:
+		case ENodeTypes::REGULAR_POLYGON:
+			return true;
+		default:
+			return false;
+	}
 }

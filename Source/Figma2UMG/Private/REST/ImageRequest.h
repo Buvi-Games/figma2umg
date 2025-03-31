@@ -77,6 +77,7 @@ public:
 
 	FImageRequest* GetNextToDownload();
 	int GetCurrentRequestTotalCount() const;
+	int GetAllRequestsTotalCount() const;
 	int GetRequestTotalCount() const;
 
 private:

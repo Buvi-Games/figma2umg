@@ -5,6 +5,21 @@
 
 #include "Builder/Widget/ImageWidgetBuilder.h"
 
+FVector2D UFigmaRectangleVector::GetAbsolutePosition(const bool IsTopWidgetForNode) const
+{
+	return AbsoluteBoundingBox.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+}
+
+FVector2D UFigmaRectangleVector::GetAbsoluteSize(const bool IsTopWidgetForNode) const
+{
+	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);	
+}
+
+FVector2D UFigmaRectangleVector::GetAbsoluteCenter() const
+{
+	return AbsoluteBoundingBox.GetCenter();
+}
+
 bool UFigmaRectangleVector::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
 	bool HasImage = false;
