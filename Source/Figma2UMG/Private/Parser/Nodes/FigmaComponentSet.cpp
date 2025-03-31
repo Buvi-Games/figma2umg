@@ -6,6 +6,7 @@
 #include "FigmaInstance.h"
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/MaterialBuilder.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"
 #include "Builder/Widget/WidgetSwitcherBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
@@ -184,6 +185,10 @@ FString UFigmaComponentSet::GetPackageNameForBuilder(const TScriptInterface<IAss
 	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
 	{
 		Suffix = "Material";
+	}
+	else if (Cast<UTexture2DBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Textures";
 	}
 
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;

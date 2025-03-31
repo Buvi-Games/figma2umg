@@ -7,6 +7,7 @@
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
 #include "Builder/Asset/MaterialBuilder.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 
 void UFigmaComponent::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
 {
@@ -30,6 +31,10 @@ FString UFigmaComponent::GetPackageNameForBuilder(const TScriptInterface<IAssetB
 	if (Cast<UMaterialBuilder>(InAssetBuilder.GetObject()))
 	{
 		Suffix = "Material";
+	}
+	else if (Cast<UTexture2DBuilder>(InAssetBuilder.GetObject()))
+	{
+		Suffix = "Textures";
 	}
 
 	return TopParentNode->GetCurrentPackagePath() + TEXT("/") + Suffix;
