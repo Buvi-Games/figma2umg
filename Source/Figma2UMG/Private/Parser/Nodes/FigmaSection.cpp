@@ -41,7 +41,7 @@ FVector2D UFigmaSection::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
-sFVector2D UFigmaSection::GetAbsoluteCenter() const
+FVector2D UFigmaSection::GetAbsoluteCenter() const
 {
 	return AbsoluteBoundingBox.GetCenter();
 }
