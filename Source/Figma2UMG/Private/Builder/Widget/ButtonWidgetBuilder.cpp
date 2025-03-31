@@ -334,6 +334,14 @@ void UButtonWidgetBuilder::SetupBrush(FSlateBrush& Brush, const UFigmaGroup& Fig
 		Brush.TintColor = FLinearColor(1.0f, 1.0f, 1.0f, 0.0f);
 	}
 
+	for (const FFigmaPaint& Fill : FigmaGroup.Fills)
+	{
+		if (const TObjectPtr<UTexture2D> Texture = Fill.GetTexture())
+		{
+			Brush.SetResourceObject(Texture);
+		}
+	}
+
 	if (!FigmaGroup.Strokes.IsEmpty())
 	{
 		Brush.OutlineSettings.Color = FigmaGroup.Strokes[0].GetLinearColor();
