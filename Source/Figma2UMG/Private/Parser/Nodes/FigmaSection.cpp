@@ -31,15 +31,21 @@ void UFigmaSection::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const T
 	PostSerializeProperty(JsonObj, "strokes", Strokes);
 }
 
-FVector2D UFigmaSection::GetAbsolutePosition() const
+FVector2D UFigmaSection::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition();
+	return AbsoluteBoundingBox.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
-FVector2D UFigmaSection::GetAbsoluteSize() const
+FVector2D UFigmaSection::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize();
+	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
+
+inline FVector2D UFigmaSection::GetAbsoluteCenter() const
+{
+	return AbsoluteBoundingBox.GetCenter();
+}
+
 
 FString UFigmaSection::GetCurrentPackagePath() const
 {

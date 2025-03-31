@@ -25,14 +25,19 @@ void UFigmaInstance::PrepareForFlow()
 	}
 }
 
-FVector2D UFigmaInstance::GetAbsolutePosition() const
+FVector2D UFigmaInstance::GetAbsolutePosition(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetPosition();
+	return AbsoluteBoundingBox.GetPosition(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
 }
 
-FVector2D UFigmaInstance::GetAbsoluteSize() const
+FVector2D UFigmaInstance::GetAbsoluteSize(const bool IsTopWidgetForNode) const
 {
-	return AbsoluteRenderBounds.GetSize();
+	return AbsoluteBoundingBox.GetSize(IsTopWidgetForNode ? GetAbsoluteRotation() : 0.0f);
+}
+
+FVector2D UFigmaInstance::GetAbsoluteCenter() const
+{
+	return AbsoluteBoundingBox.GetCenter();
 }
 
 void UFigmaInstance::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
@@ -334,7 +339,7 @@ const FFigmaComponentPropertyDefinition* UFigmaInstance::IsInstanceSwap() const
 			PropertyDefinition = FigmaComponentSet->ComponentPropertyDefinitions.Find(MainComponent);
 		}
 
-		HigherNode = ParentNode->GetParentNode();
+		HigherNode = HigherNode->GetParentNode();
 	}
 
 	if (PropertyDefinition && PropertyDefinition->Type == EFigmaComponentPropertyType::INSTANCE_SWAP)

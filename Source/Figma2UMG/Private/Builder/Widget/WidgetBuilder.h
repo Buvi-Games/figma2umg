@@ -148,7 +148,7 @@ void IWidgetBuilder::SetCorner(TObjectPtr<WidgetT> Widget, const FVector4& Corne
 		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
 		Brush.OutlineSettings.RoundingType = ESlateBrushRoundingType::FixedRadius;
 		Brush.OutlineSettings.CornerRadii = CornerRadii;
-		FVector2D AbsoluteSize = Node->GetAbsoluteSize();
+		FVector2D AbsoluteSize = Node->GetAbsoluteSize(IsTopWidgetForNode());
 		AbsoluteSize.X -= Brush.OutlineSettings.Width * 2.0f;
 		AbsoluteSize.Y -= Brush.OutlineSettings.Width * 2.0f;
 

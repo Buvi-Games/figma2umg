@@ -42,10 +42,12 @@ public:
 	ESlateVisibility GetVisibility() const;
 
 	FVector2D GetPosition() const;
-	float GetRotation() const { return Rotation; }
+	float GetRotation() const;
+	float GetAbsoluteRotation() const;
 
-	virtual FVector2D GetAbsolutePosition() const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D::ZeroVector;)
-	virtual FVector2D GetAbsoluteSize() const PURE_VIRTUAL(UFigmaNode::GetAbsoluteSize(), return FVector2D::ZeroVector;)
+	virtual FVector2D GetAbsolutePosition(const bool IsTopWidgetForNode) const PURE_VIRTUAL(UFigmaNode::GetAbsolutePosition(), return FVector2D::ZeroVector;)
+	virtual FVector2D GetAbsoluteSize(const bool IsTopWidgetForNode) const PURE_VIRTUAL(UFigmaNode::GetAbsoluteSize(), return FVector2D::ZeroVector;)
+	virtual FVector2D GetAbsoluteCenter() const PURE_VIRTUAL(UFigmaNode::GetAbsoluteCenter(), return FVector2D::ZeroVector;)
 
 	void SetCurrentPackagePath(const FString & InPackagePath);
 	virtual FString GetCurrentPackagePath() const;
@@ -65,7 +67,8 @@ public:
 	void CreatePaintAssetBuilderIfNeeded(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, TArray<FFigmaPaint>& InFills, TArray<FFigmaPaint>& InStrokes) const;
 
 	virtual TScriptInterface<IWidgetBuilder> CreateWidgetBuilders(bool IsRoot = false, bool AllowFrameButton = true) const { return nullptr; }
-
+	
+	ENodeTypes GetType() const {return Type;}
 protected:
 	void SerializeArray(TArray<UFigmaNode*>& Array, const TSharedRef<FJsonObject> JsonObj, const FString& arrayName);
 

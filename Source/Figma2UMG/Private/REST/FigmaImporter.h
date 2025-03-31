@@ -156,6 +156,7 @@ protected:
 	FImagesRequestResult ImagesRequestResult;
 	FImageRequests RequestedImages;
 	int ImageDownloadCount = 0;
+	int ImageDownloadCountTotal = 0;
 	int ImageURLRequestedCount = 0;
 	int TotalImageURLRequestedCount = 0;
 
