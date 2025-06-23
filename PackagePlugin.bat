@@ -2,8 +2,10 @@ REM "C:\Program Files\Epic Games\UE_5.2\Engine\Build\BatchFiles\RunUAT.bat" Buil
 REM "C:\Program Files\Epic Games\UE_5.3\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.3"
 REM "C:\Program Files\Epic Games\UE_5.4\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.4"
 REM "C:\Program Files\Epic Games\UE_5.5\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.5"
+"C:\Program Files\Epic Games\UE_5.6\Engine\Build\BatchFiles\RunUAT.bat" BuildPlugin -Plugin="D:\Projects\Figma2UMGTester\Plugins\figma2umg\Figma2UMG.uplugin" -Package="D:\Projects\Figma2UMG-Release\5.6"
 
 REM sh "/Users/Shared/Epic Games/UE_5.2/Engine/Build/BatchFiles/RunUAT.sh" BuildPlugin -Plugin="/Users/Beto/Projects/Figma2UMGTester/Plugins/figma2umg/Figma2UMG.uplugin" -Package="/Users/Beto/Projects/Figma2UMG-Release/5.2"
 REM sh "/Users/Shared/Epic Games/UE_5.3/Engine/Build/BatchFiles/RunUAT.sh" BuildPlugin -Plugin="/Users/Beto/Projects/Figma2UMGTester/Plugins/figma2umg/Figma2UMG.uplugin" -Package="/Users/Beto/Projects/Figma2UMG-Release/5.3"
 REM sh "/Users/Shared/Epic Games/UE_5.4/Engine/Build/BatchFiles/RunUAT.sh" BuildPlugin -Plugin="/Users/Beto/Projects/Figma2UMGTester/Plugins/figma2umg/Figma2UMG.uplugin" -Package="/Users/Beto/Projects/Figma2UMG-Release/5.4"
-sh "/Users/Shared/Epic Games/UE_5.5/Engine/Build/BatchFiles/RunUAT.sh" BuildPlugin -Plugin="/Users/Beto/Projects/Figma2UMGTester/Plugins/figma2umg/Figma2UMG.uplugin" -Package="/Users/Beto/Projects/Figma2UMG-Release/5.5"
+REM sh "/Users/Shared/Epic Games/UE_5.5/Engine/Build/BatchFiles/RunUAT.sh" BuildPlugin -Plugin="/Users/Beto/Projects/Figma2UMGTester/Plugins/figma2umg/Figma2UMG.uplugin" -Package="/Users/Beto/Projects/Figma2UMG-Release/5.5"
+REM sh "/Users/Shared/Epic Games/UE_5.6/Engine/Build/BatchFiles/RunUAT.sh" BuildPlugin -Plugin="/Users/Beto/Projects/Figma2UMGTester/Plugins/figma2umg/Figma2UMG.uplugin" -Package="/Users/Beto/Projects/Figma2UMG-Release/5.6"
