@@ -185,7 +185,7 @@ void UFigmaFile::FixComponentSetRef()
 		}
 		else
 		{
-			UE_LOG_Figma2UMG(Error, TEXT("File %s's Component %s is part of a ComponentSet %i not found."), *Name, *ComponentPair.Value.Name, *ComponentPair.Value.ComponentSetId);
+			UE_LOG_Figma2UMG(Error, TEXT("File %s's Component %s is part of a ComponentSet %s not found."), *Name, *ComponentPair.Value.Name, *ComponentPair.Value.ComponentSetId);
 		}
 	}
 }
