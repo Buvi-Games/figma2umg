@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "CanvasBuilder.h"
+#include "Builder/Widget/Panels/CanvasBuilder.h"
 
 #include "Components/CanvasPanel.h"
 #include "Components/WidgetSwitcher.h"

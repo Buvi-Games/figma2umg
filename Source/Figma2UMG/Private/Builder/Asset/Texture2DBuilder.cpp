@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "Texture2DBuilder.h"
+#include "Builder/Asset/Texture2DBuilder.h"
 
 #include "AssetToolsModule.h"
 #include "Figma2UMGModule.h"

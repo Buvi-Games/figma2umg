@@ -4,8 +4,8 @@
 #include "UI/Figma2UMGManager.h"
 
 #include "ContentBrowserDataMenuContexts.h"
-#include "Figma2UMGStyle.h"
-#include "SImporterWidget.h"
+#include "UI/Figma2UMGStyle.h"
+#include "UI/SImporterWidget.h"
 
 #define LOCTEXT_NAMESPACE "Figma2UMG"
 #define CONTENTBROWSER_MODULE_NAME TEXT("ContentBrowser")

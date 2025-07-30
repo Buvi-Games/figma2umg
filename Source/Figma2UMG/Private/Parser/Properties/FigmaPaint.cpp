@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (c) 2024 Buvi Games
 
-#include "FigmaPaint.h"
+#include "Parser/Properties/FigmaPaint.h"
 
 #include "Figma2UMGModule.h"
 #include "Builder/Asset/MaterialBorderBuilder.h"

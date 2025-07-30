@@ -7,10 +7,10 @@
 #include "Figma2UMGModule.h"
 #include "Async/Async.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
-#include "Nodes/FigmaDocument.h"
-#include "Nodes/FigmaInstance.h"
+#include "Parser/Nodes/FigmaDocument.h"
+#include "Parser/Nodes/FigmaInstance.h"
 #include "REST/FigmaImporter.h"
-#include "Properties/FigmaComponentRef.h"
+#include "Parser/Properties/FigmaComponentRef.h"
 #include "Dom/JsonObject.h"
 
 void UFigmaFile::PostSerialize(const FString& InFileKey, const FString& InPackagePath, const TSharedRef<FJsonObject> fileJsonObject)

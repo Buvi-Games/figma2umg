@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "SizeBoxWidgetBuilder.h"
+#include "Builder/Widget/SizeBoxWidgetBuilder.h"
 
 #include "FigmaImportSubsystem.h"
 #include "Blueprint/WidgetTree.h"

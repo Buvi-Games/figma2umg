@@ -4,7 +4,7 @@
 
 #include "Parser/Nodes/FigmaComponent.h"
 
-#include "FigmaInstance.h"
+#include "Parser/Nodes/FigmaInstance.h"
 #include "Parser/FigmaFile.h"
 #include "Parser/Properties/FigmaComponentRef.h"
 #include "Builder/Asset/MaterialBuilder.h"

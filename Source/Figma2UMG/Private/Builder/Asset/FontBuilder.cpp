@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "FontBuilder.h"
+#include "Builder/Asset/FontBuilder.h"
 
 #include "AssetToolsModule.h"
 #include "Figma2UMGModule.h"

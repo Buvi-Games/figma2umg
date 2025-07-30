@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "ButtonWidgetBuilder.h"
+#include "Builder/Widget/ButtonWidgetBuilder.h"
 
 #include "BlueprintDelegateNodeSpawner.h"
 #include "EdGraphSchema_K2_Actions.h"

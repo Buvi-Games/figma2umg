@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "ImageWidgetBuilder.h"
+#include "Builder/Widget/ImageWidgetBuilder.h"
 
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"

@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "WidgetBuilder.h"
+#include "Builder/Widget/WidgetBuilder.h"
 
 #include "Figma2UMGModule.h"
 #include "Blueprint/WidgetTree.h"

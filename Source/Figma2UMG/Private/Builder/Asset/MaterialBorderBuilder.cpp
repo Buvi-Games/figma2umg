@@ -2,19 +2,17 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "MaterialBorderBuilder.h"
+#include "Builder/Asset/MaterialBorderBuilder.h"
 
 #include "AssetToolsModule.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
 #include "MaterialDomain.h"
 #include "MaterialEditorUtilities.h"
-#include "ObjectTools.h"
 #include "PackageTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Factories/MaterialFactoryNew.h"
 #include "Factories/MaterialInstanceConstantFactoryNew.h"
-#include "Materials/MaterialExpressionConstant.h"
 #include "Materials/MaterialExpressionDivide.h"
 #include "Materials/MaterialExpressionMultiply.h"
 #include "Materials/MaterialExpressionSubtract.h"
@@ -24,7 +22,6 @@
 #include "Parser/Nodes/FigmaNode.h"
 #include "Parser/Nodes/FigmaSection.h"
 #include "Parser/Nodes/Vectors/FigmaText.h"
-#include "Materials/MaterialInstanceConstant.h"
 
 void UMaterialBorderBuilder::LoadOrCreateAssets()
 {

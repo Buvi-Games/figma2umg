@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "BorderWidgetBuilder.h"
+#include "Builder/Widget/BorderWidgetBuilder.h"
 
 #include "FigmaImportSubsystem.h"
 #include "Blueprint/WidgetTree.h"

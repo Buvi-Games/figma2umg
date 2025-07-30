@@ -4,7 +4,7 @@
 
 #include "Parser/Nodes/FigmaComponentSet.h"
 
-#include "FigmaInstance.h"
+#include "Parser/Nodes/FigmaInstance.h"
 #include "Builder/WidgetBlueprintHelper.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"

@@ -4,7 +4,7 @@
 
 #include "Parser/Nodes/FigmaGroup.h"
 
-#include "FigmaComponentSet.h"
+#include "Parser/Nodes/FigmaComponentSet.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
 #include "Builder/Widget/ButtonWidgetBuilder.h"

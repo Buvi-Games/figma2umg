@@ -4,13 +4,13 @@
 
 #include "REST/FigmaImporter.h"
 
-#include "Defines.h"
+#include "REST/Defines.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
 #include "FileHelpers.h"
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
-#include "RequestParams.h"
+#include "REST/RequestParams.h"
 #include "Async/Async.h"
 #include "Builder/Asset/AssetBuilder.h"
 #include "Builder/Asset/FontBuilder.h"

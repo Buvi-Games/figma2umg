@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "MaterialBuilder.h"
+#include "Builder/Asset/MaterialBuilder.h"
 
 #include "AssetToolsModule.h"
 #include "Figma2UMGModule.h"
@@ -16,8 +16,6 @@
 #include "Materials/MaterialExpressionComponentMask.h"
 #include "Materials/MaterialExpressionConstant.h"
 #include "Materials/MaterialExpressionCustom.h"
-#include "Materials/MaterialExpressionMultiply.h"
-#include "Materials/MaterialExpressionScalarParameter.h"
 #include "Materials/MaterialExpressionSubtract.h"
 #include "Materials/MaterialExpressionTextureCoordinate.h"
 #include "Parser/FigmaFile.h"

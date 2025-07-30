@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "PanelWidgetBuilder.h"
+#include "Builder/Widget/PanelWidgetBuilder.h"
 
 void UPanelWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
 {

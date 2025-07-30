@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "TextBlockWidgetBuilder.h"
+#include "Builder/Widget/TextBlockWidgetBuilder.h"
 
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"

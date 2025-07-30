@@ -1,7 +1,7 @@
 // MIT License
 // Copyright (c) 2024 Buvi Games
 
-#include "FigmaTypeStyle.h"
+#include "Parser/Properties/FigmaTypeStyle.h"
 
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonTypes.h"

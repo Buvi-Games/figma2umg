@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "WidgetSwitcherBuilder.h"
+#include "Builder/Widget/WidgetSwitcherBuilder.h"
 
 #include "FigmaImportSubsystem.h"
 #include "Blueprint/WidgetTree.h"

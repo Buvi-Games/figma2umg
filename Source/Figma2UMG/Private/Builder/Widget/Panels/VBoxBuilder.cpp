@@ -2,7 +2,7 @@
 // Copyright (c) 2024 Buvi Games
 
 
-#include "VBoxBuilder.h"
+#include "Builder/Widget/Panels/VBoxBuilder.h"
 
 #include "Figma2UMGModule.h"
 #include "Parser/Nodes/FigmaGroup.h"
