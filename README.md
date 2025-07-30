@@ -80,6 +80,27 @@ Planned improvements include:
 
 ---
 
-## 💬 Continued Support
+If you purchased the plugin via the Epic Marketplace, don’t worry — you’ll continue receiving **personal support** from me.
 
-If you purchased the plugin via the E
+If you'd like to support ongoing development, you can still join the [Patreon](https://www.patreon.com/) 💛
+
+---
+
+## 🙌 Special Thanks
+
+Big thanks to:
+- Everyone who purchased Figma2UMG on the Marketplace
+- All my Patreon supporters
+- Anyone giving feedback or spreading the word
+
+You helped make this possible.
+
+---
+
+## 📝 License
+
+This plugin is licensed under the **MIT License** — see [`LICENSE`](LICENSE) for details.
+
+---
+
+**Built with ❤️ by Buvi Games**
