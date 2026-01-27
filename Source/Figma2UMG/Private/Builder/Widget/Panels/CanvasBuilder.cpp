@@ -8,7 +8,7 @@
 #include "Components/WidgetSwitcher.h"
 #include "Parser/Nodes/FigmaDocument.h"
 
-void UCanvasBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void UCanvasBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
     TObjectPtr<UWidget> MyWidgetToPatch = WidgetToPatch;
     if(MyWidgetToPatch && MyWidgetToPatch->IsA<UWidgetSwitcher>() && Node->GetParentNode() && Node->GetParentNode()->IsA<UFigmaDocument>())
@@ -16,10 +16,10 @@ void UCanvasBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlu
         MyWidgetToPatch = FindNodeWidgetInParent(Cast<UWidgetSwitcher>(WidgetToPatch));
     }
 
-    CanvasPanel = Patch<UCanvasPanel>(WidgetBlueprint->WidgetTree, MyWidgetToPatch);
+    CanvasPanel = Patch<UCanvasPanel>(WidgetBlueprint->WidgetTree, MyWidgetToPatch, NameTracker);
 
     Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, CanvasPanel);
-    PatchAndInsertChildren(WidgetBlueprint, CanvasPanel);
+    PatchAndInsertChildren(WidgetBlueprint, CanvasPanel, NameTracker);
 }
 
 void UCanvasBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)

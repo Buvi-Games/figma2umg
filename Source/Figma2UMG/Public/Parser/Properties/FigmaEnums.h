@@ -41,6 +41,7 @@ enum class EFigmaLayoutMode
 	NONE,
 	HORIZONTAL,
 	VERTICAL,
+	GRID,
 };
 
 UENUM()

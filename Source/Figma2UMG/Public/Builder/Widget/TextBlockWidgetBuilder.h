@@ -17,7 +17,7 @@ class FIGMA2UMG_API UTextBlockWidgetBuilder : public UObject, public IWidgetBuil
 public:
 	GENERATED_BODY()
 
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker) override;
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) override;
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;

@@ -21,7 +21,7 @@ class FIGMA2UMG_API UPanelWidgetBuilder : public UMultiChildBuilder
 public:
 	GENERATED_BODY()
 
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchAndInsertWidget());
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker) override PURE_VIRTUAL(UPanelWidgetBuilder::PatchAndInsertWidget());
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
 	virtual void ResetWidget() override;
@@ -29,7 +29,7 @@ protected:
 	virtual TObjectPtr<UPanelWidget> GetPanelWidget() const override;
 
 	template<class WidgetType>
-	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch);
+	TObjectPtr<WidgetType> Patch(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker);
 	virtual void Setup() const PURE_VIRTUAL(UPanelWidgetBuilder::Setup());
 
 	UPROPERTY()
@@ -38,7 +38,7 @@ protected:
 
 
 template <class WidgetType>
-TObjectPtr<WidgetType> UPanelWidgetBuilder::Patch(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch)
+TObjectPtr<WidgetType> UPanelWidgetBuilder::Patch(TObjectPtr<UWidgetTree> WidgetTree, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
 	TObjectPtr<WidgetType> PatchedWidget = nullptr;
 	const FString NodeName = Node->GetNodeName();
@@ -78,7 +78,7 @@ TObjectPtr<WidgetType> UPanelWidgetBuilder::Patch(TObjectPtr<UWidgetTree> Widget
 
 		if (!PatchedWidget)
 		{
-			PatchedWidget = UFigmaImportSubsystem::NewWidget<WidgetType>(WidgetTree, NodeName, WidgetName);
+			PatchedWidget = UFigmaImportSubsystem::NewWidget<WidgetType>(WidgetTree, NodeName, WidgetName, NameTracker);
 		}
 		else
 		{
@@ -91,7 +91,7 @@ TObjectPtr<WidgetType> UPanelWidgetBuilder::Patch(TObjectPtr<UWidgetTree> Widget
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<WidgetType>(NodeName) : nullptr;
 		if (ClassOverride && PatchedWidget->GetClass() != ClassOverride)
 		{
-			WidgetType* NewWidget = UFigmaImportSubsystem::NewWidget<WidgetType>(WidgetTree, NodeName, WidgetName, ClassOverride);
+			WidgetType* NewWidget = UFigmaImportSubsystem::NewWidget<WidgetType>(WidgetTree, NodeName, WidgetName, ClassOverride, NameTracker);
 			while (PatchedWidget->GetChildrenCount() > 0)
 			{
 				NewWidget->AddChild(PatchedWidget->GetChildAt(0));

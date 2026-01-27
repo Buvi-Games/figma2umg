@@ -17,6 +17,14 @@ void UFigmaDocument::SetFigmaFile(UFigmaFile* InFigmaFile)
 
 bool UFigmaDocument::CreateAssetBuilder(const FString& InFileKey, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders)
 {
+	// Only create the Document-level widget blueprint if no specific frames were selected.
+	// When specific frames are selected, we only want those frames as separate widgets,
+	// not a container widget for the entire document.
+	if (FigmaFile && FigmaFile->HasSelectedNodes())
+	{
+		return false;
+	}
+
 	UWidgetBlueprintBuilder* AssetBuilder = NewObject<UWidgetBlueprintBuilder>();
 	AssetBuilder->SetNode(InFileKey, this);
 	AssetBuilders.Add(AssetBuilder);

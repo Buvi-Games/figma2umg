@@ -29,7 +29,14 @@ public:
 
 	FLinearColor GetLinearColor() const
 	{
-		return FLinearColor(Color.R, Color.G, Color.B, Opacity);
+		// Figma colors are sRGB - convert to linear color space for UE5
+		const FColor SRGBColor(
+			FMath::RoundToInt(Color.R * 255.f),
+			FMath::RoundToInt(Color.G * 255.f),
+			FMath::RoundToInt(Color.B * 255.f),
+			FMath::RoundToInt(Opacity * 255.f)
+		);
+		return FLinearColor::FromSRGBColor(SRGBColor);
 	}
 
 	void CreateAssetBuilder(const FString& InFileKey, const UFigmaNode* OwnerNode, TArray<TScriptInterface<IAssetBuilder>>& AssetBuilders, bool IsStroke = false);

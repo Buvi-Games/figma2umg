@@ -27,6 +27,15 @@ public:
 	UPROPERTY(EditAnywhere, meta = (Category = "Figma2UMG", ToolTip = "Local folder where the UAssets will be created. eg '/Game/MyFolder'"))
 	FString ContentRootFolder = "/Game/Figma";
 
+	UPROPERTY(Config, EditAnywhere, meta = (Category = "Figma2UMG|Naming", ToolTip = "Prefix added to asset names. eg 'WBP_' results in 'WBP_Healthbar'"))
+	FString AssetNamePrefix = "WBP_";
+
+	UPROPERTY(Config, EditAnywhere, meta = (Category = "Figma2UMG|Naming", ToolTip = "Prefix added to widget variable names inside blueprints. Empty by default."))
+	FString WidgetNamePrefix = "";
+
+	UPROPERTY(Config, EditAnywhere, meta = (Category = "Figma2UMG|Naming", ToolTip = "If true, appends the Figma node ID to asset names. eg 'Healthbar--20-6'"))
+	bool IncludeNodeIdInName = false;
+
 	UPROPERTY(Config, EditAnywhere, meta = (Category = "Figma2UMG|Options", ToolTip = "Try to download missing fonts from Google."))
 	bool DownloadFontsFromGoogle = true;
 

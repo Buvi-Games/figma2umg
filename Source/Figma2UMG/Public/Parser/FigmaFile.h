@@ -69,6 +69,10 @@ public:
 	void SetImporter(UFigmaImporter* InFigmaImporter);
 	UFigmaImporter* GetImporter() const;
 
+	void SetSelectedNodeIds(const TArray<FString>& InSelectedNodeIds);
+	bool IsNodeSelected(const FString& NodeId) const;
+	bool HasSelectedNodes() const { return !SelectedNodeIds.IsEmpty(); }
+
 protected:
 	void FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
 	void FixRemoteComponentSetReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles);
@@ -117,6 +121,8 @@ protected:
 
 	FString FileKey;
 	FString PackagePath;
+
+	TArray<FString> SelectedNodeIds;
 
 	UFigmaImporter* FigmaImporter = nullptr;
 

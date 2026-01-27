@@ -4,6 +4,7 @@
 
 #include "Builder/Widget/SizeBoxWidgetBuilder.h"
 
+#include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/SizeBox.h"
@@ -13,7 +14,7 @@
 #include "Parser/Nodes/Vectors/FigmaText.h"
 
 
-void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
 	Widget = Cast<USizeBox>(WidgetToPatch);
 	const FString NodeName = Node->GetNodeName();
@@ -24,7 +25,7 @@ void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wi
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<USizeBox>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			USizeBox* NewSizeBox = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
+			USizeBox* NewSizeBox = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride, NameTracker);
 			NewSizeBox->SetContent(Widget->GetContent());
 			Widget = NewSizeBox;
 		}
@@ -32,7 +33,7 @@ void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wi
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<USizeBox>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, NameTracker);
 
 		if (WidgetToPatch)
 		{
@@ -42,12 +43,20 @@ void USizeBoxWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wi
 
 	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
 	Setup();
-	PatchAndInsertChild(WidgetBlueprint, Widget);
+	PatchAndInsertChild(WidgetBlueprint, Widget, NameTracker);
 }
 
 void USizeBoxWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
 {
+	UE_LOG_Figma2UMG(Display, TEXT("[USizeBoxWidgetBuilder::SetWidget] Node: %s, InWidget: %s (Type: %s)"),
+		Node ? *Node->GetNodeName() : TEXT("no node"),
+		InWidget ? *InWidget->GetName() : TEXT("NULL"),
+		InWidget ? *InWidget->GetClass()->GetName() : TEXT("N/A"));
 	Widget = Cast<USizeBox>(InWidget);
+	if (!Widget && InWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[USizeBoxWidgetBuilder::SetWidget] Cast to USizeBox failed! InWidget type: %s"), *InWidget->GetClass()->GetName());
+	}
 	SetChildWidget(Widget);
 }
 
@@ -74,9 +83,15 @@ void USizeBoxWidgetBuilder::Setup() const
 {
 	EFigmaLayoutSizing LayoutSizingHorizontal = EFigmaLayoutSizing::FILL;
 	EFigmaLayoutSizing LayoutSizingVertical = EFigmaLayoutSizing::FILL;
-	float FixedWidth;
-	float FixedHeight;
+	float FixedWidth = 0.0f;
+	float FixedHeight = 0.0f;
 	GetValues(LayoutSizingHorizontal, LayoutSizingVertical, FixedWidth, FixedHeight);
+
+	// Clear all size constraints first
+	Widget->ClearWidthOverride();
+	Widget->ClearHeightOverride();
+	Widget->ClearMinDesiredWidth();
+	Widget->ClearMinDesiredHeight();
 
 	if (LayoutSizingHorizontal == EFigmaLayoutSizing::FIXED)
 	{

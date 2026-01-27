@@ -100,7 +100,7 @@ void USingleChildBuilder::ResetWidget()
 	}
 }
 
-void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UContentWidget>& ParentWidget)
+void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UContentWidget>& ParentWidget, TMap<FString, int32>& NameTracker)
 {
 	if (!ParentWidget)
 	{
@@ -111,7 +111,7 @@ void USingleChildBuilder::PatchAndInsertChild(TObjectPtr<UWidgetBlueprint> Widge
 	if (ChildWidgetBuilder)
 	{
 		TObjectPtr<UWidget> ChildWidget = ParentWidget->GetContent();
-		ChildWidgetBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget);
+		ChildWidgetBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget, NameTracker);
 	}
 }
 
@@ -125,6 +125,12 @@ void USingleChildBuilder::SetChildWidget(TObjectPtr<UContentWidget> ParentWidget
 
 	if (ChildWidgetBuilder)
 	{
-		ChildWidgetBuilder->SetWidget(ParentWidget->GetContent());
+		TObjectPtr<UWidget> Content = ParentWidget->GetContent();
+		UE_LOG_Figma2UMG(Display, TEXT("[USingleChildBuilder::SetChildWidget] Node: %s, ParentWidget: %s, Content: %s (Type: %s)"),
+			*Node->GetNodeName(),
+			*ParentWidget->GetName(),
+			Content ? *Content->GetName() : TEXT("NULL"),
+			Content ? *Content->GetClass()->GetName() : TEXT("N/A"));
+		ChildWidgetBuilder->SetWidget(Content);
 	}
 }

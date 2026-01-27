@@ -6,11 +6,11 @@
 
 #include "Figma2UMGModule.h"
 
-void UWBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void UWBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
-    Box = Patch<UWrapBox>(WidgetBlueprint->WidgetTree, WidgetToPatch);
+    Box = Patch<UWrapBox>(WidgetBlueprint->WidgetTree, WidgetToPatch, NameTracker);
 
-    PatchAndInsertChildren(WidgetBlueprint, Box);
+    PatchAndInsertChildren(WidgetBlueprint, Box, NameTracker);
 
     Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Box);
 }

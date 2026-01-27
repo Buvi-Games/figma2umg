@@ -36,7 +36,7 @@ void UImageWidgetBuilder::SetColor(const FLinearColor& InColor)
 	SolidColor = InColor;
 }
 
-void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
 	Widget = Cast<UImage>(WidgetToPatch);
 
@@ -48,13 +48,13 @@ void UImageWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Widg
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UImage>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
+			Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride, NameTracker);
 		}
 		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UImage>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, NameTracker);
 	}
 
 	if (!Texture2DBuilder && !Material)

@@ -16,7 +16,7 @@ class FIGMA2UMG_API USizeBoxWidgetBuilder : public USingleChildBuilder
 public:
 	GENERATED_BODY()
 
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) override;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker) override;
 
 	virtual void SetWidget(const TObjectPtr<UWidget>& InWidget) override;
 	virtual void ResetWidget() override;

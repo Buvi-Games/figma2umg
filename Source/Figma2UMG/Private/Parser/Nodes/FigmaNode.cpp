@@ -5,6 +5,7 @@
 #include "Parser/Nodes/FigmaNode.h"
 
 #include "Figma2UMGModule.h"
+#include "Settings/Figma2UMGSettings.h"
 #include "Parser/Nodes/FigmaCanvas.h"
 #include "Parser/Nodes/FigmaComponent.h"
 #include "Parser/Nodes/FigmaComponentSet.h"
@@ -48,21 +49,47 @@ FString UFigmaNode::GetNodeName() const
 
 FString UFigmaNode::GetUniqueName(bool RemoveInstanceId) const
 {
-	FString IdForName = GetIdForName();
-	if(RemoveInstanceId)
+	const UFigma2UMGSettings* Settings = GetDefault<UFigma2UMGSettings>();
+	FString Result = Settings->WidgetNamePrefix + Name;
+
+	if (Settings->IncludeNodeIdInName)
 	{
-		int index = -1;
-		if (IdForName.FindChar(';', index))
+		FString IdForName = GetIdForName();
+		if(RemoveInstanceId)
 		{
-			IdForName.RemoveAt(0, index+1);
+			int index = -1;
+			if (IdForName.FindChar(';', index))
+			{
+				IdForName.RemoveAt(0, index+1);
+			}
 		}
+		Result += "--" + IdForName;
 	}
-	return Name + "--" + IdForName;
+
+	return Result;
+}
+
+FString UFigmaNode::GetWidgetName() const
+{
+	const UFigma2UMGSettings* Settings = GetDefault<UFigma2UMGSettings>();
+	FString Result = Settings->WidgetNamePrefix + Name;
+
+	// Sanitize for valid C++ identifier
+	Result.ReplaceInline(TEXT(" "), TEXT("_"));
+	Result.ReplaceInline(TEXT("-"), TEXT("_"));
+
+	return Result;
 }
 
 FString UFigmaNode::GetUAssetName() const
 {
-	return GetUniqueName();
+	const UFigma2UMGSettings* Settings = GetDefault<UFigma2UMGSettings>();
+	FString Result = Settings->AssetNamePrefix + Name;
+	if (Settings->IncludeNodeIdInName)
+	{
+		Result += "--" + GetIdForName();
+	}
+	return Result;
 }
 
 ESlateVisibility UFigmaNode::GetVisibility() const
@@ -532,13 +559,80 @@ UFigmaNode* UFigmaNode::CreateNode(const TSharedPtr<FJsonObject>& JsonObj)
 		break;
 	}
 
-	if (FigmaNode != nullptr && FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), FigmaNode->GetClass(), FigmaNode))
+	if (FigmaNode != nullptr)
 	{
-		FigmaNode->PostSerialize(this, JsonObj.ToSharedRef());
+		// Get node name for logging
+		FString NodeName = JsonObj->HasField("name") ? JsonObj->GetStringField("name") : TEXT("Unknown");
+		FString NodeId = JsonObj->HasField("id") ? JsonObj->GetStringField("id") : TEXT("Unknown");
+
+		UE_LOG_Figma2UMG(Display, TEXT("[CreateNode] Attempting to deserialize node: %s (ID: %s, Type: %s, Class: %s)"),
+			*NodeName, *NodeId, *NodeTypeStr, *FigmaNode->GetClass()->GetName());
+
+		if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), FigmaNode->GetClass(), FigmaNode))
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("[CreateNode] Successfully deserialized node: %s"), *NodeName);
+
+			// Log layout-related JSON fields for FRAME/GROUP nodes to debug layout issues
+			if (NodeTypeStr == TEXT("FRAME") || NodeTypeStr == TEXT("GROUP") || NodeTypeStr == TEXT("COMPONENT") || NodeTypeStr == TEXT("INSTANCE"))
+			{
+				FString LayoutModeJson = JsonObj->HasField(TEXT("layoutMode")) ? JsonObj->GetStringField(TEXT("layoutMode")) : TEXT("NOT_PRESENT");
+				FString LayoutSizingH = JsonObj->HasField(TEXT("layoutSizingHorizontal")) ? JsonObj->GetStringField(TEXT("layoutSizingHorizontal")) : TEXT("NOT_PRESENT");
+				FString LayoutSizingV = JsonObj->HasField(TEXT("layoutSizingVertical")) ? JsonObj->GetStringField(TEXT("layoutSizingVertical")) : TEXT("NOT_PRESENT");
+				FString LayoutWrap = JsonObj->HasField(TEXT("layoutWrap")) ? JsonObj->GetStringField(TEXT("layoutWrap")) : TEXT("NOT_PRESENT");
+				FString PrimaryAxisAlign = JsonObj->HasField(TEXT("primaryAxisAlignItems")) ? JsonObj->GetStringField(TEXT("primaryAxisAlignItems")) : TEXT("NOT_PRESENT");
+				FString CounterAxisAlign = JsonObj->HasField(TEXT("counterAxisAlignItems")) ? JsonObj->GetStringField(TEXT("counterAxisAlignItems")) : TEXT("NOT_PRESENT");
+				float ItemSpacing = JsonObj->HasField(TEXT("itemSpacing")) ? JsonObj->GetNumberField(TEXT("itemSpacing")) : -1.0f;
+
+				UE_LOG_Figma2UMG(Display, TEXT("[CreateNode] Layout JSON for %s (ID: %s):"), *NodeName, *NodeId);
+				UE_LOG_Figma2UMG(Display, TEXT("  layoutMode: %s"), *LayoutModeJson);
+				UE_LOG_Figma2UMG(Display, TEXT("  layoutSizingHorizontal: %s"), *LayoutSizingH);
+				UE_LOG_Figma2UMG(Display, TEXT("  layoutSizingVertical: %s"), *LayoutSizingV);
+				UE_LOG_Figma2UMG(Display, TEXT("  layoutWrap: %s"), *LayoutWrap);
+				UE_LOG_Figma2UMG(Display, TEXT("  primaryAxisAlignItems: %s"), *PrimaryAxisAlign);
+				UE_LOG_Figma2UMG(Display, TEXT("  counterAxisAlignItems: %s"), *CounterAxisAlign);
+				UE_LOG_Figma2UMG(Display, TEXT("  itemSpacing: %.1f"), ItemSpacing);
+			}
+
+			FigmaNode->PostSerialize(this, JsonObj.ToSharedRef());
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Error, TEXT("[CreateNode] Failed to deserialize node: %s (ID: %s, Type: %s). JSON conversion failed."),
+				*NodeName, *NodeId, *NodeTypeStr);
+
+			// Log the JSON keys to help debug
+			TArray<FString> Keys;
+			JsonObj->Values.GetKeys(Keys);
+			UE_LOG_Figma2UMG(Error, TEXT("[CreateNode] JSON keys for failed node: %s"), *FString::Join(Keys, TEXT(", ")));
+
+			// Log specific field types to identify the problematic field
+			for (const FString& Key : Keys)
+			{
+				const TSharedPtr<FJsonValue>* Value = JsonObj->Values.Find(Key);
+				if (Value && Value->IsValid())
+				{
+					FString OtherStr;
+					switch ((*Value)->Type)
+					{
+						case EJson::None: OtherStr = TEXT("None"); break;
+						case EJson::Null: OtherStr = TEXT("Null"); break;
+						case EJson::String: OtherStr = TEXT("String"); break;
+						case EJson::Number: OtherStr = TEXT("Number"); break;
+						case EJson::Boolean: OtherStr = TEXT("Boolean"); break;
+						case EJson::Array: OtherStr = TEXT("Array"); break;
+						case EJson::Object: OtherStr = TEXT("Object"); break;
+						default: OtherStr = TEXT("Unknown"); break;
+					}
+					UE_LOG_Figma2UMG(Display, TEXT("[CreateNode] Field '%s' type: %s"), *Key, *OtherStr);
+				}
+			}
+
+			return nullptr;
+		}
 	}
 	else
 	{
-		UE_LOG_Figma2UMG(Error, TEXT("[CreateNode] A ndoe failt to be serialized from JSON. Figma must have updated its API. Please contact figma2umg@buvi.games and send your log. Thank you!"));
+		UE_LOG_Figma2UMG(Error, TEXT("[CreateNode] Unknown node type: %s. Figma may have added a new node type."), *NodeTypeStr);
 		return nullptr;
 	}
 	

@@ -4,10 +4,25 @@
 
 #include "Parser/Nodes/FigmaFrame.h"
 
+#include "Figma2UMGModule.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Asset/Texture2DBuilder.h"
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 #include "Builder/Widget/UserWidgetBuilder.h"
+#include "Parser/FigmaFile.h"
+
+void UFigmaFrame::PostSerialize(const TObjectPtr<UFigmaNode> InParent, const TSharedRef<FJsonObject> JsonObj)
+{
+	Super::PostSerialize(InParent, JsonObj);
+
+	if (UFigmaFile* File = GetFigmaFile())
+	{
+		if (File->IsNodeSelected(GetId()))
+		{
+			SetGenerateFile(true);
+		}
+	}
+}
 
 void UFigmaFrame::SetGenerateFile(bool Value /*= true*/)
 {
@@ -16,12 +31,17 @@ void UFigmaFrame::SetGenerateFile(bool Value /*= true*/)
 
 TScriptInterface<IWidgetBuilder> UFigmaFrame::CreateWidgetBuilders(bool IsRoot/*= false*/, bool AllowFrameButton/*= true*/) const
 {
+	UE_LOG_Figma2UMG(Display, TEXT("[FigmaFrame::CreateWidgetBuilders] Node: %s, IsRoot: %d, GenerateFile: %d, AllowFrameButton: %d"),
+		*GetNodeName(), IsRoot, GenerateFile, AllowFrameButton);
+
 	if (!GenerateFile || IsRoot)
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("[FigmaFrame] Calling Super::CreateWidgetBuilders for: %s"), *GetNodeName());
 		return Super::CreateWidgetBuilders(IsRoot, AllowFrameButton);
 	}
 	else
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("[FigmaFrame] Creating UserWidgetBuilder (placeholder) for: %s - Children will NOT be processed!"), *GetNodeName());
 		UUserWidgetBuilder* UserWidgetBuilder = NewObject<UUserWidgetBuilder>();
 		UserWidgetBuilder->SetNode(this);
 		UserWidgetBuilder->SetWidgetBlueprintBuilder(GetAssetBuilder());

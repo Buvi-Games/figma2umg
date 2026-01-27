@@ -7,6 +7,7 @@
 #include "REST/Defines.h"
 #include "Figma2UMGModule.h"
 #include "FigmaImportSubsystem.h"
+#include "Editor.h"
 #include "FileHelpers.h"
 #include "HttpModule.h"
 #include "JsonObjectConverter.h"
@@ -42,6 +43,7 @@ void UFigmaImporter::Init(const TObjectPtr<URequestParams> InProperties, const F
 {
 	AccessToken = InProperties->AccessToken;
 	FileKey = InProperties->FileKey;
+	SelectedNodeIds = InProperties->Ids;
 	if(!InProperties->Ids.IsEmpty())
 	{
 
@@ -255,7 +257,30 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 				static FString ErrorStr("err");
 				if (JsonObj->HasField(StatusStr) && JsonObj->HasField(ErrorStr))
 				{
-					UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField(ErrorStr));
+					const FString ErrorMessage = JsonObj->GetStringField(ErrorStr);
+
+					// Check for rate limiting
+					if (ErrorMessage.Contains(TEXT("Rate limit"), ESearchCase::IgnoreCase))
+					{
+						int32 RetryAfterSeconds = 60; // Default
+						FString RetryAfterHeader = HttpResponse->GetHeader(TEXT("Retry-After"));
+						if (!RetryAfterHeader.IsEmpty())
+						{
+							RetryAfterSeconds = FCString::Atoi(*RetryAfterHeader);
+							if (RetryAfterSeconds <= 0)
+							{
+								RetryAfterSeconds = 60;
+							}
+						}
+
+						if (UFigmaImportSubsystem* Subsystem = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>())
+						{
+							Subsystem->SetRateLimited(RetryAfterSeconds);
+						}
+						UE_LOG(LogFigma2UMG, Warning, TEXT("%sRate limit hit. Retry after %d seconds."), *MessagePrefix, RetryAfterSeconds);
+					}
+
+					UpdateStatus(eRequestStatus::Failed, MessagePrefix + ErrorMessage);
 
 					return nullptr;
 				}
@@ -264,25 +289,74 @@ TSharedPtr<FJsonObject> UFigmaImporter::ParseRequestReceived(FString MessagePref
 			}
 #if (ENGINE_MAJOR_VERSION < 5 || ENGINE_MINOR_VERSION <= 3)
 		default:
-			TSharedPtr<FJsonObject> JsonObj;
-			TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
-			bool DeserializeSuccess = FJsonSerializer::Deserialize(Reader, JsonObj) && JsonObj.IsValid();
-			if (DeserializeSuccess)
 			{
-				static FString StatusStr("status");
-				static FString ErrorStr("err");
-				if (JsonObj->HasField(StatusStr) && JsonObj->HasField(ErrorStr))
+				// Check for HTTP 429 (Too Many Requests)
+				const int32 ResponseCode = HttpResponse->GetResponseCode();
+				if (ResponseCode == 429)
 				{
-					UpdateStatus(eRequestStatus::Failed, MessagePrefix + JsonObj->GetStringField(ErrorStr));
+					int32 RetryAfterSeconds = 60;
+					FString RetryAfterHeader = HttpResponse->GetHeader(TEXT("Retry-After"));
+					if (!RetryAfterHeader.IsEmpty())
+					{
+						RetryAfterSeconds = FCString::Atoi(*RetryAfterHeader);
+						if (RetryAfterSeconds <= 0)
+						{
+							RetryAfterSeconds = 60;
+						}
+					}
+
+					if (UFigmaImportSubsystem* Subsystem = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>())
+					{
+						Subsystem->SetRateLimited(RetryAfterSeconds);
+					}
+					UE_LOG(LogFigma2UMG, Warning, TEXT("%sHTTP 429 Rate limit hit. Retry after %d seconds."), *MessagePrefix, RetryAfterSeconds);
+					UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("Rate limit exceeded. Please wait before retrying."));
+					break;
+				}
+
+				TSharedPtr<FJsonObject> JsonObj;
+				TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(HttpResponse->GetContentAsString());
+				bool DeserializeSuccess = FJsonSerializer::Deserialize(Reader, JsonObj) && JsonObj.IsValid();
+				if (DeserializeSuccess)
+				{
+					static FString StatusStr("status");
+					static FString ErrorStr("err");
+					if (JsonObj->HasField(StatusStr) && JsonObj->HasField(ErrorStr))
+					{
+						const FString ErrorMessage = JsonObj->GetStringField(ErrorStr);
+
+						// Check for rate limiting in error message
+						if (ErrorMessage.Contains(TEXT("Rate limit"), ESearchCase::IgnoreCase))
+						{
+							int32 RetryAfterSeconds = 60;
+							FString RetryAfterHeader = HttpResponse->GetHeader(TEXT("Retry-After"));
+							if (!RetryAfterHeader.IsEmpty())
+							{
+								RetryAfterSeconds = FCString::Atoi(*RetryAfterHeader);
+								if (RetryAfterSeconds <= 0)
+								{
+									RetryAfterSeconds = 60;
+								}
+							}
+
+							if (UFigmaImportSubsystem* Subsystem = GEditor->GetEditorSubsystem<UFigmaImportSubsystem>())
+							{
+								Subsystem->SetRateLimited(RetryAfterSeconds);
+							}
+							UE_LOG(LogFigma2UMG, Warning, TEXT("%sRate limit hit. Retry after %d seconds."), *MessagePrefix, RetryAfterSeconds);
+						}
+
+						UpdateStatus(eRequestStatus::Failed, MessagePrefix + ErrorMessage);
+					}
+					else
+					{
+						UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(ResponseCode) + TEXT(")"));
+					}
 				}
 				else
 				{
-					UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(HttpResponse->GetResponseCode()) + TEXT(")"));
+					UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(ResponseCode) + TEXT(")"));
 				}
-			}
-			else
-			{
-				UpdateStatus(eRequestStatus::Failed, MessagePrefix + TEXT("EHttpResponseCode(") + FString::FromInt(HttpResponse->GetResponseCode()) + TEXT(")"));
 			}
 			break;
 #endif
@@ -372,6 +446,7 @@ void UFigmaImporter::OnFigmaFileRequestReceived(FHttpRequestPtr HttpRequest, FHt
 		FFileHelper::SaveStringToFile(RawText, *FullFilename);
 
 		File = NewObject<UFigmaFile>();
+		File->SetSelectedNodeIds(SelectedNodeIds);
 
 		AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [this, JsonObj]()
 			{

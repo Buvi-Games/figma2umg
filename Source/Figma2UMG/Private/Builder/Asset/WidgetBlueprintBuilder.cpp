@@ -5,7 +5,9 @@
 #include "Builder/Asset/WidgetBlueprintBuilder.h"
 
 #include "AssetToolsModule.h"
+#include "Components/PanelWidget.h"
 #include "Figma2UMGModule.h"
+#include "FigmaImportSubsystem.h"
 #include "ObjectTools.h"
 #include "PackageTools.h"
 #include "WidgetBlueprint.h"
@@ -84,7 +86,18 @@ void UWidgetBlueprintBuilder::ResetWidgets()
 {
 	if (Asset && RootWidgetBuilder)
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("[ResetWidgets] Asset: %s, RootWidget: %s (Type: %s), RootWidgetBuilder: %s"),
+			*Asset->GetName(),
+			Asset->WidgetTree->RootWidget ? *Asset->WidgetTree->RootWidget->GetName() : TEXT("NULL"),
+			Asset->WidgetTree->RootWidget ? *Asset->WidgetTree->RootWidget->GetClass()->GetName() : TEXT("N/A"),
+			*RootWidgetBuilder.GetObject()->GetClass()->GetName());
 		RootWidgetBuilder->SetWidget(Asset->WidgetTree->RootWidget);
+	}
+	else
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[ResetWidgets] Missing Asset (%s) or RootWidgetBuilder (%s)"),
+			Asset ? TEXT("valid") : TEXT("null"),
+			RootWidgetBuilder ? TEXT("valid") : TEXT("null"));
 	}
 }
 
@@ -127,8 +140,11 @@ void UWidgetBlueprintBuilder::CreateWidgetBuilders()
 		UE_LOG_Figma2UMG(Error, TEXT("[CreateWidgetBuilders] Missing Blueprint for node %s."), *Node->GetNodeName());
 		return;
 	}
-	UE_LOG_Figma2UMG(Display, TEXT("[CreateWidgetBuilders] Generating Tree for %s."), *Asset->GetName());
+	UE_LOG_Figma2UMG(Display, TEXT("[WidgetBlueprintBuilder::CreateWidgetBuilders] Generating Tree for %s (NodeType: %s)."),
+		*Asset->GetName(), *Node->GetClass()->GetName());
 	RootWidgetBuilder = Node->CreateWidgetBuilders(true);
+	UE_LOG_Figma2UMG(Display, TEXT("[WidgetBlueprintBuilder::CreateWidgetBuilders] RootWidgetBuilder: %s"),
+		RootWidgetBuilder ? *RootWidgetBuilder.GetObject()->GetClass()->GetName() : TEXT("NULL"));
 }
 
 void UWidgetBlueprintBuilder::PatchAndInsertWidgets()
@@ -146,7 +162,48 @@ void UWidgetBlueprintBuilder::PatchAndInsertWidgets()
 	}
 
 	UE_LOG_Figma2UMG(Display, TEXT("[PatchAndInsertWidget] Bluepring %s."), *Asset->GetName());
-	RootWidgetBuilder->PatchAndInsertWidget(Asset, Asset->WidgetTree->RootWidget);
+
+	// Clear orphaned widgets before re-import to prevent name collisions (Fill_2, Fill_3, etc.)
+	// We must find ALL UWidget objects with WidgetTree as Outer (including orphaned ones not in hierarchy)
+	// and move them to a different Outer so MakeUniqueObjectName() won't find them.
+	if (Asset->WidgetTree)
+	{
+		// Clear children from root panel first
+		if (UPanelWidget* RootPanel = Cast<UPanelWidget>(Asset->WidgetTree->RootWidget))
+		{
+			RootPanel->ClearChildren();
+		}
+
+		// Find ALL UObjects with WidgetTree as Outer (includes orphaned widgets not in hierarchy)
+		TArray<UObject*> ObjectsInTree;
+		GetObjectsWithOuter(Asset->WidgetTree, ObjectsInTree, false);
+
+		UE_LOG(LogFigma2UMG, Display, TEXT("[PatchAndInsertWidget] Cleaning up %d objects from WidgetTree"), ObjectsInTree.Num());
+
+		// Move all widgets to transient package so they won't cause name collisions
+		for (UObject* Obj : ObjectsInTree)
+		{
+			UWidget* Widget = Cast<UWidget>(Obj);
+			if (Widget && Widget != Asset->WidgetTree->RootWidget)
+			{
+				UE_LOG(LogFigma2UMG, Display, TEXT("[PatchAndInsertWidget] Moving widget '%s' to transient"), *Widget->GetName());
+				// Clear standalone flag so it can be garbage collected
+				Widget->ClearFlags(RF_Standalone);
+				// Move to transient package - this removes them from the WidgetTree's Outer
+				Widget->Rename(nullptr, GetTransientPackage(), REN_DontCreateRedirectors | REN_ForceNoResetLoaders);
+				Widget->MarkAsGarbage();
+			}
+		}
+
+		Asset->WidgetTree->SetFlags(RF_Transactional);
+		Asset->WidgetTree->Modify();
+	}
+
+	// Local name tracker for this widget blueprint's import session
+	// Tracks how many times each base name has been used to generate unique suffixes
+	TMap<FString, int32> NameTracker;
+
+	RootWidgetBuilder->PatchAndInsertWidget(Asset, Asset->WidgetTree->RootWidget, NameTracker);
 	RootWidgetBuilder->PostInsertWidgets(Asset);
 	if (Asset->WidgetTree->RootWidget == nullptr)
 	{

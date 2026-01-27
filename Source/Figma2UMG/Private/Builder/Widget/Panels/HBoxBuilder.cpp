@@ -7,13 +7,13 @@
 #include "Figma2UMGModule.h"
 #include "Parser/Nodes/FigmaGroup.h"
 
-void UHBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void UHBoxBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
-    Box = Patch<UHorizontalBox>(WidgetBlueprint->WidgetTree, WidgetToPatch);
+    Box = Patch<UHorizontalBox>(WidgetBlueprint->WidgetTree, WidgetToPatch, NameTracker);
 
     Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Box);
     Setup();
-    PatchAndInsertChildren(WidgetBlueprint, Box);
+    PatchAndInsertChildren(WidgetBlueprint, Box, NameTracker);
 }
 
 void UHBoxBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)

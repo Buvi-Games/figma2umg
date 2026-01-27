@@ -125,7 +125,7 @@ void UMultiChildBuilder::ResetWidget()
 	}
 }
 
-void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UPanelWidget>& ParentWidget)
+void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UPanelWidget>& ParentWidget, TMap<FString, int32>& NameTracker)
 {
 	if (!ParentWidget)
 	{
@@ -133,15 +133,60 @@ void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetBlueprint> Wid
 		return;
 	}
 
+	// Track which widgets have already been assigned to avoid duplicate matching
+	TSet<UWidget*> AssignedWidgets;
 	TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
 	TArray<UWidget*> NewChildren;
+
 	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
 	{
 		if (!ChildBuilder)
 			continue;
 
-		TObjectPtr<UWidget> ChildWidget = ChildBuilder->FindNodeWidgetInParent(ParentWidget);
-		ChildBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget);
+		const UFigmaNode* ChildNode = ChildBuilder->GetNode();
+		TObjectPtr<UWidget> ChildWidget = nullptr;
+
+		if (ChildNode)
+		{
+			const FString IdForName = ChildNode->GetIdForName();
+			const FString NodeName = ChildNode->GetNodeName();
+
+			// First try to find by node ID
+			for (TObjectPtr<UWidget> Widget : AllChildren)
+			{
+				if (!Widget || AssignedWidgets.Contains(Widget))
+					continue;
+
+				if (Widget->GetName().Contains(IdForName, ESearchCase::IgnoreCase))
+				{
+					ChildWidget = Widget;
+					break;
+				}
+			}
+
+			// Fallback: find first unassigned widget matching node name
+			if (!ChildWidget)
+			{
+				for (TObjectPtr<UWidget> Widget : AllChildren)
+				{
+					if (!Widget || AssignedWidgets.Contains(Widget))
+						continue;
+
+					if (Widget->GetName().Contains(NodeName, ESearchCase::IgnoreCase))
+					{
+						ChildWidget = Widget;
+						break;
+					}
+				}
+			}
+
+			if (ChildWidget)
+			{
+				AssignedWidgets.Add(ChildWidget);
+			}
+		}
+
+		ChildBuilder->PatchAndInsertWidget(WidgetBlueprint, ChildWidget, NameTracker);
 
 		if (TObjectPtr<UWidget> PatchedWidget = ChildBuilder->GetWidget())
 		{
@@ -157,7 +202,7 @@ void UMultiChildBuilder::PatchAndInsertChildren(TObjectPtr<UWidgetBlueprint> Wid
 
 		if (NewChildren.Contains(AllChildren[i]))
 			continue;
-	
+
 		AllChildren.RemoveAt(i);
 	}
 
@@ -168,16 +213,76 @@ void UMultiChildBuilder::SetChildrenWidget(TObjectPtr<UPanelWidget> ParentWidget
 {
 	if (!ParentWidget)
 	{
-		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::SetChildWidget] ParentWidget is null at Node %s."), *Node->GetNodeName());
+		UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::SetChildrenWidget] ParentWidget is null at Node %s."), *Node->GetNodeName());
 		return;
 	}
+
+	UE_LOG_Figma2UMG(Display, TEXT("[UMultiChildBuilder::SetChildrenWidget] Node: %s, ParentWidget: %s, ChildBuilders: %d"),
+		*Node->GetNodeName(), *ParentWidget->GetName(), ChildWidgetBuilders.Num());
+
+	// Track which widgets have already been assigned to avoid duplicate matching
+	TSet<UWidget*> AssignedWidgets;
+	TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
 
 	for (const TScriptInterface<IWidgetBuilder>& ChildBuilder : ChildWidgetBuilders)
 	{
 		if (!ChildBuilder)
 			continue;
 
-		TObjectPtr<UWidget> ChildWidget = ChildBuilder->FindNodeWidgetInParent(ParentWidget);
+		const UFigmaNode* ChildNode = ChildBuilder->GetNode();
+		if (!ChildNode)
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[UMultiChildBuilder::SetChildrenWidget] ChildBuilder has no node"));
+			continue;
+		}
+
+		const FString IdForName = ChildNode->GetIdForName();
+		const FString NodeName = ChildNode->GetNodeName();
+		TObjectPtr<UWidget> ChildWidget = nullptr;
+
+		// First try to find by node ID (for widgets that include the Figma ID in their name)
+		for (TObjectPtr<UWidget> Widget : AllChildren)
+		{
+			if (!Widget || AssignedWidgets.Contains(Widget))
+				continue;
+
+			if (Widget->GetName().Contains(IdForName, ESearchCase::IgnoreCase))
+			{
+				ChildWidget = Widget;
+				UE_LOG_Figma2UMG(Display, TEXT("[SetChildrenWidget] Found by ID: %s for node '%s'"), *Widget->GetName(), *NodeName);
+				break;
+			}
+		}
+
+		// Fallback: find first unassigned widget matching node name
+		if (!ChildWidget)
+		{
+			for (TObjectPtr<UWidget> Widget : AllChildren)
+			{
+				if (!Widget || AssignedWidgets.Contains(Widget))
+					continue;
+
+				if (Widget->GetName().Contains(NodeName, ESearchCase::IgnoreCase))
+				{
+					ChildWidget = Widget;
+					UE_LOG_Figma2UMG(Display, TEXT("[SetChildrenWidget] Found by name: %s for node '%s'"), *Widget->GetName(), *NodeName);
+					break;
+				}
+			}
+		}
+
+		if (ChildWidget)
+		{
+			AssignedWidgets.Add(ChildWidget);
+		}
+		else
+		{
+			UE_LOG_Figma2UMG(Warning, TEXT("[SetChildrenWidget] No widget found for node '%s' (ID: %s)"), *NodeName, *IdForName);
+		}
+
+		UE_LOG_Figma2UMG(Display, TEXT("[UMultiChildBuilder::SetChildrenWidget] Found widget: %s for child builder type: %s"),
+			ChildWidget ? *ChildWidget->GetName() : TEXT("NULL"),
+			*ChildBuilder.GetObject()->GetClass()->GetName());
 		ChildBuilder->SetWidget(ChildWidget);
 	}
 }

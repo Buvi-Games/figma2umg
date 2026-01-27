@@ -239,6 +239,16 @@ UFigmaImporter* UFigmaFile::GetImporter() const
 	return FigmaImporter;
 }
 
+void UFigmaFile::SetSelectedNodeIds(const TArray<FString>& InSelectedNodeIds)
+{
+	SelectedNodeIds = InSelectedNodeIds;
+}
+
+bool UFigmaFile::IsNodeSelected(const FString& NodeId) const
+{
+	return SelectedNodeIds.Contains(NodeId);
+}
+
 void UFigmaFile::FixRemoteComponentReferences(const TMap<FString, TObjectPtr<UFigmaFile>>& LibraryFiles)
 {
 	TMap<FString, FFigmaComponentRef> PendingComponents;

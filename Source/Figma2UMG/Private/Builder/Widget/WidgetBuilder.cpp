@@ -10,11 +10,15 @@
 #include "Components/Border.h"
 #include "Components/BorderSlot.h"
 #include "Components/ButtonSlot.h"
+#include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/GridSlot.h"
+#include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Components/Image.h"
 #include "Components/PanelWidget.h"
 #include "Components/SizeBoxSlot.h"
+#include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/Widget.h"
 #include "Components/WrapBox.h"
@@ -41,17 +45,39 @@ TObjectPtr<UWidget> IWidgetBuilder::FindNodeWidgetInParent(const TObjectPtr<UPan
 		return nullptr;
 
 	TArray<UWidget*> AllChildren = ParentWidget->GetAllChildren();
+	const FString IdForName = Node->GetIdForName();
+	const FString NodeName = Node->GetNodeName();
+
+	UE_LOG_Figma2UMG(Display, TEXT("[FindNodeWidgetInParent] Searching in %s for node '%s' (ID: %s), %d children available"),
+		*ParentWidget->GetName(), *NodeName, *IdForName, AllChildren.Num());
+
+	// First try to find by node ID (for widgets that include the Figma ID in their name)
 	for (TObjectPtr<UWidget> Widget : AllChildren)
 	{
 		if (Widget == nullptr)
 			continue;
 
-		if (Widget->GetName().Contains(Node->GetIdForName(), ESearchCase::IgnoreCase))
+		if (Widget->GetName().Contains(IdForName, ESearchCase::IgnoreCase))
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[FindNodeWidgetInParent] Found by ID: %s"), *Widget->GetName());
 			return Widget;
 		}
 	}
 
+	// Fallback: try to find by node name (for widgets named like "SizeBox-Container_1")
+	for (TObjectPtr<UWidget> Widget : AllChildren)
+	{
+		if (Widget == nullptr)
+			continue;
+
+		if (Widget->GetName().Contains(NodeName, ESearchCase::IgnoreCase))
+		{
+			UE_LOG_Figma2UMG(Display, TEXT("[FindNodeWidgetInParent] Found by name: %s"), *Widget->GetName());
+			return Widget;
+		}
+	}
+
+	UE_LOG_Figma2UMG(Warning, TEXT("[FindNodeWidgetInParent] No widget found for node '%s' (ID: %s)"), *NodeName, *IdForName);
 	return nullptr;
 }
 
@@ -151,23 +177,17 @@ void IWidgetBuilder::SetPosition() const
 	const TObjectPtr<UWidget> Widget = GetWidget();
 	if (Widget && Widget->Slot)
 	{
+		const FVector2D Position = Node->GetPosition();
+
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
-			CanvasSlot->SetPosition(Node->GetPosition());
-			//			CanvasSlot->SetAutoSize(true);
+			UE_LOG_Figma2UMG(Display, TEXT("[SetPosition] Node: %s, Widget: %s, CanvasSlot Position: (%.1f, %.1f)"),
+				Node ? *Node->GetNodeName() : TEXT("no node"),
+				*Widget->GetName(),
+				Position.X, Position.Y);
+			CanvasSlot->SetPosition(Position);
 		}
-		//else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
-		//{
-		//	HorizontalBoxSlot->SetPosition(Position);
-		//}
-		//else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
-		//{
-		//	VerticalBoxSlot->SetPosition(Position);
-		//}
-		//else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
-		//{
-		//	WrapBoxSlot->SetPosition(Position);
-		//}
+		// Note: HBox/VBox/WrapBox slots use auto-layout positioning, not absolute position
 	}
 }
 
@@ -185,6 +205,29 @@ void IWidgetBuilder::SetRotation() const
 			Widget->SetRenderTransformAngle(0.0f);
 		}
 	}
+}
+
+bool IWidgetBuilder::IsNodeHugSizing(bool bHorizontal) const
+{
+	if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+	{
+		return bHorizontal ?
+			FigmaGroup->LayoutSizingHorizontal == EFigmaLayoutSizing::HUG :
+			FigmaGroup->LayoutSizingVertical == EFigmaLayoutSizing::HUG;
+	}
+	if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
+	{
+		return bHorizontal ?
+			FigmaInstance->LayoutSizingHorizontal == EFigmaLayoutSizing::HUG :
+			FigmaInstance->LayoutSizingVertical == EFigmaLayoutSizing::HUG;
+	}
+	if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
+	{
+		return bHorizontal ?
+			FigmaText->LayoutSizingHorizontal == EFigmaLayoutSizing::HUG :
+			FigmaText->LayoutSizingVertical == EFigmaLayoutSizing::HUG;
+	}
+	return false;
 }
 
 void IWidgetBuilder::SetSize() const
@@ -221,7 +264,9 @@ void IWidgetBuilder::SetSize() const
 		{
 			FSlateChildSize ChildSize;
 			ChildSize.Value = Size.Y;
-			ChildSize.SizeRule = SizeToContent ? ESlateSizeRule::Fill : ESlateSizeRule::Automatic;
+			// HUG = size to content = use Automatic (natural size), FILL = stretch = use Fill
+			bool bUseFill = SizeToContent && !IsNodeHugSizing(false);
+			ChildSize.SizeRule = bUseFill ? ESlateSizeRule::Fill : ESlateSizeRule::Automatic;
 			VerticalBoxSlot->SetSize(ChildSize);
 		}
 		//else if (UWrapBoxSlot* WrapBoxSlot = Cast<UWrapBoxSlot>(Widget->Slot))
@@ -265,6 +310,10 @@ void IWidgetBuilder::SetPadding() const
 		else if (UButtonSlot* ButtonSlot = Cast<UButtonSlot>(Widget->Slot))
 		{
 			ButtonSlot->SetPadding(Padding);
+		}
+		else if (UGridSlot* GridSlot = Cast<UGridSlot>(Widget->Slot))
+		{
+			GridSlot->SetPadding(Padding);
 		}
 	}
 }
@@ -310,6 +359,12 @@ void IWidgetBuilder::SetConstraintsAndAlign() const
 	const TObjectPtr<UWidget> Widget = GetWidget();
 	if (Widget && Widget->Slot)
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetConstraintsAndAlign] Node: %s, Widget: %s (%s), Slot: %s"),
+			Node ? *Node->GetNodeName() : TEXT("no node"),
+			*Widget->GetName(),
+			*Widget->GetClass()->GetName(),
+			*Widget->Slot->GetClass()->GetName());
+
 		if (UWrapBox* WrapBox = Cast<UWrapBox>(Widget))
 		{
 			WrapBox->SetHorizontalAlignment(HorizontalAlignment);
@@ -319,9 +374,13 @@ void IWidgetBuilder::SetConstraintsAndAlign() const
 
 		if (UCanvasPanelSlot* CanvasSlot = Cast<UCanvasPanelSlot>(Widget->Slot))
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[SetConstraintsAndAlign] Node: %s - CanvasPanelSlot (no alignment change)"),
+				Node ? *Node->GetNodeName() : TEXT("no node"));
 		}
 		else if (USizeBoxSlot* SizeBoxSlot = Cast<USizeBoxSlot>(Widget->Slot))
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[SetConstraintsAndAlign] Node: %s - SizeBoxSlot -> HAlign_Fill, VAlign_Fill"),
+				Node ? *Node->GetNodeName() : TEXT("no node"));
 			SizeBoxSlot->SetHorizontalAlignment(HAlign_Fill);
 			SizeBoxSlot->SetVerticalAlignment(VAlign_Fill);
 		}
@@ -332,11 +391,15 @@ void IWidgetBuilder::SetConstraintsAndAlign() const
 		}
 		else if (UHorizontalBoxSlot* HorizontalBoxSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[SetConstraintsAndAlign] Node: %s - HorizontalBoxSlot -> HAlign: %d, VAlign: %d"),
+				Node ? *Node->GetNodeName() : TEXT("no node"), (int)HorizontalAlignment, (int)VerticalAlignment);
 			HorizontalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
 			HorizontalBoxSlot->SetVerticalAlignment(VerticalAlignment);
 		}
 		else if (UVerticalBoxSlot* VerticalBoxSlot = Cast<UVerticalBoxSlot>(Widget->Slot))
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[SetConstraintsAndAlign] Node: %s - VerticalBoxSlot -> HAlign: %d, VAlign: %d"),
+				Node ? *Node->GetNodeName() : TEXT("no node"), (int)HorizontalAlignment, (int)VerticalAlignment);
 			VerticalBoxSlot->SetHorizontalAlignment(HorizontalAlignment);
 			VerticalBoxSlot->SetVerticalAlignment(VerticalAlignment);
 		}
@@ -349,6 +412,11 @@ void IWidgetBuilder::SetConstraintsAndAlign() const
 		{
 			ButtonSlot->SetHorizontalAlignment(HorizontalAlignment);
 			ButtonSlot->SetVerticalAlignment(VerticalAlignment);
+		}
+		else if (UGridSlot* GridSlot = Cast<UGridSlot>(Widget->Slot))
+		{
+			GridSlot->SetHorizontalAlignment(HorizontalAlignment);
+			GridSlot->SetVerticalAlignment(VerticalAlignment);
 		}
 	}
 }
@@ -383,25 +451,46 @@ void IWidgetBuilder::SetFill(const TArray<FFigmaPaint>& Fills) const
 	TObjectPtr<UBorder> Border = Cast<UBorder>(Widget);
 	if (Border)
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("[SetFill] Node: %s, Fills.Num: %d"),
+			Node ? *Node->GetNodeName() : TEXT("no node"), Fills.Num());
+
 		if (Fills.Num() > 0 && Fills[0].Visible)
 		{
 			if (const TObjectPtr<UMaterialInterface> Material = Fills[0].GetMaterial())
 			{
+				UE_LOG_Figma2UMG(Display, TEXT("[SetFill] Node: %s - Applying Material"),
+					Node ? *Node->GetNodeName() : TEXT("no node"));
 				Border->SetBrushColor(FLinearColor::White);
 				Border->SetBrushFromMaterial(Material);
 			}
 			else if (const TObjectPtr<UTexture2D> Texture = Fills[0].GetTexture())
 			{
+				UE_LOG_Figma2UMG(Display, TEXT("[SetFill] Node: %s - Applying Texture"),
+					Node ? *Node->GetNodeName() : TEXT("no node"));
 				Border->SetBrushColor(FLinearColor::White);
 				Border->SetBrushFromTexture(Texture);
 			}
 			else
 			{
-				Border->SetBrushColor(Fills[0].GetLinearColor());
+				const FLinearColor FillColor = Fills[0].GetLinearColor();
+				UE_LOG_Figma2UMG(Display, TEXT("[SetFill] Node: %s - Applying Color: R=%.3f G=%.3f B=%.3f A=%.3f"),
+					Node ? *Node->GetNodeName() : TEXT("no node"),
+					FillColor.R, FillColor.G, FillColor.B, FillColor.A);
+
+				// For solid color fills, ensure the brush has no texture/material resource
+				// and is properly configured for the color
+				FSlateBrush Brush = GetBrush(Border);
+				Brush.SetResourceObject(nullptr);
+				// Use Image draw type for solid colors - Box mode is for 9-slice images
+				Brush.DrawAs = ESlateBrushDrawType::Image;
+				SetBrush(Border, Brush);
+				Border->SetBrushColor(FillColor);
 			}
 		}
 		else
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[SetFill] Node: %s - No visible fills, setting transparent"),
+				Node ? *Node->GetNodeName() : TEXT("no node"));
 			Border->SetBrushColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 		}
 	}
@@ -454,24 +543,28 @@ void IWidgetBuilder::GetPaddingValue(FMargin& Padding) const
 	Padding.Top = 0.0f;
 	Padding.Bottom = 0.0f;
 
-	if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
+	// Only apply slot padding for the top widget of a node
+	// When multiple widgets share the same node (SizeBox -> Border -> VBox),
+	// the Border handles internal padding via SetPadding() in BorderWidgetBuilder::Setup()
+	// Inner widgets (VBox, etc.) should NOT have additional slot padding
+	if (!IsTopWidgetForNode())
 	{
-		Padding.Left = FigmaGroup->PaddingLeft;
-		Padding.Right = FigmaGroup->PaddingRight;
-		Padding.Top = FigmaGroup->PaddingTop;
-		Padding.Bottom = FigmaGroup->PaddingBottom;
+		return;
 	}
-	else if (const UFigmaInstance* FigmaInstance = Cast<UFigmaInstance>(Node))
-	{
-		Padding.Left = FigmaInstance->PaddingLeft;
-		Padding.Right = FigmaInstance->PaddingRight;
-		Padding.Top = FigmaInstance->PaddingTop;
-		Padding.Bottom = FigmaInstance->PaddingBottom;
-	}
+
+	// Note: For top widgets, we currently don't apply the node's internal padding as slot padding
+	// because the node's PaddingLeft/Right/Top/Bottom is INTERNAL padding (space inside the frame)
+	// not EXTERNAL margin. The Border's content padding handles internal spacing.
+	// If the top widget needs margin in its parent, that would come from a different source.
 }
 
 bool IWidgetBuilder::GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const
 {
+	// Check if parent is a layout container - if so, use parent's counterAxisAlignItems for cross-axis alignment
+	const UFigmaGroup* ParentGroup = Node ? Cast<UFigmaGroup>(Node->GetParentNode()) : nullptr;
+	const bool bParentIsVerticalLayout = ParentGroup && ParentGroup->LayoutMode == EFigmaLayoutMode::VERTICAL;
+	const bool bParentIsHorizontalLayout = ParentGroup && ParentGroup->LayoutMode == EFigmaLayoutMode::HORIZONTAL;
+
 	if (const UFigmaText* FigmaText = Cast<UFigmaText>(Node))
 	{
 		HorizontalAlignment = Convert(FigmaText->Style.TextAlignHorizontal);
@@ -481,8 +574,42 @@ bool IWidgetBuilder::GetAlignmentValues(EHorizontalAlignment& HorizontalAlignmen
 	}
 	else if (const UFigmaGroup* FigmaGroup = Cast<UFigmaGroup>(Node))
 	{
-		HorizontalAlignment = Convert(FigmaGroup->PrimaryAxisAlignItems);
-		VerticalAlignment = Convert(FigmaGroup->CounterAxisAlignItems);
+		// For children in a layout container, determine alignment based on sizing mode
+		// FILL sizing = Fill alignment, FIXED/HUG sizing = use parent's counterAxisAlignItems
+		if (bParentIsVerticalLayout)
+		{
+			// Parent is vertical layout
+			// Horizontal alignment: FILL sizing -> HAlign_Fill, otherwise use parent's counterAxisAlignItems
+			if (FigmaGroup->LayoutSizingHorizontal == EFigmaLayoutSizing::FILL)
+			{
+				HorizontalAlignment = HAlign_Fill;
+			}
+			else
+			{
+				HorizontalAlignment = ConvertCounterAxisToHorizontal(ParentGroup->CounterAxisAlignItems);
+			}
+			VerticalAlignment = Convert(FigmaGroup->CounterAxisAlignItems);
+		}
+		else if (bParentIsHorizontalLayout)
+		{
+			// Parent is horizontal layout
+			// Vertical alignment: FILL sizing -> VAlign_Fill, otherwise use parent's counterAxisAlignItems
+			HorizontalAlignment = Convert(FigmaGroup->PrimaryAxisAlignItems);
+			if (FigmaGroup->LayoutSizingVertical == EFigmaLayoutSizing::FILL)
+			{
+				VerticalAlignment = VAlign_Fill;
+			}
+			else
+			{
+				VerticalAlignment = ConvertCounterAxisToVertical(ParentGroup->CounterAxisAlignItems);
+			}
+		}
+		else
+		{
+			// No layout parent - use the node's own settings (for absolute positioned items)
+			HorizontalAlignment = Convert(FigmaGroup->PrimaryAxisAlignItems);
+			VerticalAlignment = Convert(FigmaGroup->CounterAxisAlignItems);
+		}
 		//TODO: compare with FigmaGroup->Constraints
 		return true;
 	}
@@ -605,6 +732,38 @@ EVerticalAlignment IWidgetBuilder::Convert(EFigmaCounterAxisAlignItems LayoutCon
 	}
 
 	return VAlign_Center;
+}
+
+EHorizontalAlignment IWidgetBuilder::ConvertCounterAxisToHorizontal(EFigmaCounterAxisAlignItems LayoutConstraint) const
+{
+	switch (LayoutConstraint)
+	{
+	case EFigmaCounterAxisAlignItems::MIN:
+		return HAlign_Left;
+	case EFigmaCounterAxisAlignItems::CENTER:
+		return HAlign_Center;
+	case EFigmaCounterAxisAlignItems::MAX:
+		return HAlign_Right;
+	case EFigmaCounterAxisAlignItems::BASELINE:
+		return HAlign_Fill;
+	}
+	return HAlign_Left;
+}
+
+EVerticalAlignment IWidgetBuilder::ConvertCounterAxisToVertical(EFigmaCounterAxisAlignItems LayoutConstraint) const
+{
+	switch (LayoutConstraint)
+	{
+	case EFigmaCounterAxisAlignItems::MIN:
+		return VAlign_Top;
+	case EFigmaCounterAxisAlignItems::CENTER:
+		return VAlign_Center;
+	case EFigmaCounterAxisAlignItems::MAX:
+		return VAlign_Bottom;
+	case EFigmaCounterAxisAlignItems::BASELINE:
+		return VAlign_Fill;
+	}
+	return VAlign_Top;
 }
 
 void IWidgetBuilder::ProcessComponentPropertyReference(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const TObjectPtr<UWidget>& Widget, const TPair<FString, FString>& PropertyReference) const

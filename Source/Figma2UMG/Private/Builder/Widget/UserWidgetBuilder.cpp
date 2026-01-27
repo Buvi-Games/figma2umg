@@ -41,12 +41,12 @@ void UUserWidgetBuilder::SetWidgetBlueprintBuilder(const TObjectPtr<UWidgetBluep
 	}
 }
 
-void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void UUserWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
 	Widget = Cast<UUserWidget>(WidgetToPatch);
 
 	const FString NodeName = Node->GetNodeName();
-	const FString WidgetName = Node->GetUniqueName();
+	const FString WidgetName = Node->GetWidgetName();
 	if (UWidgetBlueprint* ComponentAsset = WidgetBlueprintBuilder ? WidgetBlueprintBuilder->GetAsset() : nullptr)
 	{
 		if (Widget && Widget.GetClass()->ClassGeneratedBy == ComponentAsset)

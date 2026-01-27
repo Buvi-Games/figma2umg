@@ -38,6 +38,7 @@ public:
 
 	FString GetNodeName() const;
 	FString GetUniqueName(bool RemoveInstanceId = false) const;
+	FString GetWidgetName() const;
 	virtual FString GetUAssetName() const;
 	ESlateVisibility GetVisibility() const;
 

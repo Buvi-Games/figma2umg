@@ -128,6 +128,7 @@ protected:
 	FString AccessToken;
 	FString FileKey;
 	FString Ids;
+	TArray<FString> SelectedNodeIds;
 	FString CurrentLibraryFileKey;
 
 	FString ContentRootFolder;

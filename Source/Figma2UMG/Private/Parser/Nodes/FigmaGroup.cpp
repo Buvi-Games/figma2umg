@@ -4,6 +4,7 @@
 
 #include "Parser/Nodes/FigmaGroup.h"
 
+#include "Figma2UMGModule.h"
 #include "Parser/Nodes/FigmaComponentSet.h"
 #include "Builder/Asset/MaterialBuilder.h"
 #include "Builder/Widget/BorderWidgetBuilder.h"
@@ -12,6 +13,7 @@
 #include "Builder/Widget/SizeBoxWidgetBuilder.h"
 #include "Builder/Widget/WidgetBuilder.h"
 #include "Builder/Widget/Panels/CanvasBuilder.h"
+#include "Builder/Widget/Panels/GridBuilder.h"
 #include "Builder/Widget/Panels/HBoxBuilder.h"
 #include "Builder/Widget/Panels/VBoxBuilder.h"
 #include "Builder/Widget/Panels/WBoxBuilder.h"
@@ -58,7 +60,7 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 	if (AllowFrameButton && IsButton())
 	{
 		TScriptInterface<UButtonWidgetBuilder> Button = CreateButtonBuilder();
-		const TScriptInterface<IWidgetBuilder> Container = CreateContainersBuilder();
+		const TScriptInterface<IWidgetBuilder> Container = CreateContainersBuilder(IsRoot);
 		Button->SetChild(Container);
 
 #if (ENGINE_MAJOR_VERSION < 5 || ENGINE_MINOR_VERSION <= 2)
@@ -69,7 +71,7 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateWidgetBuilders(bool IsRoot/*
 	}
 	else
 	{
-		TScriptInterface<IWidgetBuilder> WidgetBuilder = CreateContainersBuilder();
+		TScriptInterface<IWidgetBuilder> WidgetBuilder = CreateContainersBuilder(IsRoot);
 		return WidgetBuilder;
 	}
 }
@@ -151,14 +153,22 @@ TScriptInterface<UButtonWidgetBuilder> UFigmaGroup::CreateButtonBuilder() const
 	return ButtonBuilder;
 }
 
-TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateContainersBuilder() const
+TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateContainersBuilder(bool IsRoot/*= false*/) const
 {
 	const bool IsGeneratingButton = IsButton();
 	USizeBoxWidgetBuilder* SizeBoxWidgetBuilder = nullptr;
 	UBorderWidgetBuilder* BorderWidgetBuilder = nullptr;
 	UPanelWidgetBuilder* PanelWidgetBuilder = nullptr;
-	if (!IsGeneratingButton && (LayoutSizingHorizontal == EFigmaLayoutSizing::FIXED || LayoutSizingVertical == EFigmaLayoutSizing::FIXED))
+
+	// Skip SizeBox for root nodes - they should fill their container (e.g., HUD filling viewport)
+	UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s, IsRoot: %d, LayoutSizingH: %d, LayoutSizingV: %d"),
+		*GetNodeName(),
+		IsRoot ? 1 : 0,
+		(int)LayoutSizingHorizontal,
+		(int)LayoutSizingVertical);
+	if (!IsGeneratingButton && !IsRoot && (LayoutSizingHorizontal == EFigmaLayoutSizing::FIXED || LayoutSizingVertical == EFigmaLayoutSizing::FIXED))
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Creating SizeBox for node: %s"), *GetNodeName());
 		SizeBoxWidgetBuilder = NewObject<USizeBoxWidgetBuilder>();
 		SizeBoxWidgetBuilder->SetNode(this);
 	}
@@ -188,10 +198,14 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateContainersBuilder() const
 		}
 	}
 
+	UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s, LayoutMode: %d (NONE=0, HORIZONTAL=1, VERTICAL=2, GRID=3), LayoutSizingH: %d, LayoutSizingV: %d, LayoutWrap: %d"),
+		*GetNodeName(), (int)LayoutMode, (int)LayoutSizingHorizontal, (int)LayoutSizingVertical, (int)LayoutWrap);
+
 	switch (LayoutMode)
 	{
 	case EFigmaLayoutMode::NONE:
 	{
+		UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s -> Creating CanvasBuilder"), *GetNodeName());
 		PanelWidgetBuilder = NewObject<UCanvasBuilder>();
 	}
 	break;
@@ -199,10 +213,12 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateContainersBuilder() const
 	{
 		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s -> Creating HBoxBuilder"), *GetNodeName());
 			PanelWidgetBuilder = NewObject<UHBoxBuilder>();
 		}
 		else
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s -> Creating WBoxBuilder (horizontal wrap)"), *GetNodeName());
 			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
 		}
 	}
@@ -211,12 +227,20 @@ TScriptInterface<IWidgetBuilder> UFigmaGroup::CreateContainersBuilder() const
 	{
 		if (LayoutWrap == EFigmaLayoutWrap::NO_WRAP)
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s -> Creating VBoxBuilder"), *GetNodeName());
 			PanelWidgetBuilder = NewObject<UVBoxBuilder>();
 		}
 		else
 		{
+			UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s -> Creating WBoxBuilder (vertical wrap)"), *GetNodeName());
 			PanelWidgetBuilder = NewObject<UWBoxBuilder>();
 		}
+	}
+	break;
+	case EFigmaLayoutMode::GRID:
+	{
+		UE_LOG_Figma2UMG(Display, TEXT("[CreateContainersBuilder] Node: %s -> Creating GridBuilder"), *GetNodeName());
+		PanelWidgetBuilder = NewObject<UGridBuilder>();
 	}
 	break;
 	}
@@ -300,4 +324,243 @@ void UFigmaGroup::FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const
 		}
 	}
 
+}
+
+TArray<FFigmaGridTrackSizing> UFigmaGroup::GetParsedColumnSizing() const
+{
+	if (!GridColumnsSizing.IsEmpty())
+	{
+		return ParseGridSizingString(GridColumnsSizing);
+	}
+
+	// Default: create equal fractional columns based on GridColumnCount
+	TArray<FFigmaGridTrackSizing> Result;
+	const int32 Count = FMath::Max(1, GridColumnCount);
+	for (int32 i = 0; i < Count; i++)
+	{
+		Result.Add(FFigmaGridTrackSizing(EFigmaGridTrackType::Fractional, 1.0f));
+	}
+	return Result;
+}
+
+TArray<FFigmaGridTrackSizing> UFigmaGroup::GetParsedRowSizing() const
+{
+	if (!GridRowsSizing.IsEmpty())
+	{
+		return ParseGridSizingString(GridRowsSizing);
+	}
+
+	// Default: create equal fractional rows based on GridRowCount
+	TArray<FFigmaGridTrackSizing> Result;
+	const int32 Count = FMath::Max(1, GridRowCount);
+	for (int32 i = 0; i < Count; i++)
+	{
+		Result.Add(FFigmaGridTrackSizing(EFigmaGridTrackType::Fractional, 1.0f));
+	}
+	return Result;
+}
+
+FFigmaGridTrackSizing UFigmaGroup::ParseSingleTrackValue(const FString& Value)
+{
+	FFigmaGridTrackSizing Track;
+	FString TrimmedValue = Value.TrimStartAndEnd();
+
+	// Check for fractional units (e.g., "1fr", "2.5fr", "400fr")
+	if (TrimmedValue.EndsWith(TEXT("fr"), ESearchCase::IgnoreCase))
+	{
+		Track.Type = EFigmaGridTrackType::Fractional;
+		FString ValueStr = TrimmedValue.LeftChop(2); // Remove "fr"
+		Track.Value = FCString::Atof(*ValueStr);
+		if (Track.Value <= 0.0f)
+		{
+			Track.Value = 1.0f;
+		}
+	}
+	// Check for pixel units (e.g., "100px", "200.5px")
+	else if (TrimmedValue.EndsWith(TEXT("px"), ESearchCase::IgnoreCase))
+	{
+		Track.Type = EFigmaGridTrackType::Fixed;
+		FString ValueStr = TrimmedValue.LeftChop(2); // Remove "px"
+		Track.Value = FCString::Atof(*ValueStr);
+	}
+	// Check for "auto" keyword
+	else if (TrimmedValue.Equals(TEXT("auto"), ESearchCase::IgnoreCase))
+	{
+		Track.Type = EFigmaGridTrackType::Auto;
+		Track.Value = 0.0f;
+	}
+	// Assume numeric values without units are pixels
+	else if (TrimmedValue.IsNumeric())
+	{
+		Track.Type = EFigmaGridTrackType::Fixed;
+		Track.Value = FCString::Atof(*TrimmedValue);
+	}
+	else
+	{
+		// Unknown format, default to auto
+		Track.Type = EFigmaGridTrackType::Auto;
+		Track.Value = 0.0f;
+	}
+
+	return Track;
+}
+
+TArray<FFigmaGridTrackSizing> UFigmaGroup::ParseGridSizingString(const FString& SizingString)
+{
+	TArray<FFigmaGridTrackSizing> Result;
+
+	// Handle CSS Grid functions like minmax() and repeat()
+	// Examples:
+	// - "minmax(0, 400fr) minmax(0, 1fr)" -> space-separated minmax expressions
+	// - "repeat(1, minmax(0, 1fr))" -> repeat function
+	// - "1fr, 2fr, auto" -> simple comma-separated values
+
+	FString WorkingString = SizingString.TrimStartAndEnd();
+
+	// Check for repeat() function: repeat(N, value)
+	if (WorkingString.StartsWith(TEXT("repeat("), ESearchCase::IgnoreCase))
+	{
+		// Extract content inside repeat()
+		int32 OpenParen = WorkingString.Find(TEXT("("));
+		int32 CloseParen = WorkingString.Find(TEXT(")"), ESearchCase::IgnoreCase, ESearchDir::FromEnd);
+		if (OpenParen != INDEX_NONE && CloseParen != INDEX_NONE)
+		{
+			FString RepeatContent = WorkingString.Mid(OpenParen + 1, CloseParen - OpenParen - 1);
+			// Find the first comma to separate count from value
+			int32 FirstComma = RepeatContent.Find(TEXT(","));
+			if (FirstComma != INDEX_NONE)
+			{
+				FString CountStr = RepeatContent.Left(FirstComma).TrimStartAndEnd();
+				FString ValuePart = RepeatContent.Mid(FirstComma + 1).TrimStartAndEnd();
+				int32 RepeatCount = FCString::Atoi(*CountStr);
+				if (RepeatCount <= 0) RepeatCount = 1;
+
+				// Parse the value part (could be minmax or simple value)
+				FFigmaGridTrackSizing Track;
+				if (ValuePart.StartsWith(TEXT("minmax("), ESearchCase::IgnoreCase))
+				{
+					// Extract the max value from minmax(min, max)
+					int32 MinmaxOpen = ValuePart.Find(TEXT("("));
+					int32 MinmaxClose = ValuePart.Find(TEXT(")"));
+					if (MinmaxOpen != INDEX_NONE && MinmaxClose != INDEX_NONE)
+					{
+						FString MinmaxContent = ValuePart.Mid(MinmaxOpen + 1, MinmaxClose - MinmaxOpen - 1);
+						int32 MinmaxComma = MinmaxContent.Find(TEXT(","));
+						if (MinmaxComma != INDEX_NONE)
+						{
+							FString MaxValue = MinmaxContent.Mid(MinmaxComma + 1).TrimStartAndEnd();
+							Track = ParseSingleTrackValue(MaxValue);
+						}
+					}
+				}
+				else
+				{
+					Track = ParseSingleTrackValue(ValuePart);
+				}
+
+				// Add the track RepeatCount times
+				for (int32 i = 0; i < RepeatCount; i++)
+				{
+					Result.Add(Track);
+				}
+			}
+		}
+
+		if (Result.Num() > 0)
+		{
+			return Result;
+		}
+	}
+
+	// Check for minmax() functions (space-separated)
+	// Example: "minmax(0, 400fr) minmax(0, 1fr)"
+	if (WorkingString.Contains(TEXT("minmax("), ESearchCase::IgnoreCase))
+	{
+		// Find all minmax() expressions
+		int32 SearchStart = 0;
+		while (SearchStart < WorkingString.Len())
+		{
+			int32 MinmaxStart = WorkingString.Find(TEXT("minmax("), ESearchCase::IgnoreCase, ESearchDir::FromStart, SearchStart);
+			if (MinmaxStart == INDEX_NONE)
+			{
+				break;
+			}
+
+			// Find the matching closing parenthesis
+			int32 ParenDepth = 0;
+			int32 MinmaxEnd = INDEX_NONE;
+			for (int32 i = MinmaxStart; i < WorkingString.Len(); i++)
+			{
+				if (WorkingString[i] == '(')
+				{
+					ParenDepth++;
+				}
+				else if (WorkingString[i] == ')')
+				{
+					ParenDepth--;
+					if (ParenDepth == 0)
+					{
+						MinmaxEnd = i;
+						break;
+					}
+				}
+			}
+
+			if (MinmaxEnd != INDEX_NONE)
+			{
+				// Extract minmax content
+				int32 ContentStart = MinmaxStart + 7; // Length of "minmax("
+				FString MinmaxContent = WorkingString.Mid(ContentStart, MinmaxEnd - ContentStart);
+
+				// Find comma separating min and max
+				int32 CommaPos = MinmaxContent.Find(TEXT(","));
+				if (CommaPos != INDEX_NONE)
+				{
+					FString MaxValue = MinmaxContent.Mid(CommaPos + 1).TrimStartAndEnd();
+					Result.Add(ParseSingleTrackValue(MaxValue));
+				}
+
+				SearchStart = MinmaxEnd + 1;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (Result.Num() > 0)
+		{
+			return Result;
+		}
+	}
+
+	// Fall back to simple parsing: comma or space separated values like "1fr, 2fr, auto"
+	TArray<FString> Parts;
+	SizingString.ParseIntoArray(Parts, TEXT(","), true);
+
+	// If no commas, try spaces (but be careful with minmax which was already handled above)
+	if (Parts.Num() <= 1 && !SizingString.Contains(TEXT("(")))
+	{
+		Parts.Empty();
+		SizingString.ParseIntoArray(Parts, TEXT(" "), true);
+	}
+
+	for (const FString& Part : Parts)
+	{
+		FString TrimmedPart = Part.TrimStartAndEnd();
+		if (TrimmedPart.IsEmpty())
+		{
+			continue;
+		}
+
+		Result.Add(ParseSingleTrackValue(TrimmedPart));
+	}
+
+	// If nothing was parsed, return a single auto track
+	if (Result.Num() == 0)
+	{
+		Result.Add(FFigmaGridTrackSizing(EFigmaGridTrackType::Auto, 0.0f));
+	}
+
+	return Result;
 }

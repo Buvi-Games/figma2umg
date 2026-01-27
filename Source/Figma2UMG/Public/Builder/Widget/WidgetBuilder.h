@@ -32,12 +32,14 @@ public:
 	UFUNCTION()
 	virtual void SetNode(const UFigmaNode* InNode);
 
+	const UFigmaNode* GetNode() const { return Node; }
+
 	UFUNCTION()
 	virtual void SetParent(TScriptInterface<IWidgetBuilder> InParent);
 
 	virtual TObjectPtr<UWidget> FindNodeWidgetInParent(const TObjectPtr<UPanelWidget>& ParentWidget) const;
 
-	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch) = 0;
+	virtual void PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker) = 0;
 	virtual void PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) {}
 	virtual bool TryInsertOrReplace(const TObjectPtr<UWidget>& PrePatchWidget, const TObjectPtr<UWidget>& PostPatchWidget) = 0;
 	virtual void PatchWidgetBinds(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint);
@@ -70,6 +72,7 @@ protected:
 	void SetCorner(TObjectPtr<WidgetT> Widget, const FVector4& CornerRadii, bool bForceRoundCorner = false) const;
 
 	virtual bool GetSizeValue(FVector2D& Size, bool& SizeToContent) const;
+	bool IsNodeHugSizing(bool bHorizontal) const;
 	virtual void GetPaddingValue(FMargin& Padding) const;
 	virtual bool GetAlignmentValues(EHorizontalAlignment& HorizontalAlignment, EVerticalAlignment& VerticalAlignment) const;
 
@@ -79,6 +82,8 @@ protected:
 	EVerticalAlignment Convert(EFigmaTextAlignVertical TextAlignVertical) const;
 	EVerticalAlignment Convert(EFigmaLayoutConstraintVertical LayoutConstraint) const;
 	EVerticalAlignment Convert(EFigmaCounterAxisAlignItems LayoutConstraint) const;
+	EHorizontalAlignment ConvertCounterAxisToHorizontal(EFigmaCounterAxisAlignItems LayoutConstraint) const;
+	EVerticalAlignment ConvertCounterAxisToVertical(EFigmaCounterAxisAlignItems LayoutConstraint) const;
 
 	void ProcessComponentPropertyReference(const TObjectPtr<UWidgetBlueprint>& WidgetBlueprint, const TObjectPtr<UWidget>& Widget, const TPair<FString, FString>& PropertyReference) const;
 

@@ -24,6 +24,31 @@
 
 class UButtonWidgetBuilder;
 
+// Enum for grid track sizing types (CSS Grid compatible)
+UENUM()
+enum class EFigmaGridTrackType : uint8
+{
+	Fixed,       // Fixed pixel size (e.g., "100px" or just "100")
+	Fractional,  // Fractional unit (e.g., "1fr", "2fr")
+	Auto         // Automatic sizing based on content
+};
+
+// Structure representing a single grid track (column or row) sizing
+USTRUCT()
+struct FIGMA2UMG_API FFigmaGridTrackSizing
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	EFigmaGridTrackType Type = EFigmaGridTrackType::Auto;
+
+	UPROPERTY()
+	float Value = 1.0f;
+
+	FFigmaGridTrackSizing() = default;
+	FFigmaGridTrackSizing(EFigmaGridTrackType InType, float InValue) : Type(InType), Value(InValue) {}
+};
+
 UCLASS()
 class FIGMA2UMG_API UFigmaGroup : public UFigmaNode, public IFigmaContainer, public IFlowTransition
 {
@@ -194,6 +219,25 @@ public:
 	UPROPERTY()
 	float CounterAxisSpacing = 0.0f;
 
+	// CSS Grid properties (added for Figma API compatibility)
+	UPROPERTY()
+	int32 GridColumnCount = 0;
+
+	UPROPERTY()
+	int32 GridRowCount = 0;
+
+	UPROPERTY()
+	float GridRowGap = 0.0f;
+
+	UPROPERTY()
+	float GridColumnGap = 0.0f;
+
+	UPROPERTY()
+	FString GridColumnsSizing;
+
+	UPROPERTY()
+	FString GridRowsSizing;
+
 	UPROPERTY()
 	EFigmaLayoutPositioning LayoutPositioning = EFigmaLayoutPositioning::AUTO;
 
@@ -207,6 +251,12 @@ public:
 	EFigmaOverflowDirection OverflowDirection = EFigmaOverflowDirection::NONE;
 
 	UPROPERTY()
+	FString ScrollBehavior;
+
+	UPROPERTY()
+	TArray<FFigmaPaint> Background;
+
+	UPROPERTY()
 	TArray<FFigmaEffect> Effects;
 
 	UPROPERTY()
@@ -218,11 +268,18 @@ public:
 	UPROPERTY()
 	TMap<EFigmaStyleType, FString> Styles;
 
-protected:
+	// Grid sizing parsing methods
+	TArray<FFigmaGridTrackSizing> GetParsedColumnSizing() const;
+	TArray<FFigmaGridTrackSizing> GetParsedRowSizing() const;
+
 	bool IsButton() const;
+
+protected:
 	TScriptInterface<UButtonWidgetBuilder> CreateButtonBuilder() const;
-	TScriptInterface<IWidgetBuilder> CreateContainersBuilder() const;
+	TScriptInterface<IWidgetBuilder> CreateContainersBuilder(bool IsRoot = false) const;
 
 	void FixSpacers(const TObjectPtr<UPanelWidget>& PanelWidget) const;
+	static FFigmaGridTrackSizing ParseSingleTrackValue(const FString& Value);
+	static TArray<FFigmaGridTrackSizing> ParseGridSizingString(const FString& SizingString);
 };
 

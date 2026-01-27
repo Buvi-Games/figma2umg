@@ -21,7 +21,7 @@
 #include "Kismet2/KismetEditorUtilities.h"
 
 
-void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
 	Widget = Cast<UButton>(WidgetToPatch);
 	const FString NodeName = Node->GetNodeName();
@@ -32,7 +32,7 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wid
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UBorder>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			UButton* NewButton = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName , WidgetName, ClassOverride);
+			UButton* NewButton = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName , WidgetName, ClassOverride, NameTracker);
 			NewButton->SetContent(Widget->GetContent());
 			Widget = NewButton;
 		}
@@ -40,7 +40,7 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wid
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UButton>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, NameTracker);
 		if (WidgetToPatch)
 		{
 			Widget->SetContent(WidgetToPatch);
@@ -51,7 +51,7 @@ void UButtonWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> Wid
 
 	Setup(WidgetBlueprint);
 
-	PatchAndInsertChild(WidgetBlueprint, Widget);
+	PatchAndInsertChild(WidgetBlueprint, Widget, NameTracker);
 }
 
 void UButtonWidgetBuilder::PostInsertWidgets(TObjectPtr<UWidgetBlueprint> WidgetBlueprint)
@@ -104,7 +104,15 @@ void UButtonWidgetBuilder::SetFocusedNode(const UFigmaGroup* InNode)
 
 void UButtonWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
 {
+	UE_LOG_Figma2UMG(Display, TEXT("[UButtonWidgetBuilder::SetWidget] Node: %s, InWidget: %s (Type: %s)"),
+		Node ? *Node->GetNodeName() : TEXT("no node"),
+		InWidget ? *InWidget->GetName() : TEXT("NULL"),
+		InWidget ? *InWidget->GetClass()->GetName() : TEXT("N/A"));
 	Widget = Cast<UButton>(InWidget);
+	if (!Widget && InWidget)
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[UButtonWidgetBuilder::SetWidget] Cast to UButton failed! InWidget type: %s"), *InWidget->GetClass()->GetName());
+	}
 	SetChildWidget(Widget);
 }
 
@@ -134,7 +142,7 @@ void UButtonWidgetBuilder::Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) c
 	if (DefaultNode)
 	{
 		SetupBrush(Style.Normal, *DefaultNode);
-		const FMargin Padding(0.0f);// = DefaultNode->GetPadding();
+		const FMargin Padding(0.0f);
 		Style.SetNormalPadding(Padding);
 	}
 
@@ -146,7 +154,7 @@ void UButtonWidgetBuilder::Setup(TObjectPtr<UWidgetBlueprint> WidgetBlueprint) c
 	if (PressedNode)
 	{
 		SetupBrush(Style.Pressed, *PressedNode);
-		const FMargin Padding(0.0f);// = PressedNode->GetPadding();
+		const FMargin Padding(0.0f);
 		Style.SetPressedPadding(Padding);
 	}
 

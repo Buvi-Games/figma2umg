@@ -15,7 +15,7 @@
 #include "Engine/Font.h"
 #include "Engine/ObjectLibrary.h"
 
-void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch)
+void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> WidgetBlueprint, const TObjectPtr<UWidget>& WidgetToPatch, TMap<FString, int32>& NameTracker)
 {
 	Widget = Cast<UTextBlock>(WidgetToPatch);
 
@@ -27,14 +27,14 @@ void UTextBlockWidgetBuilder::PatchAndInsertWidget(TObjectPtr<UWidgetBlueprint> 
 		UClass* ClassOverride = Importer ? Importer->GetOverrideClassForNode<UTextBlock>(NodeName) : nullptr;
 		if (ClassOverride && Widget->GetClass() != ClassOverride)
 		{
-			Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride);
+			Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, ClassOverride, NameTracker);
 		}
 
 		UFigmaImportSubsystem::TryRenameWidget(WidgetName, Widget);
 	}
 	else
 	{
-		Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetBlueprint->WidgetTree, NodeName, WidgetName);
+		Widget = UFigmaImportSubsystem::NewWidget<UTextBlock>(WidgetBlueprint->WidgetTree, NodeName, WidgetName, NameTracker);
 	}
 
 	Insert(WidgetBlueprint->WidgetTree, WidgetToPatch, Widget);
@@ -51,6 +51,12 @@ bool UTextBlockWidgetBuilder::TryInsertOrReplace(const TObjectPtr<UWidget>& PreP
 void UTextBlockWidgetBuilder::SetWidget(const TObjectPtr<UWidget>& InWidget)
 {
 	Widget = Cast<UTextBlock>(InWidget);
+
+	// Call Setup to apply text, font, and style to the existing widget
+	if (Widget)
+	{
+		Setup();
+	}
 }
 
 TObjectPtr<UWidget> UTextBlockWidgetBuilder::GetWidget() const
@@ -71,7 +77,34 @@ void UTextBlockWidgetBuilder::Setup() const
 		UE_LOG_Figma2UMG(Warning, TEXT("[UTextBlockWidgetBuilder::Setup] Expecting Node %s to be an UFigmaText nit it's %s instead."), *Node->GetNodeName(), *Node->GetClass()->GetName());
 	}
 
-	Widget->SetText(FText::FromString(FigmaText->Characters));
+	// Apply TextCase transformation to the text
+	FString DisplayText = FigmaText->Characters;
+	switch (FigmaText->Style.TextCase)
+	{
+	case EFigmaTextCase::UPPER:
+		DisplayText = DisplayText.ToUpper();
+		break;
+	case EFigmaTextCase::LOWER:
+		DisplayText = DisplayText.ToLower();
+		break;
+	case EFigmaTextCase::TITLE:
+		// Title case: capitalize first letter of each word
+		DisplayText = DisplayText.ToLower();
+		for (int32 i = 0; i < DisplayText.Len(); ++i)
+		{
+			if (i == 0 || (i > 0 && FChar::IsWhitespace(DisplayText[i - 1])))
+			{
+				DisplayText[i] = FChar::ToUpper(DisplayText[i]);
+			}
+		}
+		break;
+	case EFigmaTextCase::ORIGINAL:
+	default:
+		// Keep original text as-is
+		break;
+	}
+
+	Widget->SetText(FText::FromString(DisplayText));
 	Widget->SetAutoWrapText(FigmaText->Style.TextAutoResize != EFigmaTextAutoResize::WIDTH_AND_HEIGHT);
 
 	SetStyle(FigmaText->Style);
@@ -116,12 +149,23 @@ void UTextBlockWidgetBuilder::SetStyle(const FFigmaTypeStyle& Style) const
 	if (FoundFont)
 	{
 		FontInfo.FontObject = FoundFont;
+		UE_LOG_Figma2UMG(Display, TEXT("[TextBlockWidgetBuilder::SetStyle] Node: %s - Font '%s' found: %s"),
+			Node ? *Node->GetNodeName() : TEXT("no node"),
+			*Style.FontFamily,
+			*FoundFont->GetName());
+	}
+	else
+	{
+		UE_LOG_Figma2UMG(Warning, TEXT("[TextBlockWidgetBuilder::SetStyle] Node: %s - Font '%s' NOT FOUND, using default"),
+			Node ? *Node->GetNodeName() : TEXT("no node"),
+			*Style.FontFamily);
 	}
 
 	FontInfo.TypefaceFontName = *Style.GetFaceName();
 
 	FontInfo.Size = ConvertFontSizeFromDisplayToNative(Style.FontSize);
-	FontInfo.LetterSpacing = (Style.LetterSpacing*100.0f);
+	// Figma provides LetterSpacing in pixels - use directly as UE5 LetterSpacing is also in Slate Units (pixels)
+	FontInfo.LetterSpacing = Style.LetterSpacing;
 	Widget->SetFont(FontInfo);
 }
 
